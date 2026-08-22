@@ -23,4 +23,10 @@ class AppConfig {
   );
 
   static bool get isProduction => appEnv == 'production';
+
+  /// Kosong berarti Sentry belum dikonfigurasi (diisi di env production).
+  static const String sentryDsn = String.fromEnvironment(
+    'SENTRY_DSN',
+    defaultValue: '',
+  );
 }

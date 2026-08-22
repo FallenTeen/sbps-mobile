@@ -1,0 +1,6 @@
+{
+  "API_BASE_URL": "https://sistem.sbpscorp.com/api/mobile",
+  "APP_ENV": "production",
+  "APP_FLAVOR": "presensi",
+  "SENTRY_DSN": ""
+}

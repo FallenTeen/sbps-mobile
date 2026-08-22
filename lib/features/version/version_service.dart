@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/api_response.dart';
 
 /// Model ringkas dari GET /api/mobile/app-version
 /// (lihat docs/api-mobile.md bagian 5.7).
@@ -33,17 +34,19 @@ class VersionService {
 
   /// `app` diambil dari flavor aktif: presensi / proyek.
   Future<AppVersionInfo> fetchAppVersion() async {
-    final envelope = await _api.getJson(
-      '/app-version?app=${Uri.encodeComponent(_appName())}&platform=android',
+    final ApiResponse<Map<String, dynamic>> envelope = await _api.get(
+      '/app-version',
+      query: {'app': _appName(), 'platform': 'android'},
+      parse: (raw) => Map<String, dynamic>.from(raw as Map),
     );
 
-    if (envelope['status'] != 'success') {
-      throw ApiException('Gagal mengambil konfigurasi versi.');
+    if (!envelope.isSuccess || envelope.data == null) {
+      throw ApiException(envelope.message.isEmpty
+          ? 'Gagal mengambil konfigurasi versi.'
+          : envelope.message);
     }
 
-    return AppVersionInfo.fromJson(
-      (envelope['data'] ?? <String, dynamic>{}) as Map<String, dynamic>,
-    );
+    return AppVersionInfo.fromJson(envelope.data!);
   }
 
   static String _appName() {
