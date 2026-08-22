@@ -42,7 +42,8 @@ class RolePermissions {
   const RolePermissions._();
 
   static const Map<String, Set<String>> _matrix = <String, Set<String>>{
-    'Mandor Titik': {'produksi', 'qc', 'tracking'},
+    // Fase A2.6: Mandor Titik dapat overview + armada-status (non-finansial).
+    'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
     'Kontraktor': {'dashboard'},
     'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan'},
     'Admin Keuangan': {'tracking', 'dashboard', 'keuangan'},

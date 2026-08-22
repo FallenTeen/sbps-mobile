@@ -70,9 +70,15 @@ class ProyekHomeScreen extends ConsumerWidget {
                         module.label,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: module.key == 'produksi'
-                          ? const Text('Sesi aktif, mulai, riwayat, progress')
-                          : const Text('Menyusul di fase berikutnya'),
+                      subtitle: switch (module.key) {
+                        'produksi' => const Text(
+                            'Sesi aktif, mulai, riwayat, progress, QC'),
+                        'dashboard' =>
+                          const Text('Ringkasan titik & operasional'),
+                        'keuangan' =>
+                          const Text('Chart keuangan, PO, invoice'),
+                        _ => const Text('Menyusul di fase berikutnya'),
+                      },
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         switch (module.key) {
@@ -80,6 +86,10 @@ class ProyekHomeScreen extends ConsumerWidget {
                             context.push('/produksi/sesi-aktif');
                           case 'tracking':
                             context.push('/tracking/pengguna-aktif');
+                          case 'dashboard':
+                            context.push('/dashboard');
+                          case 'keuangan':
+                            context.push('/dashboard/keuangan');
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

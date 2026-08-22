@@ -6,6 +6,11 @@ import '../features/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/role_picker_screen.dart';
+import '../features/dashboard/dashboard_home_screen.dart';
+import '../features/dashboard/detail_titik_screen.dart';
+import '../features/dashboard/invoice_belum_dibayar_screen.dart';
+import '../features/dashboard/keuangan_screen.dart';
+import '../features/dashboard/po_pending_screen.dart';
 import '../features/presensi/titik_kerja_screen.dart';
 import '../features/produksi/mulai_sesi_screen.dart';
 import '../features/produksi/progress_hari_ini_screen.dart';
@@ -70,6 +75,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ref.read(activeRoleProvider), 'qc')) {
           return '/home';
         }
+
+        // Guard modul dashboard: role dengan akses dashboard.
+        if (location.startsWith('/dashboard') &&
+            !RolePermissions.canAccess(
+                ref.read(activeRoleProvider), 'dashboard')) {
+          return '/home';
+        }
+
+        // Guard finansial: khusus Owner / Admin Keuangan (chart keuangan,
+        // PO pending, invoice belum dibayar — data sensitif).
+        const financialPrefixes = <String>[
+          '/dashboard/keuangan',
+          '/dashboard/po-pending',
+          '/dashboard/invoice',
+        ];
+        if (financialPrefixes.any(location.startsWith) &&
+            !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+          return '/home';
+        }
       }
       return null;
     },
@@ -127,6 +151,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/qc/detail',
         builder: (context, state) => DetailQcScreen(
           sampleId: state.extra as String? ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardHomeScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/keuangan',
+        builder: (context, state) => const KeuanganScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/po-pending',
+        builder: (context, state) => const PoPendingScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/invoice',
+        builder: (context, state) => const InvoiceBelumDibayarScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/titik/:titikId',
+        builder: (context, state) => DetailTitikScreen(
+          titikId: state.pathParameters['titikId']!,
+          nama: state.extra as String?,
         ),
       ),
     ],
