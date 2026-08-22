@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/device_info_service.dart';
+import '../../core/push_token_service.dart';
 import '../../core/storage/token_storage.dart';
 import 'auth_repository.dart';
 import 'models/user.dart';
@@ -26,6 +27,8 @@ final deviceInfoProvider = Provider<DeviceInfoService>((ref) {
   unawaited(service.load());
   return service;
 });
+
+final pushTokenProvider = Provider<PushTokenService>((ref) => PushTokenService());
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = ApiClient.buildBaseDio();
@@ -151,10 +154,12 @@ class AuthController extends AsyncNotifier<User?> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final device = ref.read(deviceInfoProvider);
+      final pushToken = await ref.read(pushTokenProvider).getToken();
       final user = await ref.read(authRepositoryProvider).login(
             email: email.trim(),
             password: password,
             deviceName: device.name,
+            deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
       return user;
@@ -171,6 +176,7 @@ class AuthController extends AsyncNotifier<User?> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final device = ref.read(deviceInfoProvider);
+      final pushToken = await ref.read(pushTokenProvider).getToken();
       final user = await ref.read(authRepositoryProvider).register(
             name: name.trim(),
             email: email.trim(),
@@ -178,6 +184,7 @@ class AuthController extends AsyncNotifier<User?> {
             phone: phone,
             role: role,
             deviceName: device.name,
+            deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
       return user;

@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/api_client.dart';
 import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/pending_action.dart';
+import '../../core/photo_compression_service.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'formulir_repository.dart';
@@ -21,9 +22,12 @@ final formulirHariIniProvider = FutureProvider.autoDispose<FormulirLapangan?>(
 );
 
 class FormulirSubmitState {
-  const FormulirSubmitState({this.busy = false});
+  const FormulirSubmitState({this.busy = false, this.phase});
 
   final bool busy;
+
+  /// Fase aktif saat busy — untuk indikator kompres → kirim di UI.
+  final UploadPhase? phase;
 }
 
 /// Hasil submit mengikuti pola [CheckInResult] presensi.
@@ -62,8 +66,16 @@ class FormulirController extends Notifier<FormulirSubmitState> {
       return const FormulirResult(error: 'Maksimal $_maksFoto foto.');
     }
 
-    state = const FormulirSubmitState(busy: true);
+    state = const FormulirSubmitState(busy: true, phase: UploadPhase.compressing);
     try {
+      // Fase A1.6: kompres tiap foto sebelum masuk outbox.
+      final compressor = ref.read(photoCompressionProvider);
+      final compressed = <String>[];
+      for (final path in photoPaths) {
+        compressed.add(await compressor.compress(path));
+      }
+      state = const FormulirSubmitState(busy: true, phase: UploadPhase.sending);
+
       final action = PendingAction(
         id: _uuid.v4(),
         clientUuid: _uuid.v4(),
@@ -76,7 +88,7 @@ class FormulirController extends Notifier<FormulirSubmitState> {
           if ((catatanTambahan ?? '').trim().isNotEmpty)
             'catatan_tambahan': catatanTambahan!.trim(),
         },
-        photoLocalPaths: photoPaths,
+        photoLocalPaths: compressed,
         createdAt: DateTime.now(),
         idempotencyKey: _uuid.v4(),
       );

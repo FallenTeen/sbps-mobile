@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/outbox/pending_action.dart';
+import '../../core/photo_compression_service.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
 
@@ -16,6 +17,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final hariIniAsync = ref.watch(hariIniProvider);
     final submitState = ref.watch(presensiSubmitProvider);
+    final busyPhase = submitState.busy ? submitState.phase : null;
     final titik = ref.watch(selectedTitikProvider);
 
     return Card(
@@ -44,9 +46,9 @@ class PresensiHariIniCard extends ConsumerWidget {
           ),
           data: (presensi) => switch (presensi.status) {
             PresensiStatus.belumCheckIn => _belumCheckIn(
-                context, ref, theme, presensi, submitState.busy, titik != null),
+                context, ref, theme, presensi, busyPhase, titik != null),
             PresensiStatus.menungguCheckOut => _menungguCheckOut(
-                context, ref, theme, presensi, submitState.busy),
+                context, ref, theme, presensi, busyPhase),
             PresensiStatus.selesai => _selesai(theme, presensi),
           },
         ),
@@ -59,9 +61,10 @@ class PresensiHariIniCard extends ConsumerWidget {
     WidgetRef ref,
     ThemeData theme,
     PresensiHariIni presensi,
-    bool busy,
+    UploadPhase? busyPhase,
     bool siap,
   ) {
+    final busy = busyPhase != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -85,7 +88,11 @@ class PresensiHariIniCard extends ConsumerWidget {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.login),
-          label: Text(busy ? 'Memproses...' : 'Check-In'),
+          label: Text(switch (busyPhase) {
+            UploadPhase.compressing => 'Mengompres foto...',
+            UploadPhase.sending => 'Mengirim...',
+            _ => 'Check-In',
+          }),
         ),
       ],
     );
@@ -96,8 +103,9 @@ class PresensiHariIniCard extends ConsumerWidget {
     WidgetRef ref,
     ThemeData theme,
     PresensiHariIni presensi,
-    bool busy,
+    UploadPhase? busyPhase,
   ) {
+    final busy = busyPhase != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -124,7 +132,11 @@ class PresensiHariIniCard extends ConsumerWidget {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.logout),
-          label: Text(busy ? 'Memproses...' : 'Check-Out'),
+          label: Text(switch (busyPhase) {
+            UploadPhase.compressing => 'Mengompres foto...',
+            UploadPhase.sending => 'Mengirim...',
+            _ => 'Check-Out',
+          }),
         ),
       ],
     );

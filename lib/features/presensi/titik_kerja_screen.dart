@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
 import '../home/home_shell.dart';
+import '../notifikasi/notifikasi_providers.dart';
+import '../notifikasi/notifikasi_screen.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
@@ -25,7 +27,11 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPosition());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadPosition();
+      ref.read(unreadCountProvider.notifier).reload();
+    });
   }
 
   Future<void> _loadPosition() async {
@@ -109,6 +115,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
             ),
           ),
           const _PendingBadgeAction(),
+          const _NotifikasiBadgeAction(),
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
@@ -272,6 +279,33 @@ class _FormulirEntryPoint extends ConsumerWidget {
           MaterialPageRoute<void>(builder: (_) => const FormulirScreen()),
         ),
       ),
+    );
+  }
+}
+
+/// Lonceng notifikasi dengan badge unread (Fase A1.7). Badge di-refresh
+/// saat kembali dari halaman notifikasi.
+class _NotifikasiBadgeAction extends ConsumerWidget {
+  const _NotifikasiBadgeAction();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(unreadCountProvider);
+
+    return IconButton(
+      tooltip: 'Notifikasi',
+      icon: Badge(
+        isLabelVisible: count > 0,
+        label: Text('$count'),
+        child: const Icon(Icons.notifications_outlined),
+      ),
+      onPressed: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+              builder: (_) => const NotifikasiScreen()),
+        );
+        ref.read(unreadCountProvider.notifier).reload();
+      },
     );
   }
 }

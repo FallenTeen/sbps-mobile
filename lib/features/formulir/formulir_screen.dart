@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/photo_compression_service.dart';
+
 import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
 import 'formulir_providers.dart';
@@ -220,6 +222,30 @@ class _Baris extends StatelessWidget {
 
 // -- Form input --------------------------------------------------------------
 
+/// Badge status kecil di thumbnail: kompres (spinner) → siap kirim
+/// (centang). State "terkirim" terlihat dari hilangnya thumbnail —
+/// setelah sukses layar otomatis pindah ke mode read-only.
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({this.phase});
+
+  final UploadPhase? phase;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (phase) {
+      UploadPhase.compressing => const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      UploadPhase.sending => Icon(Icons.cloud_upload,
+          size: 18, color: Theme.of(context).colorScheme.primary),
+      null => Icon(Icons.check_circle,
+          size: 18, color: Colors.green.shade600),
+    };
+  }
+}
+
 class _FormulirInput extends ConsumerStatefulWidget {
   const _FormulirInput();
 
@@ -284,7 +310,9 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final busy = ref.watch(formulirSubmitProvider).busy;
+    final submitState = ref.watch(formulirSubmitProvider);
+    final busyPhase = submitState.busy ? submitState.phase : null;
+    final busy = busyPhase != null;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -362,6 +390,14 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
               fit: StackFit.expand,
               children: [
                 Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
+                // Indikator 3 state (A1.6): kompres → siap kirim → terkirim
+                // (terkirim ditandai hilangnya thumbnail saat sukses —
+                // layar pindah ke mode read-only).
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: _StatusBadge(phase: busyPhase),
+                ),
                 Positioned(
                   top: 4,
                   right: 4,
@@ -389,7 +425,11 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.send_outlined),
-          label: Text(busy ? 'Mengirim...' : 'Kirim Formulir'),
+          label: Text(switch (busyPhase) {
+            UploadPhase.compressing => 'Mengompres foto...',
+            UploadPhase.sending => 'Mengirim...',
+            _ => 'Kirim Formulir',
+          }),
         ),
       ],
     );

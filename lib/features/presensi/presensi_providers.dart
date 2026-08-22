@@ -9,6 +9,7 @@ import '../../core/location_service.dart';
 import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/outbox_sync_service.dart';
 import '../../core/outbox/pending_action.dart';
+import '../../core/photo_compression_service.dart';
 import '../auth/auth_providers.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_repository.dart';
@@ -16,6 +17,10 @@ import 'models/titik.dart';
 
 final presensiRepositoryProvider = Provider<PresensiRepository>(
   (ref) => PresensiRepository(api: ref.watch(apiClientProvider)),
+);
+
+final photoCompressionProvider = Provider<PhotoCompressionService>(
+  (ref) => PhotoCompressionService(),
 );
 
 final locationServiceProvider =
@@ -120,9 +125,12 @@ class CheckInResult {
 }
 
 class PresensiSubmitState {
-  const PresensiSubmitState({this.busy = false});
+  const PresensiSubmitState({this.busy = false, this.phase});
 
   final bool busy;
+
+  /// Fase aktif saat busy — untuk indikator kompres → kirim di UI.
+  final UploadPhase? phase;
 }
 
 class PresensiSubmitController extends Notifier<PresensiSubmitState> {
@@ -151,8 +159,15 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
           error: 'Posisi GPS belum tersedia. Tunggu lokasi siap.');
     }
 
-    state = const PresensiSubmitState(busy: true);
+    state = const PresensiSubmitState(
+        busy: true, phase: UploadPhase.compressing);
     try {
+      // Fase A1.6: kompres dulu (maks ~500KB, sisi 1600px) — path hasil
+      // kompresi yang masuk outbox, bukan file asli kamera.
+      final compressed =
+          await ref.read(photoCompressionProvider).compress(photoPath);
+      state = const PresensiSubmitState(busy: true, phase: UploadPhase.sending);
+
       final lat = pos.latitude.toStringAsFixed(6);
       final lng = pos.longitude.toStringAsFixed(6);
       final action = PendingAction(
@@ -168,7 +183,7 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
           'photo_metadata[longitude]': lng,
           'device_id': ref.read(deviceInfoProvider).name,
         },
-        photoLocalPath: photoPath,
+        photoLocalPath: compressed,
         createdAt: DateTime.now(),
         idempotencyKey: _uuid.v4(),
       );
