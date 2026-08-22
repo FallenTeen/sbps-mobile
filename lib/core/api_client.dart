@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import 'api_response.dart';
@@ -18,17 +20,26 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// Spesifikasi satu file multipart: nama field + path lokal.
+class MultipartFileSpec {
+  const MultipartFileSpec(this.field, this.path);
+
+  final String field;
+  final String path;
+}
+
 /// HTTP client untuk endpoint /api/mobile/*.
 ///
 /// Endpoint mobile mewajibkan header device (lihat docs/api-mobile.md bagian
 /// 1) — dikirim sebagai header default di setiap request. Interceptor auth
-/// (Bearer token, device info asli, X-Active-Role) menyusul di Fase A1.2.
+/// (Bearer token, X-Active-Role) dipasang dari luar lewat [dio].
 class ApiClient {
-  ApiClient({Dio? dio}) : _dio = dio ?? _buildDio();
+  ApiClient({Dio? dio, this.onUnauthorized})
+      : _dio = dio ?? buildBaseDio();
 
-  final Dio _dio;
-
-  static Dio _buildDio() {
+  /// Dio dasar dengan timeout, base URL, dan header default — dipakai juga
+  /// oleh provider untuk memasang interceptor auth sebelum membuat client.
+  static Dio buildBaseDio() {
     return Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
@@ -36,8 +47,8 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 15),
         headers: {
           'Accept': 'application/json',
-          // Backend hanya menolak jika KEDUANYA kosong; nilai asli dari
-          // device_info_plus diisi lewat interceptor di Fase A1.2.
+          // Backend hanya menolak jika KEDUANYA kosong (hasil audit); nilai
+          // asli perangkat ditimpa lewat interceptor (Fase A1.2).
           'X-Device-Type': 'android',
           'X-Device-Name': 'unknown',
         },
@@ -45,6 +56,19 @@ class ApiClient {
       ),
     );
   }
+
+  /// Dipanggil saat endpoint terproteksi menjawab 401 (token invalid/kadaluarsa)
+  /// — dipakai AuthController untuk memaksa logout & redirect ke login.
+  void Function()? onUnauthorized;
+
+  /// Endpoint publik: 401 dari sini adalah error kredensial biasa,
+  /// bukan sesi berakhir — tidak boleh memicu [onUnauthorized].
+  static const _publicPaths = ['/login', '/register', '/app-version'];
+
+  final Dio _dio;
+
+  /// Akses Dio internal untuk pemasangan interceptor auth.
+  Dio get dio => _dio;
 
   Future<ApiResponse<T>> get<T>(
     String path, {
@@ -63,6 +87,27 @@ class ApiClient {
     T Function(Object? raw)? parse,
   }) {
     return _send(path, method: 'POST', body: body, query: query, headers: headers, parse: parse);
+  }
+
+  /// POST multipart/form-data — dipakai endpoint dengan unggahan file
+  /// (presensi check-in/out: `photo`; formulir lapangan: `photos[]`).
+  Future<ApiResponse<T>> postMultipart<T>(
+    String path, {
+    Map<String, String> fields = const {},
+    required List<MultipartFileSpec> files,
+    Map<String, dynamic>? headers,
+    T Function(Object? raw)? parse,
+  }) async {
+    final form = FormData();
+    form.fields.addAll(fields.entries);
+    for (final spec in files) {
+      final fileName = spec.path.split(Platform.pathSeparator).last;
+      form.files.add(MapEntry(
+        spec.field,
+        await MultipartFile.fromFile(spec.path, filename: fileName),
+      ));
+    }
+    return _send(path, method: 'POST', body: form, headers: headers, parse: parse);
   }
 
   Future<ApiResponse<T>> _send<T>(
@@ -117,8 +162,14 @@ class ApiClient {
     if (response == null) {
       return ApiException('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
     }
+    if (response.statusCode == 401 && !_isPublic(e.requestOptions.path)) {
+      onUnauthorized?.call();
+    }
     return _httpError(response);
   }
+
+  bool _isPublic(String path) =>
+      _publicPaths.any((p) => path.endsWith(p));
 
   Map<String, List<String>>? _parseErrors(Object? raw) {
     if (raw is! Map) return null;

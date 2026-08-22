@@ -1,0 +1,136 @@
+import 'dart:async';
+import 'dart:math';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+import '../api_client.dart';
+import 'outbox_repository.dart';
+import 'pending_action.dart';
+
+/// Layanan sinkronisasi outbox:
+/// - mengirim ulang aksi pending saat perangkat online;
+/// - backoff eksponensial per aksi, maksimum 5 percobaan otomatis;
+/// - satu aksi dikirim pada satu waktu (urut createdAt).
+class OutboxSyncService {
+  OutboxSyncService(this._repo, this._api);
+
+  static const _maxAttempts = 5;
+
+  final OutboxRepository _repo;
+  final ApiClient _api;
+
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  Timer? _timer;
+  bool _syncing = false;
+
+  /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) — dipakai
+  /// provider untuk me-refresh state presensi.
+  void Function()? onSyncCycleDone;
+
+  /// Kirim satu aksi sekarang juga (dipakai untuk percobaan pertama
+  /// dari [OutboxRepository.enqueue]).
+  Future<OutboxSendResult> send(PendingAction action) async {
+    try {
+      await _repo.markSyncing(action.id);
+    } catch (_) {}
+
+    try {
+      final specs = switch (action.endpoint) {
+        // Formulir lapangan: banyak foto dengan field `photos[]`.
+        PendingEndpoint.formulirSubmit => [
+            for (final path in action.photoLocalPaths)
+              MultipartFileSpec('photos[]', path),
+          ],
+        // Presensi: satu foto wajib dengan field `photo`.
+        _ => [
+            if (action.photoLocalPath != null)
+              MultipartFileSpec('photo', action.photoLocalPath!),
+          ],
+      };
+      if (specs.isEmpty) {
+        return const OutboxSendResult(
+          delivered: false,
+          permanentlyFailed: true,
+          errorMessage: 'File lampiran tidak ditemukan di perangkat.',
+        );
+      }
+      final response = await _api.postMultipart<Object?>(
+        action.endpoint.path,
+        fields: action.payloadJson,
+        files: specs,
+        headers: {
+          // SAMA persis di setiap retry — jangan generate ulang,
+          // jangan dipakai ulang antar PendingAction berbeda.
+          'Idempotency-Key': action.idempotencyKey,
+        },
+      );
+      return OutboxSendResult(delivered: true, responseData: response.data);
+    } on ApiException catch (e) {
+      // 4xx: validasi/konflik tidak akan membaik dengan retry.
+      // Catatan: dengan Idempotency-Key aktif, retry key yang sama TIDAK
+      // menghasilkan 422 "sudah check-in" — respons asli dikembalikan.
+      // 422 di sini berarti konflik sungguhan (mis. sudah check-in lewat
+      // jalur lain) atau payload invalid.
+      if ((e.statusCode ?? 0) >= 400 && (e.statusCode ?? 0) < 500) {
+        return OutboxSendResult(
+          delivered: false,
+          permanentlyFailed: true,
+          errorMessage: e.message,
+        );
+      }
+      return OutboxSendResult(delivered: false, errorMessage: e.message);
+    }
+  }
+
+  /// Proses semua aksi tertunda yang jatuh tempo (bukan sedang backoff).
+  Future<void> syncNow({bool ignoreBackoff = false}) async {
+    if (_syncing) return;
+    _syncing = true;
+    try {
+      final actions = await _repo.pendingActions();
+      for (final action in actions) {
+        if (!ignoreBackoff && _inBackoff(action)) continue;
+        if (action.retryCount >= _maxAttempts) continue;
+
+        final result = await send(action);
+        if (result.delivered) {
+          await _repo.remove(action.id);
+        } else {
+          await _repo.markFailed(action.id, result.errorMessage);
+        }
+      }
+    } finally {
+      _syncing = false;
+      onSyncCycleDone?.call();
+    }
+  }
+
+  /// Backoff eksponensial: 15s, 30s, 60s, 120s, 240s.
+  Duration _backoffFor(int retryCount) =>
+      Duration(seconds: 15 * pow(2, max(0, retryCount - 1)).toInt());
+
+  bool _inBackoff(PendingAction action) {
+    final last = action.lastAttemptAt;
+    if (last == null || action.retryCount == 0) return false;
+    return DateTime.now().isBefore(last.add(_backoffFor(action.retryCount)));
+  }
+
+  /// Mulai listener konektivitas + timer periodik. Aman dipanggil ulang.
+  void start() {
+    _connectivitySub ??= Connectivity()
+        .onConnectivityChanged
+        .listen((results) {
+      final online =
+          results.any((r) => r != ConnectivityResult.none);
+      if (online) syncNow();
+    });
+    _timer ??= Timer.periodic(const Duration(minutes: 1), (_) => syncNow());
+  }
+
+  void dispose() {
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
+    _timer?.cancel();
+    _timer = null;
+  }
+}
