@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_config.dart';
 import '../../core/device_info_service.dart';
 import '../../core/push_token_service.dart';
 import '../../core/storage/token_storage.dart';
@@ -113,6 +114,29 @@ class ActiveRoleNotifier extends Notifier<String?> {
 final activeRoleProvider =
     NotifierProvider<ActiveRoleNotifier, String?>(ActiveRoleNotifier.new);
 
+/// Role user yang relevan untuk App 2 (urut [kApp2Roles]).
+List<String> app2RolesOf(User user) =>
+    kApp2Roles.where(user.roles.contains).toList();
+
+/// Benar bila setelah login/register user wajib memilih role dulu:
+/// hanya di flavor proyek dan user punya lebih dari satu role App 2.
+bool needsRoleChoice(User user) =>
+    AppConfig.appFlavor == 'proyek' && app2RolesOf(user).length > 1;
+
+/// Flag sesi: tampilkan halaman pemilih role sebelum masuk home
+/// (Fase A2.2). Tidak diset saat restore sesi — role tersimpan langsung
+/// dipakai agar tidak mengganggu tiap kali app dibuka.
+class RoleChoicePendingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
+final roleChoicePendingProvider =
+    NotifierProvider<RoleChoicePendingNotifier, bool>(
+        RoleChoicePendingNotifier.new);
+
 /// Pesan sekali-tayang untuk UI (misal "Sesi berakhir" saat forceLogout).
 class SessionMessageNotifier extends Notifier<String?> {
   @override
@@ -162,6 +186,8 @@ class AuthController extends AsyncNotifier<User?> {
             deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
+      ref.read(roleChoicePendingProvider.notifier)
+          .set(needsRoleChoice(user));
       return user;
     });
   }
@@ -187,6 +213,8 @@ class AuthController extends AsyncNotifier<User?> {
             deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
+      ref.read(roleChoicePendingProvider.notifier)
+          .set(needsRoleChoice(user));
       return user;
     });
   }
@@ -195,6 +223,7 @@ class AuthController extends AsyncNotifier<User?> {
     try {
       await ref.read(authRepositoryProvider).logout();
     } finally {
+      ref.read(roleChoicePendingProvider.notifier).set(false);
       await ref.read(activeRoleProvider.notifier).clear();
       state = const AsyncData(null);
     }

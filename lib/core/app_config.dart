@@ -29,4 +29,11 @@ class AppConfig {
     'SENTRY_DSN',
     defaultValue: '',
   );
+
+  /// Jam cutoff tracking harian (lokal). Titik dengan timestamp >= jam ini
+  /// tidak dikumpulkan/dikirim; backend juga menolak menyimpannya.
+  static const int trackingCutoffHour = int.fromEnvironment(
+    'TRACKING_CUTOFF_HOUR',
+    defaultValue: 18,
+  );
 }

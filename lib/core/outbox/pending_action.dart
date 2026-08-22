@@ -4,11 +4,17 @@ import 'dart:convert';
 enum PendingEndpoint {
   presensiCheckIn('/presensi/check-in'),
   presensiCheckOut('/presensi/check-out'),
-  formulirSubmit('/formulir/submit');
+  formulirSubmit('/formulir/submit'),
+  produksiMulai('/produksi/mulai'),
+  produksiSelesai('/produksi/selesai');
 
   const PendingEndpoint(this.path);
 
   final String path;
+
+  /// Endpoint JSON (body JSON, tanpa lampiran file).
+  bool get isJson =>
+      this == produksiMulai || this == produksiSelesai;
 }
 
 /// Status sinkronisasi satu aksi outbox.
@@ -28,6 +34,7 @@ class PendingAction {
     required this.clientUuid,
     required this.endpoint,
     required this.payloadJson,
+    this.payloadData = const <String, dynamic>{},
     required this.createdAt,
     required this.idempotencyKey,
     this.photoLocalPath,
@@ -48,6 +55,11 @@ class PendingAction {
   /// Field form multipart, mis. `{titik_id, latitude, longitude, device_id}`.
   final Map<String, String> payloadJson;
 
+  /// Body JSON untuk endpoint non-multipart ([PendingEndpoint.isJson]),
+  /// mis. sesi produksi. `client_uuid` TIDAK perlu diisi di sini —
+  /// sync service menyuntikkannya dari [clientUuid] saat kirim.
+  final Map<String, dynamic> payloadData;
+
   final String? photoLocalPath;
 
   /// Banyak file sekaligus (formulir lapangan: `photos[]`, maks 5).
@@ -67,6 +79,7 @@ class PendingAction {
         'client_uuid': clientUuid,
         'endpoint': endpoint.name,
         'payload_json': payloadJson,
+        'payload_data': payloadData,
         'photo_local_path': photoLocalPath,
         'photo_local_paths': photoLocalPaths,
         'status': status.name,
@@ -85,6 +98,8 @@ class PendingAction {
           .firstWhere((e) => e.name == json['endpoint']),
       payloadJson: Map<String, String>.from(
           (json['payload_json'] as Map?) ?? const {}),
+      payloadData: Map<String, dynamic>.from(
+          (json['payload_data'] as Map?) ?? const {}),
       photoLocalPath: json['photo_local_path'] as String?,
       photoLocalPaths: (json['photo_local_paths'] as List?)
               ?.map((e) => e.toString())

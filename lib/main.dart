@@ -5,6 +5,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'core/app_config.dart';
 import 'core/app_router.dart';
 import 'features/presensi/presensi_providers.dart';
+import 'features/tracking/tracking_providers.dart';
 import 'features/version/version_gate.dart';
 
 Future<void> main() async {
@@ -29,6 +30,11 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       // Mulai listener konektivitas + timer retry outbox.
       ref.read(outboxSyncServiceProvider).start();
       ref.read(pendingCountProvider.notifier).reload();
+      // Live Tracking (App 2): auto-start bila Mandor Titik login;
+      // provider sendiri mendengarkan perubahan auth/role.
+      if (AppConfig.appFlavor == 'proyek') {
+        ref.read(trackingSchedulerProvider.notifier).evaluate();
+      }
     });
   }
 

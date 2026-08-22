@@ -35,6 +35,30 @@ class OutboxSyncService {
     } catch (_) {}
 
     try {
+      // Endpoint JSON (produksi): tanpa lampiran file, body dari
+      // payloadData; client_uuid disuntik dari action.clientUuid —
+      // SAMA di setiap retry agar backend idempotent.
+      if (action.endpoint.isJson) {
+        final body = <String, dynamic>{...action.payloadData};
+        var path = action.endpoint.path;
+        if (action.endpoint == PendingEndpoint.produksiSelesai) {
+          final sessionId = body.remove('session_id');
+          if (sessionId == null || sessionId.toString().isEmpty) {
+            return const OutboxSendResult(
+              delivered: false,
+              permanentlyFailed: true,
+              errorMessage: 'ID sesi produksi hilang dari antrean.',
+            );
+          }
+          path = '$path/$sessionId';
+        }
+        await _api.post<Object?>(
+          path,
+          body: <String, dynamic>{...body, 'client_uuid': action.clientUuid},
+        );
+        return const OutboxSendResult(delivered: true);
+      }
+
       final specs = switch (action.endpoint) {
         // Formulir lapangan: banyak foto dengan field `photos[]`.
         PendingEndpoint.formulirSubmit => [
