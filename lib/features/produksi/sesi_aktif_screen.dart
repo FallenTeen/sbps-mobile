@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api_client.dart';
+import '../qc/qc_providers.dart';
+import '../qc/qc_sheets.dart';
 import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
@@ -16,11 +18,18 @@ class SesiAktifScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sesi = ref.watch(sesiAktifProvider);
+    // Peta sessionId → sample menunggu_hasil: penentu tombol QC per kartu.
+    final waitingQc = ref.watch(waitingSamplesBySessionProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sesi Produksi'),
         actions: [
+          IconButton(
+            tooltip: 'Riwayat QC',
+            icon: const Icon(Icons.science_outlined),
+            onPressed: () => context.push('/qc/riwayat'),
+          ),
           IconButton(
             tooltip: 'Progress hari ini',
             icon: const Icon(Icons.insights),
@@ -62,8 +71,12 @@ class SesiAktifScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) =>
-                      _SessionCard(session: items[i]),
+                  itemBuilder: (context, i) => _SessionCard(
+                    session: items[i],
+                    hasWaitingQc: waitingQc.value
+                            ?.containsKey(items[i].id) ??
+                        false,
+                  ),
                 ),
         ),
       ),
@@ -72,9 +85,12 @@ class SesiAktifScreen extends ConsumerWidget {
 }
 
 class _SessionCard extends StatelessWidget {
-  const _SessionCard({required this.session});
+  const _SessionCard({required this.session, required this.hasWaitingQc});
 
   final ProductionSession session;
+
+  /// true bila sesi ini sudah punya sample slump menunggu hasil uji tekan.
+  final bool hasWaitingQc;
 
   @override
   Widget build(BuildContext context) {
@@ -114,13 +130,27 @@ class _SessionCard extends StatelessWidget {
                 '${durasi != null ? ' • ${durasi.inHours}j ${durasi.inMinutes % 60}m' : ''}',
               ),
             const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.stop_circle_outlined, size: 18),
-                label: const Text('Selesaikan'),
-                onPressed: () => _openSelesaikan(context, session),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: hasWaitingQc
+                      ? OutlinedButton.icon(
+                          icon: const Icon(Icons.speed, size: 18),
+                          label: const Text('Catat Uji Tekan'),
+                          onPressed: () => _openUjiTekan(context),
+                        )
+                      : TextButton.icon(
+                          icon: const Icon(Icons.science_outlined, size: 18),
+                          label: const Text('Catat Slump Test'),
+                          onPressed: () => _openSlumpTest(context),
+                        ),
+                ),
+                FilledButton.icon(
+                  icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                  label: const Text('Selesaikan'),
+                  onPressed: () => _openSelesaikan(context, session),
+                ),
+              ],
             ),
           ],
         ),
@@ -133,6 +163,26 @@ class _SessionCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       builder: (_) => _SelesaikanSheet(session: session),
+    );
+  }
+
+  void _openSlumpTest(BuildContext context) {
+    final judul =
+        '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}';
+    showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SlumpTestSheet(sessionId: session.id, judul: judul),
+    );
+  }
+
+  void _openUjiTekan(BuildContext context) {
+    final judul =
+        '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}';
+    showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => UjiTekanSheet(sessionId: session.id, judul: judul),
     );
   }
 }

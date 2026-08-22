@@ -6,7 +6,9 @@ enum PendingEndpoint {
   presensiCheckOut('/presensi/check-out'),
   formulirSubmit('/formulir/submit'),
   produksiMulai('/produksi/mulai'),
-  produksiSelesai('/produksi/selesai');
+  produksiSelesai('/produksi/selesai'),
+  qcSlumpTest('/qc/slump-test'),
+  qcUjiTekan('/qc/uji-tekan');
 
   const PendingEndpoint(this.path);
 
@@ -14,7 +16,10 @@ enum PendingEndpoint {
 
   /// Endpoint JSON (body JSON, tanpa lampiran file).
   bool get isJson =>
-      this == produksiMulai || this == produksiSelesai;
+      this == produksiMulai ||
+      this == produksiSelesai ||
+      this == qcSlumpTest ||
+      this == qcUjiTekan;
 }
 
 /// Status sinkronisasi satu aksi outbox.

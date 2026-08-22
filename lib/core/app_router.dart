@@ -13,6 +13,8 @@ import '../features/produksi/riwayat_produksi_screen.dart';
 import '../features/produksi/sesi_aktif_screen.dart';
 import '../features/proyek/proyek_home_screen.dart';
 import '../features/proyek/role_permissions.dart';
+import '../features/qc/detail_qc_screen.dart';
+import '../features/qc/riwayat_qc_screen.dart';
 import '../features/tracking/active_users_screen.dart';
 import '../features/tracking/trail_screen.dart';
 import 'app_config.dart';
@@ -59,6 +61,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         // Guard viewer tracking: khusus Owner / Admin Keuangan.
         if (location.startsWith('/tracking') &&
             !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+          return '/home';
+        }
+
+        // Guard modul QC: sesuai permission matrix.
+        if (location.startsWith('/qc') &&
+            !RolePermissions.canAccess(
+                ref.read(activeRoleProvider), 'qc')) {
           return '/home';
         }
       }
@@ -108,6 +117,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => TrailScreen(
           userId: state.pathParameters['userId']!,
           nama: state.extra as String?,
+        ),
+      ),
+      GoRoute(
+        path: '/qc/riwayat',
+        builder: (context, state) => const RiwayatQcScreen(),
+      ),
+      GoRoute(
+        path: '/qc/detail',
+        builder: (context, state) => DetailQcScreen(
+          sampleId: state.extra as String? ?? '',
         ),
       ),
     ],
