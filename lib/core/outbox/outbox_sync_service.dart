@@ -65,6 +65,11 @@ class OutboxSyncService {
             for (final path in action.photoLocalPaths)
               MultipartFileSpec('photos[]', path),
           ],
+        // Upload media generik (Fase A2.7): field `files[]`, 1-10 file.
+        PendingEndpoint.uploadMedia => [
+            for (final path in action.photoLocalPaths)
+              MultipartFileSpec('files[]', path),
+          ],
         // Presensi: satu foto wajib dengan field `photo`.
         _ => [
             if (action.photoLocalPath != null)
@@ -80,7 +85,13 @@ class OutboxSyncService {
       }
       final response = await _api.postMultipart<Object?>(
         action.endpoint.path,
-        fields: action.payloadJson,
+        fields: {
+          ...action.payloadJson,
+          // Endpoint /upload mensyaratkan client_uuid sebagai form field
+          // (bukan hanya header Idempotency-Key) — nilai SAMA tiap retry.
+          if (action.endpoint.isUploadMedia)
+            'client_uuid': action.clientUuid,
+        },
         files: specs,
         headers: {
           // SAMA persis di setiap retry — jangan generate ulang,

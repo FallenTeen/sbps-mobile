@@ -110,6 +110,22 @@ class ApiClient {
     return _send(path, method: 'POST', body: form, headers: headers, parse: parse);
   }
 
+  /// DELETE — dipakai endpoint hapus file upload (docs/api-mobile.md §11.2).
+  Future<ApiResponse<T>> delete<T>(
+    String path, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    T Function(Object? raw)? parse,
+  }) {
+    return _send(
+      path,
+      method: 'DELETE',
+      query: query,
+      headers: headers,
+      parse: parse,
+    );
+  }
+
   Future<ApiResponse<T>> _send<T>(
     String path, {
     String method = 'GET',

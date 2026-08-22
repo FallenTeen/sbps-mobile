@@ -8,7 +8,8 @@ enum PendingEndpoint {
   produksiMulai('/produksi/mulai'),
   produksiSelesai('/produksi/selesai'),
   qcSlumpTest('/qc/slump-test'),
-  qcUjiTekan('/qc/uji-tekan');
+  qcUjiTekan('/qc/uji-tekan'),
+  uploadMedia('/upload');
 
   const PendingEndpoint(this.path);
 
@@ -20,6 +21,11 @@ enum PendingEndpoint {
       this == produksiSelesai ||
       this == qcSlumpTest ||
       this == qcUjiTekan;
+
+  /// Endpoint multipart generik `POST /upload` dengan field `files[]`
+  /// (1-10 file, docs/api-mobile.md §11.1). `client_uuid` dikirim sebagai
+  /// FORM FIELD — sync service menyuntikkannya dari [PendingAction.clientUuid].
+  bool get isUploadMedia => this == uploadMedia;
 }
 
 /// Status sinkronisasi satu aksi outbox.
