@@ -1,7 +1,6 @@
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
-import '../auth/auth_providers.dart';
 import 'models/uploaded_file.dart';
 
 /// Repository upload generik (docs/api-mobile.md §11) — Fase A2.7.

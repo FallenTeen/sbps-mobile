@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Izin jaringan untuk release build (debug manifest tidak dipakai di release) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Presensi: validasi lokasi check-in/out & hitung jarak ke titik kerja -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

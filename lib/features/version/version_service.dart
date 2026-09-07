@@ -32,11 +32,11 @@ class VersionService {
 
   final ApiClient _api;
 
-  /// `app` diambil dari flavor aktif: presensi / proyek.
-  Future<AppVersionInfo> fetchAppVersion() async {
+  /// Query versi berdasarkan [appName] ('presensi' atau 'proyek').
+  Future<AppVersionInfo> fetchAppVersion(String appName) async {
     final ApiResponse<Map<String, dynamic>> envelope = await _api.get(
       '/app-version',
-      query: {'app': _appName(), 'platform': 'android'},
+      query: {'app': appName, 'platform': 'android'},
       parse: (raw) => Map<String, dynamic>.from(raw as Map),
     );
 
@@ -48,15 +48,4 @@ class VersionService {
 
     return AppVersionInfo.fromJson(envelope.data!);
   }
-
-  static String _appName() {
-    switch (_flavor) {
-      case 'proyek':
-        return 'proyek';
-      default:
-        return 'presensi';
-    }
-  }
-
-  static const String _flavor = String.fromEnvironment('APP_FLAVOR');
 }

@@ -26,6 +26,11 @@ class SesiAktifScreen extends ConsumerWidget {
         title: const Text('Sesi Produksi'),
         actions: [
           IconButton(
+            tooltip: 'Dokumentasi',
+            icon: const Icon(Icons.attach_file),
+            onPressed: () => context.push('/dokumentasi'),
+          ),
+          IconButton(
             tooltip: 'Riwayat QC',
             icon: const Icon(Icons.science_outlined),
             onPressed: () => context.push('/qc/riwayat'),

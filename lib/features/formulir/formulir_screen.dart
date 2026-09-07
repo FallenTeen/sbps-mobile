@@ -275,12 +275,10 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     final sisa = _maksFoto - _fotoLokal.length;
     if (sisa <= 0) return;
     final picked =
-        await ImagePicker().pickMultiImage(imageQuality: 85, limit: sisa);
-    if (picked.isEmpty || !mounted) return;
+        await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
+    if (picked == null || !mounted) return;
     setState(() {
-      for (final f in picked.take(sisa)) {
-        _fotoLokal.add(f.path);
-      }
+      _fotoLokal.add(picked.path);
     });
   }
 

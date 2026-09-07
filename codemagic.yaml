@@ -1,62 +1,41 @@
 # ============================================================================
-# CODEMAGIC CI/CD — SBPS Mobile (flavor: presensi & proyek)
+# CODEMAGIC CI/CD — SBPS Mobile (unified app)
 # ----------------------------------------------------------------------------
-# Letakkan file ini di ROOT repo Flutter Anda (sejajar pubspec.yaml).
-#
 # WORKFLOW:
-#   1. presensi-android  : push ke develop/main atau tag presensi-v*
-#                          -> build AAB + shorebird release -> Play internal
-#   2. proyek-android    : push ke develop/main atau tag proyek-v*
-#                          -> build AAB + shorebird release -> Firebase App Dist
-#   3. presensi-patch    : MANUAL (dashboard) -> shorebird patch tanpa review
-#   4. proyek-patch      : MANUAL (dashboard) -> shorebird patch tanpa review
+#   1. sbps-android : push ke develop/main atau tag v*
+#                    -> build AAB + shorebird release -> Firebase App Distribution
+#   2. sbps-patch   : MANUAL (dashboard) -> shorebird patch tanpa review
 #
 # BRANCH -> ENVIRONMENT:
-#   develop            -> env/<flavor>-staging.json
-#   main / tag *-v*    -> env/<flavor>-production.json
+#   develop            -> env/staging.json
+#   main / tag v*      -> env/production.json
 #
-# ENVIRONMENT VARIABLE GROUPS (Dashboard Codemagic > Environment variables,
-# semua nilai dienkripsi — JANGAN pernah commit credential ke repo):
+# ENVIRONMENT VARIABLE GROUPS (Dashboard Codemagic > Environment variables):
 #
 #   Group "android-signing":
-#     ANDROID_KEYSTORE_BASE64     = base64 upload-keystore.jks
-#                                   (base64 -w0 upload-keystore.jks)
+#     ANDROID_KEYSTORE_BASE64     = base64 -w0 upload-keystore.jks
 #     ANDROID_KEYSTORE_PASSWORD   = password keystore
 #     ANDROID_KEY_ALIAS           = alias key
 #     ANDROID_KEY_PASSWORD        = password key
 #
-#   Group "google-play" (workflow presensi):
-#     GCLOUD_SERVICE_ACCOUNT_CREDENTIALS = isi JSON service account Play Console
-#                                          (role: release ke internal track)
-#
-#   Group "firebase-app-distribution" (workflow proyek):
+#   Group "firebase-app-distribution":
 #     FIREBASE_SERVICE_ACCOUNT_CREDENTIALS = isi JSON service account Firebase
-#                                            (role: Firebase App Distribution)
-#     FIREBASE_ANDROID_APP_ID              = app id proyek, format
-#                                            1:xxxx:android:yyyy
+#     FIREBASE_ANDROID_APP_ID              = app id, format 1:xxxx:android:yyyy
 #
 #   Group "shorebird":
 #     SHOREBIRD_TOKEN             = token dari `shorebird login` (CI token)
 #
 #   Group "notifications":
-#     SLACK_CHANNEL               = nama channel tujuan, mis. mobile-releases
-#     (autentikasi Slack: hubungkan workspace di Teams > App connections,
-#      bukan via token di sini)
-#
-# CATATAN PENTING:
-#   - PIN versi Flutter di bawah (`flutter:`) sama persis dengan versi lokal
-#     tim. Shorebird MENUNTUT kesamaan versi Dart antara release dan patch.
-#   - Pastikan android/app/build.gradle membaca key.properties untuk signing
-#     tiap flavor (pola standar Flutter flavors).
+#     SLACK_CHANNEL               = nama channel tujuan
 # ============================================================================
 
 workflows:
 
   # ==========================================================================
-  # WORKFLOW 1 — PRESENSI: Play Console internal track
+  # WORKFLOW 1 — BUILD: Firebase App Distribution
   # ==========================================================================
-  presensi-android:
-    name: Presensi App (Android)
+  sbps-android:
+    name: SBPS Mobile (Android)
     max_build_duration: 60
     instance_type: linux_x2
 
@@ -71,124 +50,16 @@ workflows:
           include: true
           source: true
       tag_patterns:
-        - pattern: presensi-v*
+        - pattern: v*
           include: true
 
     environment:
-      flutter: stable          # TODO: ganti ke versi eksak, mis. v3.24.3
-      groups:
-        - android-signing
-        - google-play
-        - shorebird
-        - notifications
-      vars:
-        FLAVOR: presensi
-
-    cache:
-      cache_paths:
-        - $HOME/.gradle/caches
-        - $HOME/.gradle/wrapper
-        - $HOME/.pub-cache
-
-    scripts:
-      - name: Pilih file environment (staging/production sesuai branch/tag)
-        script: |
-          set -e
-          if [[ -n "$CM_TAG" || "$CM_BRANCH" == "main" ]]; then
-            export DART_ENV_FILE="env/presensi-production.json"
-          else
-            export DART_ENV_FILE="env/presensi-staging.json"
-          fi
-          echo "Environment: $DART_ENV_FILE (branch=$CM_BRANCH tag=$CM_TAG)"
-
-      - name: Setup keystore Android (decode dari encrypted var)
-        script: |
-          set -e
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > \
-            "$CM_BUILD_DIR/android/app/upload-keystore.jks"
-          cat > "$CM_BUILD_DIR/android/key.properties" <<EOF
-          storePassword=$ANDROID_KEYSTORE_PASSWORD
-          keyPassword=$ANDROID_KEY_PASSWORD
-          keyAlias=$ANDROID_KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-
-      - name: Dependencies
-        script: |
-          set -e
-          flutter pub get
-
-      - name: Setup Shorebird CLI
-        script: |
-          set -e
-          curl -s https://raw.githubusercontent.com/shorebirdtech/shorebird/main/bin/install | bash
-          export PATH="$HOME/.shorebird/bin:$PATH"
-          shorebird --version
-          shorebird doctor
-
-      - name: Shorebird release + build AAB
-        script: |
-          set -e
-          export PATH="$HOME/.shorebird/bin:$PATH"
-          # shorebird release = flutter build appbundle + upload ke Shorebird.
-          # Kode Dart terkirim sebagai patchable artifact; native shell tetap
-          # yang diupload ke Play Store.
-          shorebird release android \
-            --flavor "$FLAVOR" \
-            --build-number "$PROJECT_BUILD_NUMBER" \
-            --dart-define-from-file="$DART_ENV_FILE"
-
-    artifacts:
-      - build/app/outputs/bundle/release/*.aab
-      - build/app/outputs/mapping/release/mapping.txt
-
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        release_status: draft
-        submit_as_stable: false
-      slack:
-        channel: $SLACK_CHANNEL
-        notify_on_build_start: false
-      email:
-        recipients:
-          - mobile-team@sbpscorp.com   # TODO: sesuaikan
-        notify:
-          success: true
-          failure: true
-
-  # ==========================================================================
-  # WORKFLOW 2 — PROYEK: Firebase App Distribution per grup tester role
-  # ==========================================================================
-  proyek-android:
-    name: Proyek App (Android)
-    max_build_duration: 60
-    instance_type: linux_x2
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: develop
-          include: true
-          source: true
-        - pattern: main
-          include: true
-          source: true
-      tag_patterns:
-        - pattern: proyek-v*
-          include: true
-
-    environment:
-      flutter: stable          # TODO: samakan dengan workflow presensi
+      flutter: stable
       groups:
         - android-signing
         - firebase-app-distribution
         - shorebird
         - notifications
-      vars:
-        FLAVOR: proyek
 
     cache:
       cache_paths:
@@ -201,13 +72,13 @@ workflows:
         script: |
           set -e
           if [[ -n "$CM_TAG" || "$CM_BRANCH" == "main" ]]; then
-            export DART_ENV_FILE="env/proyek-production.json"
+            export DART_ENV_FILE="env/production.json"
           else
-            export DART_ENV_FILE="env/proyek-staging.json"
+            export DART_ENV_FILE="env/staging.json"
           fi
           echo "Environment: $DART_ENV_FILE (branch=$CM_BRANCH tag=$CM_TAG)"
 
-      - name: Setup keystore Android (decode dari encrypted var)
+      - name: Setup keystore Android
         script: |
           set -e
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > \
@@ -237,7 +108,6 @@ workflows:
           set -e
           export PATH="$HOME/.shorebird/bin:$PATH"
           shorebird release android \
-            --flavor "$FLAVOR" \
             --build-number "$PROJECT_BUILD_NUMBER" \
             --dart-define-from-file="$DART_ENV_FILE"
 
@@ -250,49 +120,43 @@ workflows:
         firebase_service_account: $FIREBASE_SERVICE_ACCOUNT_CREDENTIALS
         android:
           app_id: $FIREBASE_ANDROID_APP_ID
-          # Grup tester sesuai role aplikasi. Jumlah user masih sedikit?
-          # Cukup satu grup internal, mis. "proyek-semua-tester".
           groups:
-            - mandor-titik
-            - kontraktor
+            - presensi-users
+            - proyek-users
             - owner-admin
       slack:
         channel: $SLACK_CHANNEL
         notify_on_build_start: false
       email:
         recipients:
-          - mobile-team@sbpscorp.com   # TODO: sesuaikan
+          - mobile-team@sbpscorp.com
         notify:
           success: true
           failure: true
 
   # ==========================================================================
-  # WORKFLOW 3 — PRESENSI PATCH (OTA, tanpa review store)
+  # WORKFLOW 2 — OTA PATCH (tanpa build ulang)
   # Jalankan manual dari dashboard Codemagic pada commit yang sudah dirilis.
-  # TIDAK menghasilkan AAB baru; hanya mengirim kode Dart ke perangkat user.
   # ==========================================================================
-  presensi-patch:
-    name: Presensi OTA Patch
+  sbps-patch:
+    name: SBPS OTA Patch
     max_build_duration: 40
     instance_type: linux_x2
-    # Tanpa blok `triggering` = hanya bisa dijalankan manual.
 
     environment:
-      flutter: stable          # WAJIB sama dengan versi saat release terakhir
+      flutter: stable
       groups:
         - shorebird
         - notifications
-      vars:
-        FLAVOR: presensi
 
     scripts:
       - name: Pilih file environment
         script: |
           set -e
           if [[ "$CM_BRANCH" == "main" ]]; then
-            export DART_ENV_FILE="env/presensi-production.json"
+            export DART_ENV_FILE="env/production.json"
           else
-            export DART_ENV_FILE="env/presensi-staging.json"
+            export DART_ENV_FILE="env/staging.json"
           fi
           echo "Patch source: $CM_BRANCH@$CM_COMMIT -> $DART_ENV_FILE"
 
@@ -305,11 +169,7 @@ workflows:
         script: |
           set -e
           export PATH="$HOME/.shorebird/bin:$PATH"
-          # Patch HANYA berisi perubahan Dart/asset; jika ada diff native,
-          # shorebird menolak otomatis (perilaku default yang diinginkan).
-          # Ganti plugin/native? Jalankan workflow release penuh, bukan patch.
           shorebird patch android \
-            --flavor "$FLAVOR" \
             --dart-define-from-file="$DART_ENV_FILE"
 
     publishing:
@@ -318,62 +178,7 @@ workflows:
         notify_on_build_start: false
       email:
         recipients:
-          - mobile-team@sbpscorp.com   # TODO: sesuaikan
-        notify:
-          success: true
-          failure: true
-
-  # ==========================================================================
-  # WORKFLOW 4 — PROYEK PATCH (OTA, tanpa lewat App Distribution ulang)
-  # ==========================================================================
-  proyek-patch:
-    name: Proyek OTA Patch
-    max_build_duration: 40
-    instance_type: linux_x2
-    # Tanpa blok `triggering` = hanya bisa dijalankan manual.
-
-    environment:
-      flutter: stable          # WAJIB sama dengan versi saat release terakhir
-      groups:
-        - shorebird
-        - notifications
-      vars:
-        FLAVOR: proyek
-
-    scripts:
-      - name: Pilih file environment
-        script: |
-          set -e
-          if [[ "$CM_BRANCH" == "main" ]]; then
-            export DART_ENV_FILE="env/proyek-production.json"
-          else
-            export DART_ENV_FILE="env/proyek-staging.json"
-          fi
-          echo "Patch source: $CM_BRANCH@$CM_COMMIT -> $DART_ENV_FILE"
-
-      - name: Dependencies
-        script: |
-          set -e
-          flutter pub get
-
-      - name: Shorebird patch (OTA ke semua user aktif)
-        script: |
-          set -e
-          export PATH="$HOME/.shorebird/bin:$PATH"
-          # Patch HANYA berisi perubahan Dart/asset; jika ada diff native,
-          # shorebird menolak otomatis (perilaku default yang diinginkan).
-          # Ganti plugin/native? Jalankan workflow release penuh, bukan patch.
-          shorebird patch android \
-            --flavor "$FLAVOR" \
-            --dart-define-from-file="$DART_ENV_FILE"
-
-    publishing:
-      slack:
-        channel: $SLACK_CHANNEL
-        notify_on_build_start: false
-      email:
-        recipients:
-          - mobile-team@sbpscorp.com   # TODO: sesuaikan
+          - mobile-team@sbpscorp.com
         notify:
           success: true
           failure: true

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/photo_compression_service.dart';
 import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
@@ -40,8 +41,9 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
       return;
     }
     final picked =
-        await ImagePicker().pickMultiImage(imageQuality: 85, limit: sisa);
-    setState(() => _paths.addAll(picked.map((e) => e.path)));
+        await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
+    if (picked == null) return;
+    setState(() => _paths.add(picked.path));
   }
 
   Future<void> _submit() async {
@@ -78,10 +80,10 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.add_photo_alternate_outlined),
+            icon: const Icon(Icons.photo_camera_outlined),
             label: Text(_paths.isEmpty
-                ? 'Pilih Foto (1-$_maksFile)'
-                : '${_paths.length} foto dipilih — tambah lagi'),
+                ? 'Ambil Foto (1-$_maksFile)'
+                : '${_paths.length} foto — ambil lagi'),
             onPressed: busy.busy ? null : _pilihFoto,
           ),
           const SizedBox(height: 12),
@@ -130,7 +132,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
               border: OutlineInputBorder(),
             ),
             items: [
-              for (final s in sesiAktif.value?.items ?? const [])
+              for (final s in sesiAktif.value ?? const <ProductionSession>[])
                 DropdownMenuItem(
                   value: s,
                   child: Text(

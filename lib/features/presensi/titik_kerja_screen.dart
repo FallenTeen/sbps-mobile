@@ -6,6 +6,7 @@ import '../formulir/formulir_screen.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
+import '../portal/portal_providers.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
@@ -105,6 +106,15 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
       appBar: AppBar(
         title: const HomeTitle(),
         actions: [
+          // Kembali ke layar pilihan portal (hanya bila user punya >1 portal).
+          if (user != null && autoPortal(user) == null)
+            IconButton(
+              tooltip: 'Pilih portal',
+              icon: const Icon(Icons.apps),
+              onPressed: () => ref
+                  .read(selectedPortalProvider.notifier)
+                  .clear(),
+            ),
           IconButton(
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),

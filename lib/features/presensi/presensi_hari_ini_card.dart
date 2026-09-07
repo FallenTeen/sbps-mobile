@@ -169,30 +169,10 @@ class PresensiHariIniCard extends ConsumerWidget {
     WidgetRef ref,
     PendingEndpoint endpoint,
   ) async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: const Text('Ambil Foto'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Dari Galeri'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (source == null || !context.mounted) return;
+    if (!context.mounted) return;
 
     final picked = await ImagePicker().pickImage(
-      source: source,
+      source: ImageSource.camera,
       maxWidth: 1600,
       imageQuality: 85,
     );

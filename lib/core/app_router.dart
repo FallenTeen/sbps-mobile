@@ -6,12 +6,17 @@ import '../features/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/role_picker_screen.dart';
+import '../features/armada/armada_home_screen.dart';
+import '../features/armada/checklist_screen.dart';
+import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
 import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
 import '../features/dashboard/keuangan_screen.dart';
 import '../features/dashboard/po_pending_screen.dart';
 import '../features/presensi/titik_kerja_screen.dart';
+import '../features/portal/portal_providers.dart';
+import '../features/portal/portal_selection_screen.dart';
 import '../features/produksi/mulai_sesi_screen.dart';
 import '../features/produksi/progress_hari_ini_screen.dart';
 import '../features/produksi/riwayat_produksi_screen.dart';
@@ -22,18 +27,16 @@ import '../features/qc/detail_qc_screen.dart';
 import '../features/qc/riwayat_qc_screen.dart';
 import '../features/tracking/active_users_screen.dart';
 import '../features/tracking/trail_screen.dart';
-import 'app_config.dart';
+import '../features/upload/dokumentasi_screen.dart';
 
-/// Router dengan auth guard: tanpa token → /login, sudah login → /home
-/// (Fase A1.2 langkah 5). App 2 tambahan redirect /pilih-role saat
-/// multi-role user baru login (Fase A2.2). Guard client hanya lapisan UX;
-/// validasi sesungguhnya tetap di backend.
+/// Router dengan auth guard: tanpa token → /login, sudah login → /home.
+/// Portal selection ditambahkan setelah login.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresher = _ChangeSignal();
   ref.listen(authControllerProvider, (_, _) => refresher.ping());
   ref.listen(roleChoicePendingProvider, (_, _) => refresher.ping());
-  // Ganti role aktif harus memicu evaluasi ulang guard route.
   ref.listen(activeRoleProvider, (_, _) => refresher.ping());
+  ref.listen(selectedPortalProvider, (_, _) => refresher.ping());
   ref.onDispose(refresher.dispose);
 
   return GoRouter(
@@ -42,7 +45,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final loggedIn = auth.value != null;
-      // Sesi awal masih dimuat: jangan redirect dulu (hindari flash login).
       if (!loggedIn && auth.isLoading && !auth.hasError) return null;
 
       final location = state.matchedLocation;
@@ -51,48 +53,79 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!loggedIn && !onAuthScreen) return '/login';
       if (loggedIn && onAuthScreen) return '/home';
 
-      if (AppConfig.appFlavor == 'proyek') {
+      if (loggedIn) {
+        final user = auth.value!;
+        final portal = ref.read(selectedPortalProvider).value;
+
+        // Portal selection: jika user bisa akses 2 portal tapi belum pilih.
+        if (portal == null && location != '/portal') {
+          final auto = autoPortal(user);
+          if (auto != null) {
+            // Auto-select portal, tidak perlu ke /portal.
+            ref.read(selectedPortalProvider.notifier).select(auto);
+          } else {
+            return '/portal';
+          }
+        }
+        if (portal != null && location == '/portal') return '/home';
+
+        // Role choice untuk proyek portal (multi-role).
         final pickPending = ref.read(roleChoicePendingProvider);
-        if (pickPending && location != '/pilih-role') return '/pilih-role';
-        if (!pickPending && location == '/pilih-role') return '/home';
+        if (portal == AppPortal.proyek) {
+          if (pickPending && location != '/pilih-role') return '/pilih-role';
+          if (!pickPending && location == '/pilih-role') return '/home';
 
-        // Guard modul produksi: hanya role dengan akses (lapisan UX).
-        if (location.startsWith('/produksi') &&
-            !RolePermissions.canAccess(
-                ref.read(activeRoleProvider), 'produksi')) {
-          return '/home';
-        }
+          // Guard modul produksi.
+          if (location.startsWith('/produksi') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'produksi')) {
+            return '/home';
+          }
 
-        // Guard viewer tracking: khusus Owner / Admin Keuangan.
-        if (location.startsWith('/tracking') &&
-            !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
-          return '/home';
-        }
+          // Guard viewer tracking: khusus Owner / Admin Keuangan.
+          if (location.startsWith('/tracking') &&
+              !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+            return '/home';
+          }
 
-        // Guard modul QC: sesuai permission matrix.
-        if (location.startsWith('/qc') &&
-            !RolePermissions.canAccess(
-                ref.read(activeRoleProvider), 'qc')) {
-          return '/home';
-        }
+          // Guard modul QC.
+          if (location.startsWith('/qc') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'qc')) {
+            return '/home';
+          }
 
-        // Guard modul dashboard: role dengan akses dashboard.
-        if (location.startsWith('/dashboard') &&
-            !RolePermissions.canAccess(
-                ref.read(activeRoleProvider), 'dashboard')) {
-          return '/home';
-        }
+          // Guard dokumentasi upload.
+          if (location.startsWith('/dokumentasi') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'produksi')) {
+            return '/home';
+          }
 
-        // Guard finansial: khusus Owner / Admin Keuangan (chart keuangan,
-        // PO pending, invoice belum dibayar — data sensitif).
-        const financialPrefixes = <String>[
-          '/dashboard/keuangan',
-          '/dashboard/po-pending',
-          '/dashboard/invoice',
-        ];
-        if (financialPrefixes.any(location.startsWith) &&
-            !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
-          return '/home';
+          // Guard modul dashboard.
+          if (location.startsWith('/dashboard') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'dashboard')) {
+            return '/home';
+          }
+
+          // Guard modul armada (khusus Driver Armada).
+          if (location.startsWith('/armada') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'armada')) {
+            return '/home';
+          }
+
+          // Guard finansial: khusus Owner / Admin Keuangan.
+          const financialPrefixes = <String>[
+            '/dashboard/keuangan',
+            '/dashboard/po-pending',
+            '/dashboard/invoice',
+          ];
+          if (financialPrefixes.any(location.startsWith) &&
+              !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+            return '/home';
+          }
         }
       }
       return null;
@@ -107,14 +140,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
+        path: '/portal',
+        builder: (context, state) => const PortalSelectionScreen(),
+      ),
+      GoRoute(
         path: '/pilih-role',
         builder: (context, state) => const RolePickerScreen(),
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) => AppConfig.appFlavor == 'presensi'
-            ? const TitikKerjaScreen()
-            : const ProyekHomeScreen(),
+        builder: (context, state) {
+          final portal = ref.read(selectedPortalProvider).value;
+          if (portal == AppPortal.proyek) return const ProyekHomeScreen();
+          return const TitikKerjaScreen();
+        },
       ),
       GoRoute(
         path: '/produksi/sesi-aktif',
@@ -154,6 +193,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/dokumentasi',
+        builder: (context, state) => const DokumentasiScreen(),
+      ),
+      GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardHomeScreen(),
       ),
@@ -175,6 +218,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           titikId: state.pathParameters['titikId']!,
           nama: state.extra as String?,
         ),
+      ),
+      GoRoute(
+        path: '/armada',
+        builder: (context, state) => const ArmadaHomeScreen(),
+      ),
+      GoRoute(
+        path: '/armada/ritase',
+        builder: (context, state) => const RiwayatRitaseScreen(),
+      ),
+      GoRoute(
+        path: '/armada/checklist',
+        builder: (context, state) => const ChecklistScreen(),
       ),
     ],
   );

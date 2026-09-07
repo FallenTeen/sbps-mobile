@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/api_client.dart';
 import '../../core/app_config.dart';
 import '../auth/auth_providers.dart';
+import '../portal/portal_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'location_buffer_service.dart';
 import 'models.dart';
@@ -83,7 +84,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
   LocationBufferService get _buffer => ref.read(locationBufferProvider);
 
   bool get _shouldRun {
-    if (AppConfig.appFlavor != 'proyek') return false;
+    final portal = ref.read(selectedPortalProvider).value;
+    if (portal != AppPortal.proyek) return false;
     if (ref.read(authControllerProvider).value == null) return false;
     if (ref.read(activeRoleProvider) != 'Mandor Titik') return false;
     return DateTime.now().hour < AppConfig.trackingCutoffHour;

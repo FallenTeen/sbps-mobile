@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
-import '../../core/app_config.dart';
 import '../../core/device_info_service.dart';
 import '../../core/push_token_service.dart';
 import '../../core/storage/token_storage.dart';
@@ -18,6 +17,7 @@ const kApp2Roles = <String>[
   'Kontraktor',
   'Owner',
   'Admin Keuangan',
+  'Driver Armada',
 ];
 
 final tokenStorageProvider =
@@ -119,9 +119,8 @@ List<String> app2RolesOf(User user) =>
     kApp2Roles.where(user.roles.contains).toList();
 
 /// Benar bila setelah login/register user wajib memilih role dulu:
-/// hanya di flavor proyek dan user punya lebih dari satu role App 2.
-bool needsRoleChoice(User user) =>
-    AppConfig.appFlavor == 'proyek' && app2RolesOf(user).length > 1;
+/// hanya di portal proyek dan user punya lebih dari satu role App 2.
+bool needsRoleChoice(User user) => app2RolesOf(user).length > 1;
 
 /// Flag sesi: tampilkan halaman pemilih role sebelum masuk home
 /// (Fase A2.2). Tidak diset saat restore sesi — role tersimpan langsung

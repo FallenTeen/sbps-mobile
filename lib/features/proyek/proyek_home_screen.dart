@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../auth/auth_providers.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
+import '../portal/portal_providers.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
 
@@ -28,6 +29,17 @@ class ProyekHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Halo, ${user?.name ?? ''}'),
         actions: [
+          // Kembali ke layar pilihan portal (hanya bila user punya >1 portal).
+          if (user != null && autoPortal(user) == null)
+            IconButton(
+              tooltip: 'Pilih portal',
+              icon: const Icon(Icons.apps),
+              onPressed: () => ref
+                  .read(selectedPortalProvider.notifier)
+                  .clear(),
+            ),
+          // Lonceng notifikasi + badge unread — reuse modul A1.7 (A2.8).
+          const _NotifikasiBadgeAction(),
           if (roles.length > 1)
             PopupMenuButton<String>(
               tooltip: 'Ganti peran',
@@ -75,10 +87,16 @@ class ProyekHomeScreen extends ConsumerWidget {
                       subtitle: switch (module.key) {
                         'produksi' => const Text(
                             'Sesi aktif, mulai, riwayat, progress, QC'),
+                        'qc' => const Text(
+                            'Slump test & uji tekan, riwayat QC'),
+                        'tracking' => const Text(
+                            'User aktif & jejak lokasi'),
                         'dashboard' =>
                           const Text('Ringkasan titik & operasional'),
                         'keuangan' =>
                           const Text('Chart keuangan, PO, invoice'),
+                        'armada' =>
+                          const Text('Kendaraan, ritase & checklist harian'),
                         _ => const Text('Menyusul di fase berikutnya'),
                       },
                       trailing: const Icon(Icons.chevron_right),
@@ -86,12 +104,16 @@ class ProyekHomeScreen extends ConsumerWidget {
                         switch (module.key) {
                           case 'produksi':
                             context.push('/produksi/sesi-aktif');
+                          case 'qc':
+                            context.push('/qc/riwayat');
                           case 'tracking':
                             context.push('/tracking/pengguna-aktif');
                           case 'dashboard':
                             context.push('/dashboard');
                           case 'keuangan':
                             context.push('/dashboard/keuangan');
+                          case 'armada':
+                            context.push('/armada');
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -118,8 +140,37 @@ IconData _iconForRole(String role) {
       return Icons.account_balance_wallet;
     case 'Owner':
       return Icons.supervisor_account;
+    case 'Driver Armada':
+      return Icons.local_shipping;
     default:
       return Icons.badge;
+  }
+}
+
+/// Lonceng notifikasi dengan badge unread — reuse modul App 1
+/// (Fase A2.8). Badge di-refresh saat kembali dari halaman notifikasi.
+class _NotifikasiBadgeAction extends ConsumerWidget {
+  const _NotifikasiBadgeAction();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(unreadCountProvider);
+
+    return IconButton(
+      tooltip: 'Notifikasi',
+      icon: Badge(
+        isLabelVisible: count > 0,
+        label: Text('$count'),
+        child: const Icon(Icons.notifications_outlined),
+      ),
+      onPressed: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+              builder: (_) => const NotifikasiScreen()),
+        );
+        ref.read(unreadCountProvider.notifier).reload();
+      },
+    );
   }
 }
 

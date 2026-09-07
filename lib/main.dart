@@ -1,16 +1,39 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import 'core/app_config.dart';
 import 'core/app_router.dart';
+import 'core/push_token_service.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
 import 'features/version/version_gate.dart';
 
+/// Top-level handler untuk pesan yang diterima di background/terminated.
+/// Harus top-level function (bukan closure) menurut Firebase docs.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint('[FCM] Background message: ${message.messageId}');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
+  // Inisialisasi Firebase — google-services.json / GoogleService-Info.plist
+  // wajib ada di masing-masing flavor. Jika file tidak ada, Firebase
+  // akan throw dan token dikembalikan null (graceful degradation).
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint('[FCM] Firebase init failed: $e — push notifications disabled');
+  }
+
   runApp(const ProviderScope(child: SbpsApp()));
 }
 
@@ -27,27 +50,26 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Mulai listener konektivitas + timer retry outbox.
       ref.read(outboxSyncServiceProvider).start();
       ref.read(pendingCountProvider.notifier).reload();
-      // Live Tracking (App 2): auto-start bila Mandor Titik login;
-      // provider sendiri mendengarkan perubahan auth/role.
-      if (AppConfig.appFlavor == 'proyek') {
-        ref.read(trackingSchedulerProvider.notifier).evaluate();
+      ref.read(trackingSchedulerProvider.notifier).evaluate();
+
+      // Setup foreground FCM handler.
+      try {
+        FirebaseMessaging.onMessage
+            .listen(firebaseMessagingForegroundHandler);
+      } catch (_) {
+        // Firebase tidak terinisialisasi — skip.
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final title =
-        AppConfig.appFlavor == 'proyek' ? 'SBPS Proyek' : 'SBPS Presensi';
+    const title = 'SBPS';
     final theme = ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true);
     final banner = !AppConfig.isProduction;
 
-    // Force update (Fase A1.7): selagi cek berjalan tampilkan splash;
-    // bila terblokir layar update menggantikan seluruh aplikasi.
-    // Cek versi tidak pernah berakhir error (fail-open ke "ok").
     final gate = ref.watch(versionGateProvider);
     if (gate.isLoading) {
       return MaterialApp(
@@ -81,14 +103,14 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('SBPS ${AppConfig.appFlavor == 'proyek' ? 'Proyek' : 'Presensi'}'),
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(),
+            Text('SBPS'),
+            SizedBox(height: 16),
+            CircularProgressIndicator(),
           ],
         ),
       ),

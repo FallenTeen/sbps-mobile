@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
-import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../core/photo_compression_service.dart';
 import '../auth/auth_providers.dart';

@@ -1,5 +1,5 @@
 name: sbps_mobile
-description: "SBPS mobile apps (flavor: presensi & proyek)."
+description: "SBPS Mobile Apps — Presensi & Proyek."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -28,6 +28,8 @@ dependencies:
   url_launcher: ^6.3.2
   package_info_plus: ^9.0.1
   fl_chart: ^1.2.0
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.0
 
 dev_dependencies:
   flutter_test:

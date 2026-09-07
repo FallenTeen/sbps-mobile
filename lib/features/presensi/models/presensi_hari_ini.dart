@@ -19,7 +19,7 @@ class PresensiHariIni {
   });
 
   final PresensiStatus status;
-  final int? presensiId;
+  final String? presensiId;
 
   /// ISO-8601 dari backend.
   final String? checkIn;
@@ -46,7 +46,7 @@ class PresensiHariIni {
     };
     return PresensiHariIni(
       status: status,
-      presensiId: (json['presensi_id'] as num?)?.toInt(),
+      presensiId: json['presensi_id']?.toString(),
       checkIn: json['check_in'] as String?,
       checkOut: json['check_out'] as String?,
       statusValidasi: json['status_validasi'] as String?,
@@ -70,7 +70,7 @@ class RiwayatPresensi {
     this.namaTitik,
   });
 
-  final int id;
+  final String id;
   final String? tanggal;
   final String? checkIn;
   final String? checkOut;
@@ -83,7 +83,7 @@ class RiwayatPresensi {
     final json = Map<String, dynamic>.from(raw);
     final titikJson = json['titik'];
     return RiwayatPresensi(
-      id: (json['presensi_id'] as num?)?.toInt() ?? 0,
+      id: json['presensi_id']?.toString() ?? '',
       tanggal: json['tanggal'] as String?,
       checkIn: json['check_in'] as String?,
       checkOut: json['check_out'] as String?,

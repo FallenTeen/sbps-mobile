@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -31,15 +32,14 @@ android {
     }
 
     defaultConfig {
-        // Diisi ulang per flavor di bawah.
-        applicationId = "com.sbps.presensi"
+        applicationId = "com.sbps.mobile"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue("string", "app_name", "SBPS")
     }
 
-    // Satu codebase -> dua aplikasi terpisah (applicationId berbeda).
     flavorDimensions += "app"
     productFlavors {
         create("presensi") {
@@ -47,10 +47,20 @@ android {
             applicationId = "com.sbps.presensi"
             resValue("string", "app_name", "SBPS Presensi")
         }
+        create("presensiStaging") {
+            dimension = "app"
+            applicationId = "com.sbps.presensi.staging"
+            resValue("string", "app_name", "SBPS Presensi (Staging)")
+        }
         create("proyek") {
             dimension = "app"
             applicationId = "com.sbps.proyek"
             resValue("string", "app_name", "SBPS Proyek")
+        }
+        create("proyekStaging") {
+            dimension = "app"
+            applicationId = "com.sbps.proyek.staging"
+            resValue("string", "app_name", "SBPS Proyek (Staging)")
         }
     }
 

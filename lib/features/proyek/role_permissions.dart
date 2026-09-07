@@ -32,6 +32,11 @@ const kProyekModules = <ProyekModule>[
     label: 'Dashboard Finansial',
     icon: Icons.payments_outlined,
   ),
+  ProyekModule(
+    key: 'armada',
+    label: 'Armada',
+    icon: Icons.local_shipping,
+  ),
 ];
 
 /// Permission matrix sisi client — HANYA lapisan UX untuk navigasi/guard
@@ -47,6 +52,7 @@ class RolePermissions {
     'Kontraktor': {'dashboard'},
     'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan'},
     'Admin Keuangan': {'tracking', 'dashboard', 'keuangan'},
+    'Driver Armada': {'armada'},
   };
 
   static Set<String> modulesFor(String? role) =>
