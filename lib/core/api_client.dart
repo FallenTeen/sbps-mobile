@@ -40,7 +40,7 @@ class ApiClient {
   /// Dio dasar dengan timeout, base URL, dan header default — dipakai juga
   /// oleh provider untuk memasang interceptor auth sebelum membuat client.
   static Dio buildBaseDio() {
-    return Dio(
+    final dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 10),
@@ -52,9 +52,12 @@ class ApiClient {
           'X-Device-Type': 'android',
           'X-Device-Name': 'unknown',
         },
+        // 429 ditangani interceptor _RateLimitInterceptor, bukan error Dio.
         validateStatus: (status) => status != null && status < 500,
       ),
     );
+    dio.interceptors.add(_RateLimitInterceptor(dio));
+    return dio;
   }
 
   /// Dipanggil saat endpoint terproteksi menjawab 401 (token invalid/kadaluarsa)
@@ -196,4 +199,62 @@ class ApiClient {
   }
 
   void close() => _dio.close();
+}
+
+/// Interceptor 429 Too Many Requests — per docs/api-security-policy.md:
+/// parse header `Retry-After` (detik), fallback ke exponential backoff
+/// (1s, 2s, 4s), maks 3 retry. Tracking & GPS batch TIDAK boleh di-drop,
+/// melainkan di-queue (outbox menangani itu).
+class _RateLimitInterceptor extends Interceptor {
+  _RateLimitInterceptor(this._dio);
+
+  final Dio _dio;
+  static const _maxRetries = 3;
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.statusCode == 429) {
+      final retryCount =
+          (response.requestOptions.extra['_rateLimitRetry'] as int?) ?? 0;
+      if (retryCount >= _maxRetries) {
+        // Sudah coba berkali-kali, serahkan ke caller sebagai error.
+        handler.reject(
+          DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            message: 'Rate limit exceeded after $_maxRetries retries.',
+          ),
+        );
+        return;
+      }
+      _retryAfterDelay(response, retryCount, handler);
+      return;
+    }
+    super.onResponse(response, handler);
+  }
+
+  Future<void> _retryAfterDelay(
+    Response response,
+    int retryCount,
+    ResponseInterceptorHandler handler,
+  ) async {
+    // Parse Retry-After header (seconds); fallback exponential backoff.
+    final retryAfterRaw = response.headers.value('Retry-After') ??
+        response.headers.value('retry-after');
+    final retryAfterSeconds = int.tryParse(retryAfterRaw ?? '');
+    final delay = retryAfterSeconds != null
+        ? Duration(seconds: retryAfterSeconds)
+        : Duration(seconds: 1 << retryCount); // 1s, 2s, 4s
+
+    await Future<void>.delayed(delay);
+
+    final opts = response.requestOptions;
+    opts.extra['_rateLimitRetry'] = retryCount + 1;
+    try {
+      final retried = await _dio.fetch(opts);
+      handler.resolve(retried);
+    } on DioException catch (e) {
+      handler.reject(e);
+    }
+  }
 }

@@ -59,6 +59,20 @@ class OutboxSyncService {
         return const OutboxSendResult(delivered: true);
       }
 
+      // Helper presensi: path dinamis /armada/helper/{helperId}/presensi.
+      var multipartPath = action.endpoint.path;
+      if (action.endpoint == PendingEndpoint.helperPresensi) {
+        final helperId = action.payloadJson['helper_id'];
+        if (helperId == null || helperId.isEmpty) {
+          return const OutboxSendResult(
+            delivered: false,
+            permanentlyFailed: true,
+            errorMessage: 'ID helper hilang dari antrean.',
+          );
+        }
+        multipartPath = '/armada/helper/$helperId/presensi';
+      }
+
       final specs = switch (action.endpoint) {
         // Formulir lapangan: banyak foto dengan field `photos[]`.
         PendingEndpoint.formulirSubmit => [
@@ -70,7 +84,7 @@ class OutboxSyncService {
             for (final path in action.photoLocalPaths)
               MultipartFileSpec('files[]', path),
           ],
-        // Presensi: satu foto wajib dengan field `photo`.
+        // Presensi & helper presensi: satu foto wajib dengan field `photo`.
         _ => [
             if (action.photoLocalPath != null)
               MultipartFileSpec('photo', action.photoLocalPath!),
@@ -84,7 +98,7 @@ class OutboxSyncService {
         );
       }
       final response = await _api.postMultipart<Object?>(
-        action.endpoint.path,
+        multipartPath,
         fields: {
           ...action.payloadJson,
           // Endpoint /upload mensyaratkan client_uuid sebagai form field

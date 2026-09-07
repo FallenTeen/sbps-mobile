@@ -51,11 +51,38 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ),
             Card(
               child: ListTile(
+                leading: const Icon(Icons.speed_outlined),
+                title: const Text('ODO Awal Proyek'),
+                subtitle: const Text('Catat ODO awal kendaraan per titik proyek'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/odo-awal'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: const Text('Presensi Helper'),
+                subtitle: const Text('Absenkan helper armada hari ini'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/helper-presensi'),
+              ),
+            ),
+            Card(
+              child: ListTile(
                 leading: const Icon(Icons.checklist_rtl),
                 title: const Text('Checklist Harian'),
                 subtitle: const Text('Catat kondisi kendaraan hari ini'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/armada/checklist'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.build_outlined),
+                title: const Text('Servis Armada'),
+                subtitle: const Text('Pengajuan & riwayat perbaikan armada'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/servis'),
               ),
             ),
           ],

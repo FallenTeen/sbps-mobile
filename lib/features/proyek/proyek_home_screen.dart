@@ -38,6 +38,12 @@ class ProyekHomeScreen extends ConsumerWidget {
                   .read(selectedPortalProvider.notifier)
                   .clear(),
             ),
+          // Profil user — edit profil & logout semua perangkat.
+          IconButton(
+            tooltip: 'Profil',
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => context.push('/profile'),
+          ),
           // Lonceng notifikasi + badge unread — reuse modul A1.7 (A2.8).
           const _NotifikasiBadgeAction(),
           if (roles.length > 1)

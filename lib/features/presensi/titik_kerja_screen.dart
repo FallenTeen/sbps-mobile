@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
@@ -115,6 +116,12 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                   .read(selectedPortalProvider.notifier)
                   .clear(),
             ),
+          // Profil user — edit profil & logout semua perangkat.
+          IconButton(
+            tooltip: 'Profil',
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => context.push('/profile'),
+          ),
           IconButton(
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),

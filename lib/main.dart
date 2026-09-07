@@ -92,6 +92,7 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
     return MaterialApp.router(
       title: title,
       theme: theme,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: banner,
       routerConfig: ref.watch(appRouterProvider),
     );

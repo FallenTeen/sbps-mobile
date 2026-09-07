@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 /// Sumber device token push (FCM) untuk field `device_token` pada
 /// login/register.
@@ -60,11 +60,40 @@ class PushTokenService {
   }
 }
 
+final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 /// Handler untuk pesan yang diterima saat app di foreground.
 /// Dipanggil dari main.dart setelah Firebase.initializeApp().
-Future<void> firebaseMessagingForegroundHandler(
-    RemoteMessage message) async {
+Future<void> firebaseMessagingForegroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Foreground message: ${message.messageId}');
-  // TODO(Fase A1.7): Tampilkan in-app notification saat foreground.
-  // Bisa pakai flutter_local_notifications atau custom snackbar.
+  final notification = message.notification;
+  if (notification != null) {
+    final title = notification.title ?? 'Notifikasi Baru';
+    final body = notification.body ?? '';
+
+    rootScaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            if (body.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(body, style: const TextStyle(fontSize: 12)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

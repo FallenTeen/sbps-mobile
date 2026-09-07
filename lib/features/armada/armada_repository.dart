@@ -1,7 +1,9 @@
 import '../../core/api_client.dart';
 import 'models/armada.dart';
+import 'models/helper.dart';
 
-/// Repository modul Armada (driver) — docs/api-mobile.md §Armada.
+/// Repository modul Armada (driver) — docs/api-mobile.md §Armada
+/// dan manual-book Section 21.
 class ArmadaRepository {
   ArmadaRepository({required ApiClient api}) : _api = api;
 
@@ -37,10 +39,14 @@ class ArmadaRepository {
   }
 
   /// POST /armada/checklist — catat (create/update) checklist harian.
+  /// Diperluas dengan solar, ODO, jam operasional (Section 21).
   Future<void> submitChecklist({
     required String armadaId,
     required bool kondisiBaik,
     String? itemBermasalah,
+    double? solarLiter,
+    double? odoKm,
+    double? jamOperasional,
   }) async {
     await _api.post<Object?>(
       '/armada/checklist',
@@ -49,7 +55,57 @@ class ArmadaRepository {
         'kondisi_baik': kondisiBaik,
         if (itemBermasalah != null && itemBermasalah.trim().isNotEmpty)
           'item_bermasalah': itemBermasalah.trim(),
+        'solar_liter': ?solarLiter,
+        'odo_km': ?odoKm,
+        'jam_operasional': ?jamOperasional,
       },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // ODO Awal Proyek (Section 21)
+  // ---------------------------------------------------------------------------
+
+  /// POST /armada/odo-awal-proyek — input sekali per armada per proyek.
+  Future<void> submitOdoAwalProyek({
+    required String armadaId,
+    required String titikId,
+    required double odoAwal,
+  }) async {
+    await _api.post<Object?>(
+      '/armada/odo-awal-proyek',
+      body: {
+        'armada_id': armadaId,
+        'titik_id': titikId,
+        'odo_awal': odoAwal,
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helper Presensi (Section 21)
+  // ---------------------------------------------------------------------------
+
+  /// GET /armada/helper — daftar helper untuk PIC aktif.
+  Future<List<Helper>> getHelpers() async {
+    final res = await _api.get<List<Helper>>(
+      '/armada/helper',
+      parse: _parseList<Helper>(Helper.fromJson),
+    );
+    return res.data ?? const [];
+  }
+
+  /// POST /armada/helper/{helperId}/presensi — PIC absenkan helper.
+  /// [tipe] adalah 'check_in' atau 'check_out'. [photoPath] wajib.
+  Future<void> submitHelperPresensi({
+    required String helperId,
+    required String tipe,
+    required String photoPath,
+  }) async {
+    await _api.postMultipart<Object?>(
+      '/armada/helper/$helperId/presensi',
+      fields: {'tipe': tipe},
+      files: [MultipartFileSpec('photo', photoPath)],
     );
   }
 
@@ -67,3 +123,4 @@ class ArmadaRepository {
     };
   }
 }
+

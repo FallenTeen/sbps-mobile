@@ -4,11 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/profile_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/role_picker_screen.dart';
+import '../features/armada/ajuan_servis_screen.dart';
 import '../features/armada/armada_home_screen.dart';
 import '../features/armada/checklist_screen.dart';
+import '../features/armada/detail_servis_screen.dart';
+import '../features/armada/helper_presensi_screen.dart';
+import '../features/armada/odo_awal_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
+import '../features/armada/riwayat_servis_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
 import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
@@ -156,6 +162,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
         path: '/produksi/sesi-aktif',
         builder: (context, state) => const SesiAktifScreen(),
       ),
@@ -230,6 +240,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/armada/checklist',
         builder: (context, state) => const ChecklistScreen(),
+      ),
+      GoRoute(
+        path: '/armada/odo-awal',
+        builder: (context, state) => const OdoAwalScreen(),
+      ),
+      GoRoute(
+        path: '/armada/helper-presensi',
+        builder: (context, state) => const HelperPresensiScreen(),
+      ),
+      GoRoute(
+        path: '/armada/servis',
+        builder: (context, state) => const RiwayatServisScreen(),
+      ),
+      GoRoute(
+        path: '/armada/servis/ajuan',
+        builder: (context, state) => const AjuanServisScreen(),
+      ),
+      GoRoute(
+        path: '/armada/servis/:id',
+        builder: (context, state) => DetailServisScreen(
+          id: state.pathParameters['id']!,
+        ),
       ),
     ],
   );

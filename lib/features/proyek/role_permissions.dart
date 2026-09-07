@@ -50,9 +50,10 @@ class RolePermissions {
     // Fase A2.6: Mandor Titik dapat overview + armada-status (non-finansial).
     'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
     'Kontraktor': {'dashboard'},
-    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan'},
-    'Admin Keuangan': {'tracking', 'dashboard', 'keuangan'},
+    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan', 'armada'},
+    'Admin Keuangan': {'tracking', 'dashboard', 'keuangan', 'armada'},
     'Driver Armada': {'armada'},
+    'Kepala Divisi Armada': {'armada', 'dashboard'},
   };
 
   static Set<String> modulesFor(String? role) =>

@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import 'armada_repository.dart';
 import 'models/armada.dart';
+import 'models/helper.dart';
 
 final armadaRepositoryProvider = Provider<ArmadaRepository>(
   (ref) => ArmadaRepository(api: ref.watch(apiClientProvider)),
@@ -13,8 +14,7 @@ final armadaRepositoryProvider = Provider<ArmadaRepository>(
 // Armada saya (kendaraan driver)
 // ---------------------------------------------------------------------------
 
-final armadaSayaProvider =
-    FutureProvider.autoDispose<List<ArmadaSaya>>((ref) {
+final armadaSayaProvider = FutureProvider.autoDispose<List<ArmadaSaya>>((ref) {
   return ref.watch(armadaRepositoryProvider).getArmadaSaya();
 });
 
@@ -24,8 +24,8 @@ final armadaSayaProvider =
 
 final checklistHariIniProvider =
     FutureProvider.autoDispose<List<ArmadaChecklist>>((ref) {
-  return ref.watch(armadaRepositoryProvider).getChecklistHariIni();
-});
+      return ref.watch(armadaRepositoryProvider).getChecklistHariIni();
+    });
 
 // ---------------------------------------------------------------------------
 // Riwayat ritase (pagination)
@@ -57,15 +57,14 @@ class RitaseRiwayatState {
     int? total,
     bool? loading,
     String? error,
-  }) =>
-      RitaseRiwayatState(
-        items: items ?? this.items,
-        currentPage: currentPage ?? this.currentPage,
-        lastPage: lastPage ?? this.lastPage,
-        total: total ?? this.total,
-        loading: loading ?? this.loading,
-        error: error,
-      );
+  }) => RitaseRiwayatState(
+    items: items ?? this.items,
+    currentPage: currentPage ?? this.currentPage,
+    lastPage: lastPage ?? this.lastPage,
+    total: total ?? this.total,
+    loading: loading ?? this.loading,
+    error: error,
+  );
 }
 
 class RitaseRiwayatController extends Notifier<RitaseRiwayatState> {
@@ -90,8 +89,10 @@ class RitaseRiwayatController extends Notifier<RitaseRiwayatState> {
     } on ApiException catch (e) {
       state = state.copyWith(loading: false, error: e.message);
     } catch (_) {
-      state =
-          state.copyWith(loading: false, error: 'Gagal memuat riwayat ritase.');
+      state = state.copyWith(
+        loading: false,
+        error: 'Gagal memuat riwayat ritase.',
+      );
     }
   }
 
@@ -106,4 +107,13 @@ class RitaseRiwayatController extends Notifier<RitaseRiwayatState> {
 
 final ritaseRiwayatProvider =
     NotifierProvider<RitaseRiwayatController, RitaseRiwayatState>(
-        RitaseRiwayatController.new);
+      RitaseRiwayatController.new,
+    );
+
+// ---------------------------------------------------------------------------
+// Helpers armada (Section 21 — PIC absenkan helper)
+// ---------------------------------------------------------------------------
+
+final helpersProvider = FutureProvider.autoDispose<List<Helper>>((ref) {
+  return ref.watch(armadaRepositoryProvider).getHelpers();
+});

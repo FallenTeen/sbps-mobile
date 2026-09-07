@@ -20,11 +20,20 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
       isScrollControlled: true,
       builder: (_) => _ChecklistForm(
         item: item,
-        onSave: (kondisiBaik, masalah) async {
+        onSave: ({
+          required bool kondisiBaik,
+          required String masalah,
+          double? solarLiter,
+          double? odoKm,
+          double? jamOperasional,
+        }) async {
           await ref.read(armadaRepositoryProvider).submitChecklist(
                 armadaId: item.armadaId,
                 kondisiBaik: kondisiBaik,
                 itemBermasalah: masalah,
+                solarLiter: solarLiter,
+                odoKm: odoKm,
+                jamOperasional: jamOperasional,
               );
           ref.invalidate(checklistHariIniProvider);
         },
@@ -110,7 +119,13 @@ class _ChecklistForm extends ConsumerStatefulWidget {
   const _ChecklistForm({required this.item, required this.onSave});
 
   final ArmadaChecklist item;
-  final Future<void> Function(bool kondisiBaik, String masalah) onSave;
+  final Future<void> Function({
+    required bool kondisiBaik,
+    required String masalah,
+    double? solarLiter,
+    double? odoKm,
+    double? jamOperasional,
+  }) onSave;
 
   @override
   ConsumerState<_ChecklistForm> createState() => _ChecklistFormState();
@@ -119,6 +134,9 @@ class _ChecklistForm extends ConsumerStatefulWidget {
 class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
   bool _kondisiBaik = true;
   final _masalah = TextEditingController();
+  final _solarCtrl = TextEditingController();
+  final _odoCtrl = TextEditingController();
+  final _jamCtrl = TextEditingController();
   bool _busy = false;
 
   @override
@@ -126,18 +144,36 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
     super.initState();
     _kondisiBaik = widget.item.kondisiBaik ?? true;
     _masalah.text = widget.item.itemBermasalah ?? '';
+    if (widget.item.solarLiter != null) {
+      _solarCtrl.text = widget.item.solarLiter.toString();
+    }
+    if (widget.item.odoKm != null) {
+      _odoCtrl.text = widget.item.odoKm.toString();
+    }
+    if (widget.item.jamOperasional != null) {
+      _jamCtrl.text = widget.item.jamOperasional.toString();
+    }
   }
 
   @override
   void dispose() {
     _masalah.dispose();
+    _solarCtrl.dispose();
+    _odoCtrl.dispose();
+    _jamCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     setState(() => _busy = true);
     try {
-      await widget.onSave(_kondisiBaik, _masalah.text.trim());
+      await widget.onSave(
+        kondisiBaik: _kondisiBaik,
+        masalah: _masalah.text.trim(),
+        solarLiter: double.tryParse(_solarCtrl.text),
+        odoKm: double.tryParse(_odoCtrl.text),
+        jamOperasional: double.tryParse(_jamCtrl.text),
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -159,42 +195,87 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
         top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.item.platNomor,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text('Checklist hari ini',
-              style: TextStyle(color: Theme.of(context).colorScheme.outline)),
-          const SizedBox(height: 16),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Kondisi kendaraan baik'),
-            subtitle: const Text('Matikan bila ada masalah'),
-            value: _kondisiBaik,
-            onChanged: (v) => setState(() => _kondisiBaik = v),
-          ),
-          if (!_kondisiBaik)
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.item.platNomor,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text('Checklist hari ini',
+                style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Kondisi kendaraan baik'),
+              subtitle: const Text('Matikan bila ada masalah'),
+              value: _kondisiBaik,
+              onChanged: (v) => setState(() => _kondisiBaik = v),
+            ),
+            if (!_kondisiBaik)
+              TextField(
+                controller: _masalah,
+                maxLines: 3,
+                minLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Item yang bermasalah',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            const SizedBox(height: 16),
+            // Section 21: Solar, ODO, Jam Operasional.
+            Text('Data Operasional',
+                style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _solarCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Solar (liter)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _odoCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'ODO (km)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             TextField(
-              controller: _masalah,
-              maxLines: 3,
-              minLines: 2,
+              controller: _jamCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                labelText: 'Item yang bermasalah',
+                labelText: 'Jam Operasional',
                 border: OutlineInputBorder(),
+                helperText: 'Untuk alat stasioner',
               ),
             ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _busy ? null : _submit,
-              child: Text(_busy ? 'Menyimpan...' : 'Simpan'),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: Text(_busy ? 'Menyimpan...' : 'Simpan'),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -102,6 +102,39 @@ class AuthRepository {
     }
   }
 
+  /// Update profil user — POST /update-profile (docs/api-mobile.md §5.5).
+  /// Field opsional: hanya kirim yang diisi user.
+  Future<User> updateProfile({
+    String? name,
+    String? phone,
+    String? password,
+    String? passwordConfirmation,
+  }) async {
+    final body = <String, dynamic>{
+      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+      if (phone != null) 'phone': phone.trim(),
+      if (password != null && password.isNotEmpty) ...{
+        'password': password,
+        'password_confirmation': passwordConfirmation ?? password,
+      },
+    };
+    final res = await _api.post<Map<String, dynamic>>(
+      '/update-profile',
+      body: body,
+      parse: (raw) => Map<String, dynamic>.from(raw as Map),
+    );
+    _ensureSuccess(res);
+    return User.fromJson(res.data!);
+  }
+
+  /// Logout dari semua perangkat — POST /logout-all-devices
+  /// (docs/api-mobile.md §5.8). Cabut semua token Sanctum kecuali
+  /// token saat ini (bila backend mendukung), lalu bersihkan sesi lokal.
+  Future<void> logoutAllDevices() async {
+    await _api.post('/logout-all-devices');
+    await clearSession();
+  }
+
   Future<void> clearSession() async {
     await _storage.deleteToken();
     await _storage.deleteActiveRole();

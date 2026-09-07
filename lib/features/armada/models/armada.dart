@@ -156,6 +156,9 @@ class ArmadaChecklist {
     this.checklistId,
     this.kondisiBaik,
     this.itemBermasalah,
+    this.solarLiter,
+    this.odoKm,
+    this.jamOperasional,
   });
 
   final String armadaId;
@@ -168,6 +171,15 @@ class ArmadaChecklist {
   final bool? kondisiBaik;
   final String? itemBermasalah;
 
+  /// Section 21: solar yang diisi (liter).
+  final double? solarLiter;
+
+  /// Section 21: ODO-meter saat ini (km).
+  final double? odoKm;
+
+  /// Section 21: jam operasional (untuk alat stasioner).
+  final double? jamOperasional;
+
   factory ArmadaChecklist.fromJson(Map<String, dynamic> json) {
     return ArmadaChecklist(
       armadaId: json['armada_id']?.toString() ?? '',
@@ -179,6 +191,9 @@ class ArmadaChecklist {
       checklistId: json['checklist_id']?.toString(),
       kondisiBaik: json['kondisi_baik'] as bool?,
       itemBermasalah: json['item_bermasalah']?.toString(),
+      solarLiter: (json['solar_liter'] as num?)?.toDouble(),
+      odoKm: (json['odo_km'] as num?)?.toDouble(),
+      jamOperasional: (json['jam_operasional'] as num?)?.toDouble(),
     );
   }
 }

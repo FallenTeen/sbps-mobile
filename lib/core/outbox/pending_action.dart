@@ -9,7 +9,8 @@ enum PendingEndpoint {
   produksiSelesai('/produksi/selesai'),
   qcSlumpTest('/qc/slump-test'),
   qcUjiTekan('/qc/uji-tekan'),
-  uploadMedia('/upload');
+  uploadMedia('/upload'),
+  helperPresensi('/armada/helper');
 
   const PendingEndpoint(this.path);
 
