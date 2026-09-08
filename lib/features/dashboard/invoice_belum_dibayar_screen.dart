@@ -5,6 +5,7 @@ import '../../core/api_client.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'status_chip.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Daftar invoice belum lunas (Owner/Admin Keuangan) — server dibatasi
 /// maks 20 item terbaru; label eksplisit bila tepat 20.
@@ -16,7 +17,10 @@ class InvoiceBelumDibayarScreen extends ConsumerWidget {
     final inv = ref.watch(invoiceBelumDibayarProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Invoice Belum Dibayar')),
+      appBar: AppBar(
+        title: const Text('Invoice Belum Dibayar'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async =>
             ref.refresh(invoiceBelumDibayarProvider.future),

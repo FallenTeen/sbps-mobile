@@ -11,12 +11,12 @@ import '../formulir/formulir_screen.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
-import '../portal/portal_providers.dart';
 import '../titik/titik_selector.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
 import 'riwayat_screen.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Fase A1.3 — daftar titik kerja aktif dengan jarak GPS ke tiap titik,
 /// penanda titik terdekat, dan pemilihan titik untuk alur check-in (A1.4).
@@ -112,17 +112,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const HomeTitle(),
-        actions: [
-          // Kembali ke layar pilihan portal (hanya bila user punya >1 portal).
-          if (user != null && autoPortal(user) == null)
-            IconButton(
-              tooltip: 'Pilih portal',
-              icon: const Icon(Icons.apps),
-              onPressed: () => ref
-                  .read(selectedPortalProvider.notifier)
-                  .clear(),
-            ),
-          // Profil user — edit profil & logout semua perangkat.
+        actions: [          // Profil user — edit profil & logout semua perangkat.
           IconButton(
             tooltip: 'Profil',
             icon: const Icon(Icons.account_circle_outlined),
@@ -165,6 +155,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                     'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
                   ),
                   actions: [
+          const PortalSwitchButton(),
                     TextButton(
                       onPressed: () {},
                       child: const Text('Tutup'),
@@ -180,6 +171,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                       Theme.of(context).colorScheme.surfaceContainerHighest,
                   content: const Text('Belum ada penugasan, hubungi admin.'),
                   actions: [
+          const PortalSwitchButton(),
                     TextButton(
                       onPressed: () {},
                       child: const Text('Tutup'),

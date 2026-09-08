@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../core/photo_compression_service.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import 'armada_providers.dart';
 import 'models/helper.dart';
 
@@ -79,6 +80,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
       appBar: AppBar(
         title: const Text('Presensi Helper'),
         actions: [
+          const PortalSwitchButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(helpersProvider),

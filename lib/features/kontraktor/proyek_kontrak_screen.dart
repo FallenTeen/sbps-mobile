@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'kontraktor_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Screen Portal Kontraktor: Menampilkan tab Proyek Kontrak & Invoice Klien.
 class ProyekKontrakScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portal Kontraktor'),
+        actions: const [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

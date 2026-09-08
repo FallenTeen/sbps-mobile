@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Form Pengajuan Servis Armada (Section 21 — Bagian 1 Ajuan Driver/PIC).
 class AjuanServisScreen extends ConsumerStatefulWidget {
@@ -100,6 +101,7 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pengajuan Servis'),
+        actions: const [PortalSwitchButton()],
       ),
       body: masterArmadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

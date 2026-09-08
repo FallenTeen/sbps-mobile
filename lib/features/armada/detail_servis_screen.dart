@@ -8,6 +8,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import 'servis_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Detail Pengajuan Servis Armada beserta riwayat sparepart, catatan workshop,
 /// dan aksi persetujuan/penolakan untuk Kepala Divisi/Admin.
@@ -69,6 +70,7 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
           ],
         ),
         actions: [
+          const PortalSwitchButton(),
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Batal'),
@@ -142,6 +144,7 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
           ),
         ),
         actions: [
+          const PortalSwitchButton(),
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Batal'),
@@ -202,6 +205,7 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Servis'),
+        actions: const [PortalSwitchButton()],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
@@ -477,6 +481,7 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
             ),
           );
         },
+      ),
       ),
     );
   }

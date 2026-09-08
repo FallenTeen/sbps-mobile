@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/widgets/portal_switch_button.dart';
 import 'servis_providers.dart';
 
 /// Screen daftar riwayat pengajuan servis armada dengan filter status dan pagination.
@@ -38,6 +39,7 @@ class RiwayatServisScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Riwayat Servis'),
         actions: [
+          const PortalSwitchButton(),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Ajukan Servis Baru',

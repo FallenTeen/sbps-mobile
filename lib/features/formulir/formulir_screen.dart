@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
@@ -14,6 +15,7 @@ import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
 import 'formulir_providers.dart';
 import 'models/formulir_lapangan.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import 'riwayat_formulir_screen.dart';
 
 /// Formulir Lapangan harian (Fase A1.5).
@@ -31,6 +33,7 @@ class FormulirScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Formulir Lapangan'),
         actions: [
+          const PortalSwitchButton(),
           IconButton(
             tooltip: 'Riwayat formulir',
             icon: const Icon(Icons.history),

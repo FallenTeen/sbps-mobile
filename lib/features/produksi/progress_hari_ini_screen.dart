@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import 'produksi_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Ringkasan output produksi per titik hari ini (GET /produksi/titik-progress).
 class ProgressHariIniScreen extends ConsumerWidget {
@@ -13,7 +14,10 @@ class ProgressHariIniScreen extends ConsumerWidget {
     final progress = ref.watch(titikProgressProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Progress Hari Ini')),
+      appBar: AppBar(
+        title: const Text('Progress Hari Ini'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(titikProgressProvider.future),
         child: progress.when(

@@ -7,6 +7,7 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Riwayat sesi produksi milik user dengan filter tanggal & mesin,
 /// pagination tombol "Muat lagi" (Fase A2.3).
@@ -20,7 +21,10 @@ class RiwayatProduksiScreen extends ConsumerWidget {
     final mesinAsync = ref.watch(mesinProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Produksi')),
+      appBar: AppBar(
+        title: const Text('Riwayat Produksi'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         child: Column(
           children: [

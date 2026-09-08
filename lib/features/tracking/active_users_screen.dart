@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api_client.dart';
 import 'tracking_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Daftar user aktif (GPS dalam 1 jam terakhir) — khusus Owner/Admin
 /// Keuangan. Auto-refresh tiap 60 detik.
@@ -38,7 +39,10 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
     final users = ref.watch(activeUsersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('User Aktif')),
+      appBar: AppBar(
+        title: const Text('User Aktif'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(activeUsersProvider.future),
         child: users.when(

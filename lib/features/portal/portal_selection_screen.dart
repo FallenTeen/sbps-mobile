@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/auth_providers.dart';
 import 'portal_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Halaman pemilih portal: Presensi atau Proyek.
 /// Tampil setelah login jika user punya akses ke kedua portal.
@@ -31,6 +32,7 @@ class PortalSelectionScreen extends ConsumerWidget {
           automaticallyImplyLeading: false,
           title: const Text('Pilih Portal'),
           actions: [
+          const PortalSwitchButton(),
             IconButton(
               tooltip: 'Logout',
               icon: const Icon(Icons.logout),

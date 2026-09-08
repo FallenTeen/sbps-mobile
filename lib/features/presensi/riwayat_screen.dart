@@ -8,6 +8,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 const _bulanNames = [
   'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
@@ -102,7 +103,10 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
     final now = DateTime.now();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Presensi')),
+      appBar: AppBar(
+        title: const Text('Riwayat Presensi'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         child: Column(
           children: [

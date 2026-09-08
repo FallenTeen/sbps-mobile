@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Checklist harian armada: menampilkan status tiap kendaraan hari ini dan
 /// form pencatatan/ubah kondisi kendaraan.
@@ -46,7 +47,10 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     final checklist = ref.watch(checklistHariIniProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checklist Harian')),
+      appBar: AppBar(
+        title: const Text('Checklist Harian'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(checklistHariIniProvider),
         child: switch (checklist) {

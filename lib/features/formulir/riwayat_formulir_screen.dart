@@ -9,6 +9,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import 'formulir_providers.dart';
 import 'models/formulir_lapangan.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Riwayat Formulir Lapangan (GET /formulir/riwayat) — pagination
 /// "Muat lagi" + thumbnail grid foto + preview Hero.
@@ -83,7 +84,10 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Formulir')),
+      appBar: AppBar(
+        title: const Text('Riwayat Formulir'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         child: RefreshIndicator(
           onRefresh: _reload,

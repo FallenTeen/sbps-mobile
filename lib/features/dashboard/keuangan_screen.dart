@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import 'dashboard_providers.dart';
 import 'widgets/charts.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Dashboard finansial (HANYA Owner/Admin Keuangan — guard route +
 /// validasi backend 403): chart keuangan mingguan masuk vs keluar
@@ -17,7 +18,10 @@ class KeuanganScreen extends ConsumerWidget {
     final chart = ref.watch(keuanganChartProvider(period));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard Finansial')),
+      appBar: AppBar(
+        title: const Text('Dashboard Finansial'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async =>
             ref.invalidate(keuanganChartProvider(period)),

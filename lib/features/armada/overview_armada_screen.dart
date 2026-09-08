@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dashboard/dashboard_providers.dart';
 import 'servis_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Screen Overview Seluruh Armada & Status Operasional untuk Manajemen (Owner, Admin Keuangan, dsb).
 class OverviewArmadaScreen extends ConsumerWidget {
@@ -27,6 +28,7 @@ class OverviewArmadaScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Overview Seluruh Armada'),
+        actions: const [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

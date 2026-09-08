@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/photo_compression_service.dart';
 import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Lampirkan dokumentasi foto produksi/QC (Fase A2.7): pilih 1-10 foto,
 /// opsional kaitkan ke sesi produksi (subject_type "ProductionSession"),
@@ -75,7 +77,10 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
     final sesiAktif = ref.watch(sesiAktifProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dokumentasi Produksi')),
+      appBar: AppBar(
+        title: const Text('Dokumentasi Produksi'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

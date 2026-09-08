@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_providers.dart';
 import 'home_shell.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Home sementara Fase A1.2/A2.2: verifikasi sesi, role switch, dan
 /// peringatan akun belum terhubung karyawan. Modul fitur menyusul per fase.
@@ -36,6 +37,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const HomeTitle(),
         actions: [
+          const PortalSwitchButton(),
           if (roles.length > 1)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -82,6 +84,7 @@ class HomeScreen extends ConsumerWidget {
                 'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
               ),
               actions: [
+          const PortalSwitchButton(),
                 TextButton(
                   onPressed: () {},
                   child: const Text('Tutup'),

@@ -15,19 +15,21 @@ import 'package:flutter/material.dart';
 /// Jika Firebase belum dikonfigurasi, token dikembalikan null — backend
 /// menerima login tanpa `device_token` karena field tersebut opsional.
 class PushTokenService {
-  PushTokenService({FirebaseMessaging? messaging})
-      : _messaging = messaging ?? FirebaseMessaging.instance;
+  PushTokenService({FirebaseMessaging? messaging}) : _messaging = messaging;
 
-  final FirebaseMessaging _messaging;
+  final FirebaseMessaging? _messaging;
   String? _cachedToken;
+
+  FirebaseMessaging? get _fm => _messaging;
 
   /// Token FCM aktif, atau null bila Firebase belum dikonfigurasi.
   Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
+    if (_fm == null) return null;
 
     try {
       // Minta permission (Android 13+ / iOS wajib).
-      final settings = await _messaging.requestPermission(
+      final settings = await _fm!.requestPermission(
         alert: true,
         badge: true,
         sound: true,
@@ -38,11 +40,11 @@ class PushTokenService {
         return null;
       }
 
-      final token = await _messaging.getToken();
+      final token = await _fm!.getToken();
       _cachedToken = token;
 
       // Refresh token listener — simpan token baru saat FCM rotate.
-      _messaging.onTokenRefresh.listen((newToken) {
+      _fm!.onTokenRefresh.listen((newToken) {
         _cachedToken = newToken;
         debugPrint('[PushToken] Token refreshed: ${newToken.substring(0, 20)}...');
       });

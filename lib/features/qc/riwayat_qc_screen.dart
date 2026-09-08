@@ -8,6 +8,7 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Riwayat QC: filter status, badge warna per status, pagination
 /// tombol "Muat lagi" (Fase A2.5).
@@ -20,7 +21,10 @@ class RiwayatQcScreen extends ConsumerWidget {
     final filter = ref.watch(qcRiwayatFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat QC')),
+      appBar: AppBar(
+        title: const Text('Riwayat QC'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         child: Column(
           children: [

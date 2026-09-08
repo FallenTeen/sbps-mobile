@@ -8,8 +8,8 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../auth/auth_providers.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
-import '../portal/portal_providers.dart';
 import '../tracking/tracking_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import 'role_permissions.dart';
 
 /// Home App 2 per role aktif (Fase A2.2): tile modul difilter permission
@@ -32,15 +32,7 @@ class ProyekHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Halo, ${user?.name ?? ''}'),
         actions: [
-          // Kembali ke layar pilihan portal (hanya bila user punya >1 portal).
-          if (user != null && autoPortal(user) == null)
-            IconButton(
-              tooltip: 'Pilih portal',
-              icon: const Icon(Icons.apps),
-              onPressed: () => ref
-                  .read(selectedPortalProvider.notifier)
-                  .clear(),
-            ),
+          const PortalSwitchButton(),
           // Profil user — edit profil & logout semua perangkat.
           IconButton(
             tooltip: 'Profil',

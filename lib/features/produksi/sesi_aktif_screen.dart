@@ -9,6 +9,8 @@ import '../qc/qc_sheets.dart';
 import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
+import 'produksi_ringkasan_screen.dart';
 
 /// Daftar sesi berstatus `berjalan` milik user + pintu ke Mulai/Riwayat/
 /// Progress (Fase A2.3).
@@ -25,6 +27,15 @@ class SesiAktifScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Sesi Produksi'),
         actions: [
+          const PortalSwitchButton(),
+          IconButton(
+            tooltip: 'Ringkasan produksi',
+            icon: const Icon(Icons.dashboard_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const ProduksiRingkasanScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Dokumentasi',
             icon: const Icon(Icons.attach_file),

@@ -13,6 +13,7 @@ import 'fmt.dart';
 import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Dashboard operasional per role (Fase A2.6):
 /// - Owner/Admin Keuangan: overview + armada + kehadiran divisi +
@@ -28,7 +29,10 @@ class DashboardHomeScreen extends ConsumerWidget {
     final sections = dashboardSectionsFor(role);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard Operasional')),
+      appBar: AppBar(
+        title: const Text('Dashboard Operasional'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(overviewProvider);

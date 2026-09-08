@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import 'kontraktor_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Detail Proyek Kontrak Klien: Ringkasan Produksi, Realisasi RAB, Invoices, dan Chat Komunikasi.
 class DetailProyekKontrakScreen extends ConsumerStatefulWidget {
@@ -60,6 +61,7 @@ class _DetailProyekKontrakScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Proyek Kontrak'),
+        actions: const [PortalSwitchButton()],
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

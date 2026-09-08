@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/api_client.dart';
 import 'tracking_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Jejak lokasi satu user hari ini (GET /tracking/hari-ini/{userId}) dengan
 /// visualisasi Peta OpenStreetMap interaktif dan daftar titik kronologis.
@@ -46,6 +47,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.nama == null ? 'Tracking Hari Ini' : widget.nama!),
+        actions: const [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

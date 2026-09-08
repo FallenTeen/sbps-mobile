@@ -5,6 +5,7 @@ import '../../core/api_client.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'status_chip.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Daftar PO menunggu approval (Owner/Admin Keuangan) — server dibatasi
 /// maks 20 item terbaru; UI memberi label eksplisit bila tepat 20
@@ -17,7 +18,10 @@ class PoPendingScreen extends ConsumerWidget {
     final po = ref.watch(poPendingProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('PO Menunggu Approval')),
+      appBar: AppBar(
+        title: const Text('PO Menunggu Approval'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(poPendingProvider.future),
         child: po.when(

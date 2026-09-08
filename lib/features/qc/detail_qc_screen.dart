@@ -8,6 +8,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Detail QC sample: info sample + info sesi produksi terkait
 /// (produk, mesin, titik, operator, waktu mulai/selesai) — Fase A2.5.
@@ -21,7 +22,10 @@ class DetailQcScreen extends ConsumerWidget {
     final detail = ref.watch(qcDetailProvider(sampleId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail QC')),
+      appBar: AppBar(
+        title: const Text('Detail QC'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
         child: RefreshIndicator(

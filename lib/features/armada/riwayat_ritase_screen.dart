@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Riwayat ritase/pengiriman milik driver (modul Armada) dengan pagination.
 class RiwayatRitaseScreen extends ConsumerWidget {
@@ -13,7 +14,10 @@ class RiwayatRitaseScreen extends ConsumerWidget {
     final state = ref.watch(ritaseRiwayatProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Ritase')),
+      appBar: AppBar(
+        title: const Text('Riwayat Ritase'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
         child: _buildList(context, ref, state),

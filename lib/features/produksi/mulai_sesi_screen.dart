@@ -10,6 +10,7 @@ import '../presensi/presensi_providers.dart';
 import '../titik/titik_selector.dart';
 import 'models/master.dart';
 import 'produksi_providers.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Halaman "Mulai Sesi" (Fase A2.3): pilih mesin & produk dari master;
 /// titik_id default ke titik mesin bila tidak diisi (backend menangani).
@@ -88,7 +89,10 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
     final titikAsync = ref.watch(titikAktifProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mulai Sesi Produksi')),
+      appBar: AppBar(
+        title: const Text('Mulai Sesi Produksi'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         child: mesinAsync.when(
           loading: () => const Padding(

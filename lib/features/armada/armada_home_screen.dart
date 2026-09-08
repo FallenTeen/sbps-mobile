@@ -3,17 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'armada_providers.dart';
+import 'driver_dashboard_screen.dart';
 import 'models/armada.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Home modul Armada (role Driver Armada): menampilkan kendaraan milik
-/// driver beserta pintu masuk ke Riwayat Ritase & Checklist Harian.
+/// driver beserta pintu masuk ke Dashboard Pribadi, Riwayat Ritase,
+/// Checklist Harian, dan modul lainnya.
 class ArmadaHomeScreen extends ConsumerWidget {
   const ArmadaHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Armada')),
+      appBar: AppBar(
+        title: const Text('Armada'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(armadaSayaProvider),
         child: ListView(
@@ -42,29 +48,23 @@ class ArmadaHomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Card(
               child: ListTile(
+                leading: const Icon(Icons.dashboard_outlined),
+                title: const Text('Dashboard Saya'),
+                subtitle: const Text('Ringkasan kinerja & ritase hari ini'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                      builder: (_) => const DriverDashboardScreen()),
+                ),
+              ),
+            ),
+            Card(
+              child: ListTile(
                 leading: const Icon(Icons.route_outlined),
                 title: const Text('Riwayat Ritase'),
                 subtitle: const Text('Pengiriman & upah per rit'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/armada/ritase'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.speed_outlined),
-                title: const Text('ODO Awal Proyek'),
-                subtitle: const Text('Catat ODO awal kendaraan per titik proyek'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/armada/odo-awal'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.badge_outlined),
-                title: const Text('Presensi Helper'),
-                subtitle: const Text('Absenkan helper armada hari ini'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/armada/helper-presensi'),
               ),
             ),
             Card(
@@ -78,20 +78,29 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ),
             Card(
               child: ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: const Text('Presensi Helper'),
+                subtitle: const Text('Absenkan helper armada hari ini'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/helper-presensi'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.speed_outlined),
+                title: const Text('ODO Awal Proyek'),
+                subtitle: const Text('Catat ODO awal kendaraan per ritase'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/odo-awal'),
+              ),
+            ),
+            Card(
+              child: ListTile(
                 leading: const Icon(Icons.build_outlined),
                 title: const Text('Servis Armada'),
                 subtitle: const Text('Pengajuan & riwayat perbaikan armada'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/armada/servis'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.list_alt_outlined),
-                title: const Text('Overview Seluruh Armada'),
-                subtitle: const Text('Daftar seluruh unit & status operasional'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/armada/overview'),
               ),
             ),
           ],

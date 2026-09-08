@@ -7,6 +7,7 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'models/notification.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import 'notifikasi_providers.dart';
 
 /// Daftar notifikasi (Fase A1.7): status baca, tap → tandai dibaca,
@@ -22,6 +23,7 @@ class NotifikasiScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Notifikasi'),
         actions: [
+          const PortalSwitchButton(),
           IconButton(
             tooltip: 'Segarkan',
             icon: const Icon(Icons.refresh),

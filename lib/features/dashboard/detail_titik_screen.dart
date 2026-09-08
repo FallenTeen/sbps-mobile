@@ -9,6 +9,7 @@ import '../../core/api_client.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'models.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 
 /// Detail satu titik kerja (Fase A2.6): koordinat, ringkasan SDM &
 /// armada aktif, RAB titik (jika role berhak), dan riwayat produksi
@@ -32,7 +33,10 @@ class DetailTitikScreen extends ConsumerWidget {
     final detail = ref.watch(titikDetailProvider(titikId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(nama ?? 'Detail Titik')),
+      appBar: AppBar(
+        title: Text(nama ?? 'Detail Titik'),
+        actions: const [PortalSwitchButton()],
+      ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
         child: RefreshIndicator(
