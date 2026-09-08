@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../portal/portal_providers.dart';
 import 'version_service.dart';
 
 final versionServiceProvider = Provider<VersionService>(
@@ -29,10 +28,8 @@ class VersionGateController extends AsyncNotifier<VersionGateState> {
   @override
   Future<VersionGateState> build() async {
     try {
-      final portal = ref.read(selectedPortalProvider).value;
-      final appName = portal == AppPortal.proyek ? 'proyek' : 'presensi';
       final info =
-          await ref.read(versionServiceProvider).fetchAppVersion(appName);
+          await ref.read(versionServiceProvider).fetchAppVersion('mobile');
       if (!info.forceUpdate || info.minVersion.isEmpty) {
         return VersionGateState.ok;
       }

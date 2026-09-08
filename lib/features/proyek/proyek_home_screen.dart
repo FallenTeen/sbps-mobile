@@ -103,6 +103,8 @@ class ProyekHomeScreen extends ConsumerWidget {
                           const Text('Chart keuangan, PO, invoice'),
                         'armada' =>
                           const Text('Kendaraan, ritase & checklist harian'),
+                        'kontraktor' =>
+                          const Text('Proyek kontrak, progress, invoice & chat'),
                         _ => const Text('Menyusul di fase berikutnya'),
                       },
                       trailing: const Icon(Icons.chevron_right),
@@ -120,6 +122,8 @@ class ProyekHomeScreen extends ConsumerWidget {
                             context.push('/dashboard/keuangan');
                           case 'armada':
                             context.push('/armada');
+                          case 'kontraktor':
+                            context.push('/kontraktor/proyek');
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

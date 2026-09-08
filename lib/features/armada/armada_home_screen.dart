@@ -85,6 +85,15 @@ class ArmadaHomeScreen extends ConsumerWidget {
                 onTap: () => context.push('/armada/servis'),
               ),
             ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.list_alt_outlined),
+                title: const Text('Overview Seluruh Armada'),
+                subtitle: const Text('Daftar seluruh unit & status operasional'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/armada/overview'),
+              ),
+            ),
           ],
         ),
       ),

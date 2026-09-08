@@ -37,6 +37,11 @@ const kProyekModules = <ProyekModule>[
     label: 'Armada',
     icon: Icons.local_shipping,
   ),
+  ProyekModule(
+    key: 'kontraktor',
+    label: 'Portal Kontrak',
+    icon: Icons.business_center_outlined,
+  ),
 ];
 
 /// Permission matrix sisi client — HANYA lapisan UX untuk navigasi/guard
@@ -49,9 +54,9 @@ class RolePermissions {
   static const Map<String, Set<String>> _matrix = <String, Set<String>>{
     // Fase A2.6: Mandor Titik dapat overview + armada-status (non-finansial).
     'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
-    'Kontraktor': {'dashboard'},
-    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan', 'armada'},
-    'Admin Keuangan': {'tracking', 'dashboard', 'keuangan', 'armada'},
+    'Kontraktor': {'dashboard', 'kontraktor'},
+    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan', 'armada', 'kontraktor'},
+    'Admin Keuangan': {'tracking', 'dashboard', 'keuangan', 'armada', 'kontraktor'},
     'Driver Armada': {'armada'},
     'Kepala Divisi Armada': {'armada', 'dashboard'},
   };

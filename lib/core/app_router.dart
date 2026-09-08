@@ -13,6 +13,7 @@ import '../features/armada/checklist_screen.dart';
 import '../features/armada/detail_servis_screen.dart';
 import '../features/armada/helper_presensi_screen.dart';
 import '../features/armada/odo_awal_screen.dart';
+import '../features/armada/overview_armada_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/armada/riwayat_servis_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
@@ -20,6 +21,8 @@ import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
 import '../features/dashboard/keuangan_screen.dart';
 import '../features/dashboard/po_pending_screen.dart';
+import '../features/kontraktor/detail_proyek_kontrak_screen.dart';
+import '../features/kontraktor/proyek_kontrak_screen.dart';
 import '../features/presensi/titik_kerja_screen.dart';
 import '../features/portal/portal_providers.dart';
 import '../features/portal/portal_selection_screen.dart';
@@ -260,6 +263,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/armada/servis/:id',
         builder: (context, state) => DetailServisScreen(
+          id: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/armada/overview',
+        builder: (context, state) => const OverviewArmadaScreen(),
+      ),
+      GoRoute(
+        path: '/kontraktor/proyek',
+        builder: (context, state) => const ProyekKontrakScreen(),
+      ),
+      GoRoute(
+        path: '/kontraktor/proyek/:id',
+        builder: (context, state) => DetailProyekKontrakScreen(
           id: state.pathParameters['id']!,
         ),
       ),
