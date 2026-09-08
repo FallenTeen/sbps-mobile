@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/theme/breakpoints.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
+import '../presensi/models/titik.dart';
+import '../titik/titik_map_view.dart';
 import 'dashboard_providers.dart';
 import 'detail_titik_screen.dart';
 import 'fmt.dart';
@@ -36,43 +39,46 @@ class DashboardHomeScreen extends ConsumerWidget {
           }
           await Future<void>.delayed(const Duration(milliseconds: 300));
         },
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (sections.showOverview) ...[
-              const _SectionOverview(),
-              const SizedBox(height: 20),
-            ],
-            if (sections.showArmadaStatus) ...[
-              const _SectionArmada(),
-              const SizedBox(height: 20),
-            ],
-            if (sections.showKehadiran) ...[
-              const _SectionKehadiran(),
-              const SizedBox(height: 20),
-            ],
-            if (sections.showChartProduksi) ...[
-              const _SectionChartProduksi(),
-              const SizedBox(height: 12),
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.payments_outlined),
-                  title: const Text('Dashboard Finansial'),
-                  subtitle:
-                      const Text('Chart keuangan mingguan, PO & invoice'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/dashboard/keuangan'),
+        child: ResponsiveCenter(
+          maxWidth: AppBreakpoints.maxContentWidth,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (sections.showOverview) ...[
+                const _SectionOverview(),
+                const SizedBox(height: 20),
+              ],
+              if (sections.showArmadaStatus) ...[
+                const _SectionArmada(),
+                const SizedBox(height: 20),
+              ],
+              if (sections.showKehadiran) ...[
+                const _SectionKehadiran(),
+                const SizedBox(height: 20),
+              ],
+              if (sections.showChartProduksi) ...[
+                const _SectionChartProduksi(),
+                const SizedBox(height: 12),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.payments_outlined),
+                    title: const Text('Dashboard Finansial'),
+                    subtitle:
+                        const Text('Chart keuangan mingguan, PO & invoice'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/dashboard/keuangan'),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
+              ],
+              if (sections.showFinancial) ...[
+                const _PoPendingCard(),
+                const SizedBox(height: 8),
+                const _InvoiceCard(),
+              ],
             ],
-            if (sections.showFinancial) ...[
-              const _PoPendingCard(),
-              const SizedBox(height: 8),
-              const _InvoiceCard(),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -83,36 +89,77 @@ class DashboardHomeScreen extends ConsumerWidget {
 // Section: Overview titik
 // ---------------------------------------------------------------------------
 
-class _SectionOverview extends ConsumerWidget {
+class _SectionOverview extends StatefulWidget {
   const _SectionOverview();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final overview = ref.watch(overviewProvider);
+  State<_SectionOverview> createState() => _SectionOverviewState();
+}
 
-    return SectionCard(
-      title: 'Ringkasan Titik Hari Ini',
-      child: overview.when(
-        loading: () => const CenteredProgress(),
-        error: (e, _) => ErrorRetry(
-          message: e is ApiException ? e.message : 'Gagal memuat overview.',
-          onRetry: () => ref.invalidate(overviewProvider),
-        ),
-        data: (data) {
-          if (data.items.isEmpty) {
-            return const EmptyHint(text: 'Belum ada titik aktif hari ini.');
-          }
-          return Column(
-            children: [
-              for (final t in data.items)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TitikOverviewTile(titik: t),
-                ),
-            ],
-          );
-        },
-      ),
+class _SectionOverviewState extends State<_SectionOverview> {
+  bool _showMap = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final overview = ref.watch(overviewProvider);
+
+        return SectionCard(
+          title: 'Ringkasan Titik Hari Ini',
+          trailing: IconButton(
+            tooltip: _showMap ? 'Tampilkan Daftar' : 'Tampilkan Peta',
+            icon: Icon(_showMap ? Icons.format_list_bulleted : Icons.map_outlined),
+            onPressed: () => setState(() => _showMap = !_showMap),
+          ),
+          child: overview.when(
+            loading: () => const CenteredProgress(),
+            error: (e, _) => ErrorRetry(
+              message: e is ApiException ? e.message : 'Gagal memuat overview.',
+              onRetry: () => ref.invalidate(overviewProvider),
+            ),
+            data: (data) {
+              if (data.items.isEmpty) {
+                return const EmptyHint(text: 'Belum ada titik aktif hari ini.');
+              }
+
+              if (_showMap) {
+                final titikList = data.items
+                    .map((t) => Titik(
+                          id: t.titikId,
+                          nama: t.titik,
+                          proyek: t.proyek,
+                          latitude: t.latitude ?? 0,
+                          longitude: t.longitude ?? 0,
+                          radiusPresensiMeter: 0,
+                          status: 'aktif',
+                        ))
+                    .toList();
+
+                return TitikMapView(
+                  titikList: titikList,
+                  height: 280,
+                  emptyMessage: 'Belum ada titik dengan koordinat valid.',
+                  onDetail: (titik) => context.push(
+                    DetailTitikScreen.routePath(titik.id),
+                    extra: titik.nama,
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  for (final t in data.items)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: TitikOverviewTile(titik: t),
+                    ),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

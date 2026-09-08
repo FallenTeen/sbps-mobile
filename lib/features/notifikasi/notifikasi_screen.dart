@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import 'models/notification.dart';
 import 'notifikasi_providers.dart';
 
@@ -26,37 +30,41 @@ class NotifikasiScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _Pesan(
-          icon: Icons.cloud_off_outlined,
-          judul: 'Gagal memuat notifikasi',
-          detail: '$error',
-          aksiLabel: 'Coba lagi',
-          onAksi: () =>
-              ref.read(notificationsProvider.notifier).refresh(),
-        ),
-        data: (page) {
-          if (page.items.isEmpty) {
-            return const _Pesan(
-              icon: Icons.notifications_none,
-              judul: 'Belum ada notifikasi',
-              detail: 'Pemberitahuan akan muncul di sini.',
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () =>
+      body: ResponsiveCenter(
+        child: async.when(
+          loading: () => const SkeletonListView(itemCount: 6),
+          error: (error, _) => AppEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal Memuat Notifikasi',
+            subtitle: '$error',
+            actionLabel: 'Coba Lagi',
+            onAction: () =>
                 ref.read(notificationsProvider.notifier).refresh(),
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
-              itemCount: page.items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, i) =>
-                  _Tile(notification: page.items[i]),
-            ),
-          );
-        },
+          ),
+          data: (page) {
+            if (page.items.isEmpty) {
+              return const AppEmptyState(
+                icon: Icons.notifications_none,
+                title: 'Belum Ada Notifikasi',
+                subtitle: 'Pemberitahuan aktivitas dan sistem akan muncul di sini.',
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(notificationsProvider.notifier).refresh(),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                itemCount: page.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, i) => StaggeredEntrance(
+                  index: i,
+                  child: _Tile(notification: page.items[i]),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -143,48 +151,5 @@ class _Tile extends ConsumerWidget {
       messenger.showSnackBar(
           const SnackBar(content: Text('Tidak dapat membuka tautan.')));
     }
-  }
-}
-
-class _Pesan extends StatelessWidget {
-  const _Pesan({
-    required this.icon,
-    required this.judul,
-    required this.detail,
-    this.aksiLabel,
-    this.onAksi,
-  });
-
-  final IconData icon;
-  final String judul;
-  final String detail;
-  final String? aksiLabel;
-  final VoidCallback? onAksi;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: theme.colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(judul, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(detail,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall),
-            if (aksiLabel != null && onAksi != null) ...[
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                  onPressed: onAksi, child: Text(aksiLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }

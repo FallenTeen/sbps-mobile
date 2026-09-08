@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../portal/portal_providers.dart';
+import '../titik/titik_selector.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
@@ -101,7 +106,8 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     final titikAsync = ref.watch(titikAktifProvider);
     final assignmentsAsync = ref.watch(assignmentsProvider);
     final position = ref.watch(currentPositionProvider);
-    final selectedId = ref.watch(selectedTitikProvider)?.id;
+    final selectedTitik = ref.watch(selectedTitikProvider);
+    final selectedId = selectedTitik?.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -143,131 +149,144 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshAll,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (user != null && !user.hasKaryawan) ...[
-              MaterialBanner(
-                backgroundColor:
-                    Theme.of(context).colorScheme.errorContainer,
-                contentTextStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
-                content: const Text(
-                  'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Tutup'),
+        child: ResponsiveCenter(
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (user != null && !user.hasKaryawan) ...[
+                MaterialBanner(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.errorContainer,
+                  contentTextStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ] else if (assignmentsAsync.value != null &&
-                assignmentsAsync.value!.isEmpty &&
-                assignmentsAsync.hasValue) ...[
-              MaterialBanner(
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-                content: const Text('Belum ada penugasan, hubungi admin.'),
-                actions: [
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Tutup'),
+                  content: const Text(
+                    'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-
-            const PresensiHariIniCard(),
-            const _FormulirEntryPoint(),
-            _LocationCard(
-              loading: _loadingPosition,
-              problem: _locationProblem,
-              onOpenSettings: () =>
-                  ref.read(locationServiceProvider).openSettings(),
-              onRetry: _loadPosition,
-            ),
-            const SizedBox(height: 16),
-
-            Text('Titik Kerja Aktif',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-
-            titikAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, _) => Card(
-                child: ListTile(
-                  leading: Icon(Icons.error_outline,
-                      color: Theme.of(context).colorScheme.error),
-                  title: const Text('Gagal memuat titik kerja'),
-                  subtitle: Text(error.toString()),
-                  trailing: TextButton(
-                    onPressed: () => ref.invalidate(titikAktifProvider),
-                    child: const Text('Coba lagi'),
-                  ),
-                ),
-              ),
-              data: (titikList) {
-                if (titikList.isEmpty) {
-                  return const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(
-                        child: Text('Belum ada titik kerja aktif.'),
-                      ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Tutup'),
                     ),
-                  );
-                }
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ] else if (assignmentsAsync.value != null &&
+                  assignmentsAsync.value!.isEmpty &&
+                  assignmentsAsync.hasValue) ...[
+                MaterialBanner(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  content: const Text('Belum ada penugasan, hubungi admin.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
 
-                String? nearestId;
-                if (position != null) {
-                  final location = ref.read(locationServiceProvider);
-                  var best = double.infinity;
-                  for (final t in titikList) {
-                    final d = location.distanceMeters(
-                      fromLat: position.latitude,
-                      fromLng: position.longitude,
-                      toLat: t.latitude,
-                      toLng: t.longitude,
+              const PresensiHariIniCard(),
+              const _FormulirEntryPoint(),
+              _LocationCard(
+                loading: _loadingPosition,
+                problem: _locationProblem,
+                onOpenSettings: () =>
+                    ref.read(locationServiceProvider).openSettings(),
+                onRetry: _loadPosition,
+              ),
+              const SizedBox(height: 16),
+
+              Text('Titik Kerja Aktif',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+
+              titikAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SkeletonListView(itemCount: 3, padding: EdgeInsets.zero),
+                ),
+                error: (error, _) => Card(
+                  child: ListTile(
+                    leading: Icon(Icons.error_outline,
+                        color: Theme.of(context).colorScheme.error),
+                    title: const Text('Gagal memuat titik kerja'),
+                    subtitle: Text(error.toString()),
+                    trailing: TextButton(
+                      onPressed: () => ref.invalidate(titikAktifProvider),
+                      child: const Text('Coba lagi'),
+                    ),
+                  ),
+                ),
+                data: (titikList) {
+                  if (titikList.isEmpty) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: Text('Belum ada titik kerja aktif.'),
+                        ),
+                      ),
                     );
-                    if (d < best) {
-                      best = d;
-                      nearestId = t.id;
+                  }
+
+                  String? nearestId;
+                  if (position != null) {
+                    final location = ref.read(locationServiceProvider);
+                    var best = double.infinity;
+                    for (final t in titikList) {
+                      final d = location.distanceMeters(
+                        fromLat: position.latitude,
+                        fromLng: position.longitude,
+                        toLat: t.latitude,
+                        toLng: t.longitude,
+                      );
+                      if (d < best) {
+                        best = d;
+                        nearestId = t.id;
+                      }
                     }
                   }
-                }
 
-                return Column(
-                  children: [
-                    for (final t in titikList)
-                      _TitikTile(
-                        titik: t,
-                        distanceText: position == null
-                            ? null
-                            : _formatDistance(ref
-                                .read(locationServiceProvider)
-                                .distanceMeters(
-                                  fromLat: position.latitude,
-                                  fromLng: position.longitude,
-                                  toLat: t.latitude,
-                                  toLng: t.longitude,
-                                )),
-                        isNearest: t.id == nearestId,
-                        isSelected: t.id == selectedId,
-                        onTap: () => _selectTitik(t),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
+                  return TitikSelector(
+                    titikList: titikList,
+                    selectedTitik: selectedTitik,
+                    mapHeight: 360,
+                    onChanged: (t) {
+                      if (t != null) _selectTitik(t);
+                    },
+                    listBuilder: (context, _) => Column(
+                      children: [
+                        for (var i = 0; i < titikList.length; i++)
+                          StaggeredEntrance(
+                            index: i,
+                            child: _TitikTile(
+                              titik: titikList[i],
+                              distanceText: position == null
+                                  ? null
+                                  : _formatDistance(ref
+                                      .read(locationServiceProvider)
+                                      .distanceMeters(
+                                        fromLat: position.latitude,
+                                        fromLng: position.longitude,
+                                        toLat: titikList[i].latitude,
+                                        toLng: titikList[i].longitude,
+                                      )),
+                              isNearest: titikList[i].id == nearestId,
+                              isSelected: titikList[i].id == selectedId,
+                              onTap: () => _selectTitik(titikList[i]),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -311,9 +330,8 @@ class _NotifikasiBadgeAction extends ConsumerWidget {
 
     return IconButton(
       tooltip: 'Notifikasi',
-      icon: Badge(
-        isLabelVisible: count > 0,
-        label: Text('$count'),
+      icon: AnimatedCountBadge(
+        count: count,
         child: const Icon(Icons.notifications_outlined),
       ),
       onPressed: () async {
@@ -336,10 +354,21 @@ class _PendingBadgeAction extends ConsumerWidget {
 
     return IconButton(
       tooltip: 'Aksi menunggu sinkronisasi',
-      icon: Badge(
-        isLabelVisible: count > 0,
-        label: Text('$count'),
-        child: const Icon(Icons.cloud_upload_outlined),
+      icon: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedCountBadge(
+            count: count,
+            badgeColor: Colors.orange.shade700,
+            child: const Icon(Icons.cloud_upload_outlined),
+          ),
+          if (count > 0)
+            const Positioned(
+              top: 2,
+              right: 2,
+              child: PulsingSyncDot(size: 6),
+            ),
+        ],
       ),
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);

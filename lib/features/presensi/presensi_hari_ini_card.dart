@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../core/photo_compression_service.dart';
 import 'models/presensi_hari_ini.dart';
@@ -20,18 +22,13 @@ class PresensiHariIniCard extends ConsumerWidget {
     final busyPhase = submitState.busy ? submitState.phase : null;
     final titik = ref.watch(selectedTitikProvider);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: hariIniAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: CircularProgressIndicator(),
-            ),
-          ),
-          error: (error, _) => Column(
+    return hariIniAsync.when(
+      loading: () => const SkeletonCard(height: 120),
+      error: (error, _) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text('Gagal memuat status presensi.', style: theme.textTheme.titleMedium),
@@ -44,7 +41,13 @@ class PresensiHariIniCard extends ConsumerWidget {
               ),
             ],
           ),
-          data: (presensi) => switch (presensi.status) {
+        ),
+      ),
+      data: (presensi) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: switch (presensi.status) {
             PresensiStatus.belumCheckIn => _belumCheckIn(
                 context, ref, theme, presensi, busyPhase, titik != null),
             PresensiStatus.menungguCheckOut => _menungguCheckOut(
@@ -77,22 +80,28 @@ class PresensiHariIniCard extends ConsumerWidget {
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
-        FilledButton.icon(
+        BouncingButton(
           onPressed: (!siap || busy)
               ? null
               : () => _pickAndSubmit(
                   context, ref, PendingEndpoint.presensiCheckIn),
-          icon: busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.login),
-          label: Text(switch (busyPhase) {
-            UploadPhase.compressing => 'Mengompres foto...',
-            UploadPhase.sending => 'Mengirim...',
-            _ => 'Check-In',
-          }),
+          child: FilledButton.icon(
+            onPressed: (!siap || busy)
+                ? null
+                : () => _pickAndSubmit(
+                    context, ref, PendingEndpoint.presensiCheckIn),
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.login),
+            label: Text(switch (busyPhase) {
+              UploadPhase.compressing => 'Mengompres foto...',
+              UploadPhase.sending => 'Mengirim...',
+              _ => 'Check-In',
+            }),
+          ),
         ),
       ],
     );
@@ -123,20 +132,24 @@ class PresensiHariIniCard extends ConsumerWidget {
         Text('Check-in pukul ${_fmtJam(presensi.checkIn)}',
             style: theme.textTheme.bodySmall),
         const SizedBox(height: 12),
-        FilledButton.tonalIcon(
+        BouncingButton(
           onPressed:
               busy ? null : () => _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckOut),
-          icon: busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.logout),
-          label: Text(switch (busyPhase) {
-            UploadPhase.compressing => 'Mengompres foto...',
-            UploadPhase.sending => 'Mengirim...',
-            _ => 'Check-Out',
-          }),
+          child: FilledButton.tonalIcon(
+            onPressed:
+                busy ? null : () => _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckOut),
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.logout),
+            label: Text(switch (busyPhase) {
+              UploadPhase.compressing => 'Mengompres foto...',
+              UploadPhase.sending => 'Mengirim...',
+              _ => 'Check-Out',
+            }),
+          ),
         ),
       ],
     );

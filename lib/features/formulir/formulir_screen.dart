@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/photo_viewer_dialog.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/photo_compression_service.dart';
 
 import '../presensi/models/presensi_hari_ini.dart';
@@ -38,29 +42,34 @@ class FormulirScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: presensiAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _PesanTengah(
-          icon: Icons.cloud_off_outlined,
-          judul: 'Gagal memuat status presensi',
-          detail: '$error',
-          aksi: () => ref.invalidate(hariIniProvider),
+      body: ResponsiveCenter(
+        child: presensiAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: SkeletonDetailView(),
+          ),
+          error: (error, _) => _PesanTengah(
+            icon: Icons.cloud_off_outlined,
+            judul: 'Gagal memuat status presensi',
+            detail: '$error',
+            aksi: () => ref.invalidate(hariIniProvider),
+          ),
+          data: (presensi) {
+            if (presensi.status == PresensiStatus.belumCheckIn) {
+              // Cegah sejak awal — jangan biarkan user mengisi lalu gagal 422.
+              return _PesanTengah(
+                icon: Icons.login,
+                judul: 'Belum check-in hari ini',
+                detail:
+                    'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
+                    'check-in presensi.',
+                aksiLabel: 'Kembali',
+                aksi: () => Navigator.of(context).maybePop(),
+              );
+            }
+            return const _FormulirBody();
+          },
         ),
-        data: (presensi) {
-          if (presensi.status == PresensiStatus.belumCheckIn) {
-            // Cegah sejak awal — jangan biarkan user mengisi lalu gagal 422.
-            return _PesanTengah(
-              icon: Icons.login,
-              judul: 'Belum check-in hari ini',
-              detail:
-                  'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
-                  'check-in presensi.',
-              aksiLabel: 'Kembali',
-              aksi: () => Navigator.of(context).maybePop(),
-            );
-          }
-          return const _FormulirBody();
-        },
       ),
     );
   }
@@ -384,50 +393,70 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
             ),
-            itemBuilder: (context, i) => Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
-                // Indikator 3 state (A1.6): kompres → siap kirim → terkirim
-                // (terkirim ditandai hilangnya thumbnail saat sukses —
-                // layar pindah ke mode read-only).
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: _StatusBadge(phase: busyPhase),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: InkWell(
-                    onTap: () => setState(() => _fotoLokal.removeAt(i)),
-                    child: CircleAvatar(
-                      radius: 12,
-                      backgroundColor:
-                          theme.colorScheme.errorContainer,
-                      child: Icon(Icons.close,
-                          size: 14,
-                          color: theme.colorScheme.onErrorContainer),
+            itemBuilder: (context, i) {
+              final heroTag = 'formulir_draft_photo_$i';
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  GestureDetector(
+                    onTap: () => PhotoViewerDialog.show(
+                      context: context,
+                      heroTag: heroTag,
+                      filePath: _fotoLokal[i],
+                      title: 'Preview Foto ${i + 1}',
+                    ),
+                    child: Hero(
+                      tag: heroTag,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  // Indikator 3 state (A1.6): kompres → siap kirim → terkirim
+                  // (terkirim ditandai hilangnya thumbnail saat sukses —
+                  // layar pindah ke mode read-only).
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: _StatusBadge(phase: busyPhase),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: InkWell(
+                      onTap: () => setState(() => _fotoLokal.removeAt(i)),
+                      child: CircleAvatar(
+                        radius: 12,
+                        backgroundColor:
+                            theme.colorScheme.errorContainer,
+                        child: Icon(Icons.close,
+                            size: 14,
+                            color: theme.colorScheme.onErrorContainer),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         const SizedBox(height: 16),
-        FilledButton.icon(
+        BouncingButton(
           onPressed: busy ? null : _submit,
-          icon: busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.send_outlined),
-          label: Text(switch (busyPhase) {
-            UploadPhase.compressing => 'Mengompres foto...',
-            UploadPhase.sending => 'Mengirim...',
-            _ => 'Kirim Formulir',
-          }),
+          child: FilledButton.icon(
+            onPressed: busy ? null : _submit,
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.send_outlined),
+            label: Text(switch (busyPhase) {
+              UploadPhase.compressing => 'Mengompres foto...',
+              UploadPhase.sending => 'Mengirim...',
+              _ => 'Kirim Formulir',
+            }),
+          ),
         ),
       ],
     );

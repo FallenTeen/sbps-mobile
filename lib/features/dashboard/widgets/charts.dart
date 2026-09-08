@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../dashboard_providers.dart';
 import '../fmt.dart';
 import '../models.dart';
@@ -52,8 +53,21 @@ class CenteredProgress extends StatelessWidget {
   const CenteredProgress({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Center(child: CircularProgressIndicator());
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: SkeletonLoader(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonBlock(width: double.infinity, height: 16),
+              SizedBox(height: 8),
+              SkeletonBlock(width: 200, height: 12),
+              SizedBox(height: 8),
+              SkeletonBlock(width: 140, height: 12),
+            ],
+          ),
+        ),
+      );
 }
 
 class ErrorRetry extends StatelessWidget {

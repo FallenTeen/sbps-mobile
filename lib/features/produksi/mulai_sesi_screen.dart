@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
+import '../presensi/models/titik.dart';
+import '../presensi/presensi_providers.dart';
+import '../titik/titik_selector.dart';
 import 'models/master.dart';
 import 'produksi_providers.dart';
 
@@ -19,6 +25,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
 
   MesinMaster? _mesin;
   ProdukMaster? _produk;
+  Titik? _titik;
 
   @override
   void dispose() {
@@ -46,7 +53,8 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
   Future<void> _submit() async {
     if (_mesin == null || _produk == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih mesin dan produk terlebih dahulu.')),
+        const SnackBar(
+            content: Text('Pilih mesin dan produk terlebih dahulu.')),
       );
       return;
     }
@@ -54,6 +62,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
     final result = await ref.read(produksiSubmitProvider.notifier).mulai(
           mesinId: _mesin!.id,
           produkId: _produk!.id,
+          titikId: _titik?.id,
           catatan: _catatanCtrl.text.trim(),
         );
 
@@ -76,83 +85,125 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
     final busy = ref.watch(produksiSubmitProvider).busy;
     final mesinAsync = ref.watch(mesinProvider);
     final produkAsync = ref.watch(produkProvider);
+    final titikAsync = ref.watch(titikAktifProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mulai Sesi Produksi')),
-      body: mesinAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      body: ResponsiveCenter(
+        child: mesinAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: SkeletonDetailView(),
+          ),
+          error: (e, _) => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(e is ApiException ? e.message : 'Gagal memuat master data.'),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => ref.invalidate(mesinProvider),
+                  child: const Text('Coba lagi'),
+                ),
+              ],
+            ),
+          ),
+          data: (mesinList) => ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Text(e is ApiException ? e.message : 'Gagal memuat master data.'),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => ref.invalidate(mesinProvider),
-                child: const Text('Coba lagi'),
+              DropdownButtonFormField<MesinMaster>(
+                initialValue: _mesin,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Mesin *',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (final m in mesinList)
+                    DropdownMenuItem(value: m, child: Text(m.nama)),
+                ],
+                onChanged: (v) =>
+                    _onMesinChanged(v, produkAsync.value ?? const []),
+              ),
+              if (_mesin?.titikNama != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(
+                    'Titik mesin: ${_mesin!.titikNama}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ProdukMaster>(
+                // Key agar field dibuat ulang saat produk di-prefill
+                // otomatis dari produk default mesin.
+                key: ValueKey(_produk?.id ?? 'produk-none'),
+                initialValue: _produk,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Produk *',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (final p in produkAsync.value ?? const <ProdukMaster>[])
+                    DropdownMenuItem(value: p, child: Text(p.nama)),
+                ],
+                onChanged: (v) => setState(() => _produk = v),
+              ),
+              const SizedBox(height: 16),
+
+              // Titik kerja (opsional, override titik mesin).
+              if (titikAsync.value != null && titikAsync.value!.isNotEmpty) ...[
+                TitikSelector(
+                  titikList: titikAsync.value!,
+                  selectedTitik: _titik,
+                  mapHeight: 220,
+                  onChanged: (t) => setState(() => _titik = t),
+                  listBuilder: (context, _) => DropdownButtonFormField<Titik?>(
+                    initialValue: _titik,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Titik Kerja (opsional)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Kosongkan untuk otomatis mengikuti titik mesin',
+                    ),
+                    items: [
+                      const DropdownMenuItem<Titik?>(
+                        value: null,
+                        child: Text('Otomatis (ikuti titik mesin)'),
+                      ),
+                      for (final t in titikAsync.value!)
+                        DropdownMenuItem<Titik?>(
+                          value: t,
+                          child: Text(t.nama),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => _titik = v),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              TextField(
+                controller: _catatanCtrl,
+                maxLines: 3,
+                maxLength: 2000,
+                decoration: const InputDecoration(
+                  labelText: 'Catatan (opsional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              BouncingButton(
+                onPressed: busy ? null : _submit,
+                child: FilledButton.icon(
+                  onPressed: busy ? null : _submit,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(busy ? 'Memulai...' : 'Mulai Sesi'),
+                ),
               ),
             ],
           ),
-        ),
-        data: (mesinList) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            DropdownButtonFormField<MesinMaster>(
-              initialValue: _mesin,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Mesin *',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                for (final m in mesinList)
-                  DropdownMenuItem(value: m, child: Text(m.nama)),
-              ],
-              onChanged: (v) =>
-                  _onMesinChanged(v, produkAsync.value ?? const []),
-            ),
-            if (_mesin?.titikNama != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 4),
-                child: Text(
-                  'Titik mesin: ${_mesin!.titikNama}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<ProdukMaster>(
-              // Key agar field dibuat ulang saat produk di-prefill
-              // otomatis dari produk default mesin.
-              key: ValueKey(_produk?.id ?? 'produk-none'),
-              initialValue: _produk,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Produk *',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                for (final p in produkAsync.value ?? const <ProdukMaster>[])
-                  DropdownMenuItem(value: p, child: Text(p.nama)),
-              ],
-              onChanged: (v) => setState(() => _produk = v),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _catatanCtrl,
-              maxLines: 3,
-              maxLength: 2000,
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: busy ? null : _submit,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(busy ? 'Memulai...' : 'Mulai Sesi'),
-            ),
-          ],
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../shared/widgets/page_transitions.dart';
 import '../features/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/profile_screen.dart';
@@ -142,142 +143,237 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RegisterScreen(),
+        ),
       ),
       GoRoute(
         path: '/portal',
-        builder: (context, state) => const PortalSelectionScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const PortalSelectionScreen(),
+        ),
       ),
       GoRoute(
         path: '/pilih-role',
-        builder: (context, state) => const RolePickerScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RolePickerScreen(),
+        ),
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final portal = ref.read(selectedPortalProvider).value;
-          if (portal == AppPortal.proyek) return const ProyekHomeScreen();
-          return const TitikKerjaScreen();
+          final child = portal == AppPortal.proyek
+              ? const ProyekHomeScreen()
+              : const TitikKerjaScreen();
+          return buildAppTransitionPage(
+            key: state.pageKey,
+            child: child,
+          );
         },
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: '/produksi/sesi-aktif',
-        builder: (context, state) => const SesiAktifScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const SesiAktifScreen(),
+        ),
       ),
       GoRoute(
         path: '/produksi/mulai',
-        builder: (context, state) => const MulaiSesiScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const MulaiSesiScreen(),
+        ),
       ),
       GoRoute(
         path: '/produksi/riwayat',
-        builder: (context, state) => const RiwayatProduksiScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RiwayatProduksiScreen(),
+        ),
       ),
       GoRoute(
         path: '/produksi/progress',
-        builder: (context, state) => const ProgressHariIniScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ProgressHariIniScreen(),
+        ),
       ),
       GoRoute(
         path: '/tracking/pengguna-aktif',
-        builder: (context, state) => const ActiveUsersScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ActiveUsersScreen(),
+        ),
       ),
       GoRoute(
         path: '/tracking/hari-ini/:userId',
-        builder: (context, state) => TrailScreen(
-          userId: state.pathParameters['userId']!,
-          nama: state.extra as String?,
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: TrailScreen(
+            userId: state.pathParameters['userId']!,
+            nama: state.extra as String?,
+          ),
         ),
       ),
       GoRoute(
         path: '/qc/riwayat',
-        builder: (context, state) => const RiwayatQcScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RiwayatQcScreen(),
+        ),
       ),
       GoRoute(
         path: '/qc/detail',
-        builder: (context, state) => DetailQcScreen(
-          sampleId: state.extra as String? ?? '',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: DetailQcScreen(
+            sampleId: state.extra as String? ?? '',
+          ),
         ),
       ),
       GoRoute(
         path: '/dokumentasi',
-        builder: (context, state) => const DokumentasiScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const DokumentasiScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard',
-        builder: (context, state) => const DashboardHomeScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const DashboardHomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/keuangan',
-        builder: (context, state) => const KeuanganScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const KeuanganScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/po-pending',
-        builder: (context, state) => const PoPendingScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const PoPendingScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/invoice',
-        builder: (context, state) => const InvoiceBelumDibayarScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const InvoiceBelumDibayarScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/titik/:titikId',
-        builder: (context, state) => DetailTitikScreen(
-          titikId: state.pathParameters['titikId']!,
-          nama: state.extra as String?,
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: DetailTitikScreen(
+            titikId: state.pathParameters['titikId']!,
+            nama: state.extra as String?,
+          ),
         ),
       ),
       GoRoute(
         path: '/armada',
-        builder: (context, state) => const ArmadaHomeScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ArmadaHomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/ritase',
-        builder: (context, state) => const RiwayatRitaseScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RiwayatRitaseScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/checklist',
-        builder: (context, state) => const ChecklistScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ChecklistScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/odo-awal',
-        builder: (context, state) => const OdoAwalScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const OdoAwalScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/helper-presensi',
-        builder: (context, state) => const HelperPresensiScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const HelperPresensiScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/servis',
-        builder: (context, state) => const RiwayatServisScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RiwayatServisScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/servis/ajuan',
-        builder: (context, state) => const AjuanServisScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const AjuanServisScreen(),
+        ),
       ),
       GoRoute(
         path: '/armada/servis/:id',
-        builder: (context, state) => DetailServisScreen(
-          id: state.pathParameters['id']!,
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: DetailServisScreen(
+            id: state.pathParameters['id']!,
+          ),
         ),
       ),
       GoRoute(
         path: '/armada/overview',
-        builder: (context, state) => const OverviewArmadaScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const OverviewArmadaScreen(),
+        ),
       ),
       GoRoute(
         path: '/kontraktor/proyek',
-        builder: (context, state) => const ProyekKontrakScreen(),
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ProyekKontrakScreen(),
+        ),
       ),
       GoRoute(
         path: '/kontraktor/proyek/:id',
-        builder: (context, state) => DetailProyekKontrakScreen(
-          id: state.pathParameters['id']!,
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: DetailProyekKontrakScreen(
+            id: state.pathParameters['id']!,
+          ),
         ),
       ),
     ],

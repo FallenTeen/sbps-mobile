@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
@@ -18,84 +22,89 @@ class DetailQcScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detail QC')),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.refresh(qcDetailProvider(sampleId).future),
-        child: detail.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
-            children: [
-              const SizedBox(height: 140),
-              Icon(Icons.cloud_off,
-                  size: 44, color: Theme.of(context).colorScheme.error),
-              const SizedBox(height: 12),
-              Text(
-                e is ApiException ? e.message : 'Gagal memuat detail QC.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: OutlinedButton(
-                  onPressed: () => ref.invalidate(qcDetailProvider(sampleId)),
-                  child: const Text('Coba lagi'),
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
+          onRefresh: () async => ref.refresh(qcDetailProvider(sampleId).future),
+          child: detail.when(
+            loading: () => const SkeletonDetailView(),
+            error: (e, _) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                AppEmptyState(
+                  icon: Icons.cloud_off_outlined,
+                  title: 'Gagal Memuat Detail QC',
+                  subtitle:
+                      e is ApiException ? e.message : 'Gagal memuat detail QC.',
+                  actionLabel: 'Coba Lagi',
+                  onAction: () =>
+                      ref.invalidate(qcDetailProvider(sampleId)),
                 ),
-              ),
-            ],
-          ),
-          data: (s) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ],
+            ),
+            data: (s) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              children: [
+                StaggeredEntrance(
+                  index: 0,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Sample QC',
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Sample QC',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700)),
+                              QcStatusBadge(status: s.status),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _row('Nilai slump', _fmt(s.nilaiSlump)),
+                          if (s.hasilUjiTekan != null)
+                            _row('Hasil uji tekan', '${_fmt(s.hasilUjiTekan)} MPa'),
+                          if (s.tanggalUjiTekanRencana != null)
+                            _row('Rencana uji tekan', s.tanggalUjiTekanRencana!),
+                          _row('Catatan', s.catatan ?? '-'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StaggeredEntrance(
+                  index: 1,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Sesi Produksi',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700)),
-                          QcStatusBadge(status: s.status),
+                          const SizedBox(height: 10),
+                          _row('Produk', s.produkNama ?? '-'),
+                          _row('Mesin', s.mesinNama ?? '-'),
+                          _row('Titik', s.titikNama ?? '-'),
+                          _row('Operator', s.operatorNama ?? '-'),
+                          _row('Mulai', _dt(s.sesiMulai)),
+                          _row('Selesai', _dt(s.sesiSelesai)),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      _row('Nilai slump', _fmt(s.nilaiSlump)),
-                      if (s.hasilUjiTekan != null)
-                        _row('Hasil uji tekan', '${_fmt(s.hasilUjiTekan)} MPa'),
-                      if (s.tanggalUjiTekanRencana != null)
-                        _row('Rencana uji tekan', s.tanggalUjiTekanRencana!),
-                      _row('Catatan', s.catatan ?? '-'),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Sesi Produksi',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 10),
-                      _row('Produk', s.produkNama ?? '-'),
-                      _row('Mesin', s.mesinNama ?? '-'),
-                      _row('Titik', s.titikNama ?? '-'),
-                      _row('Operator', s.operatorNama ?? '-'),
-                      _row('Mulai', _dt(s.sesiMulai)),
-                      _row('Selesai', _dt(s.sesiSelesai)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

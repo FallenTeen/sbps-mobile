@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
@@ -99,86 +103,117 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Riwayat Presensi')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    initialValue: _bulan,
-                    decoration: const InputDecoration(labelText: 'Bulan'),
-                    items: [
-                      for (var i = 1; i <= 12; i++)
-                        DropdownMenuItem(value: i, child: Text(_bulanNames[i - 1])),
-                    ],
-                    onChanged: (v) {
-                      if (v != null && v != _bulan) {
-                        setState(() => _bulan = v);
-                        _reload();
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    initialValue: _tahun,
-                    decoration: const InputDecoration(labelText: 'Tahun'),
-                    items: [
-                      for (var y = now.year; y >= now.year - 5; y--)
-                        DropdownMenuItem(value: y, child: Text('$y')),
-                    ],
-                    onChanged: (v) {
-                      if (v != null && v != _tahun) {
-                        setState(() => _tahun = v);
-                        _reload();
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _reload,
-              child: _error != null && _items.isEmpty
-                  ? ListView(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Center(child: Text(_error!)),
-                        ),
+      body: ResponsiveCenter(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      initialValue: _bulan,
+                      decoration: const InputDecoration(labelText: 'Bulan'),
+                      items: [
+                        for (var i = 1; i <= 12; i++)
+                          DropdownMenuItem(value: i, child: Text(_bulanNames[i - 1])),
                       ],
-                    )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      itemCount:
-                          _items.length + (_page < _lastPage ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index >= _items.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Center(
-                              child: _loading
-                                  ? const CircularProgressIndicator()
-                                  : FilledButton.tonal(
-                                      onPressed: _loadMore,
-                                      child: const Text('Muat lagi'),
-                                    ),
-                            ),
-                          );
+                      onChanged: (v) {
+                        if (v != null && v != _bulan) {
+                          setState(() => _bulan = v);
+                          _reload();
                         }
-                        return _RiwayatTile(item: _items[index]);
                       },
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      initialValue: _tahun,
+                      decoration: const InputDecoration(labelText: 'Tahun'),
+                      items: [
+                        for (var y = now.year; y >= now.year - 5; y--)
+                          DropdownMenuItem(value: y, child: Text('$y')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null && v != _tahun) {
+                          setState(() => _tahun = v);
+                          _reload();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _reload,
+                child: _buildBody(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading && _items.isEmpty && _error == null) {
+      return const SkeletonListView(itemCount: 6);
+    }
+
+    if (_error != null && _items.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          AppEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal Memuat Riwayat',
+            subtitle: _error,
+            actionLabel: 'Coba Lagi',
+            onAction: _reload,
           ),
         ],
-      ),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          AppEmptyState(
+            icon: Icons.history_toggle_off,
+            title: 'Belum Ada Riwayat',
+            subtitle: 'Tidak ada data presensi pada bulan dan tahun ini.',
+          ),
+        ],
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      itemCount: _items.length + (_page < _lastPage ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= _items.length) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: _loading
+                  ? const CircularProgressIndicator()
+                  : FilledButton.tonal(
+                      onPressed: _loadMore,
+                      child: const Text('Muat lagi'),
+                    ),
+            ),
+          );
+        }
+        return StaggeredEntrance(
+          index: index,
+          child: _RiwayatTile(item: _items[index]),
+        );
+      },
     );
   }
 }

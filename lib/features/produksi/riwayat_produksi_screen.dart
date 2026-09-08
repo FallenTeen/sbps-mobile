@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
 
@@ -17,65 +21,67 @@ class RiwayatProduksiScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Riwayat Produksi')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_month, size: 18),
-                    label: Text(filter.tanggal == null
-                        ? 'Semua tanggal'
-                        : filter.tanggal!),
-                    onPressed: () async {
-                      final now = DateTime.now();
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: now,
-                        firstDate: DateTime(now.year - 2),
-                        lastDate: now,
-                      );
-                      if (picked != null) {
-                        ref.read(riwayatFilterProvider.notifier).set(
-                              RiwayatFilter(
-                                tanggal: picked.toIso8601String().substring(0, 10),
-                                mesinId: filter.mesinId,
-                              ),
-                            );
-                      }
-                    },
+      body: ResponsiveCenter(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_month, size: 18),
+                      label: Text(filter.tanggal == null
+                          ? 'Semua tanggal'
+                          : filter.tanggal!),
+                      onPressed: () async {
+                        final now = DateTime.now();
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: now,
+                          firstDate: DateTime(now.year - 2),
+                          lastDate: now,
+                        );
+                        if (picked != null) {
+                          ref.read(riwayatFilterProvider.notifier).set(
+                                RiwayatFilter(
+                                  tanggal: picked.toIso8601String().substring(0, 10),
+                                  mesinId: filter.mesinId,
+                                ),
+                              );
+                        }
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: filter.mesinId,
-                    isExpanded: true,
-                    decoration:
-                        const InputDecoration(border: OutlineInputBorder()),
-                    hint: const Text('Semua mesin'),
-                    items: [
-                      for (final m in mesinAsync.value ?? const [])
-                        DropdownMenuItem(value: m.id, child: Text(m.nama)),
-                    ],
-                    onChanged: (v) => ref
-                        .read(riwayatFilterProvider.notifier)
-                        .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: filter.mesinId,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
+                      hint: const Text('Semua mesin'),
+                      items: [
+                        for (final m in mesinAsync.value ?? const [])
+                          DropdownMenuItem(value: m.id, child: Text(m.nama)),
+                      ],
+                      onChanged: (v) => ref
+                          .read(riwayatFilterProvider.notifier)
+                          .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(riwayatProduksiProvider.notifier).refresh(),
-              child: _buildList(context, ref, state, filter),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(riwayatProduksiProvider.notifier).refresh(),
+                child: _buildList(context, ref, state, filter),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -87,28 +93,37 @@ class RiwayatProduksiScreen extends ConsumerWidget {
     RiwayatFilter filter,
   ) {
     if (state.loading && state.items.isEmpty && state.error == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonListView(itemCount: 5);
     }
     if (state.error != null && state.items.isEmpty) {
       return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          const SizedBox(height: 120),
-          Text(state.error!, textAlign: TextAlign.center),
+          AppEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal Memuat Riwayat',
+            subtitle: state.error,
+            actionLabel: 'Coba Lagi',
+            onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
+          ),
         ],
       );
     }
     if (state.items.isEmpty) {
       return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: const [
-          SizedBox(height: 160),
-          Icon(Icons.inbox_outlined, size: 44),
-          SizedBox(height: 12),
-          Text('Belum ada riwayat untuk filter ini.', textAlign: TextAlign.center),
+          AppEmptyState(
+            icon: Icons.inbox_outlined,
+            title: 'Belum Ada Riwayat',
+            subtitle: 'Belum ada data riwayat produksi untuk filter ini.',
+          ),
         ],
       );
     }
 
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: state.items.length + (state.hasMore ? 1 : 0),
       separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -126,7 +141,10 @@ class RiwayatProduksiScreen extends ConsumerWidget {
             ),
           );
         }
-        return _RiwayatCard(session: state.items[i]);
+        return StaggeredEntrance(
+          index: i,
+          child: _RiwayatCard(session: state.items[i]),
+        );
       },
     );
   }

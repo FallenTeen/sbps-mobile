@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import 'servis_providers.dart';
@@ -199,30 +203,29 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
       appBar: AppBar(
         title: const Text('Detail Servis'),
       ),
-      body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Gagal memuat detail servis: $error'),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => ref.invalidate(detailServisProvider(widget.id)),
-                child: const Text('Coba Lagi'),
-              ),
-            ],
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: detailAsync.when(
+          loading: () => const SkeletonDetailView(),
+          error: (error, _) => Center(
+            child: AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Gagal Memuat Detail Servis',
+              subtitle: '$error',
+              actionLabel: 'Coba Lagi',
+              onAction: () =>
+                  ref.invalidate(detailServisProvider(widget.id)),
+            ),
           ),
-        ),
-        data: (item) {
-          final color = _statusColor(item.status);
+          data: (item) {
+            final color = _statusColor(item.status);
 
-          return RefreshIndicator(
-            onRefresh: () async =>
-                ref.invalidate(detailServisProvider(widget.id)),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+            return RefreshIndicator(
+              onRefresh: () async =>
+                  ref.invalidate(detailServisProvider(widget.id)),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
                 // Header Status Card
                 Card(
                   child: Padding(
@@ -429,36 +432,42 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: BouncingButton(
                           onPressed: _isProcessing ? null : _tolakServis,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                                Theme.of(context).colorScheme.error,
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.error,
+                          child: OutlinedButton.icon(
+                            onPressed: _isProcessing ? null : _tolakServis,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.error,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            icon: const Icon(Icons.close),
+                            label: const Text('Tolak'),
                           ),
-                          icon: const Icon(Icons.close),
-                          label: const Text('Tolak'),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: FilledButton.icon(
+                        child: BouncingButton(
                           onPressed: _isProcessing ? null : _approveServis,
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: FilledButton.icon(
+                            onPressed: _isProcessing ? null : _approveServis,
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            icon: _isProcessing
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child:
+                                        CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.check),
+                            label: const Text('Setujui'),
                           ),
-                          icon: _isProcessing
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.check),
-                          label: const Text('Setujui'),
                         ),
                       ),
                     ],

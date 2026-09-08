@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/entrance_fader.dart';
 import '../auth/auth_providers.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
@@ -70,72 +73,99 @@ class ProyekHomeScreen extends ConsumerWidget {
       ),
       body: role == null
           ? _NoActiveRoleView()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (role == 'Mandor Titik') ...[
-                  const _TrackingStatusCard(),
-                  const SizedBox(height: 8),
-                ],
-                Chip(
-                  avatar: Icon(_iconForRole(role), size: 18),
-                  label: Text('Peran aktif: $role'),
-                ),
-                const SizedBox(height: 8),
-                for (final module in allowed)
-                  Card(
-                    child: ListTile(
-                      leading: Icon(module.icon, size: 32),
-                      title: Text(
-                        module.label,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: switch (module.key) {
-                        'produksi' => const Text(
-                            'Sesi aktif, mulai, riwayat, progress, QC'),
-                        'qc' => const Text(
-                            'Slump test & uji tekan, riwayat QC'),
-                        'tracking' => const Text(
-                            'User aktif & jejak lokasi'),
-                        'dashboard' =>
-                          const Text('Ringkasan titik & operasional'),
-                        'keuangan' =>
-                          const Text('Chart keuangan, PO, invoice'),
-                        'armada' =>
-                          const Text('Kendaraan, ritase & checklist harian'),
-                        'kontraktor' =>
-                          const Text('Proyek kontrak, progress, invoice & chat'),
-                        _ => const Text('Menyusul di fase berikutnya'),
-                      },
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        switch (module.key) {
-                          case 'produksi':
-                            context.push('/produksi/sesi-aktif');
-                          case 'qc':
-                            context.push('/qc/riwayat');
-                          case 'tracking':
-                            context.push('/tracking/pengguna-aktif');
-                          case 'dashboard':
-                            context.push('/dashboard');
-                          case 'keuangan':
-                            context.push('/dashboard/keuangan');
-                          case 'armada':
-                            context.push('/armada');
-                          case 'kontraktor':
-                            context.push('/kontraktor/proyek');
-                          default:
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text('${module.label} belum tersedia')),
-                            );
-                        }
-                      },
-                    ),
+          : ResponsiveCenter(
+              maxWidth: AppBreakpoints.maxContentWidth,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (role == 'Mandor Titik') ...[
+                    const _TrackingStatusCard(),
+                    const SizedBox(height: 8),
+                  ],
+                  Chip(
+                    avatar: Icon(_iconForRole(role), size: 18),
+                    label: Text('Peran aktif: $role'),
                   ),
-              ],
+                  const SizedBox(height: 8),
+                  if (context.isTablet)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 3.2,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                      ),
+                      itemCount: allowed.length,
+                      itemBuilder: (context, i) => StaggeredEntrance(
+                        index: i,
+                        child: _ModuleCard(module: allowed[i]),
+                      ),
+                    )
+                  else
+                    for (var i = 0; i < allowed.length; i++)
+                      StaggeredEntrance(
+                        index: i,
+                        child: _ModuleCard(module: allowed[i]),
+                      ),
+                ],
+              ),
             ),
+    );
+  }
+}
+
+class _ModuleCard extends StatelessWidget {
+  const _ModuleCard({required this.module});
+
+  final ProyekModule module;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(module.icon, size: 32),
+        title: Text(
+          module.label,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: switch (module.key) {
+          'produksi' => const Text('Sesi aktif, mulai, riwayat, progress, QC'),
+          'qc' => const Text('Slump test & uji tekan, riwayat QC'),
+          'tracking' => const Text('User aktif & jejak lokasi'),
+          'dashboard' => const Text('Ringkasan titik & operasional'),
+          'keuangan' => const Text('Chart keuangan, PO, invoice'),
+          'armada' => const Text('Kendaraan, ritase & checklist harian'),
+          'kontraktor' => const Text('Proyek kontrak, progress, invoice & chat'),
+          _ => const Text('Menyusul di fase berikutnya'),
+        },
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          switch (module.key) {
+            case 'produksi':
+              context.push('/produksi/sesi-aktif');
+            case 'qc':
+              context.push('/qc/riwayat');
+            case 'tracking':
+              context.push('/tracking/pengguna-aktif');
+            case 'dashboard':
+              context.push('/dashboard');
+            case 'keuangan':
+              context.push('/dashboard/keuangan');
+            case 'armada':
+              context.push('/armada');
+            case 'kontraktor':
+              context.push('/kontraktor/proyek');
+            default:
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${module.label} belum tersedia')),
+              );
+          }
+        },
+      ),
     );
   }
 }
@@ -168,9 +198,8 @@ class _NotifikasiBadgeAction extends ConsumerWidget {
 
     return IconButton(
       tooltip: 'Notifikasi',
-      icon: Badge(
-        isLabelVisible: count > 0,
-        label: Text('$count'),
+      icon: AnimatedCountBadge(
+        count: count,
         child: const Icon(Icons.notifications_outlined),
       ),
       onPressed: () async {
