@@ -24,6 +24,8 @@ dependencies:
   hive_ce: ^2.19.3
   hive_ce_flutter: ^2.3.4
   flutter_image_compress: ^2.5.1
+  image: ^4.5.3
+  intl: ^0.20.2
   path: ^1.9.1
   url_launcher: ^6.3.2
   package_info_plus: ^9.0.1

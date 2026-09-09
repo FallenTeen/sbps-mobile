@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../core/photo_compression_service.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'models/helper.dart';
 
@@ -17,15 +17,10 @@ class HelperPresensiScreen extends ConsumerStatefulWidget {
 }
 
 class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
-  final ImagePicker _picker = ImagePicker();
   String? _submittingHelperId;
 
   Future<void> _submitPresensi(Helper helper, String tipe) async {
-    final XFile? photo = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 100, // Akan dikompresi oleh PhotoCompressionService
-    );
-
+    final photo = await ref.takeWatermarkedPhoto(imageQuality: 100);
     if (photo == null) return;
 
     setState(() {
@@ -33,15 +28,12 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
     });
 
     try {
-      final compressor = PhotoCompressionService();
-      final compressedPath = await compressor.compress(photo.path);
-
       await ref
           .read(armadaRepositoryProvider)
           .submitHelperPresensi(
             helperId: helper.id,
             tipe: tipe,
-            photoPath: compressedPath,
+            photoPath: photo.path,
           );
 
       if (!mounted) return;

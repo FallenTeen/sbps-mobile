@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:image_picker/image_picker.dart';
-
 import '../../core/photo_compression_service.dart';
 import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 
 /// Lampirkan dokumentasi foto produksi/QC (Fase A2.7): pilih 1-10 foto,
 /// opsional kaitkan ke sesi produksi (subject_type "ProductionSession"),
@@ -39,13 +38,12 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
     final sisa = _maksFile - _paths.length;
     if (sisa <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Maksimal $_maksFile foto.')));
+          const SnackBar(content: Text('Maksimal 10 foto.')));
       return;
     }
-    final picked =
-        await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
-    if (picked == null) return;
-    setState(() => _paths.add(picked.path));
+    final photo = await ref.takeWatermarkedPhoto();
+    if (photo == null) return;
+    setState(() => _paths.add(photo.path));
   }
 
   Future<void> _submit() async {

@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../../core/photo_compression_service.dart';
 
 import '../presensi/models/presensi_hari_ini.dart';
@@ -286,11 +286,10 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   Future<void> _tambahFoto() async {
     final sisa = _maksFoto - _fotoLokal.length;
     if (sisa <= 0) return;
-    final picked =
-        await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
-    if (picked == null || !mounted) return;
+    final photo = await ref.takeWatermarkedPhoto();
+    if (photo == null || !mounted) return;
     setState(() {
-      _fotoLokal.add(picked.path);
+      _fotoLokal.add(photo.path);
     });
   }
 
