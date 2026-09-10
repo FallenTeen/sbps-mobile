@@ -18,14 +18,24 @@ class RitaseInputScreen extends ConsumerStatefulWidget {
 class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   ArmadaSaya? _selectedArmada;
   final _jumlahRitCtrl = TextEditingController();
-  final _satuanCtrl = TextEditingController(text: 'rit');
   final _catatanCtrl = TextEditingController();
+  String _selectedSatuan = 'rit';
   bool _isLoading = false;
+
+  static const _satuanOptions = <String>[
+    'rit',
+    'trip',
+    'ton',
+    'm³',
+    'kg',
+    'ltr',
+    'unit',
+    'kloter',
+  ];
 
   @override
   void dispose() {
     _jumlahRitCtrl.dispose();
-    _satuanCtrl.dispose();
     _catatanCtrl.dispose();
     super.dispose();
   }
@@ -56,7 +66,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ritase tersimpan: $jumlah ${_satuanCtrl.text}'),
+          content: Text('Ritase tersimpan: $jumlah $_selectedSatuan'),
         ),
       );
       Navigator.of(context).pop();
@@ -132,18 +142,24 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Jumlah',
                           border: OutlineInputBorder(),
-                          suffixText: 'rit',
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextField(
-                        controller: _satuanCtrl,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedSatuan,
                         decoration: const InputDecoration(
                           labelText: 'Satuan',
                           border: OutlineInputBorder(),
+                          isDense: true,
                         ),
+                        items: _satuanOptions.map((s) {
+                          return DropdownMenuItem(value: s, child: Text(s));
+                        }).toList(),
+                        onChanged: (v) {
+                          if (v != null) setState(() => _selectedSatuan = v);
+                        },
                       ),
                     ),
                   ],
