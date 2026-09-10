@@ -14,6 +14,7 @@ class RitaseRecord {
     this.jumlah,
     this.satuan = 'rit',
     this.catatan = '',
+    this.odoPerTrip,
   });
 
   final int index;
@@ -21,6 +22,7 @@ class RitaseRecord {
   int? jumlah;
   String satuan;
   String catatan;
+  double? odoPerTrip;
 
   bool get isComplete => armada != null && jumlah != null && jumlah! > 0;
 
@@ -29,6 +31,7 @@ class RitaseRecord {
         'jumlah': jumlah,
         'satuan': satuan,
         'catatan': catatan.isEmpty ? null : catatan,
+        'odo_per_trip': odoPerTrip,
       };
 }
 
@@ -48,6 +51,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
 
   final _jumlahRitCtrl = TextEditingController();
   final _catatanCtrl = TextEditingController();
+  final _odoPerTripCtrl = TextEditingController();
   ArmadaSaya? _selectedArmada;
   String _selectedSatuan = 'rit';
   bool _isLoading = false;
@@ -67,6 +71,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   void dispose() {
     _jumlahRitCtrl.dispose();
     _catatanCtrl.dispose();
+    _odoPerTripCtrl.dispose();
     super.dispose();
   }
 
@@ -78,6 +83,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       _selectedArmada = null;
       _jumlahRitCtrl.clear();
       _catatanCtrl.clear();
+      _odoPerTripCtrl.clear();
       _selectedSatuan = 'rit';
     });
   }
@@ -90,6 +96,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       _jumlahRitCtrl.text = record.jumlah?.toString() ?? '';
       _catatanCtrl.text = record.catatan;
       _selectedSatuan = record.satuan;
+      _odoPerTripCtrl.text = record.odoPerTrip?.toString() ?? '';
     });
   }
 
@@ -115,6 +122,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       jumlah: jumlah,
       satuan: _selectedSatuan,
       catatan: _catatanCtrl.text.trim(),
+      odoPerTrip: double.tryParse(_odoPerTripCtrl.text),
     );
 
     setState(() {
@@ -359,7 +367,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                             child: Text('${a.platNomor} — ${a.jenis ?? 'N/A'}'),
                           );
                         }).toList(),
-                        onChanged: (v) => setState(() => _selectedArmada = v),
+                        onChanged: (v) {
+                          setState(() {
+                            _selectedArmada = v;
+                            if (v != null && _odoPerTripCtrl.text.isEmpty) {
+                              final odo = v.odoTerkini;
+                              if (odo != null) {
+                                _odoPerTripCtrl.text = odo.toString();
+                              }
+                            }
+                          });
+                        },
                       ),
                       const SizedBox(height: 20),
 
@@ -410,6 +428,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                         maxLines: 2,
                         decoration: const InputDecoration(
                           labelText: 'Catatan (opsional)',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ODO per-trip (opsional)
+                      TextField(
+                        controller: _odoPerTripCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'ODO / km (opsional)',
                           border: OutlineInputBorder(),
                         ),
                       ),

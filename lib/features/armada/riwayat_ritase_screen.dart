@@ -113,6 +113,23 @@ class _HariIniTab extends ConsumerWidget {
                             color: AppTheme.textTertiary,
                           ),
                         ),
+                        if (armadaList.length == 1) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            armadaList.first.isAlatBerat
+                                ? (armadaList.first.jamOperasionalTerkini != null
+                                    ? 'HM: ${armadaList.first.jamOperasionalTerkini} jam'
+                                    : 'HM: -')
+                                : (armadaList.first.odoTerkini != null
+                                    ? 'ODO: ${armadaList.first.odoTerkini} km'
+                                    : 'ODO: -'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

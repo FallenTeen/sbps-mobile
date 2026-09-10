@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import 'armada_providers.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import '../../shared/widgets/info_tooltip.dart';
@@ -174,7 +175,23 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                         child: Text(label),
                       );
                     }).toList(),
-                    onChanged: (val) => setState(() => _selectedArmada = val),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedArmada = val;
+                        if (val != null) {
+                          final armadaList = ref.read(armadaSayaProvider).value;
+                          final armada = armadaList?.where((a) => a.id == val.id).firstOrNull;
+                          if (armada != null) {
+                            if (_odoController.text.isEmpty && armada.odoTerkini != null) {
+                              _odoController.text = armada.odoTerkini.toString();
+                            }
+                            if (_jamController.text.isEmpty && armada.jamOperasionalTerkini != null) {
+                              _jamController.text = armada.jamOperasionalTerkini.toString();
+                            }
+                          }
+                        }
+                      });
+                    },
                     validator: (val) => val == null ? 'Pilih armada' : null,
                   ),
                   const SizedBox(height: 16),

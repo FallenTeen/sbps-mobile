@@ -279,8 +279,14 @@ class _WorkflowSection extends StatelessWidget {
       WorkflowStep(
         label: armada.isAlatBerat ? 'Jam Awal' : 'ODO Awal',
         subtitle: hasOdoAwal
-            ? (armada.isAlatBerat ? 'Tercatat' : 'Sudah diisi')
-            : 'Belum diisi',
+            ? (armada.isAlatBerat
+                ? 'Tercatat'
+                : 'Sudah diisi')
+            : (armada.odoTerkini != null
+                ? (armada.isAlatBerat
+                    ? 'HM: ${armada.jamOperasionalTerkini ?? '-'} jam'
+                    : 'ODO: ${armada.odoTerkini} km')
+                : 'Belum diisi'),
         status: hasOdoAwal
             ? WorkflowStepStatus.selesai
             : WorkflowStepStatus.belum,

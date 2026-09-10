@@ -18,11 +18,16 @@ class ChecklistScreen extends ConsumerStatefulWidget {
 
 class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
   Future<void> _openForm(ArmadaChecklist item) async {
+    final armadaList = ref.read(armadaSayaProvider).value;
+    final armada = armadaList?.where((a) => a.id == item.armadaId).firstOrNull;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => _ChecklistForm(
         item: item,
+        odoTerkini: armada?.odoTerkini,
+        jamOperasionalTerkini: armada?.jamOperasionalTerkini,
         onSave: ({
           required bool kondisiBaik,
           required String masalah,
@@ -132,9 +137,16 @@ class _ChecklistCard extends StatelessWidget {
 }
 
 class _ChecklistForm extends ConsumerStatefulWidget {
-  const _ChecklistForm({required this.item, required this.onSave});
+  const _ChecklistForm({
+    required this.item,
+    this.odoTerkini,
+    this.jamOperasionalTerkini,
+    required this.onSave,
+  });
 
   final ArmadaChecklist item;
+  final double? odoTerkini;
+  final double? jamOperasionalTerkini;
   final Future<void> Function({
     required bool kondisiBaik,
     required String masalah,
@@ -165,9 +177,13 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
     }
     if (widget.item.odoKm != null) {
       _odoCtrl.text = widget.item.odoKm.toString();
+    } else if (widget.odoTerkini != null) {
+      _odoCtrl.text = widget.odoTerkini.toString();
     }
     if (widget.item.jamOperasional != null) {
       _jamCtrl.text = widget.item.jamOperasional.toString();
+    } else if (widget.jamOperasionalTerkini != null) {
+      _jamCtrl.text = widget.jamOperasionalTerkini.toString();
     }
   }
 
