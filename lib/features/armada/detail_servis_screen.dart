@@ -9,6 +9,7 @@ import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import 'servis_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 
 /// Detail Pengajuan Servis Armada beserta riwayat sparepart, catatan workshop,
 /// dan aksi persetujuan/penolakan untuk Kepala Divisi/Admin.
@@ -295,18 +296,18 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const Divider(height: 20),
-                        _infoRow('Tanggal Ajuan', item.tanggalAjuan),
+                        _infoRow('Tanggal Ajuan', fmtTanggal(item.tanggalAjuan)),
                         if (item.kategori != null)
                           _infoRow('Kategori', item.kategori!),
                         if (item.odometerSaatAjuan != null)
                           _infoRow(
                             'ODO Saat Ajuan',
-                            '${item.odometerSaatAjuan!.toStringAsFixed(0)} km',
+                            fmtKm(item.odometerSaatAjuan),
                           ),
                         if (item.jamOperasionalSaatAjuan != null)
                           _infoRow(
                             'Jam Operasional',
-                            '${item.jamOperasionalSaatAjuan!.toStringAsFixed(1)} jam',
+                            fmtJam(item.jamOperasionalSaatAjuan),
                           ),
                         if (item.diajukanOleh != null)
                           _infoRow('Diajukan Oleh', item.diajukanOleh!),
@@ -413,8 +414,8 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
                                   'Total Biaya:',
                                   style: TextStyle(fontWeight: FontWeight.w700),
                                 ),
-                                Text(
-                                  'Rp ${item.totalBiaya!.toStringAsFixed(0)}',
+                                  Text(
+                                    fmtRp(item.totalBiaya!),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: Colors.green,

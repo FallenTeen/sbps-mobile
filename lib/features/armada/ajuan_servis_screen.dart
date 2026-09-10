@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
+import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Form Pengajuan Servis Armada (Section 21 — Bagian 1 Ajuan Driver/PIC).
 class AjuanServisScreen extends ConsumerStatefulWidget {
-  const AjuanServisScreen({super.key});
+  const AjuanServisScreen({super.key, this.initialArmadaId});
+
+  final String? initialArmadaId;
 
   @override
   ConsumerState<AjuanServisScreen> createState() => _AjuanServisScreenState();
@@ -23,6 +26,7 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
   MasterArmada? _selectedArmada;
   String _kategori = 'rutin';
   bool _isLoading = false;
+  bool _initialized = false;
 
   final List<String> _kategoriOptions = const [
     'rutin',
@@ -30,6 +34,26 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
     'darurat',
     'ganti_oli',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialArmadaId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _prefillArmada();
+      });
+    }
+  }
+
+  void _prefillArmada() {
+    final armadaList = ref.read(masterArmadaProvider).value;
+    if (armadaList == null || _initialized) return;
+    _initialized = true;
+    final match = armadaList.where((a) => a.id == widget.initialArmadaId).toList();
+    if (match.isNotEmpty) {
+      setState(() => _selectedArmada = match.first);
+    }
+  }
 
   @override
   void dispose() {
@@ -119,6 +143,7 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
           ),
         ),
         data: (armadaList) {
+          _prefillArmada();
           if (armadaList.isEmpty) {
             return const Center(
               child: Text('Tidak ada armada yang terdaftar.'),
@@ -155,9 +180,12 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Kategori Servis *',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: const InfoTooltip(
+                        message: 'Rutin/Berkala = servis terjadwal. Darurat/Mogok = unit tidak bisa jalan, prioritas tertinggi. Ganti Oli = servis ringan.',
+                      ),
                     ),
                     initialValue: _kategori,
                     items: _kategoriOptions.map((k) {
@@ -177,9 +205,10 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _odoController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'ODO Saat Ini (km)',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: const InfoTooltip(message: 'Isi salah satu (ODO atau Jam Operasional) sesuai jenis unit — dipakai Workshop untuk cek riwayat servis terakhir.'),
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,

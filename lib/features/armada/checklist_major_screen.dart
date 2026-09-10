@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
+import 'armada_providers.dart';
+import 'models/armada.dart';
+import '../../shared/widgets/app_empty_state.dart';
 
 /// Checklist Major — Serah Terima Sewa (Section 21.10):
 /// Isi kondisi kendaraan detail + foto untuk serah terima.
@@ -32,6 +35,8 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   ];
   final Map<String, String> _photos = {};
   bool _isSubmitting = false;
+  ArmadaSaya? _selectedArmada;
+  bool _vehicleSelected = false;
 
   @override
   void dispose() {
@@ -69,15 +74,53 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Step 1: Pilih kendaraan
+    if (!_vehicleSelected) {
+      return _VehicleSelectionStep(
+        onSelected: (armada) {
+          setState(() {
+            _selectedArmada = armada;
+            _vehicleSelected = true;
+          });
+        },
+      );
+    }
+
+    // Step 2: Checklist form
     final hasIssue = _items.any((i) => i.status != _ItemStatus.baik);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checklist Major'),
+        title: Text('Checklist Major — ${_selectedArmada?.platNomor ?? ''}'),
         actions: const [PortalSwitchButton()],
       ),
       body: Column(
         children: [
+          // Step indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            color: AppTheme.primaryColor.withValues(alpha: 0.05),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: AppTheme.primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Langkah 2 dari 2 — Isi Checklist',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '10 item',
+                  style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                ),
+              ],
+            ),
+          ),
+
           // Warning banner
           if (hasIssue)
             Container(
@@ -107,6 +150,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                 final item = _items[index];
                 return _MajorChecklistTile(
                   item: item,
+                  index: index + 1,
                   photoPath: _photos[item.label],
                   onStatusChanged: (status) {
                     setState(() {
@@ -156,6 +200,125 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   }
 }
 
+/// Step 1: Pilih kendaraan sebelum checklist.
+class _VehicleSelectionStep extends ConsumerWidget {
+  const _VehicleSelectionStep({required this.onSelected});
+
+  final ValueChanged<ArmadaSaya> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final armadaAsync = ref.watch(armadaSayaProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Checklist Major'),
+        actions: const [PortalSwitchButton()],
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            color: AppTheme.primaryColor.withValues(alpha: 0.05),
+            child: Row(
+              children: [
+                Icon(Icons.directions_car, size: 16, color: AppTheme.primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Langkah 1 dari 2 — Pilih Kendaraan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: armadaAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => AppEmptyState(
+                icon: Icons.cloud_off_outlined,
+                title: 'Gagal memuat data',
+                subtitle: '$e',
+                actionLabel: 'Coba lagi',
+                onAction: () => ref.invalidate(armadaSayaProvider),
+              ),
+              data: (armadaList) {
+          if (armadaList.isEmpty) {
+            return const AppEmptyState(
+              icon: Icons.local_shipping_outlined,
+              title: 'Tidak ada armada',
+              subtitle: 'Anda belum memiliki armada yang ditugaskan.',
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                child: Row(
+                  children: [
+                    Icon(Icons.directions_car,
+                        color: AppTheme.primaryColor, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Pilih kendaraan untuk checklist serah terima',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: armadaList.length,
+                  itemBuilder: (context, index) {
+                    final armada = armadaList[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                          child: Icon(Icons.local_shipping,
+                              color: AppTheme.primaryColor, size: 20),
+                        ),
+                        title: Text(
+                          armada.platNomor,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
+                          style: TextStyle(
+                              fontSize: 12, color: AppTheme.textTertiary),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => onSelected(armada),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum _ItemStatus { baik, rusakRingan, rusakBerat }
 
 class _ChecklistItem {
@@ -178,12 +341,14 @@ class _ChecklistItem {
 class _MajorChecklistTile extends StatelessWidget {
   const _MajorChecklistTile({
     required this.item,
+    required this.index,
     this.photoPath,
     required this.onStatusChanged,
     required this.onTakePhoto,
   });
 
   final _ChecklistItem item;
+  final int index;
   final String? photoPath;
   final ValueChanged<_ItemStatus> onStatusChanged;
   final VoidCallback onTakePhoto;
@@ -207,6 +372,7 @@ class _MajorChecklistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _statusColor(item.status);
+    final displayNum = index.toString().padLeft(2, '0');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -217,6 +383,26 @@ class _MajorChecklistTile extends StatelessWidget {
           children: [
             Row(
               children: [
+                // Index badge
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    displayNum,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Status badge
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -290,7 +476,7 @@ class _MajorChecklistTile extends StatelessWidget {
                   height: 80,
                   width: 80,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (context, error, stack) => Container(
                     height: 80,
                     width: 80,
                     color: Colors.grey.shade200,

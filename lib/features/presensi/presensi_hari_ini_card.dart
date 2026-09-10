@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -299,7 +300,7 @@ class _WorkingCard extends StatelessWidget {
                       size: 16, color: AppTheme.textTertiary),
                   const SizedBox(width: 8),
                   Text(
-                    'Check-in pukul ${_fmtJam(presensi.checkIn)}',
+                    'Check-in pukul ${fmtWaktu(presensi.checkIn)}',
                     style: const TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 13,
@@ -340,13 +341,6 @@ class _WorkingCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _fmtJam(String? iso) {
-    if (iso == null) return '-';
-    final t = DateTime.tryParse(iso)?.toLocal();
-    if (t == null) return '-';
-    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -393,7 +387,7 @@ class _CompletedCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Masuk ${_fmtJam(presensi.checkIn)} — Pulang ${_fmtJam(presensi.checkOut)}',
+                    'Masuk ${fmtWaktu(presensi.checkIn)} — Pulang ${fmtWaktu(presensi.checkOut)}',
                     style: const TextStyle(
                       color: AppTheme.textTertiary,
                       fontSize: 13,
@@ -406,13 +400,6 @@ class _CompletedCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _fmtJam(String? iso) {
-    if (iso == null) return '-';
-    final t = DateTime.tryParse(iso)?.toLocal();
-    if (t == null) return '-';
-    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 }
 

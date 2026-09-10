@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -130,6 +129,7 @@ class _WorkshopTodoScreenState extends ConsumerState<WorkshopTodoScreen> {
                 final todo = _todos[index];
                 return _TodoTile(
                   todo: todo,
+                  index: index + 1,
                   onToggle: () {
                     setState(() {
                       _todos[index] = todo.copyWith(isDone: !todo.isDone);
@@ -190,22 +190,51 @@ class WorkshopTodo {
 class _TodoTile extends StatelessWidget {
   const _TodoTile({
     required this.todo,
+    required this.index,
     required this.onToggle,
     required this.onTakePhoto,
   });
 
   final WorkshopTodo todo;
+  final int index;
   final VoidCallback onToggle;
   final VoidCallback onTakePhoto;
 
   @override
   Widget build(BuildContext context) {
+    final displayNum = index.toString().padLeft(2, '0');
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Checkbox(
-          value: todo.isDone,
-          onChanged: (_) => onToggle(),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: todo.isDone
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : AppTheme.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                displayNum,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: todo.isDone ? Colors.green.shade700 : AppTheme.primaryColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Checkbox(
+              value: todo.isDone,
+              onChanged: (_) => onToggle(),
+            ),
+          ],
         ),
         title: Text(
           todo.title,

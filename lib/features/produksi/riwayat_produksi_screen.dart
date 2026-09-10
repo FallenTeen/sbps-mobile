@@ -5,6 +5,7 @@ import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../core/formatters.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -161,17 +162,11 @@ class _RiwayatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String jam(DateTime? t) => t == null
-        ? '-'
-        : '${t.day}/${t.month} '
-            '${t.hour.toString().padLeft(2, '0')}:'
-            '${t.minute.toString().padLeft(2, '0')}';
-
     return Card(
       child: ListTile(
         title: Text('${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}'),
         subtitle: Text(
-          '${jam(session.mulai?.toLocal())} → ${jam(session.selesai?.toLocal())}\n'
+          '${fmtTanggalWaktu(session.mulai?.toLocal())} → ${fmtTanggalWaktu(session.selesai?.toLocal())}\n'
           'Titik: ${session.titikNama ?? '-'}',
         ),
         isThreeLine: true,
@@ -180,7 +175,7 @@ class _RiwayatCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${_fmtNum(session.hasilOutput)} ${session.satuanOutput ?? ''}'.trim(),
+              '${fmtNum(session.hasilOutput)} ${session.satuanOutput ?? ''}'.trim(),
               style: Theme.of(context).textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
@@ -195,6 +190,3 @@ class _RiwayatCard extends StatelessWidget {
     );
   }
 }
-
-String _fmtNum(double n) =>
-    n % 1 == 0 ? n.toInt().toString() : n.toStringAsFixed(1);

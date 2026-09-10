@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Input ODO awal proyek dengan alur step-based:
@@ -103,8 +104,10 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
             Center(child: Text('Gagal memuat daftar armada: $error')),
         data: (armadaList) {
           if (armadaList.isEmpty) {
-            return const Center(
-              child: Text('Tidak ada armada yang sedang Anda pegang.'),
+            return const AppEmptyState(
+              icon: Icons.local_shipping_outlined,
+              title: 'Tidak ada armada',
+              subtitle: 'Anda belum memiliki armada yang ditugaskan.',
             );
           }
 
@@ -150,29 +153,44 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final labels = ['Pilih Kendaraan', 'Input ODO'];
+    final currentLabel = currentStep < labels.length ? labels[currentStep] : '';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
         children: [
-          _StepDot(
-            label: 'Konteks',
-            isActive: currentStep >= 0,
-            isCurrent: currentStep == 0,
-          ),
-          Expanded(
-            child: Container(
-              height: 2,
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              color: currentStep >= 1
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outlineVariant,
+          Text(
+            'Langkah ${currentStep + 1} dari ${labels.length} — $currentLabel',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
             ),
           ),
-          _StepDot(
-            label: 'ODO',
-            isActive: currentStep >= 1,
-            isCurrent: currentStep == 1,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _StepDot(
+                label: labels[0],
+                isActive: currentStep >= 0,
+                isCurrent: currentStep == 0,
+              ),
+              Expanded(
+                child: Container(
+                  height: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: currentStep >= 1
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant,
+                ),
+              ),
+              _StepDot(
+                label: labels[1],
+                isActive: currentStep >= 1,
+                isCurrent: currentStep == 1,
+              ),
+            ],
           ),
         ],
       ),

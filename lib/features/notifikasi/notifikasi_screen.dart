@@ -8,6 +8,7 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'models/notification.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 import 'notifikasi_providers.dart';
 
 /// Daftar notifikasi (Fase A1.7): status baca, tap → tandai dibaca,
@@ -113,7 +114,7 @@ class _Tile extends ConsumerWidget {
             if (notification.time != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(notification.time!,
+                child: Text(fmtRelatif(notification.time!),
                     style: theme.textTheme.labelSmall),
               ),
           ],

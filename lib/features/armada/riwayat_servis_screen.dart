@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 import 'servis_providers.dart';
 
 /// Screen daftar riwayat pengajuan servis armada dengan filter status dan pagination.
@@ -142,34 +144,22 @@ class RiwayatServisScreen extends ConsumerWidget {
     }
 
     if (state.error != null && state.items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(state.error!),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () =>
-                  ref.read(servisRiwayatProvider.notifier).refresh(),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
+      return AppEmptyState(
+        icon: Icons.cloud_off_outlined,
+        title: 'Gagal memuat data',
+        subtitle: state.error!,
+        actionLabel: 'Coba lagi',
+        onAction: () => ref.read(servisRiwayatProvider.notifier).refresh(),
       );
     }
 
     if (state.items.isEmpty) {
-      return ListView(
-        children: const [
-          SizedBox(height: 120),
-          Icon(Icons.build_outlined, size: 48, color: Colors.grey),
-          SizedBox(height: 12),
-          Text(
-            'Belum ada riwayat pengajuan servis.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
+      return AppEmptyState(
+        icon: Icons.build_outlined,
+        title: 'Belum ada riwayat pengajuan servis',
+        subtitle: 'Ajukan servis pertama kali dengan menekan tombol + di bawah.',
+        actionLabel: 'Ajukan Servis',
+        onAction: () => context.push('/armada/servis/ajuan'),
       );
     }
 
@@ -252,8 +242,8 @@ class RiwayatServisScreen extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          item.tanggalAjuan,
+                          Text(
+                            fmtTanggal(item.tanggalAjuan),
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.outline,

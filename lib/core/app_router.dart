@@ -338,7 +338,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/armada/servis/ajuan',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: const AjuanServisScreen(),
+          child: AjuanServisScreen(
+            initialArmadaId: state.uri.queryParameters['armadaId'],
+          ),
         ),
       ),
       GoRoute(

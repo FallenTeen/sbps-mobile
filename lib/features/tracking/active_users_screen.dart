@@ -8,6 +8,7 @@ import '../../core/api_client.dart';
 import '../../shared/theme/breakpoints.dart';
 import 'tracking_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 
 /// Daftar user aktif (GPS dalam 1 jam terakhir) — khusus Owner/Admin
 /// Keuangan. Auto-refresh tiap 60 detik.
@@ -111,8 +112,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                       subtitle: last == null
                           ? null
                           : Text('Terakhir terlihat '
-                              '${last.hour.toString().padLeft(2, '0')}:'
-                              '${last.minute.toString().padLeft(2, '0')}'),
+                              '${fmtRelatif(u.lastSeen)}'),
                       trailing: Chip(
                         visualDensity: VisualDensity.compact,
                         label: Text('${u.pointCount} titik'),
@@ -120,12 +120,13 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                       onTap: () =>
                           context.push('/tracking/hari-ini/${u.userId}', extra: u.nama),
                     ),
-                  );
-                },
-              );
-            }
+                  ),
+                );
+              },
+            );
+          }
 
-            return ListView.separated(
+          return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -141,8 +142,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                     subtitle: last == null
                         ? null
                         : Text('Terakhir terlihat '
-                            '${last.hour.toString().padLeft(2, '0')}:'
-                            '${last.minute.toString().padLeft(2, '0')}'),
+                            '${fmtRelatif(u.lastSeen)}'),
                     trailing: Chip(
                       visualDensity: VisualDensity.compact,
                       label: Text('${u.pointCount} titik'),

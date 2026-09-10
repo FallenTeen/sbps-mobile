@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Checklist harian armada: menampilkan status tiap kendaraan hari ini dan
@@ -64,13 +66,11 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
         onRefresh: () async => ref.invalidate(checklistHariIniProvider),
         child: switch (checklist) {
           AsyncData(value: final items) => items.isEmpty
-              ? ListView(children: const [
-                  SizedBox(height: 160),
-                  Icon(Icons.checklist_rtl, size: 44),
-                  SizedBox(height: 12),
-                  Text('Belum ada armada untuk dicatat.',
-                      textAlign: TextAlign.center),
-                ])
+              ? const AppEmptyState(
+                  icon: Icons.checklist_rtl,
+                  title: 'Belum ada armada untuk dicatat',
+                  subtitle: 'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
+                )
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: items.length,
@@ -80,10 +80,13 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                     onTap: () => _openForm(items[i]),
                   ),
                 ),
-          AsyncError(:final error) => ListView(children: [
-              const SizedBox(height: 120),
-              Text('$error', textAlign: TextAlign.center),
-            ]),
+          AsyncError(:final error) => AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Gagal memuat data',
+              subtitle: '$error',
+              actionLabel: 'Coba lagi',
+              onAction: () => ref.invalidate(checklistHariIniProvider),
+            ),
           _ => const Center(child: CircularProgressIndicator()),
         },
       ),
@@ -222,7 +225,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Kondisi kendaraan baik'),
-              subtitle: const Text('Matikan bila ada masalah'),
+              subtitle: const InfoTooltip(message: 'Aktifkan kalau tidak ada masalah pada unit. Matikan kalau ada kerusakan/kejanggalan yang perlu dicatat.'),
               value: _kondisiBaik,
               onChanged: (v) => setState(() => _kondisiBaik = v),
             ),
@@ -248,9 +251,10 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
                     controller: _solarCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Solar (liter)',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: const InfoTooltip(message: 'Jumlah solar yang diisi hari ini untuk unit ini. Kosongkan kalau tidak ada pengisian.'),
                     ),
                   ),
                 ),
@@ -260,9 +264,10 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
                     controller: _odoCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'ODO (km)',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: const InfoTooltip(message: 'Angka pada odometer kendaraan saat ini. Dipakai untuk hitung jarak tempuh & jadwal servis.'),
                     ),
                   ),
                 ),
@@ -273,10 +278,11 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
               controller: _jamCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Jam Operasional',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 helperText: 'Untuk alat stasioner',
+                suffixIcon: const InfoTooltip(message: 'Khusus alat berat stasioner (bukan kendaraan jalan) — total jam mesin menyala, dilihat dari HM (Hour Meter) di panel alat.'),
               ),
             ),
             const SizedBox(height: 16),

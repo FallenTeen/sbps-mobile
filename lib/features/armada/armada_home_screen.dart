@@ -3,20 +3,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'driver_dashboard_screen.dart';
 import 'models/armada.dart';
 
+/// ArmadaHomeScreen — role-aware menu.
+/// Menu ditampilkan berdasarkan sub-permission role yang login,
+/// dikelompokkan per section dengan judul.
 class ArmadaHomeScreen extends ConsumerWidget {
   const ArmadaHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeRole = ref.watch(activeRoleProvider);
+    final sections = _buildSections(activeRole);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: null,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Armada', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              _subtitleForRole(activeRole),
+              style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7)),
+            ),
+          ],
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
@@ -42,16 +59,15 @@ class ArmadaHomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.local_shipping_rounded,
-                      color: Colors.white, size: 28),
-                  SizedBox(width: 14),
+                  Icon(_iconForRole(activeRole), color: Colors.white, size: 28),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Armada',
                           style: TextStyle(
                             color: Colors.white,
@@ -59,13 +75,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Kendaraan & operasional harian',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
+                          _subtitleForRole(activeRole),
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
@@ -95,80 +108,33 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ..._armadaSection(ref),
             const SizedBox(height: 24),
 
-            // Menu section
-            Row(
-              children: [
-                Icon(Icons.apps_rounded,
-                    size: 20, color: AppTheme.primaryColor),
-                const SizedBox(width: 8),
-                const Text(
-                  'Menu',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+            // Role-aware menu sections
+            for (final section in sections) ...[
+              Row(
+                children: [
+                  Icon(section.icon, size: 20, color: AppTheme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    section.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _MenuTile(
-              icon: Icons.dashboard_outlined,
-              title: 'Dashboard Saya',
-              subtitle: 'Ringkasan kinerja & ritase hari ini',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                    builder: (_) => const DriverDashboardScreen()),
+                ],
               ),
-            ),
-            _MenuTile(
-              icon: Icons.route_outlined,
-              title: 'Riwayat Ritase',
-              subtitle: 'Pengiriman & upah per rit',
-              onTap: () => context.push('/armada/ritase'),
-            ),
-            _MenuTile(
-              icon: Icons.checklist_rtl,
-              title: 'Checklist Harian',
-              subtitle: 'Catat kondisi kendaraan hari ini',
-              onTap: () => context.push('/armada/checklist'),
-            ),
-            _MenuTile(
-              icon: Icons.badge_outlined,
-              title: 'Presensi Helper',
-              subtitle: 'Absenkan helper armada hari ini',
-              onTap: () => context.push('/armada/helper-presensi'),
-            ),
-            _MenuTile(
-              icon: Icons.speed_outlined,
-              title: 'ODO Awal Proyek',
-              subtitle: 'Catat ODO awal kendaraan per ritase',
-              onTap: () => context.push('/armada/odo-awal'),
-            ),
-            _MenuTile(
-              icon: Icons.build_outlined,
-              title: 'Servis Armada',
-              subtitle: 'Pengajuan & riwayat perbaikan armada',
-              onTap: () => context.push('/armada/servis'),
-            ),
-            _MenuTile(
-              icon: Icons.edit_road_outlined,
-              title: 'Input Ritase',
-              subtitle: 'Catat jumlah rit & satuan hari ini',
-              onTap: () => context.push('/armada/ritase-input'),
-            ),
-            _MenuTile(
-              icon: Icons.engineering_outlined,
-              title: 'Workshop To-Do',
-              subtitle: 'Daftar tugas perbaikan harian',
-              onTap: () => context.push('/armada/workshop-todo'),
-            ),
-            _MenuTile(
-              icon: Icons.assignment_outlined,
-              title: 'Checklist Major',
-              subtitle: 'Serah terima kondisi kendaraan',
-              onTap: () => context.push('/armada/checklist-major'),
-            ),
+              const SizedBox(height: 10),
+              for (final item in section.items)
+                _MenuTile(
+                  icon: item.icon,
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  badge: item.badge,
+                  onTap: item.onTap,
+                ),
+              const SizedBox(height: 24),
+            ],
           ],
         ),
       ),
@@ -184,12 +150,193 @@ class ArmadaHomeScreen extends ConsumerWidget {
       AsyncError(:final error) => [_ErrorView(message: '$error')],
       _ => const [
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
+            padding: EdgeInsets.vertical: 40),
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
     };
   }
+
+  String _subtitleForRole(String? role) {
+    return switch (role) {
+      'Driver Armada' => 'Tugas Harian & Operasional',
+      'Kepala Divisi Armada' => 'Monitoring & Approval',
+      'Owner' => 'Monitoring & Approval',
+      'Admin Keuangan' => 'Monitoring & Approval',
+      _ => 'Kendaraan & operasional harian',
+    };
+  }
+
+  IconData _iconForRole(String? role) {
+    return switch (role) {
+      'Driver Armada' => Icons.local_shipping_rounded,
+      'Kepala Divisi Armada' => Icons.supervisor_account_rounded,
+      'Owner' => Icons.admin_panel_settings_rounded,
+      'Admin Keuangan' => Icons.account_balance_wallet_rounded,
+      _ => Icons.local_shipping_rounded,
+    };
+  }
+
+  List<_MenuSection> _buildSections(String? role) {
+    return switch (role) {
+      'Driver Armada' => _driverSections(),
+      'Kepala Divisi Armada' => _kepalaDivisiSections(),
+      'Owner' => _ownerSections(),
+      'Admin Keuangan' => _adminKeuanganSections(),
+      _ => _driverSections(), // default
+    };
+  }
+
+  List<_MenuSection> _driverSections() => [
+    _MenuSection(
+      icon: Icons.task_alt_rounded,
+      title: 'Tugas Harian Saya',
+      items: [
+        _MenuItem(
+          icon: Icons.dashboard_outlined,
+          title: 'Dashboard Saya',
+          subtitle: 'Ringkasan kinerja & ritase hari ini',
+          onTap: (ctx) => Navigator.of(ctx).push(
+            MaterialPageRoute<void>(builder: (_) => const DriverDashboardScreen()),
+          ),
+        ),
+        _MenuItem(
+          icon: Icons.checklist_rtl,
+          title: 'Checklist Harian',
+          subtitle: 'Catat kondisi kendaraan hari ini',
+          onTap: (ctx) => ctx.push('/armada/checklist'),
+        ),
+        _MenuItem(
+          icon: Icons.speed_outlined,
+          title: 'ODO Awal Proyek',
+          subtitle: 'Catat ODO awal kendaraan per ritase',
+          onTap: (ctx) => ctx.push('/armada/odo-awal'),
+        ),
+        _MenuItem(
+          icon: Icons.badge_outlined,
+          title: 'Presensi Helper',
+          subtitle: 'Absenkan helper armada hari ini',
+          onTap: (ctx) => ctx.push('/armada/helper-presensi'),
+        ),
+      ],
+    ),
+    _MenuSection(
+      icon: Icons.work_rounded,
+      title: 'Operasional',
+      items: [
+        _MenuItem(
+          icon: Icons.route_outlined,
+          title: 'Riwayat Ritase',
+          subtitle: 'Pengiriman & upah per rit',
+          onTap: (ctx) => ctx.push('/armada/ritase'),
+        ),
+        _MenuItem(
+          icon: Icons.edit_road_outlined,
+          title: 'Input Ritase',
+          subtitle: 'Catat jumlah rit & satuan hari ini',
+          onTap: (ctx) => ctx.push('/armada/ritase-input'),
+        ),
+        _MenuItem(
+          icon: Icons.build_outlined,
+          title: 'Servis Armada',
+          subtitle: 'Pengajuan & riwayat perbaikan armada',
+          onTap: (ctx) => ctx.push('/armada/servis'),
+        ),
+      ],
+    ),
+  ];
+
+  List<_MenuSection> _kepalaDivisiSections() => [
+    _MenuSection(
+      icon: Icons.dashboard_rounded,
+      title: 'Monitoring',
+      items: [
+        _MenuItem(
+          icon: Icons.analytics_outlined,
+          title: 'Overview Armada',
+          subtitle: 'Status seluruh armada & dashboard',
+          onTap: (ctx) => ctx.push('/armada/overview'),
+        ),
+      ],
+    ),
+    _MenuSection(
+      icon: Icons.approval_rounded,
+      title: 'Approval',
+      items: [
+        _MenuItem(
+          icon: Icons.build_outlined,
+          title: 'Servis Armada',
+          subtitle: 'Persetujuan & riwayat perbaikan',
+          onTap: (ctx) => ctx.push('/armada/servis'),
+        ),
+        _MenuItem(
+          icon: Icons.assignment_outlined,
+          title: 'Checklist Major',
+          subtitle: 'Serah terima kondisi kendaraan',
+          onTap: (ctx) => ctx.push('/armada/checklist-major'),
+        ),
+      ],
+    ),
+  ];
+
+  List<_MenuSection> _ownerSections() => _kepalaDivisiSections();
+
+  List<_MenuSection> _adminKeuanganSections() => [
+    _MenuSection(
+      icon: Icons.dashboard_rounded,
+      title: 'Monitoring',
+      items: [
+        _MenuItem(
+          icon: Icons.analytics_outlined,
+          title: 'Overview Armada',
+          subtitle: 'Status seluruh armada & dashboard',
+          onTap: (ctx) => ctx.push('/armada/overview'),
+        ),
+      ],
+    ),
+    _MenuSection(
+      icon: Icons.approval_rounded,
+      title: 'Approval',
+      items: [
+        _MenuItem(
+          icon: Icons.build_outlined,
+          title: 'Servis Armada',
+          subtitle: 'Persetujuan & riwayat perbaikan',
+          onTap: (ctx) => ctx.push('/armada/servis'),
+        ),
+      ],
+    ),
+  ];
+}
+
+// ── Data Models ──────────────────────────────────────────────────────────────
+
+class _MenuSection {
+  const _MenuSection({
+    required this.icon,
+    required this.title,
+    required this.items,
+  });
+
+  final IconData icon;
+  final String title;
+  final List<_MenuItem> items;
+}
+
+class _MenuItem {
+  const _MenuItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.badge,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final int? badge;
+  final void Function(BuildContext) onTap;
 }
 
 // ── Menu Tile ─────────────────────────────────────────────────────────────────
@@ -199,12 +346,14 @@ class _MenuTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.badge,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final int? badge;
   final VoidCallback onTap;
 
   @override
@@ -259,6 +408,22 @@ class _MenuTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (badge != null && badge! > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$badge',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.warningColor,
+                      ),
+                    ),
+                  ),
                 const Icon(Icons.chevron_right_rounded,
                     color: AppTheme.textMuted, size: 20),
               ],

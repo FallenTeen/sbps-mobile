@@ -9,6 +9,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 
 /// Riwayat QC: filter status, badge warna per status, pagination
 /// tombol "Muat lagi" (Fase A2.5).
@@ -117,7 +118,7 @@ class RiwayatQcScreen extends ConsumerWidget {
                 'Slump ${_fmt(s.nilaiSlump)}'
                 '${s.hasilUjiTekan != null ? ' • Uji tekan ${_fmt(s.hasilUjiTekan)} MPa' : ''}\n'
                 '${s.titikNama ?? '-'}'
-                '${s.createdAt != null ? ' • ${_fmtTanggal(s.createdAt!)}' : ''}',
+                '${s.createdAt != null ? ' • ${fmtTanggalWaktu(s.createdAt!)}' : ''}',
               ),
               isThreeLine: true,
               trailing: QcStatusBadge(status: s.status),
@@ -142,8 +143,3 @@ String _fmt(double? n) => n == null
     : n % 1 == 0
         ? n.toInt().toString()
         : n.toStringAsFixed(1);
-
-String _fmtTanggal(DateTime t) =>
-    '${t.day}/${t.month} '
-    '${t.hour.toString().padLeft(2, '0')}:'
-    '${t.minute.toString().padLeft(2, '0')}';

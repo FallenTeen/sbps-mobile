@@ -1,27 +1,194 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 
-/// Riwayat ritase/pengiriman milik driver (modul Armada) dengan pagination.
-class RiwayatRitaseScreen extends ConsumerWidget {
+/// Riwayat ritase dengan tab "Hari Ini" dan "Riwayat".
+/// Tab Hari Ini: ringkasan ritase hari ini per kendaraan + tombol input baru.
+/// Tab Riwayat: daftar ritase lengkap dengan pagination.
+class RiwayatRitaseScreen extends ConsumerStatefulWidget {
   const RiwayatRitaseScreen({super.key});
 
+  @override
+  ConsumerState<RiwayatRitaseScreen> createState() =>
+      _RiwayatRitaseScreenState();
+}
+
+class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ritase'),
+        actions: const [PortalSwitchButton()],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Hari Ini'),
+            Tab(text: 'Riwayat'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _HariIniTab(),
+          _RiwayatTab(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tab "Hari Ini": ringkasan ritase hari ini per kendaraan.
+class _HariIniTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final armadaAsync = ref.watch(armadaSayaProvider);
+
+    return armadaAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => AppEmptyState(
+        icon: Icons.cloud_off_outlined,
+        title: 'Gagal memuat data',
+        subtitle: '$e',
+        actionLabel: 'Coba lagi',
+        onAction: () => ref.invalidate(armadaSayaProvider),
+      ),
+      data: (armadaList) {
+        if (armadaList.isEmpty) {
+          return const AppEmptyState(
+            icon: Icons.route_outlined,
+            title: 'Tidak ada armada',
+            subtitle: 'Anda belum memiliki armada yang ditugaskan.',
+          );
+        }
+
+        return Column(
+          children: [
+            // Summary card
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: AppTheme.primaryColor.withValues(alpha: 0.05),
+              child: Row(
+                children: [
+                  Icon(Icons.today, color: AppTheme.primaryColor, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ritase Hari Ini',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${armadaList.length} kendaraan aktif',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Armada list
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: armadaList.length,
+                itemBuilder: (context, index) {
+                  final armada = armadaList[index];
+                  return _ArmadaRitaseCard(armada: armada);
+                },
+              ),
+            ),
+
+            // Input button
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/armada/ritase-input'),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Input Ritase Baru'),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Card armada di tab Hari Ini.
+class _ArmadaRitaseCard extends StatelessWidget {
+  const _ArmadaRitaseCard({required this.armada});
+
+  final ArmadaSaya armada;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          child: Icon(Icons.local_shipping, color: AppTheme.primaryColor, size: 20),
+        ),
+        title: Text(
+          armada.platNomor,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
+          style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+      ),
+    );
+  }
+}
+
+/// Tab "Riwayat": daftar ritase paginated.
+class _RiwayatTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(ritaseRiwayatProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Ritase'),
-        actions: const [PortalSwitchButton()],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
-        child: _buildList(context, ref, state),
-      ),
+    return RefreshIndicator(
+      onRefresh: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
+      child: _buildList(context, ref, state),
     );
   }
 
@@ -31,25 +198,20 @@ class RiwayatRitaseScreen extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.error != null && state.items.isEmpty) {
-      return ListView(children: [
-        const SizedBox(height: 120),
-        Text(state.error!, textAlign: TextAlign.center),
-        const SizedBox(height: 8),
-        Center(
-          child: OutlinedButton(
-            onPressed: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
-            child: const Text('Coba lagi'),
-          ),
-        ),
-      ]);
+      return AppEmptyState(
+        icon: Icons.cloud_off_outlined,
+        title: 'Gagal memuat data',
+        subtitle: state.error!,
+        actionLabel: 'Coba lagi',
+        onAction: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
+      );
     }
     if (state.items.isEmpty) {
-      return ListView(children: const [
-        SizedBox(height: 160),
-        Icon(Icons.route_outlined, size: 44),
-        SizedBox(height: 12),
-        Text('Belum ada riwayat ritase.', textAlign: TextAlign.center),
-      ]);
+      return const AppEmptyState(
+        icon: Icons.route_outlined,
+        title: 'Belum ada riwayat ritase',
+        subtitle: 'Ritase yang sudah Anda catat akan muncul di sini.',
+      );
     }
 
     return ListView.separated(
@@ -94,7 +256,7 @@ class _RitaseCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${ritase.material ?? 'Material'} • ${_fmtTanggal(ritase.tanggal)}',
+                    '${ritase.material ?? 'Material'} • ${fmtTanggal(ritase.tanggal)}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -103,13 +265,13 @@ class _RitaseCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${ritase.jumlahRit ?? 0} rit'
+              '${fmtRitase(ritase.jumlahRit)}'
               '${ritase.ruteAsal != null && ritase.ruteTujuan != null ? ' • ${ritase.ruteAsal} → ${ritase.ruteTujuan}' : ''}',
             ),
             if (ritase.totalUpahRit != null) ...[
               const SizedBox(height: 4),
               Text(
-                'Upah: ${_fmtUang(ritase.totalUpahRit!)}',
+                'Upah: ${fmtRp(ritase.totalUpahRit!)}',
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
@@ -152,21 +314,4 @@ String _labelStatus(String status) => switch (status) {
       _ => status,
     };
 
-String _fmtTanggal(String? tanggal) {
-  if (tanggal == null || tanggal.isEmpty) return '-';
-  final t = DateTime.tryParse(tanggal);
-  if (t == null) return tanggal;
-  return '${t.day}/${t.month}/${t.year}';
-}
 
-String _fmtUang(double n) {
-  final rounded = n.round();
-  final s = rounded.toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    buf.write(s[i]);
-    final remaining = s.length - 1 - i;
-    if (remaining > 0 && remaining % 3 == 0) buf.write('.');
-  }
-  return 'Rp $buf';
-}

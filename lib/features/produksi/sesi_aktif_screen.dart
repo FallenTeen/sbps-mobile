@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api_client.dart';
+import '../../core/formatters.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
 import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import 'produksi_ringkasan_screen.dart';
 
@@ -72,16 +74,10 @@ class SesiAktifScreen extends ConsumerWidget {
             onRetry: () => ref.invalidate(sesiAktifProvider),
           ),
           data: (items) => items.isEmpty
-              ? ListView(
-                  children: const [
-                    SizedBox(height: 160),
-                    Icon(Icons.factory_outlined, size: 48),
-                    SizedBox(height: 12),
-                    Text(
-                      'Tidak ada sesi berjalan.\nTekan "Mulai Sesi" untuk memulai.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+              ? const AppEmptyState(
+                  icon: Icons.factory_outlined,
+                  title: 'Belum ada sesi aktif',
+                  subtitle: 'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
                 )
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -142,7 +138,7 @@ class _SessionCard extends StatelessWidget {
             Text('Titik: ${session.titikNama ?? '-'}'),
             if (mulai != null)
               Text(
-                'Mulai ${_fmtJam(mulai)}'
+                'Mulai ${fmtTanggalWaktu(mulai)}'
                 '${durasi != null ? ' • ${durasi.inHours}j ${durasi.inMinutes % 60}m' : ''}',
               ),
             const SizedBox(height: 10),
@@ -202,10 +198,6 @@ class _SessionCard extends StatelessWidget {
     );
   }
 }
-
-String _fmtJam(DateTime t) =>
-    '${t.day}/${t.month} ${t.hour.toString().padLeft(2, '0')}:'
-    '${t.minute.toString().padLeft(2, '0')}';
 
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});

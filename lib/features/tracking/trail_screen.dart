@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/api_client.dart';
 import 'tracking_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../core/formatters.dart';
 
 /// Jejak lokasi satu user hari ini (GET /tracking/hari-ini/{userId}) dengan
 /// visualisasi Peta OpenStreetMap interaktif dan daftar titik kronologis.
@@ -185,7 +186,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                                     ),
                                   ),
                                   Text(
-                                    '${_formatTime(firstTime)} → ${_formatTime(lastTime)}',
+                                    '${fmtWaktu(firstTime)} → ${fmtWaktu(lastTime)}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Theme.of(context)
@@ -224,7 +225,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                         color: isLatest ? Colors.red : null,
                       ),
                       title: Text(
-                        _formatTime(item.timestamp.toLocal()),
+                        fmtWaktu(item.timestamp),
                         style: TextStyle(
                           fontWeight: isLatest
                               ? FontWeight.bold

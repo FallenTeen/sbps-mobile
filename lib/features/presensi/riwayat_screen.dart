@@ -6,14 +6,10 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
+import '../../core/formatters.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
-
-const _bulanNames = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-  'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-];
 
 /// Riwayat presensi (GET /presensi/riwayat) — filter bulan/tahun,
 /// pagination tombol "Muat lagi".
@@ -120,7 +116,7 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
                       decoration: const InputDecoration(labelText: 'Bulan'),
                       items: [
                         for (var i = 1; i <= 12; i++)
-                          DropdownMenuItem(value: i, child: Text(_bulanNames[i - 1])),
+                          DropdownMenuItem(value: i, child: Text(kBulanNama[i - 1])),
                       ],
                       onChanged: (v) {
                         if (v != null && v != _bulan) {
@@ -241,20 +237,14 @@ class _RiwayatTile extends StatelessWidget {
               ? theme.colorScheme.error
               : theme.colorScheme.primary,
         ),
-        title: Text(item.tanggal ?? '-'),
+        title: Text(fmtTanggal(item.tanggal)),
         subtitle: Text(
           '${item.namaTitik ?? 'Titik'} • '
-          'Masuk ${_jam(item.checkIn)} • Pulang ${_jam(item.checkOut)}',
+          'Masuk ${fmtWaktu(item.checkIn)} • Pulang ${fmtWaktu(item.checkOut)}',
         ),
         trailing: Text(_statusLabel(item.status), style: theme.textTheme.bodySmall),
       ),
     );
-  }
-
-  String _jam(String? iso) {
-    final t = iso == null ? null : DateTime.tryParse(iso)?.toLocal();
-    if (t == null) return '-';
-    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 
   String _statusLabel(String? status) => switch (status) {

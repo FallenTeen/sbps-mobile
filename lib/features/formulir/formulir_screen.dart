@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
@@ -51,69 +52,28 @@ class FormulirScreen extends ConsumerWidget {
             padding: EdgeInsets.all(16),
             child: SkeletonDetailView(),
           ),
-          error: (error, _) => _PesanTengah(
+          error: (error, _) => AppEmptyState(
             icon: Icons.cloud_off_outlined,
-            judul: 'Gagal memuat status presensi',
-            detail: '$error',
-            aksi: () => ref.invalidate(hariIniProvider),
+            title: 'Gagal memuat status presensi',
+            subtitle: '$error',
+            actionLabel: 'Coba lagi',
+            onAction: () => ref.invalidate(hariIniProvider),
           ),
           data: (presensi) {
             if (presensi.status == PresensiStatus.belumCheckIn) {
               // Cegah sejak awal — jangan biarkan user mengisi lalu gagal 422.
-              return _PesanTengah(
+              return AppEmptyState(
                 icon: Icons.login,
-                judul: 'Belum check-in hari ini',
-                detail:
+                title: 'Belum check-in hari ini',
+                subtitle:
                     'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
                     'check-in presensi.',
-                aksiLabel: 'Kembali',
-                aksi: () => Navigator.of(context).maybePop(),
+                actionLabel: 'Kembali',
+                onAction: () => Navigator.of(context).maybePop(),
               );
             }
             return const _FormulirBody();
           },
-        ),
-      ),
-    );
-  }
-}
-
-/// Layar pesan tengah dengan satu aksi (dipakai untuk state terblokir
-/// maupun gagal memuat).
-class _PesanTengah extends StatelessWidget {
-  const _PesanTengah({
-    required this.icon,
-    required this.judul,
-    required this.detail,
-    required this.aksi,
-    this.aksiLabel = 'Coba lagi',
-  });
-
-  final IconData icon;
-  final String judul;
-  final String detail;
-  final VoidCallback aksi;
-  final String aksiLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: theme.colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(judul, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(detail,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall),
-            const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: aksi, child: Text(aksiLabel)),
-          ],
         ),
       ),
     );
