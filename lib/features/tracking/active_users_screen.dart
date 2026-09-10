@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api_client.dart';
+import '../../shared/theme/breakpoints.dart';
 import 'tracking_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -80,6 +81,50 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                 ],
               );
             }
+
+            final isTablet = context.isTablet;
+            final crossAxisCount = context.responsiveValue(
+              compact: 1,
+              medium: 2,
+              expanded: 3,
+            );
+
+            if (isTablet) {
+              return GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 3.0,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, i) {
+                  final u = items[i];
+                  final last = u.lastSeen?.toLocal();
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        child: Text(u.nama.isNotEmpty ? u.nama[0] : '?'),
+                      ),
+                      title: Text(u.nama),
+                      subtitle: last == null
+                          ? null
+                          : Text('Terakhir terlihat '
+                              '${last.hour.toString().padLeft(2, '0')}:'
+                              '${last.minute.toString().padLeft(2, '0')}'),
+                      trailing: Chip(
+                        visualDensity: VisualDensity.compact,
+                        label: Text('${u.pointCount} titik'),
+                      ),
+                      onTap: () =>
+                          context.push('/tracking/hari-ini/${u.userId}', extra: u.nama),
+                    ),
+                  );
+                },
+              );
+            }
+
             return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: items.length,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dashboard/dashboard_providers.dart';
 import 'servis_providers.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Screen Overview Seluruh Armada & Status Operasional untuk Manajemen (Owner, Admin Keuangan, dsb).
@@ -132,6 +133,36 @@ class OverviewArmadaScreen extends ConsumerWidget {
                   );
                 }
 
+                final isTablet = context.isTablet;
+                final crossAxisCount = context.responsiveValue(
+                  compact: 1,
+                  medium: 2,
+                  expanded: 3,
+                );
+
+                if (isTablet) {
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 2.8,
+                    ),
+                    itemCount: armadaList.length,
+                    itemBuilder: (context, index) {
+                      final armada = armadaList[index];
+                      final color = _statusColor(armada.status);
+                      return _ArmadaTile(
+                        armada: armada,
+                        color: color,
+                        onTap: () => context.push('/armada/servis'),
+                      );
+                    },
+                  );
+                }
+
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -140,51 +171,10 @@ class OverviewArmadaScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final armada = armadaList[index];
                     final color = _statusColor(armada.status);
-
-                    return Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: color.withValues(alpha: 0.15),
-                          child: Icon(
-                            Icons.local_shipping_outlined,
-                            color: color,
-                          ),
-                        ),
-                        title: Text(
-                          armada.platNomor,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          [
-                            if (armada.kodeUnit != null && armada.kodeUnit!.isNotEmpty)
-                              'Unit: ${armada.kodeUnit}',
-                            if (armada.jenis != null && armada.jenis!.isNotEmpty)
-                              armada.jenis,
-                          ].join(' • '),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            armada.status ?? 'Aktif',
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        onTap: () {
-                          // View servis riwayat / ajukan servis
-                          context.push('/armada/servis');
-                        },
-                      ),
+                    return _ArmadaTile(
+                      armada: armada,
+                      color: color,
+                      onTap: () => context.push('/armada/servis'),
                     );
                   },
                 );
@@ -192,6 +182,64 @@ class OverviewArmadaScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ArmadaTile extends StatelessWidget {
+  const _ArmadaTile({
+    required this.armada,
+    required this.color,
+    required this.onTap,
+  });
+
+  final dynamic armada;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: 0.15),
+          child: Icon(
+            Icons.local_shipping_outlined,
+            color: color,
+          ),
+        ),
+        title: Text(
+          armada.platNomor,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          [
+            if (armada.kodeUnit != null && armada.kodeUnit!.isNotEmpty)
+              'Unit: ${armada.kodeUnit}',
+            if (armada.jenis != null && armada.jenis!.isNotEmpty)
+              armada.jenis,
+          ].join(' • '),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            armada.status ?? 'Aktif',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        onTap: onTap,
       ),
     );
   }
