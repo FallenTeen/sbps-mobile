@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'driver_dashboard_screen.dart';
@@ -40,10 +43,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ),
           ],
         ),
-        actions: const [PortalSwitchButton()],
+        actions: const [PortalSwitchButton(), SyncActionButton()],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(armadaSayaProvider),
+        onRefresh: () async {
+          HapticFeedback.lightImpact();
+          ref.invalidate(armadaSayaProvider);
+        },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -153,7 +159,20 @@ class ArmadaHomeScreen extends ConsumerWidget {
       AsyncData(value: final items) => items.isEmpty
           ? const [_EmptyArmada()]
           : [for (final a in items) _ArmadaCard(armada: a)],
-      AsyncError(:final error) => [_ErrorView(message: '$error')],
+      AsyncError() => [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: AppEmptyState(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              icon: Icons.cloud_off_outlined,
+              title: 'Gagal memuat data armada',
+              subtitle:
+                  'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+              actionLabel: 'Muat Ulang',
+              onAction: () => ref.invalidate(armadaSayaProvider),
+            ),
+          ),
+        ],
       _ => const [
           Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
@@ -201,7 +220,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
         _MenuItem(
           icon: Icons.dashboard_outlined,
           title: 'Dashboard Saya',
-          subtitle: 'Ringkasan kinerja & ritase hari ini',
+          subtitle: 'Ringkasan kinerja & muatan hari ini',
           onTap: (ctx) => Navigator.of(ctx).push(
             MaterialPageRoute<void>(builder: (_) => const DriverDashboardScreen()),
           ),
@@ -214,8 +233,8 @@ class ArmadaHomeScreen extends ConsumerWidget {
         ),
         _MenuItem(
           icon: Icons.speed_outlined,
-          title: 'ODO Awal Proyek',
-          subtitle: 'Catat ODO awal kendaraan per ritase',
+          title: 'KM Awal',
+          subtitle: 'Catat KM awal kendaraan per muatan',
           onTap: (ctx) => ctx.push('/armada/odo-awal'),
         ),
         _MenuItem(
@@ -232,14 +251,14 @@ class ArmadaHomeScreen extends ConsumerWidget {
       items: [
         _MenuItem(
           icon: Icons.route_outlined,
-          title: 'Riwayat Ritase',
-          subtitle: 'Pengiriman & upah per rit',
+          title: 'Riwayat Muatan',
+          subtitle: 'Pengiriman & upah per muatan',
           onTap: (ctx) => ctx.push('/armada/ritase'),
         ),
         _MenuItem(
           icon: Icons.edit_road_outlined,
-          title: 'Input Ritase',
-          subtitle: 'Catat jumlah rit & satuan hari ini',
+          title: 'Input Muatan',
+          subtitle: 'Catat jumlah muatan & satuan hari ini',
           onTap: (ctx) => ctx.push('/armada/ritase-input'),
         ),
         _MenuItem(
@@ -277,7 +296,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
         ),
         _MenuItem(
           icon: Icons.assignment_outlined,
-          title: 'Checklist Major',
+          title: 'Checklist Serah Terima',
           subtitle: 'Serah terima kondisi kendaraan',
           onTap: (ctx) => ctx.push('/armada/checklist-major'),
         ),

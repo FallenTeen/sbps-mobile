@@ -82,6 +82,7 @@ class ArmadaRepository {
     double? solarLiter,
     double? odoKm,
     double? jamOperasional,
+    List<Map<String, dynamic>>? itemDetails,
   }) async {
     final action = PendingAction(
       id: _uuid.v4(),
@@ -96,6 +97,7 @@ class ArmadaRepository {
         if (solarLiter != null) 'solar_liter': solarLiter,
         if (odoKm != null) 'odo_km': odoKm,
         if (jamOperasional != null) 'jam_operasional': jamOperasional,
+        if (itemDetails != null) 'items': itemDetails,
       },
       createdAt: DateTime.now(),
       idempotencyKey: _uuid.v4(),

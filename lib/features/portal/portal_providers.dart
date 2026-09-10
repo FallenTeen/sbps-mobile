@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 
+import '../../core/analytics_service.dart';
 import '../auth/models/user.dart';
 
 const _kPortalBox = 'portal';
@@ -43,6 +44,7 @@ class SelectedPortalNotifier extends AsyncNotifier<AppPortal?> {
     final box = await _openBox();
     await box.put(_kSelectedPortal, portal.name);
     state = AsyncData(portal);
+    AnalyticsService.setPortal(portal.name);
   }
 
   Future<void> clear() async {

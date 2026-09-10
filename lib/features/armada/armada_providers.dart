@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'armada_repository.dart';
+import 'checklist_draft_store.dart';
 import 'models/armada.dart';
 import 'models/helper.dart';
 
@@ -31,6 +32,11 @@ final checklistHariIniProvider =
     FutureProvider.autoDispose<List<ArmadaChecklist>>((ref) {
       return ref.watch(armadaRepositoryProvider).getChecklistHariIni();
     });
+
+final checklistAkhirDoneProvider =
+    FutureProvider.autoDispose.family<bool, String>((ref, armadaId) {
+  return ChecklistDraftStore.isAkhirSubmitted(armadaId);
+});
 
 // ---------------------------------------------------------------------------
 // Riwayat ritase (pagination)

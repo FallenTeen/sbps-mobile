@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics_service.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -60,23 +61,24 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
       return;
     }
 
-    final result = await ref.read(produksiSubmitProvider.notifier).mulai(
-          mesinId: _mesin!.id,
-          produkId: _produk!.id,
-          titikId: _titik?.id,
-          catatan: _catatanCtrl.text.trim(),
-        );
+final result = await ref.read(produksiSubmitProvider.notifier).mulai(
+           mesinId: _mesin!.id,
+           produkId: _produk!.id,
+           titikId: _titik?.id,
+           catatan: _catatanCtrl.text.trim(),
+         );
 
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    if (result.delivered || result.queued) {
-      Navigator.of(context).pop();
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.delivered
-            ? 'Sesi produksi dimulai.'
-            : 'Offline — sesi masuk antrean, dikirim otomatis saat online.'),
-      ));
-    } else if (result.error != null) {
+      AnalyticsService.produksiSesiMulai();
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      if (result.delivered || result.queued) {
+        Navigator.of(context).pop();
+        messenger.showSnackBar(SnackBar(
+          content: Text(result.delivered
+              ? 'Sesi produksi dimulai.'
+              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+        ));
+      } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }
   }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
 import 'models/master.dart';
@@ -15,12 +16,32 @@ import '../../shared/widgets/portal_switch_button.dart';
 import 'produksi_ringkasan_screen.dart';
 
 /// Daftar sesi berstatus `berjalan` milik user + pintu ke Mulai/Riwayat/
-/// Progress (Fase A2.3).
-class SesiAktifScreen extends ConsumerWidget {
+/// Progress (Fase A2.3) - Refactored with TabBar (Fase 2).
+class SesiAktifScreen extends ConsumerStatefulWidget {
   const SesiAktifScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SesiAktifScreen> createState() => _SesiAktifScreenState();
+}
+
+class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sesi = ref.watch(sesiAktifProvider);
     // Peta sessionId → sample menunggu_hasil: penentu tombol QC per kartu.
     final waitingQc = ref.watch(waitingSamplesBySessionProvider);
@@ -30,67 +51,285 @@ class SesiAktifScreen extends ConsumerWidget {
         title: const Text('Sesi Produksi'),
         actions: [
           const PortalSwitchButton(),
-          IconButton(
-            tooltip: 'Ringkasan produksi',
-            icon: const Icon(Icons.dashboard_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                  builder: (_) => const ProduksiRingkasanScreen()),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Dokumentasi',
-            icon: const Icon(Icons.attach_file),
-            onPressed: () => context.push('/dokumentasi'),
-          ),
-          IconButton(
-            tooltip: 'Riwayat QC',
-            icon: const Icon(Icons.science_outlined),
-            onPressed: () => context.push('/qc/riwayat'),
-          ),
-          IconButton(
-            tooltip: 'Progress hari ini',
-            icon: const Icon(Icons.insights),
-            onPressed: () => context.push('/produksi/progress'),
-          ),
-          IconButton(
-            tooltip: 'Riwayat',
-            icon: const Icon(Icons.history),
-            onPressed: () => context.push('/produksi/riwayat'),
+          // Context menu for additional actions (Fase 2)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'ringkasan':
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const ProduksiRingkasanScreen()),
+                  );
+                  break;
+                case 'dokumentasi':
+                  context.push('/dokumentasi');
+                  break;
+                case 'qc':
+                  context.push('/qc/riwayat');
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'ringkasan',
+                child: Row(
+                  children: [
+                    Icon(Icons.dashboard_outlined),
+                    SizedBox(width: 12),
+                    Text('Ringkasan Produksi'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'dokumentasi',
+                child: Row(
+                  children: [
+                    Icon(Icons.attach_file),
+                    SizedBox(width: 12),
+                    Text('Dokumentasi'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'qc',
+                child: Row(
+                  children: [
+                    Icon(Icons.science_outlined),
+                    SizedBox(width: 12),
+                    Text('Riwayat QC'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Sesi Aktif'),
+            Tab(text: 'Progress'),
+            Tab(text: 'Riwayat'),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/produksi/mulai'),
         icon: const Icon(Icons.play_arrow),
         label: const Text('Mulai Sesi'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.refresh(sesiAktifProvider.future),
-        child: sesi.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _ErrorView(
-            message: e is ApiException ? e.message : 'Gagal memuat sesi aktif.',
-            onRetry: () => ref.invalidate(sesiAktifProvider),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 1: Sesi Aktif
+          _ActiveSessionsTab(
+            sesi: sesi,
+            waitingQc: waitingQc,
           ),
-          data: (items) => items.isEmpty
-              ? const AppEmptyState(
-                  icon: Icons.factory_outlined,
-                  title: 'Belum ada sesi aktif',
-                  subtitle: 'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _SessionCard(
-                    session: items[i],
-                    hasWaitingQc: waitingQc.value
-                            ?.containsKey(items[i].id) ??
-                        false,
+          // Tab 2: Progress (redirect to progress screen)
+          const _ProgressTab(),
+          // Tab 3: Riwayat (redirect to history screen)
+          const _HistoryTab(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveSessionsTab extends ConsumerWidget {
+  const _ActiveSessionsTab({
+    required this.sesi,
+    required this.waitingQc,
+  });
+
+  final AsyncValue<List<ProductionSession>> sesi;
+  final AsyncValue<Map<String, List<dynamic>>> waitingQc;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(sesiAktifProvider),
+      child: sesi.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => _ErrorView(
+          message: e is ApiException ? e.message : 'Gagal memuat sesi aktif.',
+          onRetry: () => ref.invalidate(sesiAktifProvider),
+        ),
+        data: (items) => CustomScrollView(
+          slivers: [
+            // Summary header (Fase 2)
+            if (items.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _SessionSummaryHeader(
+                  activeCount: items.length,
+                  waitingQcCount: waitingQc.value?.length ?? 0,
+                ),
+              ),
+            // Session list
+            items.isEmpty
+                ? SliverFillRemaining(
+                    child: const AppEmptyState(
+                      icon: Icons.factory_outlined,
+                      title: 'Belum ada sesi aktif',
+                      subtitle: 'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
+                    ),
+                  )
+                : SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                    sliver: SliverList.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => const SliverToBoxAdapter(
+                        child: SizedBox(height: 12),
+                      ),
+                      itemBuilder: (context, i) => _SessionCard(
+                        session: items[i],
+                        hasWaitingQc: waitingQc.value
+                                ?.containsKey(items[i].id) ??
+                            false,
+                      ),
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionSummaryHeader extends StatelessWidget {
+  const _SessionSummaryHeader({
+    required this.activeCount,
+    required this.waitingQcCount,
+  });
+
+  final int activeCount;
+  final int waitingQcCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ringkasan Sesi',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-        ),
+                const SizedBox(height: 4),
+                Text(
+                  '$activeCount sesi aktif',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (waitingQcCount > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.science, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$waitingQcCount QC tertunda',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressTab extends StatelessWidget {
+  const _ProgressTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.bar_chart, size: 64, color: AppTheme.textMuted),
+          const SizedBox(height: 16),
+          const Text(
+            'Progress Hari Ini',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Lihat progress produksi hari ini',
+            style: TextStyle(color: AppTheme.textTertiary),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => context.push('/produksi/progress'),
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Buka Halaman Progress'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryTab extends StatelessWidget {
+  const _HistoryTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.history, size: 64, color: AppTheme.textMuted),
+          const SizedBox(height: 16),
+          const Text(
+            'Riwayat Produksi',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Lihat riwayat sesi produksi',
+            style: TextStyle(color: AppTheme.textTertiary),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => context.push('/produksi/riwayat'),
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Buka Halaman Riwayat'),
+          ),
+        ],
       ),
     );
   }
@@ -276,7 +515,7 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
       messenger.showSnackBar(const SnackBar(content: Text('Sesi produksi selesai.')));
     } else if (result.queued) {
       messenger.showSnackBar(const SnackBar(
-        content: Text('Offline — penutupan sesi masuk antrean kirim otomatis.'),
+        content: Text('Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
       ));
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));

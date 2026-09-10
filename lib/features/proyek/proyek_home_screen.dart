@@ -10,8 +10,10 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
+import '../../shared/widgets/sync_action_button.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
+import 'pending_summary_provider.dart';
 
 class ProyekHomeScreen extends ConsumerWidget {
   const ProyekHomeScreen({super.key});
@@ -37,6 +39,7 @@ class ProyekHomeScreen extends ConsumerWidget {
             onPressed: () => context.push('/profile'),
           ),
           const PortalSwitchButton(),
+          const SyncActionButton(),
           const _NotifikasiBadgeAction(),
           if (roles.length > 1)
             PopupMenuButton<String>(
@@ -76,6 +79,14 @@ class ProyekHomeScreen extends ConsumerWidget {
                     const _TrackingStatusCard(),
                     const SizedBox(height: 16),
                   ],
+
+                  // Pekerjaan Menunggu Anda card (Fase 2)
+                  _PendingWorkCard(role: role),
+                  const SizedBox(height: 16),
+
+                  // Quick Actions per role (Fase 2)
+                  _QuickActions(role: role),
+                  const SizedBox(height: 16),
 
                   // Section: Modul
                   Row(
@@ -205,13 +216,15 @@ class _GreetingHeader extends StatelessWidget {
 
 // ── Module Card ───────────────────────────────────────────────────────────────
 
-class _ModuleCard extends StatelessWidget {
+class _ModuleCard extends ConsumerWidget {
   const _ModuleCard({required this.module});
 
   final ProyekModule module;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(activeRoleProvider);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -262,6 +275,9 @@ class _ModuleCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Pending badge (Fase 2)
+                _PendingBadge(moduleKey: module.key, role: role),
+                const SizedBox(width: 8),
                 const Icon(Icons.chevron_right_rounded,
                     color: AppTheme.textMuted, size: 20),
               ],
@@ -451,6 +467,355 @@ class _NoActiveRoleView extends StatelessWidget {
               'Peran aktif tidak tersedia untuk App Proyek.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textTertiary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Pekerjaan Menunggu Anda Card (Fase 2) ───────────────────────────────────────
+
+class _PendingWorkCard extends ConsumerWidget {
+  const _PendingWorkCard({required this.role});
+
+  final String? role;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pendingSummary = ref.watch(pendingSummaryProvider);
+    
+    return FutureBuilder<ModulePendingCounts>(
+      future: pendingSummary.getSummary(role ?? ''),
+      builder: (context, snapshot) {
+        final counts = snapshot.data ?? const ModulePendingCounts();
+        
+        if (!counts.hasPending) {
+          return const SizedBox.shrink();
+        }
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.pending_actions,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Pekerjaan Menunggu Anda',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${counts.total} menunggu',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _PendingItemsList(counts: counts),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PendingItemsList extends StatelessWidget {
+  const _PendingItemsList({required this.counts});
+
+  final ModulePendingCounts counts;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <_PendingItem>[];
+    
+    if (counts.armada > 0) {
+      items.add(_PendingItem(label: 'Armada', count: counts.armada));
+    }
+    if (counts.produksi > 0) {
+      items.add(_PendingItem(label: 'Produksi', count: counts.produksi));
+    }
+    if (counts.qc > 0) {
+      items.add(_PendingItem(label: 'QC', count: counts.qc));
+    }
+    if (counts.workshop > 0) {
+      items.add(_PendingItem(label: 'Workshop', count: counts.workshop));
+    }
+    
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items,
+    );
+  }
+}
+
+class _PendingItem extends StatelessWidget {
+  const _PendingItem({required this.label, required this.count});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '$label: $count',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Pending Badge (Fase 2) ─────────────────────────────────────────────────────
+
+class _PendingBadge extends ConsumerWidget {
+  const _PendingBadge({required this.moduleKey, required this.role});
+
+  final String moduleKey;
+  final String? role;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pendingSummary = ref.watch(pendingSummaryProvider);
+    
+    return FutureBuilder<ModulePendingCounts>(
+      future: pendingSummary.getSummary(role ?? ''),
+      builder: (context, snapshot) {
+        final counts = snapshot.data ?? const ModulePendingCounts();
+        final count = _getCountForModule(counts, moduleKey);
+        
+        if (count == 0) {
+          return const SizedBox.shrink();
+        }
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.warningColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            count > 99 ? '99+' : '$count',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  int _getCountForModule(ModulePendingCounts counts, String moduleKey) {
+    switch (moduleKey) {
+      case 'armada':
+        return counts.armada;
+      case 'produksi':
+        return counts.produksi;
+      case 'qc':
+        return counts.qc;
+      case 'workshop':
+        return counts.workshop;
+      default:
+        return 0;
+    }
+  }
+}
+
+// ── Quick Actions per Role (Fase 2) ───────────────────────────────────────────────
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.role});
+
+  final String? role;
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = _getActionsForRole(role);
+    
+    if (actions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.flash_on_rounded,
+                size: 20, color: AppTheme.primaryColor),
+            const SizedBox(width: 8),
+            const Text(
+              'Aksi Cepat',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 60,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: actions.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => _QuickActionButton(
+              action: actions[index],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  List<_QuickAction> _getActionsForRole(String? role) {
+    switch (role) {
+      case 'Driver Armada':
+        return [
+          _QuickAction(
+            icon: Icons.checklist,
+            label: 'Checklist',
+            route: '/armada/checklist',
+          ),
+          _QuickAction(
+            icon: Icons.add_road,
+            label: 'Ritase',
+            route: '/armada/ritase-input',
+          ),
+          _QuickAction(
+            icon: Icons.build,
+            label: 'Servis',
+            route: '/armada/servis/ajuan',
+          ),
+        ];
+      case 'Mandor Titik':
+        return [
+          _QuickAction(
+            icon: Icons.play_circle,
+            label: 'Mulai Sesi',
+            route: '/produksi/mulai',
+          ),
+          _QuickAction(
+            icon: Icons.science,
+            label: 'QC Test',
+            route: '/qc/riwayat',
+          ),
+        ];
+      case 'Workshop':
+        return [
+          _QuickAction(
+            icon: Icons.build_circle,
+            label: 'Antrian',
+            route: '/workshop',
+          ),
+        ];
+      default:
+        return [];
+    }
+  }
+}
+
+class _QuickAction {
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
+
+  final IconData icon;
+  final String label;
+  final String route;
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({required this.action});
+
+  final _QuickAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push(action.route),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.borderColor),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              action.icon,
+              color: AppTheme.primaryColor,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              action.label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

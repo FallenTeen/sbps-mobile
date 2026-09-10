@@ -9,6 +9,7 @@ import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
 import '../home/home_shell.dart';
@@ -351,36 +352,7 @@ class _PendingBadgeAction extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(pendingCountProvider);
-
-    return IconButton(
-      tooltip: 'Aksi menunggu sinkronisasi',
-      icon: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedCountBadge(
-            count: count,
-            badgeColor: Colors.orange.shade700,
-            child: const Icon(Icons.cloud_upload_outlined),
-          ),
-          if (count > 0)
-            const Positioned(
-              top: 2,
-              right: 2,
-              child: PulsingSyncDot(size: 6),
-            ),
-        ],
-      ),
-      onPressed: () async {
-        final messenger = ScaffoldMessenger.of(context);
-        await ref
-            .read(outboxSyncServiceProvider)
-            .syncNow(ignoreBackoff: true);
-        messenger.showSnackBar(
-          SnackBar(content: Text('Sinkronisasi selesai ($count tertunda).')),
-        );
-      },
-    );
+    return const SyncActionButton();
   }
 }
 

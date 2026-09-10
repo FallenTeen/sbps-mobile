@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics_service.dart';
 import 'qc_providers.dart';
 
 /// Bottom sheet "Catat Slump Test" (Fase A2.5).
@@ -33,21 +34,22 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final result = await ref.read(qcSubmitProvider.notifier).slumpTest(
-          sessionId: widget.sessionId,
-          nilaiSlump: double.parse(_nilaiCtrl.text.replaceAll(',', '.')),
-          catatan: _catatanCtrl.text.trim(),
-        );
+final result = await ref.read(qcSubmitProvider.notifier).slumpTest(
+           sessionId: widget.sessionId,
+           nilaiSlump: double.parse(_nilaiCtrl.text.replaceAll(',', '.')),
+           catatan: _catatanCtrl.text.trim(),
+         );
 
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
-    if (result.delivered || result.queued) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.delivered
-            ? 'Slump test dicatat — menunggu hasil uji tekan.'
-            : 'Offline — slump test masuk antrean kirim otomatis.'),
-      ));
+      AnalyticsService.qcSlumpSubmit();
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop();
+      if (result.delivered || result.queued) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(result.delivered
+              ? 'Slump test dicatat — menunggu hasil uji tekan.'
+              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+        ));
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }
@@ -153,22 +155,23 @@ class _UjiTekanSheetState extends ConsumerState<UjiTekanSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final targetText = _targetCtrl.text.trim().replaceAll(',', '.');
-    final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
-          sessionId: widget.sessionId,
-          hasilUjiTekan: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
-          targetMpa: targetText.isEmpty ? null : double.parse(targetText),
-          catatan: _catatanCtrl.text.trim(),
-        );
+final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
+           sessionId: widget.sessionId,
+           hasilUjiTekan: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
+           targetMpa: targetText.isEmpty ? null : double.parse(targetText),
+           catatan: _catatanCtrl.text.trim(),
+         );
 
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
-    if (result.delivered || result.queued) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.delivered
-            ? 'Hasil uji tekan dicatat.'
-            : 'Offline — uji tekan masuk antrean kirim otomatis.'),
-      ));
+      AnalyticsService.qcUjitekanSubmit();
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop();
+      if (result.delivered || result.queued) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(result.delivered
+              ? 'Hasil uji tekan dicatat.'
+              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+        ));
     } else if (result.error != null) {
       // Termasuk kasus 422 "tidak ada sample slump test yang menunggu
       // hasil untuk sesi ini".

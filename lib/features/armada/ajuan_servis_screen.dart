@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import 'armada_providers.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
-import '../../shared/widgets/info_tooltip.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Form Pengajuan Servis Armada (Section 21 — Bagian 1 Ajuan Driver/PIC).
@@ -83,6 +86,7 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
     try {
@@ -97,7 +101,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
             jamOperasionalSaatAjuan: jam,
           );
 
+      AnalyticsService.servisAjuanSubmit();
       if (!mounted) return;
+      HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pengajuan servis berhasil dikirim')),
       );
@@ -109,10 +115,14 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengajukan servis: $e')),
+        const SnackBar(
+          content: Text(
+            'Gagal mengajukan servis.\nPeriksa koneksi lalu coba lagi.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -130,24 +140,22 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
       ),
       body: masterArmadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Gagal memuat master armada: $error'),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => ref.invalidate(masterArmadaProvider),
-                child: const Text('Coba Lagi'),
-              ),
-            ],
-          ),
+        error: (_, __) => AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal memuat data armada',
+          subtitle:
+              'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          actionLabel: 'Coba Lagi',
+          onAction: () => ref.invalidate(masterArmadaProvider),
         ),
         data: (armadaList) {
           _prefillArmada();
           if (armadaList.isEmpty) {
-            return const Center(
-              child: Text('Tidak ada armada yang terdaftar.'),
+            return const AppEmptyState(
+              icon: Icons.build_outlined,
+              title: 'Tidak ada armada yang terdaftar',
+              subtitle:
+                  'Hubungi admin untuk mendaftarkan unit armada ke sistem.',
             );
           }
 
@@ -197,12 +205,11 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Kategori Servis *',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: const InfoTooltip(
-                        message: 'Rutin/Berkala = servis terjadwal. Darurat/Mogok = unit tidak bisa jalan, prioritas tertinggi. Ganti Oli = servis ringan.',
-                      ),
+                    decoration: const InputDecoration(
+                      labelText: 'Kategori Servis',
+                      border: OutlineInputBorder(),
+                      helperText:
+                          'Rutin = servis terjadwal. Darurat = unit mogok, prioritas tertinggi. Ganti Oli = servis ringan.',
                     ),
                     initialValue: _kategori,
                     items: _kategoriOptions.map((k) {
@@ -222,10 +229,11 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _odoController,
-                          decoration: InputDecoration(
-                            labelText: 'ODO Saat Ini (km)',
-                            border: const OutlineInputBorder(),
-                            suffixIcon: const InfoTooltip(message: 'Isi salah satu (ODO atau Jam Operasional) sesuai jenis unit — dipakai Workshop untuk cek riwayat servis terakhir.'),
+                          decoration: const InputDecoration(
+                            labelText: 'KM Saat Ini (Odometer)',
+                            border: OutlineInputBorder(),
+                            helperText:
+                                'Isi salah satu (KM atau Jam Kerja) sesuai jenis unit — untuk cek riwayat servis terakhir',
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -237,8 +245,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                         child: TextFormField(
                           controller: _jamController,
                           decoration: const InputDecoration(
-                            labelText: 'Jam Operasional',
+                            labelText: 'Jam Kerja Unit (HM)',
                             border: OutlineInputBorder(),
+                            helperText: 'Total jam mesin menyala hari ini',
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -252,7 +261,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                   TextFormField(
                     controller: _keluhanController,
                     decoration: const InputDecoration(
-                      labelText: 'Keluhan / Deskripsi Masalah *',
+                      labelText: 'Keluhan / Deskripsi Masalah',
+                      hintText:
+                          'Contoh: mesin berisik saat jalan, rem kurang pakem, oli bocor',
                       border: OutlineInputBorder(),
                       alignLabelWithHint: true,
                     ),
@@ -264,18 +275,37 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  FilledButton(
-                    onPressed: _isLoading ? null : _submit,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: BouncingButton(
+                      onPressed: _isLoading ? null : _submit,
+                      child: FilledButton(
+                        onPressed: _isLoading ? null : _submit,
+                        child: _isLoading
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Mengirim...'),
+                                ],
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.send_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Kirim Pengajuan Servis'),
+                                ],
+                              ),
+                      ),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Kirim Pengajuan Servis'),
                   ),
                 ],
               ),

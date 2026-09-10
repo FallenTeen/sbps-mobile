@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics_service.dart';
+import '../../core/api_client.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// ODO Harian — input odometer sekali per hari.
-/// Form tunggal: pilih kendaraan, lihat ODO terakhir, update ODO sekarang.
-/// Tidak ada lagi wizard 2-step atau radio "angkutan ke berapa".
+/// KM Harian — input kilometer sekali per hari.
+  /// Form tunggal: pilih kendaraan, lihat KM terakhir, update KM sekarang.
+  /// Tidak ada lagi wizard 2-step atau radio "angkutan ke berapa".
 class OdoAwalScreen extends ConsumerStatefulWidget {
   const OdoAwalScreen({super.key});
 
@@ -39,7 +43,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
   void _onArmadaChanged(ArmadaSaya? armada) {
     setState(() {
       _selectedArmada = armada;
-      // Prefill dengan ODO terkini jika ada
+      // Prefill dengan KM terkini jika ada
       if (armada?.odoTerkini != null) {
         _odoController.text = armada!.odoTerkini!.toStringAsFixed(0);
       } else {
@@ -49,10 +53,21 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
   }
 
   Future<void> _submit() async {
-    if (_selectedArmada == null) return;
+    if (_selectedArmada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih kendaraan terlebih dahulu')),
+      );
+      return;
+    }
     if (_odoController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ODO harus diisi')),
+        SnackBar(
+          content: Text(
+            _selectedArmada!.isAlatBerat
+                ? 'Jam Kerja Unit harus diisi'
+                : 'KM harus diisi',
+          ),
+        ),
       );
       return;
     }
@@ -60,11 +75,12 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     final odoValue = double.tryParse(_odoController.text.trim());
     if (odoValue == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Format angka ODO tidak valid')),
+        const SnackBar(content: Text('Format angka tidak valid')),
       );
       return;
     }
 
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
     try {
@@ -75,18 +91,31 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
       );
 
       if (!mounted) return;
+      HapticFeedback.lightImpact();
+      AnalyticsService.odoSave();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(delivered
-              ? 'ODO terkini berhasil diperbarui'
-              : 'Tersimpan. Menunggu sinkronisasi saat online.'),
+              ? (_selectedArmada!.isAlatBerat
+                  ? 'Jam Kerja Unit berhasil diperbarui'
+                  : 'KM terkini berhasil diperbarui')
+              : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
         ),
       );
       context.go('/armada/unit-saya');
-    } catch (e) {
+    } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Terjadi kesalahan yang tidak terduga')),
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gagal menyimpan.\nPeriksa koneksi lalu coba lagi.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -99,31 +128,39 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ODO Harian'),
+        title: const Text('KM Harian'),
         actions: const [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Gagal memuat data: $error')),
+        error: (_, __) => AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal memuat data armada',
+          subtitle:
+              'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          actionLabel: 'Coba Lagi',
+          onAction: () => ref.invalidate(armadaSayaProvider),
+        ),
         data: (armadaList) {
           if (armadaList.isEmpty) {
             return const AppEmptyState(
               icon: Icons.local_shipping_outlined,
-              title: 'Tidak ada armada',
-              subtitle: 'Anda belum memiliki armada yang ditugaskan.',
+              title: 'Tidak ada armada yang ditugaskan',
+              subtitle:
+                  'Hubungi admin untuk mendapatkan penugasan unit kendaraan.',
             );
           }
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Dropdown kendaraan
               DropdownButtonFormField<ArmadaSaya>(
                 initialValue: _selectedArmada,
                 decoration: const InputDecoration(
                   labelText: 'Pilih Kendaraan',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.local_shipping_outlined),
+                  helperText: 'Pilih unit yang akan Anda operasikan hari ini',
                 ),
                 items: armadaList.map((a) => DropdownMenuItem(
                   value: a,
@@ -135,8 +172,9 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
               if (_selectedArmada != null) ...[
                 const SizedBox(height: 20),
 
-                // Info ODO terkini
-                if (_selectedArmada!.odoTerkini != null)
+                if (_selectedArmada!.isAlatBerat
+                    ? _selectedArmada!.jamOperasionalTerkini != null
+                    : _selectedArmada!.odoTerkini != null)
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -155,16 +193,20 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'ODO Terakhir Tercatat',
-                                style: TextStyle(
+                              Text(
+                                _selectedArmada!.isAlatBerat
+                                    ? 'Jam Kerja Unit Terakhir Tercatat'
+                                    : 'KM Terakhir Tercatat',
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.textTertiary,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                fmtKm(_selectedArmada!.odoTerkini),
+                                _selectedArmada!.isAlatBerat
+                                    ? '${_selectedArmada!.jamOperasionalTerkini} jam'
+                                    : fmtKm(_selectedArmada!.odoTerkini),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -192,10 +234,12 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                         Icon(Icons.info_outline,
                           color: AppTheme.warningColor, size: 20),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Belum ada ODO tercatat untuk unit ini hari ini.',
-                            style: TextStyle(fontSize: 13),
+                            _selectedArmada!.isAlatBerat
+                                ? 'Belum ada Jam Kerja Unit tercatat untuk unit ini hari ini.'
+                                : 'Belum ada KM tercatat untuk unit ini hari ini.',
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ),
                       ],
@@ -204,41 +248,51 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
                 const SizedBox(height: 20),
 
-                // Input ODO Sekarang
                 TextFormField(
                   controller: _odoController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: _selectedArmada!.isAlatBerat
-                        ? 'Jam Operasional Sekarang (HM)'
-                        : 'ODO Sekarang (KM)',
+                        ? 'Jam Kerja Unit Sekarang (HM)'
+                        : 'KM Sekarang (Odometer)',
                     suffixText: _selectedArmada!.isAlatBerat ? 'HM' : 'KM',
                     border: const OutlineInputBorder(),
                     prefixIcon: Icon(_selectedArmada!.isAlatBerat
                         ? Icons.timer_outlined
                         : Icons.speed_outlined),
+                    helperText: _selectedArmada!.isAlatBerat
+                        ? 'Total jam mesin menyala dari Hour Meter'
+                        : 'Angka pada odometer (penghitung km) kendaraan',
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // Submit
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: FilledButton.icon(
+                  child: BouncingButton(
                     onPressed: _isLoading ? null : _submit,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.save),
-                    label: Text(_isLoading ? 'Menyimpan...' : 'Simpan ODO'),
+                    child: FilledButton.icon(
+                      onPressed: _isLoading ? null : _submit,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.save),
+                      label: Text(
+                        _isLoading
+                            ? 'Menyimpan...'
+                            : _selectedArmada!.isAlatBerat
+                                ? 'Simpan Jam Kerja Unit'
+                                : 'Simpan KM',
+                      ),
+                    ),
                   ),
                 ),
               ],

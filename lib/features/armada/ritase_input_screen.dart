@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics_service.dart';
+import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
@@ -35,9 +40,9 @@ class RitaseRecord {
       };
 }
 
-/// Input ritase ringkas untuk Driver (Section 21.4):
-/// Driver mencatat jumlah rit dan satuan dari lapangan.
-/// Mendukung multi-record dengan indexing.
+/// Input muatan ringkas untuk Driver (Section 21.4):
+  /// Driver mencatat jumlah muatan dan satuan dari lapangan.
+  /// Mendukung multi-record dengan indexing.
 class RitaseInputScreen extends ConsumerStatefulWidget {
   const RitaseInputScreen({super.key});
 
@@ -111,11 +116,12 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     final jumlah = int.tryParse(_jumlahRitCtrl.text.trim());
     if (jumlah == null || jumlah <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Jumlah rit harus angka positif')),
+        const SnackBar(content: Text('Jumlah muatan harus angka positif')),
       );
       return;
     }
 
+    HapticFeedback.lightImpact();
     final newRecord = RitaseRecord(
       index: _currentRecordIndex == -1 ? _nextIndex : _currentRecordIndex,
       armada: _selectedArmada,
@@ -134,14 +140,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       }
     });
 
+    AnalyticsService.ritaseRecordAdd();
+
     _startNewRecord();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Record #${newRecord.index} tersimpan')),
+      SnackBar(content: Text('Muatan #${newRecord.index} tersimpan di daftar')),
     );
   }
 
   void _deleteRecord(int recordIndex) {
+    HapticFeedback.lightImpact();
     setState(() {
       _records.removeWhere((r) => r.index == recordIndex);
       if (_currentRecordIndex == recordIndex) _startNewRecord();
@@ -153,11 +162,12 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     if (incomplete.isNotEmpty) {
       final nums = incomplete.map((r) => '#${r.index}').join(', ');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Record $nums belum lengkap')),
+        SnackBar(content: Text('Muatan $nums belum lengkap — periksa kembali')),
       );
       return;
     }
 
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
     try {
@@ -165,14 +175,25 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) return;
+      HapticFeedback.lightImpact();
+      AnalyticsService.ritaseSubmitAll(_records.length);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_records.length} ritase berhasil dikirim')),
+        SnackBar(content: Text('${_records.length} muatan berhasil dikirim')),
       );
       Navigator.of(context).pop();
-    } catch (e) {
+    } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menyimpan ritase')),
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gagal mengirim muatan.\nPeriksa koneksi lalu coba lagi.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -185,16 +206,26 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Input Ritase'),
+        title: const Text('Input Muatan'),
         actions: const [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Gagal memuat armada: $e')),
+        error: (_, __) => AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal memuat data armada',
+          subtitle:
+              'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          actionLabel: 'Coba Lagi',
+          onAction: () => ref.invalidate(armadaSayaProvider),
+        ),
         data: (armadaList) {
           if (armadaList.isEmpty) {
-            return const Center(
-              child: Text('Tidak ada armada yang sedang Anda pegang.'),
+            return const AppEmptyState(
+              icon: Icons.no_crash_outlined,
+              title: 'Belum ada armada yang ditugaskan',
+              subtitle:
+                  'Hubungi admin untuk mendapatkan penugasan unit kendaraan.',
             );
           }
 
@@ -226,7 +257,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                   ),
                 ),
                 SizedBox(
-                  height: 100,
+                  height: 110,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -234,31 +265,30 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                     itemBuilder: (context, idx) {
                       final record = _records[idx];
                       final isActive = _currentRecordIndex == record.index;
-                      return GestureDetector(
-                        onTap: () => _editRecord(record.index),
-                        onLongPress: () => _confirmDelete(record.index),
-                        child: Container(
-                          width: 140,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
+                      return Container(
+                        width: 150,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppTheme.primaryColor.withValues(alpha: 0.12)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
                             color: isActive
-                                ? AppTheme.primaryColor.withValues(alpha: 0.12)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isActive
-                                  ? AppTheme.primaryColor
-                                  : Colors.grey.shade300,
-                              width: isActive ? 2 : 1,
-                            ),
+                                ? AppTheme.primaryColor
+                                : Colors.grey.shade300,
+                            width: isActive ? 2 : 1,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _editRecord(record.index),
+                                  child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
@@ -278,34 +308,56 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                       ),
                                     ),
                                   ),
-                                  const Spacer(),
-                                  if (record.isComplete)
-                                    const Icon(Icons.check_circle,
-                                        size: 14, color: Colors.green)
-                                  else
-                                    Icon(Icons.edit, size: 14, color: Colors.orange.shade600),
+                                ),
+                                const Spacer(),
+                                if (record.isComplete)
+                                  const Icon(Icons.check_circle,
+                                      size: 14, color: Colors.green)
+                                else
+                                  Icon(Icons.edit,
+                                      size: 14, color: Colors.orange.shade600),
+                                const SizedBox(width: 4),
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    iconSize: 16,
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    tooltip: 'Hapus muatan ini',
+                                    onPressed: () => _confirmDelete(record.index),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            GestureDetector(
+                              onTap: () => _editRecord(record.index),
+                              behavior: HitTestBehavior.opaque,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    record.armada?.platNomor ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${record.jumlah ?? '-'} ${record.satuan}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.textTertiary,
+                                    ),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                record.armada?.platNomor ?? '-',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${record.jumlah ?? '-'} ${record.satuan}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.textTertiary,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -433,25 +485,31 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // ODO per-trip (opsional)
                       TextField(
                         controller: _odoPerTripCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(
-                          labelText: 'ODO / km (opsional)',
+                          labelText: 'KM / Odometer (opsional)',
                           border: OutlineInputBorder(),
+                          helperText:
+                              'Angka pada odometer (penghitung km) kendaraan — opsional',
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      // Tombol simpan record
-                      FilledButton.icon(
-                        onPressed: _saveCurrentRecord,
-                        icon: const Icon(Icons.save, size: 18),
-                        label: Text(
-                          _currentRecordIndex == -1
-                              ? 'Simpan Record #$_nextIndex'
-                              : 'Update Record #$_currentRecordIndex',
+                      SizedBox(
+                        height: 48,
+                        child: BouncingButton(
+                          onPressed: _saveCurrentRecord,
+                          child: FilledButton.icon(
+                            onPressed: _saveCurrentRecord,
+                            icon: const Icon(Icons.save, size: 18),
+                            label: Text(
+                              _currentRecordIndex == -1
+                                  ? 'Simpan Muatan #$_nextIndex'
+                                  : 'Update Muatan #$_currentRecordIndex',
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -459,7 +517,6 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                 ),
               ),
 
-              // === SUBMIT ALL ===
               if (_records.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -475,20 +532,24 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                   ),
                   child: SizedBox(
                     width: double.infinity,
-                    child: FilledButton.icon(
+                    height: 48,
+                    child: BouncingButton(
                       onPressed: _isLoading ? null : _submitAll,
-                      icon: _isLoading
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.send, size: 18),
-                      label: Text(
-                        _isLoading
-                            ? 'Mengirim...'
-                            : 'Kirim Semua Record (${_records.length})',
+                      child: FilledButton.icon(
+                        onPressed: _isLoading ? null : _submitAll,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.send, size: 18),
+                        label: Text(
+                          _isLoading
+                              ? 'Mengirim...'
+                              : 'Kirim Semua Muatan (${_records.length})',
+                        ),
                       ),
                     ),
                   ),

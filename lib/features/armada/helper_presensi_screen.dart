@@ -40,7 +40,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
         SnackBar(
           content: Text(delivered
               ? 'Berhasil menyimpan presensi ${helper.nama}'
-              : 'Tersimpan. Menunggu sinkronisasi saat online.'),
+              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
         ),
       );
 
@@ -73,7 +73,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Presensi Helper'),
+        title: const Text('Presensi Pendamping'),
         actions: [
           const PortalSwitchButton(),
           IconButton(

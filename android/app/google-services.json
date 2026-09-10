@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "sbps-mobile-placeholder",
-    "storage_bucket": "sbps-mobile-placeholder.appspot.com"
+    "project_number": "267868241139",
+    "project_id": "mobile-sbps",
+    "storage_bucket": "mobile-sbps.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "mobilesdk_app_id": "1:267868241139:android:f6673d83bd523ceb248b86",
         "android_client_info": {
           "package_name": "com.sbps.mobile"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "PLACEHOLDER_REPLACE_WITH_REAL_KEY"
+          "current_key": "AIzaSyDSI6ahMsJu_gE-y4GsHbMfp_mkKJuJ8fo"
         }
       ],
       "services": {

@@ -40,7 +40,7 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ritase'),
+        title: const Text('Riwayat Muatan'),
         actions: const [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,
@@ -155,9 +155,9 @@ class _HariIniTab extends ConsumerWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => context.push('/armada/ritase-input'),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Input Ritase Baru'),
+                    onPressed: () => context.push('/armada/ritase-input'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Input Muatan Baru'),
                 ),
               ),
             ),
@@ -226,8 +226,8 @@ class _RiwayatTab extends ConsumerWidget {
     if (state.items.isEmpty) {
       return const AppEmptyState(
         icon: Icons.route_outlined,
-        title: 'Belum ada riwayat ritase',
-        subtitle: 'Ritase yang sudah Anda catat akan muncul di sini.',
+        title: 'Belum ada riwayat muatan',
+        subtitle: 'Muatan yang sudah Anda catat akan muncul di sini.',
       );
     }
 

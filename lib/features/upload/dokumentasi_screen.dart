@@ -61,7 +61,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
       messenger.showSnackBar(SnackBar(
         content: Text(result.delivered
             ? 'Dokumentasi berhasil diunggah.'
-            : 'Offline — dokumentasi masuk antrean kirim otomatis.'),
+            : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
       ));
       context.pop();
     } else if (result.error != null) {

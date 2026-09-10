@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics_service.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/bouncing_button.dart';
@@ -10,6 +11,22 @@ import '../../core/outbox/pending_action.dart';
 import '../../core/photo_compression_service.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
+
+String presensiSubmissionMessage(CheckInResult result) {
+  if (result.luarRadius) {
+    return 'Presensi tercatat — Di luar area kerja. Foto dan lokasi tetap tersimpan untuk review.';
+  }
+
+  if (result.queued) {
+    return 'Tersimpan offline — akan dikirim otomatis saat online.';
+  }
+
+  if (result.error != null) {
+    return result.error!;
+  }
+
+  return 'Presensi berhasil dicatat.';
+}
 
 /// Kartu alur presensi harian: Check-in / Check-out / ringkasan selesai.
 class PresensiHariIniCard extends ConsumerWidget {
@@ -30,18 +47,18 @@ class PresensiHariIniCard extends ConsumerWidget {
       ),
       data: (presensi) => switch (presensi.status) {
         PresensiStatus.belumCheckIn => _CheckInCard(
-            presensi: presensi,
-            busyPhase: busyPhase,
-            siap: titik != null,
-            onCheckIn: () => _pickAndSubmit(
-                context, ref, PendingEndpoint.presensiCheckIn),
-          ),
+          presensi: presensi,
+          busyPhase: busyPhase,
+          siap: titik != null,
+          onCheckIn: () =>
+              _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckIn),
+        ),
         PresensiStatus.menungguCheckOut => _WorkingCard(
-            presensi: presensi,
-            busyPhase: busyPhase,
-            onCheckOut: () => _pickAndSubmit(
-                context, ref, PendingEndpoint.presensiCheckOut),
-          ),
+          presensi: presensi,
+          busyPhase: busyPhase,
+          onCheckOut: () =>
+              _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckOut),
+        ),
         PresensiStatus.selesai => _CompletedCard(presensi: presensi),
       },
     );
@@ -63,37 +80,34 @@ class PresensiHariIniCard extends ConsumerWidget {
         .submit(endpoint: endpoint, photoPath: photo.path);
 
     if (result.delivered) {
-      if (result.luarRadius && context.mounted) {
-        await showDialog<void>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Di luar radius titik'),
-            content: const Text(
-              'Lokasi Anda berada di luar radius titik kerja. Presensi tetap '
-              'tercatat dan akan ditinjau oleh admin.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Mengerti'),
-              ),
-            ],
-          ),
-        );
-      } else {
+      ref.invalidate(hariIniProvider);
+      if (result.luarRadius) {
+        AnalyticsService.radiusWarningShown();
+      }
+      if (context.mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Presensi berhasil dicatat.')),
+          SnackBar(
+            content: Text(presensiSubmissionMessage(result)),
+            backgroundColor: result.luarRadius
+                ? AppTheme.warningColor
+                : AppTheme.successColor,
+          ),
         );
       }
     } else if (result.queued) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Tersimpan. Menunggu sinkronisasi otomatis saat online.'),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(presensiSubmissionMessage(result)),
+          backgroundColor: AppTheme.warningColor,
+        ),
+      );
     } else if (result.error != null) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.error!),
-        backgroundColor: AppTheme.errorColor,
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(presensiSubmissionMessage(result)),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
     }
   }
 }
@@ -129,8 +143,9 @@ class _CheckInCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (siap ? AppTheme.primaryColor : Colors.grey)
-                .withValues(alpha: 0.25),
+            color: (siap ? AppTheme.primaryColor : Colors.grey).withValues(
+              alpha: 0.25,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -149,7 +164,11 @@ class _CheckInCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.fingerprint, color: Colors.white, size: 24),
+                  child: const Icon(
+                    Icons.fingerprint,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -166,7 +185,9 @@ class _CheckInCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        siap ? 'Siap untuk check-in' : 'Pilih titik kerja terlebih dahulu',
+                        siap
+                            ? 'Siap untuk check-in'
+                            : 'Pilih titik kerja terlebih dahulu',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 12,
@@ -257,8 +278,11 @@ class _WorkingCard extends StatelessWidget {
                     color: AppTheme.successColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.work_rounded,
-                      color: AppTheme.successColor, size: 24),
+                  child: const Icon(
+                    Icons.work_rounded,
+                    color: AppTheme.successColor,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -296,8 +320,11 @@ class _WorkingCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.access_time_rounded,
-                      size: 16, color: AppTheme.textTertiary),
+                  const Icon(
+                    Icons.access_time_rounded,
+                    size: 16,
+                    color: AppTheme.textTertiary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Check-in pukul ${fmtWaktu(presensi.checkIn)}',
@@ -327,7 +354,9 @@ class _WorkingCard extends StatelessWidget {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppTheme.errorColor),
+                          strokeWidth: 2,
+                          color: AppTheme.errorColor,
+                        ),
                       )
                     : const Icon(Icons.logout_rounded),
                 label: Text(switch (busyPhase) {
@@ -369,8 +398,11 @@ class _CompletedCard extends StatelessWidget {
                 color: AppTheme.successColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.check_circle_rounded,
-                  color: AppTheme.successColor, size: 24),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: AppTheme.successColor,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -437,7 +469,10 @@ class _ErrorCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(message, style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+          Text(
+            message,
+            style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+          ),
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: onRetry,

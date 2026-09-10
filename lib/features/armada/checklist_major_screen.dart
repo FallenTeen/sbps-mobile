@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../core/analytics_service.dart';
+import '../../core/api_client.dart';
 
 /// Checklist Major — Serah Terima Sewa (Section 21.10):
 /// Isi kondisi kendaraan detail + foto untuk serah terima.
@@ -30,7 +34,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
     _ChecklistItem(label: 'Kaca / Spion', status: _ItemStatus.baik),
     _ChecklistItem(label: 'Lampu', status: _ItemStatus.baik),
     _ChecklistItem(label: 'Interior', status: _ItemStatus.baik),
-    _ChecklistItem(label: 'ODOMETER', status: _ItemStatus.baik),
+    _ChecklistItem(label: 'KM (Odometer)', status: _ItemStatus.baik),
     _ChecklistItem(label: 'Kelengkapan Dokumen', status: _ItemStatus.baik),
   ];
   final Map<String, String> _photos = {};
@@ -45,6 +49,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   }
 
   Future<void> _takePhoto(String itemLabel) async {
+    HapticFeedback.lightImpact();
     final photo = await takeWatermarkedPhoto(ref);
     if (photo == null) return;
     setState(() {
@@ -53,19 +58,30 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   }
 
   Future<void> _submit() async {
+    HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
     try {
       // TODO: Kirim ke backend POST /armada/checklist-major
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
+      HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checklist Major tersimpan')),
+        const SnackBar(content: Text('Checklist Serah Terima tersimpan')),
       );
       Navigator.of(context).pop();
-    } catch (e) {
+    } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menyimpan checklist')),
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gagal menyimpan checklist.\nPeriksa koneksi lalu coba lagi.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -91,7 +107,8 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Checklist Major — ${_selectedArmada?.platNomor ?? ''}'),
+        title: Text(
+            'Checklist Serah Terima — ${_selectedArmada?.platNomor ?? ''}'),
         actions: const [PortalSwitchButton()],
       ),
       body: Column(
@@ -156,6 +173,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                     setState(() {
                       _items[index] = item.copyWith(status: status);
                     });
+                    AnalyticsService.checklistItemToggle(item.label, status == _ItemStatus.baik);
                   },
                   onTakePhoto: () => _takePhoto(item.label),
                 );
@@ -182,15 +200,34 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
             padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.infinity,
-              child: FilledButton(
+              height: 48,
+              child: BouncingButton(
                 onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Simpan Checklist Major'),
+                child: FilledButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            ),
+                            SizedBox(width: 8),
+                            Text('Menyimpan...'),
+                          ],
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.verified_outlined, size: 20),
+                            SizedBox(width: 8),
+                            Text('Simpan Checklist Serah Terima'),
+                          ],
+                        ),
+                ),
               ),
             ),
           ),
@@ -212,7 +249,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checklist Major'),
+        title: const Text('Checklist Serah Terima'),
         actions: const [PortalSwitchButton()],
       ),
       body: Column(
@@ -238,10 +275,11 @@ class _VehicleSelectionStep extends ConsumerWidget {
           Expanded(
             child: armadaAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => AppEmptyState(
+              error: (_, __) => AppEmptyState(
                 icon: Icons.cloud_off_outlined,
-                title: 'Gagal memuat data',
-                subtitle: '$e',
+                title: 'Gagal memuat data armada',
+                subtitle:
+                    'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
                 actionLabel: 'Coba lagi',
                 onAction: () => ref.invalidate(armadaSayaProvider),
               ),

@@ -161,25 +161,38 @@ class ApiClient {
 
   /// HTTP >= 400: bisa envelope `{status:"error", message, errors}` maupun
   /// error validasi bawaan Laravel 422 `{message, errors}` tanpa wrapper.
+  /// Format pesan: 3 baris — apa terjadi → kenapa → apa bisa dilakukan.
   ApiException _httpError(Response<dynamic> response) {
     final data = response.data;
     if (data is Map) {
       final json = Map<String, dynamic>.from(data);
+      final serverMsg = json['message'] as String?;
+      final errors = _parseErrors(json['errors']);
+      final statusMsg = serverMsg ?? 'Terjadi kesalahan';
+      final reason = json['errors'] != null
+          ? 'Validasi gagal: periksa field yang ditandai merah.'
+          : '';
+      final action = response.statusCode! >= 500
+          ? 'Coba lagi beberapa saat. Jika masih gagal, hubungi admin.'
+          : 'Periksa kembali data Anda dan coba kirim ulang.';
       return ApiException(
-        json['message'] as String? ??
-            'Terjadi kesalahan (${response.statusCode}).',
+        '$statusMsg\n$reason\n$action',
         statusCode: response.statusCode,
-        errors: _parseErrors(json['errors']),
+        errors: errors,
       );
     }
-    return ApiException('Terjadi kesalahan (${response.statusCode}).',
-        statusCode: response.statusCode);
+    return ApiException(
+      'Tidak dapat terhubung ke server\nPeriksa koneksi internet Anda\nCoba lagi atau matikan lalu hidupkan kembali jaringan.',
+      statusCode: response.statusCode,
+    );
   }
 
   ApiException _mapDioError(DioException e) {
     final response = e.response;
     if (response == null) {
-      return ApiException('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      return ApiException(
+        'Tidak dapat terhubung ke server\nPeriksa koneksi internet Anda\nCoba lagi atau matikan lalu hidupkan kembali jaringan.',
+      );
     }
     if (response.statusCode == 401 && !_isPublic(e.requestOptions.path)) {
       onUnauthorized?.call();

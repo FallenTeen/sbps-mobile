@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
+import '../../core/analytics_service.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/bouncing_button.dart';
@@ -255,21 +255,22 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
 
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
-    final result = await ref.read(formulirSubmitProvider.notifier).submit(
-          aktivitasDilakukan: _aktivitas.text,
-          kondisiArea: _kondisi.text,
-          kendala: _kendala.text,
-          catatanTambahan: _catatan.text,
-          photoPaths: List.unmodifiable(_fotoLokal),
-        );
+final result = await ref.read(formulirSubmitProvider.notifier).submit(
+           aktivitasDilakukan: _aktivitas.text,
+           kondisiArea: _kondisi.text,
+           kendala: _kendala.text,
+           catatanTambahan: _catatan.text,
+           photoPaths: List.unmodifiable(_fotoLokal),
+         );
 
-    if (result.delivered) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text('Formulir berhasil disimpan.')));
-    } else if (result.queued) {
+     AnalyticsService.formulirSubmit();
+     if (result.delivered) {
+       messenger.showSnackBar(
+           const SnackBar(content: Text('Formulir berhasil disimpan.')));
+     } else if (result.queued) {
       messenger.showSnackBar(const SnackBar(
         content:
-            Text('Tersimpan. Menunggu sinkronisasi otomatis saat online.'),
+            Text('Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
       ));
     } else if (result.error != null && mounted) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));

@@ -460,7 +460,7 @@ class _RecentRitaseSection extends StatelessWidget {
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Riwayat Ritase Terakhir',
+                  'Riwayat Muatan Terakhir',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -495,7 +495,7 @@ class _RecentRitaseSection extends StatelessWidget {
               if (ritaseAsync.items.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Belum ada riwayat ritase',
+                  child: Text('Belum ada riwayat muatan',
                       style: TextStyle(color: AppTheme.textTertiary)),
                 );
               }

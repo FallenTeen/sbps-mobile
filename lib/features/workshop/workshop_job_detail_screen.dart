@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics_service.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -105,6 +106,7 @@ class _WorkshopJobDetailScreenState
 
     setState(() => _isSubmitting = true);
     try {
+      AnalyticsService.workshopTodoComplete();
       await Future<void>.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

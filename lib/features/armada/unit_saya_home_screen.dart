@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/workflow_stepper.dart';
 import 'armada_providers.dart';
@@ -35,20 +37,29 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          HapticFeedback.lightImpact();
           ref.invalidate(armadaSayaProvider);
           ref.invalidate(checklistHariIniProvider);
           await ref.read(ritaseRiwayatProvider.notifier).refresh();
         },
         child: armadaAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
+          error: (_, __) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: AppEmptyState(
-                  icon: Icons.error_outline,
+                  icon: Icons.cloud_off_outlined,
                   title: 'Gagal memuat data unit',
-                  subtitle: '$e',
+                  subtitle:
+                      'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+                  actionLabel: 'Coba Lagi',
+                  onAction: () {
+                    ref.invalidate(armadaSayaProvider);
+                    ref.invalidate(checklistHariIniProvider);
+                    ref.invalidate(ritaseRiwayatProvider);
+                  },
                 ),
               ),
             ],
@@ -56,6 +67,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
           data: (items) {
             if (items.isEmpty) {
               return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: const [
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 48),
@@ -72,6 +84,9 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
             final armada = items.first;
             final checklists = checklistAsync.value ?? [];
             final ritItems = ritaseAsync.items;
+            final akhirDone =
+                ref.watch(checklistAkhirDoneProvider(armada.id)).value ??
+                    false;
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -83,6 +98,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                   armada: armada,
                   checklists: checklists,
                   ritItems: ritItems,
+                  akhirDone: akhirDone,
                 ),
                 const SizedBox(height: 4),
                 _RingkasanKerja(
@@ -245,31 +261,87 @@ class _UnitHeader extends StatelessWidget {
 
 // ── Workflow Section ─────────────────────────────────────────────────────────
 
+class _DayStep {
+  const _DayStep({
+    required this.label,
+    required this.done,
+    required this.route,
+    required this.cta,
+  });
+
+  final String label;
+  final bool done;
+  final String route;
+  final String cta;
+}
+
 class _WorkflowSection extends StatelessWidget {
   const _WorkflowSection({
     required this.armada,
     required this.checklists,
     required this.ritItems,
+    required this.akhirDone,
   });
 
   final ArmadaSaya armada;
   final List<ArmadaChecklist> checklists;
   final List<RitaseItem> ritItems;
+  final bool akhirDone;
 
   @override
   Widget build(BuildContext context) {
-    final myChecklist = checklists.where((c) => c.armadaId == armada.id).toList();
+    final myChecklist =
+        checklists.where((c) => c.armadaId == armada.id).toList();
     final hasChecklistPagi = myChecklist.any((c) => c.sudahIsi);
-    final hasOdoAwal = myChecklist.any((c) =>
-        armada.isAlatBerat
-            ? (c.jamOperasional != null && c.jamOperasional! > 0)
-            : (c.odoKm != null && c.odoKm! > 0));
+    final hasOdoAwal = myChecklist.any((c) => armada.isAlatBerat
+        ? (c.jamOperasional != null && c.jamOperasional! > 0)
+        : (c.odoKm != null && c.odoKm! > 0)) ||
+        (armada.isAlatBerat
+            ? (armada.jamOperasionalTerkini != null &&
+                armada.jamOperasionalTerkini! > 0)
+            : (armada.odoTerkini != null && armada.odoTerkini! > 0));
     final ritCount = ritItems.length;
-    final hasChecklistAkhir = hasChecklistPagi;
+    final hasRitase = ritCount > 0;
+
+    final daySteps = [
+      _DayStep(
+        label: 'Checklist harian',
+        done: hasChecklistPagi,
+        route: '/armada/checklist',
+        cta: 'Isi checklist',
+      ),
+      _DayStep(
+        label: armada.isAlatBerat ? 'Jam Awal' : 'KM Awal',
+        done: hasOdoAwal,
+        route: '/armada/odo-awal',
+        cta: armada.isAlatBerat ? 'Catat jam' : 'Catat KM',
+      ),
+      _DayStep(
+        label: 'Muatan (Ritase)',
+        done: hasRitase,
+        route: '/armada/ritase-input',
+        cta: 'Catat muatan',
+      ),
+      _DayStep(
+        label: 'Checklist akhir',
+        done: akhirDone,
+        route: '/armada/checklist-akhir',
+        cta: 'Isi checklist akhir',
+      ),
+    ];
+
+    final doneCount = daySteps.where((s) => s.done).length;
+    _DayStep? next;
+    for (final s in daySteps) {
+      if (!s.done) {
+        next = s;
+        break;
+      }
+    }
 
     final steps = [
       WorkflowStep(
-        label: 'Checklist Unit',
+        label: 'Checklist harian',
         subtitle: hasChecklistPagi ? 'Sudah diisi' : 'Belum diisi',
         status: hasChecklistPagi
             ? WorkflowStepStatus.selesai
@@ -277,42 +349,117 @@ class _WorkflowSection extends StatelessWidget {
         onTap: () => context.push('/armada/checklist'),
       ),
       WorkflowStep(
-        label: armada.isAlatBerat ? 'Jam Awal' : 'ODO Awal',
+        label: armada.isAlatBerat ? 'Jam Awal' : 'KM Awal',
         subtitle: hasOdoAwal
-            ? (armada.isAlatBerat
-                ? 'Tercatat'
-                : 'Sudah diisi')
-            : (armada.odoTerkini != null
-                ? (armada.isAlatBerat
-                    ? 'HM: ${armada.jamOperasionalTerkini ?? '-'} jam'
-                    : 'ODO: ${armada.odoTerkini} km')
-                : 'Belum diisi'),
+            ? 'Sudah diisi'
+            : (armada.isAlatBerat
+                ? (armada.jamOperasionalTerkini != null
+                    ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
+                    : 'Belum diisi')
+                : (armada.odoTerkini != null
+                    ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
+                    : 'Belum diisi')),
         status: hasOdoAwal
             ? WorkflowStepStatus.selesai
             : WorkflowStepStatus.belum,
         onTap: () => context.push('/armada/odo-awal'),
       ),
       WorkflowStep(
-        label: armada.isAlatBerat ? 'Jam Kerja Berjalan' : 'Ritase Berjalan',
-        subtitle: armada.isAlatBerat
-            ? (ritCount > 0 ? 'Aktif' : 'Belum ada data')
-            : (ritCount > 0 ? '$ritCount rit tercatat' : 'Belum ada rit'),
-        status: ritCount > 0
-            ? WorkflowStepStatus.selesai
-            : WorkflowStepStatus.belum,
-        onTap: () => context.push('/armada/ritase'),
+        label: 'Muatan (Ritase)',
+        subtitle: hasRitase
+            ? (armada.isAlatBerat
+                ? 'Aktif'
+                : '$ritCount muatan tercatat')
+            : 'Belum ada muatan',
+        status:
+            hasRitase ? WorkflowStepStatus.selesai : WorkflowStepStatus.belum,
+        onTap: () => context.push('/armada/ritase-input'),
       ),
       WorkflowStep(
-        label: 'Checklist Akhir',
-        subtitle: hasChecklistAkhir ? 'Sudah diisi' : 'Belum diisi',
-        status: hasChecklistAkhir
+        label: 'Checklist akhir',
+        subtitle: akhirDone ? 'Sudah diisi' : 'Belum diisi',
+        status: akhirDone
             ? WorkflowStepStatus.selesai
             : WorkflowStepStatus.belum,
         onTap: () => context.push('/armada/checklist-akhir'),
       ),
     ];
 
-    return WorkflowStepper(steps: steps);
+    return Column(
+      children: [
+        _HariIniStatusCard(
+          doneCount: doneCount,
+          total: daySteps.length,
+          next: next,
+        ),
+        WorkflowStepper(steps: steps),
+      ],
+    );
+  }
+}
+
+class _HariIniStatusCard extends StatelessWidget {
+  const _HariIniStatusCard({
+    required this.doneCount,
+    required this.total,
+    required this.next,
+  });
+
+  final int doneCount;
+  final int total;
+  final _DayStep? next;
+
+  @override
+  Widget build(BuildContext context) {
+    final allDone = next == null;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: allDone
+              ? AppTheme.successColor.withValues(alpha: 0.35)
+              : AppTheme.primaryColor.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            allDone
+                ? '$doneCount dari $total selesai — kerja hari ini tuntas'
+                : '$doneCount dari $total selesai — sisa: ${next!.label}',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          if (!allDone) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: BouncingButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.push(next!.route);
+                },
+                child: FilledButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push(next!.route);
+                  },
+                  child: Text(next!.cta),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -365,36 +512,48 @@ class _RingkasanKerja extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Row(
-                children: [
-                  Expanded(
-                    child: _StatBox(
-                      label: armada.isAlatBerat ? 'Jam Kerja' : 'Rit Hari Ini',
-                      value: armada.isAlatBerat
-                          ? fmtRitase(ritCount, 'jam')
-                          : fmtRitase(ritCount),
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  if (armada.isKendaraan) ...[
-                    const SizedBox(width: 10),
+                  children: [
                     Expanded(
                       child: _StatBox(
-                        label: 'Total Upah',
-                        value: fmtRp(totalUpah),
-                        color: AppTheme.successColor,
+                        label: armada.isAlatBerat
+                            ? 'Jam Kerja'
+                            : 'Muatan Hari Ini (Rit)',
+                        value: armada.isAlatBerat
+                            ? fmtRitase(ritCount, 'jam')
+                            : fmtRitase(ritCount),
+                        color: AppTheme.primaryColor,
                       ),
                     ),
+                    if (armada.isKendaraan) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatBox(
+                          label: 'Estimasi Pendapatan',
+                          value: fmtRp(totalUpah),
+                          color: AppTheme.successColor,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
+                ),
               if (armada.isKendaraan) ...[
                 const SizedBox(height: 12),
                 SizedBox(
+                  height: 44,
                   width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.push('/armada/ritase-input'),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Input Ritase Baru'),
+                  child: BouncingButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      context.push('/armada/ritase-input');
+                    },
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/armada/ritase-input');
+                      },
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('Input Muatan Baru'),
+                    ),
                   ),
                 ),
               ],
@@ -489,9 +648,12 @@ class _ShortcutSection extends StatelessWidget {
           ),
           _ShortcutTile(
             icon: Icons.badge_outlined,
-            title: 'Presensi Helper',
-            subtitle: 'Absenkan helper hari ini',
-            onTap: () => context.push('/armada/helper-presensi'),
+            title: 'Presensi Pendamping',
+            subtitle: 'Catat kehadiran rekan kerja Anda',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/armada/helper-presensi');
+            },
           ),
         ],
       ),

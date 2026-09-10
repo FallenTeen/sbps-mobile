@@ -12,7 +12,8 @@ enum PendingEndpoint {
   uploadMedia('/upload'),
   helperPresensi('/armada/helper'),
   armadaChecklist('/armada/checklist'),
-  armadaOdoAwal('/armada/odo-awal-proyek');
+  armadaOdoAwal('/armada/odo-awal-proyek'),
+  armadaRitase('/armada/ritase/input');
 
   const PendingEndpoint(this.path);
 
@@ -25,7 +26,8 @@ enum PendingEndpoint {
       this == qcSlumpTest ||
       this == qcUjiTekan ||
       this == armadaChecklist ||
-      this == armadaOdoAwal;
+      this == armadaOdoAwal ||
+      this == armadaRitase;
 
   /// Endpoint multipart generik `POST /upload` dengan field `files[]`
   /// (1-10 file, docs/api-mobile.md §11.1). `client_uuid` dikirim sebagai

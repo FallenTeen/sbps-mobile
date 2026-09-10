@@ -4,9 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/analytics_service.dart';
 import '../../core/device_info_service.dart';
 import '../../core/push_token_service.dart';
 import '../../core/storage/token_storage.dart';
+import '../portal/portal_providers.dart';
 import 'auth_repository.dart';
 import 'models/user.dart';
 
@@ -23,8 +25,7 @@ const kApp2Roles = <String>[
   'Inventory',
 ];
 
-final tokenStorageProvider =
-    Provider<TokenStorage>((ref) => TokenStorage());
+final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
 final deviceInfoProvider = Provider<DeviceInfoService>((ref) {
   final service = DeviceInfoService();
@@ -32,7 +33,9 @@ final deviceInfoProvider = Provider<DeviceInfoService>((ref) {
   return service;
 });
 
-final pushTokenProvider = Provider<PushTokenService>((ref) => PushTokenService());
+final pushTokenProvider = Provider<PushTokenService>(
+  (ref) => PushTokenService(),
+);
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = ApiClient.buildBaseDio();
@@ -87,6 +90,7 @@ class ActiveRoleNotifier extends Notifier<String?> {
     final stored = await ref.read(tokenStorageProvider).readActiveRole();
     if (stored != null && user.roles.contains(stored)) {
       state = stored;
+      AnalyticsService.setRole(stored);
       return;
     }
     String? chosen;
@@ -100,12 +104,14 @@ class ActiveRoleNotifier extends Notifier<String?> {
     state = chosen;
     if (chosen != null) {
       await ref.read(tokenStorageProvider).saveActiveRole(chosen);
+      AnalyticsService.setRole(chosen);
     }
   }
 
   Future<void> switchRole(String role) async {
     state = role;
     await ref.read(tokenStorageProvider).saveActiveRole(role);
+    AnalyticsService.setRole(role);
   }
 
   Future<void> clear() async {
@@ -114,8 +120,9 @@ class ActiveRoleNotifier extends Notifier<String?> {
   }
 }
 
-final activeRoleProvider =
-    NotifierProvider<ActiveRoleNotifier, String?>(ActiveRoleNotifier.new);
+final activeRoleProvider = NotifierProvider<ActiveRoleNotifier, String?>(
+  ActiveRoleNotifier.new,
+);
 
 /// Role user yang relevan untuk App 2 (urut [kApp2Roles]).
 List<String> app2RolesOf(User user) =>
@@ -137,7 +144,8 @@ class RoleChoicePendingNotifier extends Notifier<bool> {
 
 final roleChoicePendingProvider =
     NotifierProvider<RoleChoicePendingNotifier, bool>(
-        RoleChoicePendingNotifier.new);
+      RoleChoicePendingNotifier.new,
+    );
 
 /// Pesan sekali-tayang untuk UI (misal "Sesi berakhir" saat forceLogout).
 class SessionMessageNotifier extends Notifier<String?> {
@@ -151,7 +159,8 @@ class SessionMessageNotifier extends Notifier<String?> {
 
 final sessionMessageProvider =
     NotifierProvider<SessionMessageNotifier, String?>(
-        SessionMessageNotifier.new);
+      SessionMessageNotifier.new,
+    );
 
 class AuthController extends AsyncNotifier<User?> {
   @override
@@ -173,23 +182,32 @@ class AuthController extends AsyncNotifier<User?> {
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final device = ref.read(deviceInfoProvider);
       final pushToken = await ref.read(pushTokenProvider).getToken();
-      final user = await ref.read(authRepositoryProvider).login(
+      final user = await ref
+          .read(authRepositoryProvider)
+          .login(
             email: email.trim(),
             password: password,
             deviceName: device.name,
             deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
-      ref.read(roleChoicePendingProvider.notifier)
-          .set(needsRoleChoice(user));
+      // Only set role choice pending if no saved role
+      final hasSavedRole =
+          await ref.read(tokenStorageProvider).readActiveRole() != null;
+      ref
+          .read(roleChoicePendingProvider.notifier)
+          .set(needsRoleChoice(user) && !hasSavedRole);
+      // Set user properties untuk Analytics
+      final portal = ref.read(selectedPortalProvider).value;
+      await AnalyticsService.setUser(
+        role: user.roles.isNotEmpty ? user.roles.first : 'unknown',
+        portal: portal?.name ?? 'unknown',
+      );
       return user;
     });
   }
@@ -205,7 +223,9 @@ class AuthController extends AsyncNotifier<User?> {
     state = await AsyncValue.guard(() async {
       final device = ref.read(deviceInfoProvider);
       final pushToken = await ref.read(pushTokenProvider).getToken();
-      final user = await ref.read(authRepositoryProvider).register(
+      final user = await ref
+          .read(authRepositoryProvider)
+          .register(
             name: name.trim(),
             email: email.trim(),
             password: password,
@@ -215,8 +235,12 @@ class AuthController extends AsyncNotifier<User?> {
             deviceToken: pushToken,
           );
       await ref.read(activeRoleProvider.notifier).syncForUser(user);
-      ref.read(roleChoicePendingProvider.notifier)
-          .set(needsRoleChoice(user));
+      // Only set role choice pending if no saved role
+      final hasSavedRole =
+          await ref.read(tokenStorageProvider).readActiveRole() != null;
+      ref
+          .read(roleChoicePendingProvider.notifier)
+          .set(needsRoleChoice(user) && !hasSavedRole);
       return user;
     });
   }
@@ -233,12 +257,14 @@ class AuthController extends AsyncNotifier<User?> {
 
   /// Dipanggil ApiClient ketika endpoint terproteksi menjawab 401.
   void forceLogout() {
-    ref.read(sessionMessageProvider.notifier)
+    ref
+        .read(sessionMessageProvider.notifier)
         .set('Sesi berakhir, silakan login kembali.');
     unawaited(ref.read(authRepositoryProvider).clearSession());
     state = const AsyncData(null);
   }
 }
 
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, User?>(AuthController.new);
+final authControllerProvider = AsyncNotifierProvider<AuthController, User?>(
+  AuthController.new,
+);

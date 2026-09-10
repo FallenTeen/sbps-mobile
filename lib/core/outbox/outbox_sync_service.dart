@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import '../analytics_service.dart';
 import '../api_client.dart';
 import 'outbox_repository.dart';
 import 'pending_action.dart';
@@ -144,8 +145,10 @@ class OutboxSyncService {
         final result = await send(action);
         if (result.delivered) {
           await _repo.remove(action.id);
+          AnalyticsService.outboxItemSynced();
         } else {
           await _repo.markFailed(action.id, result.errorMessage);
+          AnalyticsService.outboxItemFail();
         }
       }
     } finally {

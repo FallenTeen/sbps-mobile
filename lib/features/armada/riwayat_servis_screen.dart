@@ -146,8 +146,9 @@ class RiwayatServisScreen extends ConsumerWidget {
     if (state.error != null && state.items.isEmpty) {
       return AppEmptyState(
         icon: Icons.cloud_off_outlined,
-        title: 'Gagal memuat data',
-        subtitle: state.error!,
+        title: 'Gagal memuat data riwayat servis',
+        subtitle:
+            'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
         actionLabel: 'Coba lagi',
         onAction: () => ref.read(servisRiwayatProvider.notifier).refresh(),
       );

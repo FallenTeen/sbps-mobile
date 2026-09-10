@@ -19,7 +19,6 @@ import '../features/armada/overview_armada_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/armada/riwayat_servis_screen.dart';
 import '../features/armada/ritase_input_screen.dart';
-import '../features/armada/workshop_todo_screen.dart';
 import '../features/armada/unit_saya_home_screen.dart';
 import '../features/workshop/workshop_queue_screen.dart';
 import '../features/workshop/workshop_job_detail_screen.dart';
@@ -36,6 +35,7 @@ import '../features/kontraktor/proyek_kontrak_screen.dart';
 import '../features/presensi/titik_kerja_screen.dart';
 import '../features/portal/portal_providers.dart';
 import '../features/portal/portal_selection_screen.dart';
+import '../features/portal/combined_selection_screen.dart';
 import '../features/produksi/mulai_sesi_screen.dart';
 import '../features/produksi/progress_hari_ini_screen.dart';
 import '../features/produksi/riwayat_produksi_screen.dart';
@@ -53,7 +53,6 @@ import '../features/upload/dokumentasi_screen.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresher = _ChangeSignal();
   ref.listen(authControllerProvider, (_, _) => refresher.ping());
-  ref.listen(roleChoicePendingProvider, (_, _) => refresher.ping());
   ref.listen(activeRoleProvider, (_, _) => refresher.ping());
   ref.listen(selectedPortalProvider, (_, _) => refresher.ping());
   ref.onDispose(refresher.dispose);
@@ -75,18 +74,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (loggedIn) {
         final user = auth.value!;
         final portal = ref.read(selectedPortalProvider).value;
+        final activeRole = ref.read(activeRoleProvider);
 
-        // Portal selection: semua user harus pilih portal.
-        if (portal == null && location != '/portal') {
+        // Portal + role selection: use combined screen
+        final needsSelection = portal == null || 
+                             (portal == AppPortal.proyek && activeRole == null);
+        
+        if (needsSelection && location != '/portal') {
           return '/portal';
         }
-        if (portal != null && location == '/portal') return '/home';
-
-        // Role choice untuk proyek portal (multi-role).
-        final pickPending = ref.read(roleChoicePendingProvider);
-        if (portal == AppPortal.proyek) {
-          if (pickPending && location != '/pilih-role') return '/pilih-role';
-          if (!pickPending && location == '/pilih-role') return '/home';
+        
+        if (!needsSelection && location == '/portal') {
+          return '/home';
+        }
 
           // Guard modul produksi.
           if (location.startsWith('/produksi') &&
@@ -176,14 +176,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/portal',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: const PortalSelectionScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/pilih-role',
-        pageBuilder: (context, state) => buildAppTransitionPage(
-          key: state.pageKey,
-          child: const RolePickerScreen(),
+          child: const CombinedSelectionScreen(),
         ),
       ),
       GoRoute(
@@ -334,6 +327,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/armada/checklist-akhir',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ChecklistScreen(isAkhir: true),
+        ),
+      ),
+      GoRoute(
         path: '/armada/odo-awal',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
@@ -386,13 +386,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: const RitaseInputScreen(),
         ),
       ),
-      GoRoute(
-        path: '/armada/workshop-todo',
-        pageBuilder: (context, state) => buildAppTransitionPage(
-          key: state.pageKey,
-          child: const WorkshopTodoScreen(),
-        ),
-      ),
+      // Legacy workshop-todo route retired in Fase 2 - migrated to proper workshop module
       GoRoute(
         path: '/armada/checklist-major',
         pageBuilder: (context, state) => buildAppTransitionPage(

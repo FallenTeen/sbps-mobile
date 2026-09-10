@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/location_service.dart';
 import '../../core/outbox/outbox_repository.dart';
@@ -162,6 +163,8 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
     state = const PresensiSubmitState(
         busy: true, phase: UploadPhase.compressing);
     try {
+      AnalyticsService.presensiCheckinTap(
+          endpoint == PendingEndpoint.presensiCheckIn ? 'check_in' : 'check_out');
       // Fase A1.6: kompres dulu (maks ~500KB, sisi 1600px) — path hasil
       // kompresi yang masuk outbox, bukan file asli kamera.
       final compressed =
@@ -194,12 +197,14 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
 
       if (result.delivered) {
         ref.invalidate(hariIniProvider);
+        AnalyticsService.presensiCheckinSynced();
         final raw = result.responseData;
         return CheckInResult(
           delivered: true,
           data: raw is Map ? Map<String, dynamic>.from(raw) : null,
         );
       }
+      AnalyticsService.presensiCheckinQueued();
       return const CheckInResult(queued: true);
     } on ApiException catch (e) {
       return CheckInResult(error: e.message);
