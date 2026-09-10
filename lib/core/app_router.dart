@@ -11,12 +11,15 @@ import '../features/auth/role_picker_screen.dart';
 import '../features/armada/ajuan_servis_screen.dart';
 import '../features/armada/armada_home_screen.dart';
 import '../features/armada/checklist_screen.dart';
+import '../features/armada/checklist_major_screen.dart';
 import '../features/armada/detail_servis_screen.dart';
 import '../features/armada/helper_presensi_screen.dart';
 import '../features/armada/odo_awal_screen.dart';
 import '../features/armada/overview_armada_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/armada/riwayat_servis_screen.dart';
+import '../features/armada/ritase_input_screen.dart';
+import '../features/armada/workshop_todo_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
 import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
@@ -61,21 +64,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final onAuthScreen =
           location == '/login' || location == '/register';
       if (!loggedIn && !onAuthScreen) return '/login';
-      if (loggedIn && onAuthScreen) return '/home';
+      if (loggedIn && onAuthScreen) return '/portal';
 
       if (loggedIn) {
         final user = auth.value!;
         final portal = ref.read(selectedPortalProvider).value;
 
-        // Portal selection: jika user bisa akses 2 portal tapi belum pilih.
+        // Portal selection: semua user harus pilih portal.
         if (portal == null && location != '/portal') {
-          final auto = autoPortal(user);
-          if (auto != null) {
-            // Auto-select portal, tidak perlu ke /portal.
-            ref.read(selectedPortalProvider.notifier).select(auto);
-          } else {
-            return '/portal';
-          }
+          return '/portal';
         }
         if (portal != null && location == '/portal') return '/home';
 
@@ -358,6 +355,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
           child: const OverviewArmadaScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/armada/ritase-input',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RitaseInputScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/armada/workshop-todo',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const WorkshopTodoScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/armada/checklist-major',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ChecklistMajorScreen(),
         ),
       ),
       GoRoute(
