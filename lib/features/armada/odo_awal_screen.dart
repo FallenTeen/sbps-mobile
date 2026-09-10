@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_client.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -64,7 +63,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(armadaRepositoryProvider).submitOdoAwalProyek(
+      final delivered = await ref.read(armadaRepositoryProvider).submitOdoAwalProyek(
             armadaId: _selectedArmada!.id,
             titikId: _selectedArmada!.titikId ?? '',
             odoAwal: odoValue,
@@ -72,14 +71,13 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Berhasil menyimpan ODO awal')),
+        SnackBar(
+          content: Text(delivered
+              ? 'Berhasil menyimpan ODO awal'
+              : 'Tersimpan. Menunggu sinkronisasi saat online.'),
+        ),
       );
       Navigator.of(context).pop();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

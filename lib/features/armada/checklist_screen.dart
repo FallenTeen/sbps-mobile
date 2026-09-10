@@ -28,7 +28,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
           double? odoKm,
           double? jamOperasional,
         }) async {
-          await ref.read(armadaRepositoryProvider).submitChecklist(
+          final delivered = await ref.read(armadaRepositoryProvider).submitChecklist(
                 armadaId: item.armadaId,
                 kondisiBaik: kondisiBaik,
                 itemBermasalah: masalah,
@@ -36,6 +36,15 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                 odoKm: odoKm,
                 jamOperasional: jamOperasional,
               );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(delivered
+                    ? 'Checklist tersimpan.'
+                    : 'Tersimpan. Menunggu sinkronisasi saat online.'),
+              ),
+            );
+          }
           ref.invalidate(checklistHariIniProvider);
         },
       ),

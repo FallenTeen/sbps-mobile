@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
-import '../../core/photo_compression_service.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
@@ -28,7 +27,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
     });
 
     try {
-      await ref
+      final delivered = await ref
           .read(armadaRepositoryProvider)
           .submitHelperPresensi(
             helperId: helper.id,
@@ -38,7 +37,11 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Berhasil menyimpan presensi ${helper.nama}')),
+        SnackBar(
+          content: Text(delivered
+              ? 'Berhasil menyimpan presensi ${helper.nama}'
+              : 'Tersimpan. Menunggu sinkronisasi saat online.'),
+        ),
       );
 
       // Refresh list
