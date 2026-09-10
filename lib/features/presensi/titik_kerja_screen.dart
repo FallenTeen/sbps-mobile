@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
@@ -16,7 +18,6 @@ import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
 import 'riwayat_screen.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 
 /// Fase A1.3 — daftar titik kerja aktif dengan jarak GPS ke tiap titik,
 /// penanda titik terdekat, dan pemilihan titik untuk alur check-in (A1.4).
@@ -112,12 +113,14 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const HomeTitle(),
-        actions: [          // Profil user — edit profil & logout semua perangkat.
+        actions: [
+          // Profil user
           IconButton(
             tooltip: 'Profil',
             icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push('/profile'),
           ),
+          const PortalSwitchButton(),
           IconButton(
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),
@@ -155,7 +158,6 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                     'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
                   ),
                   actions: [
-          const PortalSwitchButton(),
                     TextButton(
                       onPressed: () {},
                       child: const Text('Tutup'),
@@ -171,7 +173,6 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                       Theme.of(context).colorScheme.surfaceContainerHighest,
                   content: const Text('Belum ada penugasan, hubungi admin.'),
                   actions: [
-          const PortalSwitchButton(),
                     TextButton(
                       onPressed: () {},
                       child: const Text('Tutup'),
@@ -192,9 +193,16 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
               ),
               const SizedBox(height: 16),
 
-              Text('Titik Kerja Aktif',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.place_outlined,
+                      size: 20, color: AppTheme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text('Titik Kerja Aktif',
+                      style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
+              const SizedBox(height: 10),
 
               titikAsync.when(
                 loading: () => const Padding(
@@ -458,64 +466,129 @@ class _TitikTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final proyekLabel = titik.proyek;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: isSelected
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: theme.colorScheme.primary, width: 2),
-            )
-          : null,
-      child: ListTile(
-        onTap: onTap,
-        selected: isSelected,
-        leading: CircleAvatar(
-          backgroundColor: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-          child: Icon(
-            isSelected ? Icons.place : Icons.location_on_outlined,
-            size: 20,
-          ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppTheme.primaryColor.withValues(alpha: 0.05)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? AppTheme.primaryColor
+              : isNearest
+                  ? AppTheme.primaryColor.withValues(alpha: 0.3)
+                  : AppTheme.borderColor,
+          width: isSelected ? 2 : 1,
         ),
-        title: Text(titik.nama),
-        subtitle: Text([
-          if (proyekLabel != null && proyekLabel.isNotEmpty) proyekLabel,
-          'Radius ${titik.radiusPresensiMeter.round()} m',
-        ].join(' • ')),
-        isThreeLine: true,
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isNearest)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(999),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // Location icon
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.primaryColor.withValues(alpha: 0.1)
+                        : AppTheme.surfaceVariantColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isSelected ? Icons.place_rounded : Icons.location_on_outlined,
+                    color: isSelected ? AppTheme.primaryColor : AppTheme.textTertiary,
+                    size: 22,
+                  ),
                 ),
-                child: Text(
-                  'Terdekat',
-                  style: theme.textTheme.labelSmall,
+                const SizedBox(width: 12),
+                // Title + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titik.nama,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: isSelected
+                              ? AppTheme.primaryColor
+                              : AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      if (proyekLabel != null && proyekLabel.isNotEmpty)
+                        Text(
+                          proyekLabel,
+                          style: const TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      Text(
+                        'Radius ${titik.radiusPresensiMeter.round()} m',
+                        style: const TextStyle(
+                          color: AppTheme.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            else if (isSelected)
-              Icon(Icons.check_circle,
-                  color: theme.colorScheme.primary, size: 20),
-            if (distanceText != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  distanceText!,
-                  style: theme.textTheme.labelLarge,
+                // Trailing badges
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (isNearest)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Terdekat',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else if (isSelected)
+                      const Icon(Icons.check_circle_rounded,
+                          color: AppTheme.primaryColor, size: 22),
+                    if (distanceText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          distanceText!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -6,11 +6,9 @@ import 'package:flutter/material.dart';
 /// Sumber device token push (FCM) untuk field `device_token` pada
 /// login/register.
 ///
-/// Membutuhkan file konfigurasi Firebase per flavor:
-/// - App 1 (presensi): `android/app/src/presensi/google-services.json`
-///                    & `ios/Runner/GoogleService-Info-presensi.plist`
-/// - App 2 (proyek):   `android/app/src/proyek/google-services.json`
-///                    & `ios/Runner/GoogleService-Info-proyek.plist`
+/// Membutuhkan file konfigurasi Firebase unified:
+/// - Android: `android/app/src/main/google-services.json`
+/// - iOS: `ios/Runner/GoogleService-Info.plist`
 ///
 /// Jika Firebase belum dikonfigurasi, token dikembalikan null — backend
 /// menerima login tanpa `device_token` karena field tersebut opsional.

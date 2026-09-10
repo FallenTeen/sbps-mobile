@@ -32,7 +32,7 @@ class VersionService {
 
   final ApiClient _api;
 
-  /// Query versi berdasarkan [appName] ('presensi' atau 'proyek').
+  /// Query versi app unified (param `app` selalu 'mobile').
   Future<AppVersionInfo> fetchAppVersion(String appName) async {
     final ApiResponse<Map<String, dynamic>> envelope = await _api.get(
       '/app-version',

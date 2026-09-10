@@ -40,30 +40,6 @@ android {
         resValue("string", "app_name", "SBPS")
     }
 
-    flavorDimensions += "app"
-    productFlavors {
-        create("presensi") {
-            dimension = "app"
-            applicationId = "com.sbps.presensi"
-            resValue("string", "app_name", "SBPS Presensi")
-        }
-        create("presensiStaging") {
-            dimension = "app"
-            applicationId = "com.sbps.presensi.staging"
-            resValue("string", "app_name", "SBPS Presensi (Staging)")
-        }
-        create("proyek") {
-            dimension = "app"
-            applicationId = "com.sbps.proyek"
-            resValue("string", "app_name", "SBPS Proyek")
-        }
-        create("proyekStaging") {
-            dimension = "app"
-            applicationId = "com.sbps.proyek.staging"
-            resValue("string", "app_name", "SBPS Proyek (Staging)")
-        }
-    }
-
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
