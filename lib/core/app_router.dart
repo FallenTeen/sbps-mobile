@@ -47,6 +47,7 @@ import '../features/qc/riwayat_qc_screen.dart';
 import '../features/tracking/active_users_screen.dart';
 import '../features/tracking/trail_screen.dart';
 import '../features/upload/dokumentasi_screen.dart';
+import '../features/outbox/data_belum_terkirim_screen.dart';
 
 /// Router dengan auth guard: tanpa token → /login, sudah login → /home.
 /// Portal selection ditambahkan setelah login.
@@ -66,8 +67,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!loggedIn && auth.isLoading && !auth.hasError) return null;
 
       final location = state.matchedLocation;
-      final onAuthScreen =
-          location == '/login' || location == '/register';
+      final onAuthScreen = location == '/login' || location == '/register';
       if (!loggedIn && !onAuthScreen) return '/login';
       if (loggedIn && onAuthScreen) return '/portal';
 
@@ -77,82 +77,93 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final activeRole = ref.read(activeRoleProvider);
 
         // Portal + role selection: use combined screen
-        final needsSelection = portal == null || 
-                             (portal == AppPortal.proyek && activeRole == null);
-        
+        final needsSelection =
+            portal == null ||
+            (portal == AppPortal.proyek && activeRole == null);
+
         if (needsSelection && location != '/portal') {
           return '/portal';
         }
-        
+
         if (!needsSelection && location == '/portal') {
           return '/home';
         }
 
-          // Guard modul produksi.
-          if (location.startsWith('/produksi') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'produksi')) {
-            return '/home';
-          }
+        // Guard modul produksi.
+        if (location.startsWith('/produksi') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'produksi',
+            )) {
+          return '/home';
+        }
 
-          // Guard viewer tracking: khusus Owner / Admin Keuangan.
-          if (location.startsWith('/tracking') &&
-              !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
-            return '/home';
-          }
+        // Guard viewer tracking: khusus Owner / Admin Keuangan.
+        if (location.startsWith('/tracking') &&
+            !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+          return '/home';
+        }
 
-          // Guard modul QC.
-          if (location.startsWith('/qc') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'qc')) {
-            return '/home';
-          }
+        // Guard modul QC.
+        if (location.startsWith('/qc') &&
+            !RolePermissions.canAccess(ref.read(activeRoleProvider), 'qc')) {
+          return '/home';
+        }
 
-          // Guard dokumentasi upload.
-          if (location.startsWith('/dokumentasi') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'produksi')) {
-            return '/home';
-          }
+        // Guard dokumentasi upload.
+        if (location.startsWith('/dokumentasi') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'produksi',
+            )) {
+          return '/home';
+        }
 
-          // Guard modul dashboard.
-          if (location.startsWith('/dashboard') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'dashboard')) {
-            return '/home';
-          }
+        // Guard modul dashboard.
+        if (location.startsWith('/dashboard') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'dashboard',
+            )) {
+          return '/home';
+        }
 
-          // Guard modul armada.
-          if (location.startsWith('/armada') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'armada')) {
-            return '/home';
-          }
+        // Guard modul armada.
+        if (location.startsWith('/armada') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'armada',
+            )) {
+          return '/home';
+        }
 
-          // Guard modul workshop.
-          if (location.startsWith('/workshop') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'workshop')) {
-            return '/home';
-          }
+        // Guard modul workshop.
+        if (location.startsWith('/workshop') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'workshop',
+            )) {
+          return '/home';
+        }
 
-          // Guard modul inventory.
-          if (location.startsWith('/inventory') &&
-              !RolePermissions.canAccess(
-                  ref.read(activeRoleProvider), 'inventory')) {
-            return '/home';
-          }
+        // Guard modul inventory.
+        if (location.startsWith('/inventory') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'inventory',
+            )) {
+          return '/home';
+        }
 
-          // Guard finansial: khusus Owner / Admin Keuangan.
-          const financialPrefixes = <String>[
-            '/dashboard/keuangan',
-            '/dashboard/po-pending',
-            '/dashboard/invoice',
-          ];
-          if (financialPrefixes.any(location.startsWith) &&
-              !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
-            return '/home';
-          }
+        // Guard finansial: khusus Owner / Admin Keuangan.
+        const financialPrefixes = <String>[
+          '/dashboard/keuangan',
+          '/dashboard/po-pending',
+          '/dashboard/invoice',
+        ];
+        if (financialPrefixes.any(location.startsWith) &&
+            !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
+          return '/home';
         }
       }
       return null;
@@ -186,10 +197,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final child = portal == AppPortal.proyek
               ? const ProyekHomeScreen()
               : const TitikKerjaScreen();
-          return buildAppTransitionPage(
-            key: state.pageKey,
-            child: child,
-          );
+          return buildAppTransitionPage(key: state.pageKey, child: child);
         },
       ),
       GoRoute(
@@ -197,6 +205,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
           child: const ProfileScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/data-belum-terkirim',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const DataBelumTerkirimScreen(),
         ),
       ),
       GoRoute(
@@ -255,9 +270,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/qc/detail',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: DetailQcScreen(
-            sampleId: state.extra as String? ?? '',
-          ),
+          child: DetailQcScreen(sampleId: state.extra as String? ?? ''),
         ),
       ),
       GoRoute(
@@ -367,9 +380,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/armada/servis/:id',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: DetailServisScreen(
-            id: state.pathParameters['id']!,
-          ),
+          child: DetailServisScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
@@ -405,9 +416,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/kontraktor/proyek/:id',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: DetailProyekKontrakScreen(
-            id: state.pathParameters['id']!,
-          ),
+          child: DetailProyekKontrakScreen(id: state.pathParameters['id']!),
         ),
       ),
       // ── Unit Saya (Driver Armada workflow) ──
@@ -430,9 +439,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/workshop/job/:id',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
-          child: WorkshopJobDetailScreen(
-            jobId: state.pathParameters['id']!,
-          ),
+          child: WorkshopJobDetailScreen(jobId: state.pathParameters['id']!),
         ),
       ),
       // ── Inventory ──

@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 /// Jika Firebase belum dikonfigurasi, token dikembalikan null — backend
 /// menerima login tanpa `device_token` karena field tersebut opsional.
 class PushTokenService {
-  PushTokenService({FirebaseMessaging? messaging}) : _messaging = messaging;
+  PushTokenService({FirebaseMessaging? messaging})
+    : _messaging = messaging ?? FirebaseMessaging.instance;
 
   final FirebaseMessaging? _messaging;
   String? _cachedToken;
@@ -44,7 +45,9 @@ class PushTokenService {
       // Refresh token listener — simpan token baru saat FCM rotate.
       _fm!.onTokenRefresh.listen((newToken) {
         _cachedToken = newToken;
-        debugPrint('[PushToken] Token refreshed: ${newToken.substring(0, 20)}...');
+        debugPrint(
+          '[PushToken] Token refreshed: ${newToken.substring(0, 20)}...',
+        );
       });
 
       if (token != null) {
@@ -82,10 +85,7 @@ Future<void> firebaseMessagingForegroundHandler(RemoteMessage message) async {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             if (body.isNotEmpty) ...[
               const SizedBox(height: 2),

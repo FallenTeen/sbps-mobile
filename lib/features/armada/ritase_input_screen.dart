@@ -32,17 +32,17 @@ class RitaseRecord {
   bool get isComplete => armada != null && jumlah != null && jumlah! > 0;
 
   Map<String, dynamic> toPayload() => {
-        'armada_id': armada?.id,
-        'jumlah': jumlah,
-        'satuan': satuan,
-        'catatan': catatan.isEmpty ? null : catatan,
-        'odo_per_trip': odoPerTrip,
-      };
+    'armada_id': armada?.id,
+    'jumlah': jumlah,
+    'satuan': satuan,
+    'catatan': catatan.isEmpty ? null : catatan,
+    'odo_per_trip': odoPerTrip,
+  };
 }
 
 /// Input muatan ringkas untuk Driver (Section 21.4):
-  /// Driver mencatat jumlah muatan dan satuan dari lapangan.
-  /// Mendukung multi-record dengan indexing.
+/// Driver mencatat jumlah muatan dan satuan dari lapangan.
+/// Mendukung multi-record dengan indexing.
 class RitaseInputScreen extends ConsumerStatefulWidget {
   const RitaseInputScreen({super.key});
 
@@ -171,21 +171,43 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Kirim ke backend POST /armada/ritase/input (batch)
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      var delivered = true;
+      for (final record in _records) {
+        final satuanVolume = switch (record.satuan) {
+          'rit' => 'ritase',
+          'ton' => 'tonase',
+          'm³' => 'm3',
+          _ => 'ritase',
+        };
+        final sent = await ref
+            .read(armadaRepositoryProvider)
+            .submitRitase(
+              armadaId: record.armada!.id,
+              jumlahRit: record.jumlah!,
+              satuanVolume: satuanVolume,
+              catatan: record.catatan,
+            );
+        delivered = delivered && sent;
+      }
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
       AnalyticsService.ritaseSubmitAll(_records.length);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_records.length} muatan berhasil dikirim')),
+        SnackBar(
+          content: Text(
+            delivered
+                ? '${_records.length} muatan berhasil dikirim'
+                : '${_records.length} muatan tersimpan dan akan dikirim saat online',
+          ),
+        ),
       );
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -234,11 +256,18 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               // === DAFTAR RECORD ===
               if (_records.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   color: AppTheme.primaryColor.withValues(alpha: 0.05),
                   child: Row(
                     children: [
-                      Icon(Icons.list_alt, size: 18, color: AppTheme.primaryColor),
+                      Icon(
+                        Icons.list_alt,
+                        size: 18,
+                        color: AppTheme.primaryColor,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '${_records.length} Record Tersimpan',
@@ -260,7 +289,10 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                   height: 110,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     itemCount: _records.length,
                     itemBuilder: (context, idx) {
                       final record = _records[idx];
@@ -290,11 +322,15 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                   onTap: () => _editRecord(record.index),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: record.isComplete
                                           ? Colors.green.withValues(alpha: 0.12)
-                                          : Colors.orange.withValues(alpha: 0.12),
+                                          : Colors.orange.withValues(
+                                              alpha: 0.12,
+                                            ),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -311,11 +347,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                 ),
                                 const Spacer(),
                                 if (record.isComplete)
-                                  const Icon(Icons.check_circle,
-                                      size: 14, color: Colors.green)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    size: 14,
+                                    color: Colors.green,
+                                  )
                                 else
-                                  Icon(Icons.edit,
-                                      size: 14, color: Colors.orange.shade600),
+                                  Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Colors.orange.shade600,
+                                  ),
                                 const SizedBox(width: 4),
                                 SizedBox(
                                   width: 24,
@@ -323,9 +365,13 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                   child: IconButton(
                                     padding: EdgeInsets.zero,
                                     iconSize: 16,
-                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.red,
+                                    ),
                                     tooltip: 'Hapus muatan ini',
-                                    onPressed: () => _confirmDelete(record.index),
+                                    onPressed: () =>
+                                        _confirmDelete(record.index),
                                   ),
                                 ),
                               ],
@@ -376,15 +422,20 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                       // Header record
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.edit_note,
-                                color: AppTheme.primaryColor, size: 20),
+                            Icon(
+                              Icons.edit_note,
+                              color: AppTheme.primaryColor,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               _currentRecordIndex == -1
@@ -401,11 +452,11 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                       const SizedBox(height: 16),
 
                       // Pilih kendaraan
-                      Text('Kendaraan',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Kendaraan',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<ArmadaSaya>(
                         decoration: const InputDecoration(
@@ -434,11 +485,11 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                       const SizedBox(height: 20),
 
                       // Jumlah rit
-                      Text('Jumlah',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Jumlah',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -463,10 +514,14 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                 isDense: true,
                               ),
                               items: _satuanOptions.map((s) {
-                                return DropdownMenuItem(value: s, child: Text(s));
+                                return DropdownMenuItem(
+                                  value: s,
+                                  child: Text(s),
+                                );
                               }).toList(),
                               onChanged: (v) {
-                                if (v != null) setState(() => _selectedSatuan = v);
+                                if (v != null)
+                                  setState(() => _selectedSatuan = v);
                               },
                             ),
                           ),
@@ -487,7 +542,9 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
 
                       TextField(
                         controller: _odoPerTripCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
                           labelText: 'KM / Odometer (opsional)',
                           border: OutlineInputBorder(),
@@ -542,7 +599,9 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                 height: 18,
                                 width: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.send, size: 18),
                         label: Text(

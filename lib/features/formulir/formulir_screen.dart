@@ -19,6 +19,8 @@ import 'models/formulir_lapangan.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import 'riwayat_formulir_screen.dart';
 
+import 'package:flutter/material.dart';
+
 /// Formulir Lapangan harian (Fase A1.5).
 /// - Belum check-in → diblokir dengan pesan jelas.
 /// - Sudah terisi hari ini → mode read-only.
@@ -30,50 +32,51 @@ class FormulirScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final presensiAsync = ref.watch(hariIniProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Formulir Lapangan'),
-        actions: [
-          const PortalSwitchButton(),
-          IconButton(
-            tooltip: 'Riwayat formulir',
-            icon: const Icon(Icons.history),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RiwayatFormulirScreen(),
+    return Semantics(
+      label: 'Formulir Lapangan — aplikasi presensi lapangan SBPS',
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Formulir Lapangan'),
+          actions: [
+            Semantics(button: true, label: 'Portal switch', child: const PortalSwitchButton()),
+            Semantics(button: true, label: 'Riwayat formulir', child: IconButton(
+              tooltip: 'Riwayat formulir',
+              icon: const Icon(Icons.history),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const RiwayatFormulirScreen(),
+                ),
               ),
+            ),)],
+          ),
+        body: ResponsiveCenter(
+          child: presensiAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: SkeletonDetailView(),
             ),
+            error: (error, _) => AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Gagal memuat status presensi',
+              subtitle: '$error',
+              actionLabel: 'Coba lagi',
+              onAction: () => ref.invalidate(hariIniProvider),
+            ),
+            data: (presensi) {
+              if (presensi.status == PresensiStatus.belumCheckIn) {
+                return AppEmptyState(
+                  icon: Icons.login,
+                  title: 'Belum check-in hari ini',
+                  subtitle:
+                      'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
+                      'check-in presensi.',
+                  actionLabel: 'Kembali',
+                  onAction: () => Navigator.of(context).maybePop(),
+                );
+              }
+              return const _FormulirBody();
+            },
           ),
-        ],
-      ),
-      body: ResponsiveCenter(
-        child: presensiAsync.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.all(16),
-            child: SkeletonDetailView(),
-          ),
-          error: (error, _) => AppEmptyState(
-            icon: Icons.cloud_off_outlined,
-            title: 'Gagal memuat status presensi',
-            subtitle: '$error',
-            actionLabel: 'Coba lagi',
-            onAction: () => ref.invalidate(hariIniProvider),
-          ),
-          data: (presensi) {
-            if (presensi.status == PresensiStatus.belumCheckIn) {
-              // Cegah sejak awal — jangan biarkan user mengisi lalu gagal 422.
-              return AppEmptyState(
-                icon: Icons.login,
-                title: 'Belum check-in hari ini',
-                subtitle:
-                    'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
-                    'check-in presensi.',
-                actionLabel: 'Kembali',
-                onAction: () => Navigator.of(context).maybePop(),
-              );
-            }
-            return const _FormulirBody();
-          },
         ),
       ),
     );
@@ -129,18 +132,18 @@ class _FormulirSudahTerisi extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
+            Semantics(label: 'Ceklis sukses', child: Icon(Icons.check_circle_outline, color: theme.colorScheme.primary)),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Formulir hari ini sudah terisi.',
-                  style: theme.textTheme.titleMedium),
+              child: Semantics(label: 'Formulir sudah terisi hari ini', child: Text('Formulir hari ini sudah terisi.',
+                  style: theme.textTheme.titleMedium)),
             ),
           ],
         ),
         if ((formulir.tanggal ?? '').isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(formulir.tanggal!, style: theme.textTheme.bodySmall),
+            child: Semantics(label: 'Tanggal formulir', child: Text(formulir.tanggal!, style: theme.textTheme.bodySmall)),
           ),
         const SizedBox(height: 12),
         _Baris(label: 'Aktivitas', nilai: formulir.aktivitasDilakukan),
@@ -149,7 +152,7 @@ class _FormulirSudahTerisi extends StatelessWidget {
         _Baris(label: 'Catatan tambahan', nilai: formulir.catatanTambahan),
         if (formulir.foto.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text('Foto', style: theme.textTheme.titleSmall),
+          Semantics(label: 'Foto dokumentasi', child: Text('Foto', style: theme.textTheme.titleSmall)),
           const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
@@ -183,9 +186,12 @@ class _Baris extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: theme.textTheme.labelMedium),
+          Semantics(label: label, child: Text(label, style: theme.textTheme.labelMedium)),
           const SizedBox(height: 2),
-          Text(nilai == null || nilai!.isEmpty ? '-' : nilai!),
+          if (nilai == null || nilai!.isEmpty)
+            Semantics(label: 'Kosong', child: Text('-', style: theme.textTheme.bodySmall))
+          else
+            Semantics(label: 'Nilai: $nilai', child: Text(nilai!, style: theme.textTheme.bodySmall)),
         ],
       ),
     );
@@ -288,64 +294,78 @@ final result = await ref.read(formulirSubmitProvider.notifier).submit(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
-        TextField(
-          controller: _aktivitas,
-          maxLength: 5000,
-          minLines: 3,
-          maxLines: 6,
-          decoration: const InputDecoration(
-            labelText: 'Aktivitas dilakukan *',
-            hintText: 'Uraikan pekerjaan hari ini...',
-            border: OutlineInputBorder(),
+        Semantics(
+          label: 'Field aktivitas dilakukan',
+          child: TextField(
+            controller: _aktivitas,
+            maxLength: 5000,
+            minLines: 3,
+            maxLines: 6,
+            decoration: const InputDecoration(
+              labelText: 'Aktivitas dilakukan *',
+              hintText: 'Uraikan pekerjaan hari ini...',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _kondisi,
-          maxLength: 2000,
-          minLines: 2,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            labelText: 'Kondisi area',
-            border: OutlineInputBorder(),
+        Semantics(
+          label: 'Field kondisi area',
+          child: TextField(
+            controller: _kondisi,
+            maxLength: 2000,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Kondisi area',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _kendala,
-          maxLength: 2000,
-          minLines: 2,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            labelText: 'Kendala',
-            border: OutlineInputBorder(),
+        Semantics(
+          label: 'Field kendala',
+          child: TextField(
+            controller: _kendala,
+            maxLength: 2000,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Kendala',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _catatan,
-          maxLength: 2000,
-          minLines: 2,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            labelText: 'Catatan tambahan',
-            border: OutlineInputBorder(),
+        Semantics(
+          label: 'Field catatan tambahan',
+          child: TextField(
+            controller: _catatan,
+            maxLength: 2000,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Catatan tambahan',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        Row(
+Row(
           children: [
-            Text('Foto (${_fotoLokal.length}/$_maksFoto)',
-                style: theme.textTheme.labelLarge),
+            Semantics(label: 'Counter foto', child: Text('Foto (${_fotoLokal.length}/$_maksFoto)', style: theme.textTheme.labelLarge)),
             const Spacer(),
             if (_fotoLokal.length < _maksFoto)
-              TextButton.icon(
+              Semantics(button: true, label: 'Tambah foto', child: TextButton.icon(
                 onPressed: busy ? null : _tambahFoto,
                 icon: const Icon(Icons.add_a_photo_outlined),
                 label: const Text('Tambah'),
               ),
+            ),
           ],
         ),
+          ),
+        ],
         if (_fotoLokal.isNotEmpty)
           GridView.builder(
             shrinkWrap: true,
@@ -358,48 +378,24 @@ final result = await ref.read(formulirSubmitProvider.notifier).submit(
             ),
             itemBuilder: (context, i) {
               final heroTag = 'formulir_draft_photo_$i';
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  GestureDetector(
-                    onTap: () => PhotoViewerDialog.show(
-                      context: context,
-                      heroTag: heroTag,
-                      filePath: _fotoLokal[i],
-                      title: 'Preview Foto ${i + 1}',
-                    ),
-                    child: Hero(
-                      tag: heroTag,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
-                      ),
-                    ),
+              return Semantics(
+                button: true,
+                label: 'Foto ${i + 1}, tap untuk preview',
+                child: GestureDetector(
+                  onTap: () => PhotoViewerDialog.show(
+                    context: context,
+                    heroTag: heroTag,
+                    filePath: _fotoLokal[i],
+                    title: 'Preview Foto ${i + 1}',
                   ),
-                  // Indikator 3 state (A1.6): kompres → siap kirim → terkirim
-                  // (terkirim ditandai hilangnya thumbnail saat sukses —
-                  // layar pindah ke mode read-only).
-                  Positioned(
-                    bottom: 4,
-                    right: 4,
-                    child: _StatusBadge(phase: busyPhase),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: InkWell(
-                      onTap: () => setState(() => _fotoLokal.removeAt(i)),
-                      child: CircleAvatar(
-                        radius: 12,
-                        backgroundColor:
-                            theme.colorScheme.errorContainer,
-                        child: Icon(Icons.close,
-                            size: 14,
-                            color: theme.colorScheme.onErrorContainer),
-                      ),
+                  child: Hero(
+                    tag: heroTag,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
                     ),
                   ),
-                ],
+                ),
               );
             },
           ),

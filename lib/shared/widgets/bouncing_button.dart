@@ -70,19 +70,23 @@ class _BouncingButtonState extends State<BouncingButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      onTap: widget.onPressed,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
+    return Semantics(
+      button: true,
+      enabled: widget.onPressed != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: _onTapDown,
+        onTapUp: _onTapUp,
+        onTapCancel: _onTapCancel,
+        onTap: widget.onPressed,
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) => Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          ),
+          child: widget.child,
         ),
-        child: widget.child,
       ),
     );
   }

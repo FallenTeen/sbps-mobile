@@ -21,27 +21,30 @@ class AnimatedCountBadge extends StatelessWidget {
     final bg = badgeColor ?? theme.colorScheme.error;
     final fg = textColor ?? theme.colorScheme.onError;
 
-    return Badge(
-      isLabelVisible: count > 0,
-      backgroundColor: bg,
-      textColor: fg,
-      label: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        transitionBuilder: (child, animation) => ScaleTransition(
-          scale: animation,
-          child: child,
-        ),
-        child: Text(
-          '$count',
-          key: ValueKey<int>(count),
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: fg,
+    return Semantics(
+      label: count > 0 ? '$count notifikasi belum dibaca' : null,
+      child: Badge(
+        isLabelVisible: count > 0,
+        backgroundColor: bg,
+        textColor: fg,
+        label: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, animation) => ScaleTransition(
+            scale: animation,
+            child: child,
+          ),
+          child: Text(
+            '$count',
+            key: ValueKey<int>(count),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: fg,
+            ),
           ),
         ),
+        child: child,
       ),
-      child: child,
     );
   }
 }

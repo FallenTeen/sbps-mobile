@@ -17,6 +17,7 @@ import 'features/tracking/tracking_providers.dart';
 import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/notification_handler.dart';
+import 'shared/widgets/sync_action_button.dart';
 
 /// Top-level handler untuk pesan yang diterima di background/terminated.
 /// Harus top-level function (bukan closure) menurut Firebase docs.
@@ -37,8 +38,7 @@ Future<void> main() async {
   // Firebase akan throw dan token dikembalikan null (graceful degradation).
   try {
     await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     // Crashlytics — tangkap semua error Flutter
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -72,8 +72,7 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
 
       // Setup foreground FCM handler.
       try {
-        FirebaseMessaging.onMessage
-            .listen(firebaseMessagingForegroundHandler);
+        FirebaseMessaging.onMessage.listen(firebaseMessagingForegroundHandler);
       } catch (_) {
         // Firebase tidak terinisialisasi — skip.
       }
@@ -112,6 +111,8 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       title: title,
       theme: theme,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
+      builder: (context, child) =>
+          OfflineBanner(child: child ?? const SizedBox.shrink()),
       debugShowCheckedModeBanner: banner,
       routerConfig: ref.watch(appRouterProvider),
     );
@@ -169,10 +170,7 @@ class _Splash extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Mobile Apps',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppTheme.textMuted,
-              ),
+              style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
             ),
             const SizedBox(height: 24),
             const SizedBox(

@@ -84,17 +84,26 @@ class OutboxRepository {
     return n;
   }
 
+  /// Reset backoff dan tandai aksi gagal untuk percobaan manual.
+  Future<void> markPending(String id) => _update(
+    id,
+    (a) => a
+      ..status = PendingStatus.pending
+      ..retryCount = 0
+      ..errorMessage = null,
+  );
+
   Future<void> markSyncing(String id) async =>
       _update(id, (a) => a..status = PendingStatus.syncing);
 
   Future<void> markFailed(String id, String? message) async => _update(
-        id,
-        (a) => a
-          ..status = PendingStatus.failed
-          ..lastAttemptAt = DateTime.now()
-          ..retryCount = a.retryCount + 1
-          ..errorMessage = message,
-      );
+    id,
+    (a) => a
+      ..status = PendingStatus.failed
+      ..lastAttemptAt = DateTime.now()
+      ..retryCount = a.retryCount + 1
+      ..errorMessage = message,
+  );
 
   Future<void> remove(String id) async {
     final box = await _ensureOpen();
@@ -115,10 +124,7 @@ class OutboxRepository {
     } catch (_) {}
   }
 
-  Future<void> _update(
-    String id,
-    void Function(PendingAction) mutate,
-  ) async {
+  Future<void> _update(String id, void Function(PendingAction) mutate) async {
     final box = await _ensureOpen();
     final raw = box.get(id);
     if (raw == null) return;

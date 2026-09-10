@@ -24,8 +24,9 @@ final photoCompressionProvider = Provider<PhotoCompressionService>(
   (ref) => PhotoCompressionService(),
 );
 
-final locationServiceProvider =
-    Provider<LocationService>((ref) => LocationService());
+final locationServiceProvider = Provider<LocationService>(
+  (ref) => LocationService(),
+);
 
 /// Daftar titik aktif — di-refresh saat pull-to-refresh.
 final titikAktifProvider = FutureProvider.autoDispose<List<Titik>>(
@@ -45,8 +46,9 @@ class SelectedTitikNotifier extends Notifier<Titik?> {
   void select(Titik? titik) => state = titik;
 }
 
-final selectedTitikProvider =
-    NotifierProvider<SelectedTitikNotifier, Titik?>(SelectedTitikNotifier.new);
+final selectedTitikProvider = NotifierProvider<SelectedTitikNotifier, Titik?>(
+  SelectedTitikNotifier.new,
+);
 
 /// Posisi GPS terakhir yang berhasil didapat di halaman titik kerja.
 class CurrentPositionNotifier extends Notifier<Position?> {
@@ -58,7 +60,8 @@ class CurrentPositionNotifier extends Notifier<Position?> {
 
 final currentPositionProvider =
     NotifierProvider<CurrentPositionNotifier, Position?>(
-        CurrentPositionNotifier.new);
+      CurrentPositionNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Fase A1.4 — Check-in/out via outbox
@@ -95,8 +98,14 @@ class PendingCountNotifier extends Notifier<int> {
   }
 }
 
-final pendingCountProvider =
-    NotifierProvider<PendingCountNotifier, int>(PendingCountNotifier.new);
+final pendingCountProvider = NotifierProvider<PendingCountNotifier, int>(
+  PendingCountNotifier.new,
+);
+
+/// Daftar data lokal yang belum berhasil dikirim ke server.
+final pendingActionsProvider = FutureProvider<List<PendingAction>>(
+  (ref) => ref.watch(outboxRepositoryProvider).pendingActions(),
+);
 
 /// Status presensi hari ini (belum_check_in / menunggu_check_out / selesai).
 final hariIniProvider = FutureProvider.autoDispose<PresensiHariIni>(
@@ -157,18 +166,23 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
     }
     if (pos == null) {
       return const CheckInResult(
-          error: 'Posisi GPS belum tersedia. Tunggu lokasi siap.');
+        error: 'Posisi GPS belum tersedia. Tunggu lokasi siap.',
+      );
     }
 
     state = const PresensiSubmitState(
-        busy: true, phase: UploadPhase.compressing);
+      busy: true,
+      phase: UploadPhase.compressing,
+    );
     try {
       AnalyticsService.presensiCheckinTap(
-          endpoint == PendingEndpoint.presensiCheckIn ? 'check_in' : 'check_out');
+        endpoint == PendingEndpoint.presensiCheckIn ? 'check_in' : 'check_out',
+      );
       // Fase A1.6: kompres dulu (maks ~500KB, sisi 1600px) — path hasil
       // kompresi yang masuk outbox, bukan file asli kamera.
-      final compressed =
-          await ref.read(photoCompressionProvider).compress(photoPath);
+      final compressed = await ref
+          .read(photoCompressionProvider)
+          .compress(photoPath);
       state = const PresensiSubmitState(busy: true, phase: UploadPhase.sending);
 
       final lat = pos.latitude.toStringAsFixed(6);
@@ -178,8 +192,7 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
         clientUuid: _uuid.v4(),
         endpoint: endpoint,
         payloadJson: {
-          if (endpoint == PendingEndpoint.presensiCheckIn)
-            'titik_id': titik.id,
+          if (endpoint == PendingEndpoint.presensiCheckIn) 'titik_id': titik.id,
           'latitude': lat,
           'longitude': lng,
           'photo_metadata[latitude]': lat,
@@ -192,8 +205,9 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
       );
 
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
 
       if (result.delivered) {
         ref.invalidate(hariIniProvider);
@@ -209,8 +223,7 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
     } on ApiException catch (e) {
       return CheckInResult(error: e.message);
     } catch (_) {
-      return const CheckInResult(
-          error: 'Gagal memproses presensi. Coba lagi.');
+      return const CheckInResult(error: 'Gagal memproses presensi. Coba lagi.');
     } finally {
       state = const PresensiSubmitState();
     }
@@ -219,4 +232,5 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
 
 final presensiSubmitProvider =
     NotifierProvider<PresensiSubmitController, PresensiSubmitState>(
-        PresensiSubmitController.new);
+      PresensiSubmitController.new,
+    );

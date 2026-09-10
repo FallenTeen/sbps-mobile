@@ -16,9 +16,9 @@ class ArmadaRepository {
     required ApiClient api,
     required OutboxRepository outbox,
     required OutboxSyncService sync,
-  })  : _api = api,
-        _outbox = outbox,
-        _sync = sync;
+  }) : _api = api,
+       _outbox = outbox,
+       _sync = sync;
 
   final ApiClient _api;
   final OutboxRepository _outbox;
@@ -144,11 +144,35 @@ class ArmadaRepository {
       id: _uuid.v4(),
       clientUuid: _uuid.v4(),
       endpoint: PendingEndpoint.helperPresensi,
-      payloadJson: {
-        'helper_id': helperId,
-        'tipe': tipe,
-      },
+      payloadJson: {'helper_id': helperId, 'tipe': tipe},
       photoLocalPath: photoPath,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    return result.delivered;
+  }
+
+  /// POST /armada/ritase/input — satu catatan muatan via outbox.
+  Future<bool> submitRitase({
+    required String armadaId,
+    required int jumlahRit,
+    required String satuanVolume,
+    String? catatan,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.armadaRitase,
+      payloadJson: {},
+      payloadData: {
+        'armada_id': armadaId,
+        'jumlah_rit': jumlahRit,
+        'satuan_volume': satuanVolume,
+        if (catatan != null && catatan.trim().isNotEmpty)
+          'catatan': catatan.trim(),
+      },
       createdAt: DateTime.now(),
       idempotencyKey: _uuid.v4(),
     );
@@ -163,14 +187,14 @@ class ArmadaRepository {
 
   /// Parser daftar item dari `{ items: [...] }`.
   static List<T> Function(Object? raw) _parseList<T>(
-      T Function(Map<String, dynamic>) fromJson) {
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     return (raw) {
       final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
       final items = map['items'];
       return <T>[
         if (items is List)
-          for (final e in items)
-            fromJson(Map<String, dynamic>.from(e as Map)),
+          for (final e in items) fromJson(Map<String, dynamic>.from(e as Map)),
       ];
     };
   }

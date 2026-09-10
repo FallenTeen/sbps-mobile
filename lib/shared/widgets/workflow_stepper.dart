@@ -98,78 +98,87 @@ class _StepTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _statusColor();
     final isActive = step.status != WorkflowStepStatus.belum;
+    final statusText = switch (step.status) {
+      WorkflowStepStatus.selesai => 'Sudah selesai',
+      WorkflowStepStatus.sedang => 'Sedang berlangsung',
+      WorkflowStepStatus.belum => 'Belum dimulai',
+    };
 
-    return InkWell(
-      onTap: step.onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stepper column (icon + line)
-            SizedBox(
-              width: 32,
-              child: Column(
-                children: [
-                  Icon(_statusIcon(), size: 24, color: color),
-                  if (!isLast)
-                    Container(
-                      width: 2,
-                      height: 28,
-                      color: isActive
-                          ? color.withValues(alpha: 0.4)
-                          : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Content
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+    return Semantics(
+      button: step.onTap != null && step.status != WorkflowStepStatus.selesai,
+      label: 'Langkah ${index + 1}: ${step.label}. Status: $statusText${step.subtitle != null ? ". " + step.subtitle! : ""}',
+      child: InkWell(
+        onTap: step.onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Stepper column (icon + line)
+              SizedBox(
+                width: 32,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      step.label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight:
-                            isActive ? FontWeight.w600 : FontWeight.w500,
+                    Icon(_statusIcon(), size: 24, color: color),
+                    if (!isLast)
+                      Container(
+                        width: 2,
+                        height: 28,
                         color: isActive
-                            ? AppTheme.textPrimary
-                            : AppTheme.textTertiary,
-                        decoration: step.status == WorkflowStepStatus.selesai
-                            ? TextDecoration.lineThrough
-                            : null,
+                            ? color.withValues(alpha: 0.4)
+                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
-                    ),
-                    if (step.subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        step.subtitle!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: step.status == WorkflowStepStatus.selesai
-                              ? AppTheme.successColor
-                              : AppTheme.textTertiary,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
-            ),
-            // Action indicator
-            if (step.onTap != null && step.status != WorkflowStepStatus.selesai)
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.outline,
+              const SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        step.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight:
+                              isActive ? FontWeight.w600 : FontWeight.w500,
+                          color: isActive
+                              ? AppTheme.textPrimary
+                              : AppTheme.textTertiary,
+                          decoration: step.status == WorkflowStepStatus.selesai
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                      if (step.subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          step.subtitle!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: step.status == WorkflowStepStatus.selesai
+                                ? AppTheme.successColor
+                                : AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-          ],
+              // Action indicator
+              if (step.onTap != null && step.status != WorkflowStepStatus.selesai)
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: theme.colorScheme.outline,
+                ),
+            ],
+          ),
         ),
       ),
     );
