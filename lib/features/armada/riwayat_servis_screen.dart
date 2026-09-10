@@ -59,14 +59,28 @@ class RiwayatServisScreen extends ConsumerWidget {
               children: [
                 FilterChip(
                   label: const Text('Semua'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == null,
                   onSelected: (_) {
-                    ref.read(servisRiwayatProvider.notifier).filterByStatus(null);
+                    ref
+                        .read(servisRiwayatProvider.notifier)
+                        .filterByStatus(null);
                   },
                 ),
                 const SizedBox(width: 8),
                 FilterChip(
                   label: const Text('Menunggu'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == 'diajukan',
                   onSelected: (_) {
                     ref
@@ -77,6 +91,12 @@ class RiwayatServisScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 FilterChip(
                   label: const Text('Disetujui'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == 'disetujui',
                   onSelected: (_) {
                     ref
@@ -87,6 +107,12 @@ class RiwayatServisScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 FilterChip(
                   label: const Text('Dikerjakan'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == 'dikerjakan',
                   onSelected: (_) {
                     ref
@@ -97,6 +123,12 @@ class RiwayatServisScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 FilterChip(
                   label: const Text('Selesai'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == 'selesai',
                   onSelected: (_) {
                     ref
@@ -107,6 +139,12 @@ class RiwayatServisScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 FilterChip(
                   label: const Text('Ditolak'),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: state.statusFilter == 'ditolak',
                   onSelected: (_) {
                     ref
@@ -138,7 +176,10 @@ class RiwayatServisScreen extends ConsumerWidget {
   }
 
   Widget _buildList(
-      BuildContext context, WidgetRef ref, ServisRiwayatState state) {
+    BuildContext context,
+    WidgetRef ref,
+    ServisRiwayatState state,
+  ) {
     if (state.loading && state.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -158,7 +199,8 @@ class RiwayatServisScreen extends ConsumerWidget {
       return AppEmptyState(
         icon: Icons.build_outlined,
         title: 'Belum ada riwayat pengajuan servis',
-        subtitle: 'Ajukan servis pertama kali dengan menekan tombol + di bawah.',
+        subtitle:
+            'Ajukan servis pertama kali dengan menekan tombol + di bawah.',
         actionLabel: 'Ajukan Servis',
         onAction: () => context.push('/armada/servis/ajuan'),
       );
@@ -243,8 +285,8 @@ class RiwayatServisScreen extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(width: 4),
-                          Text(
-                            fmtTanggal(item.tanggalAjuan),
+                        Text(
+                          fmtTanggal(item.tanggalAjuan),
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.outline,

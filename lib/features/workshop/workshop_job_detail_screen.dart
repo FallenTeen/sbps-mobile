@@ -90,23 +90,23 @@ class _WorkshopJobDetailScreenState
 
   void _requestSparepart() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fitur request sparepart akan segera hadir')),
+      const SnackBar(
+        content: Text('Fitur request sparepart akan segera hadir'),
+      ),
     );
   }
 
   Future<void> _markComplete() async {
     if (_completedCount < _items.length) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selesaikan semua item terlebih dahulu'),
-        ),
+        const SnackBar(content: Text('Selesaikan semua item terlebih dahulu')),
       );
       return;
     }
 
     setState(() => _isSubmitting = true);
     try {
-      AnalyticsService.workshopTodoComplete();
+      AnalyticsService.workshopJobComplete();
       await Future<void>.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,9 +115,9 @@ class _WorkshopJobDetailScreenState
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -126,8 +126,9 @@ class _WorkshopJobDetailScreenState
   @override
   Widget build(BuildContext context) {
     final job = _mockJob;
-    final progress =
-        job.totalItems > 0 ? _completedCount / job.totalItems : 0.0;
+    final progress = job.totalItems > 0
+        ? _completedCount / job.totalItems
+        : 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -164,8 +165,9 @@ class _WorkshopJobDetailScreenState
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: _statusColor(job.status)
-                                    .withValues(alpha: 0.12),
+                                color: _statusColor(
+                                  job.status,
+                                ).withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
@@ -207,8 +209,11 @@ class _WorkshopJobDetailScreenState
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_today_outlined,
-                                size: 16, color: AppTheme.textTertiary),
+                            const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 16,
+                              color: AppTheme.textTertiary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'Dibuat ${fmtTanggalWaktu(job.createdAt)}',
@@ -324,15 +329,18 @@ class _WorkshopJobDetailScreenState
                             )
                           : null,
                       trailing: item.isDone
-                          ? const Icon(Icons.check_circle,
-                              color: AppTheme.successColor)
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: AppTheme.successColor,
+                            )
                           : IconButton(
                               icon: const Icon(Icons.camera_alt_outlined),
                               onPressed: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
-                                        'Fitur kamera akan segera hadir'),
+                                      'Fitur kamera akan segera hadir',
+                                    ),
                                   ),
                                 );
                               },

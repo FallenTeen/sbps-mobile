@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 
 /// Uniform History Screen Component (Fase 2)
 /// Provides consistent period chips, status filters, and pagination across history screens.
-/// 
+///
 /// Usage: Wrap your history screen content with this widget to get consistent UI.
 class UniformHistoryScreen extends ConsumerStatefulWidget {
   const UniformHistoryScreen({
@@ -34,7 +34,8 @@ class UniformHistoryScreen extends ConsumerStatefulWidget {
   final bool showStatusChips;
 
   @override
-  ConsumerState<UniformHistoryScreen> createState() => _UniformHistoryScreenState();
+  ConsumerState<UniformHistoryScreen> createState() =>
+      _UniformHistoryScreenState();
 }
 
 class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
@@ -51,10 +52,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: const [],
-      ),
+      appBar: AppBar(title: Text(widget.title), actions: const []),
       body: Column(
         children: [
           // Period Filter Chips (Fase 2)
@@ -67,7 +65,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
                 widget.onPeriodChanged?.call(value);
               },
             ),
-          
+
           // Status Filter Chips (Fase 2)
           if (widget.showStatusChips)
             _StatusFilterSection(
@@ -78,7 +76,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
                 widget.onStatusChanged?.call(value);
               },
             ),
-          
+
           // Content
           Expanded(child: widget.child),
         ],
@@ -104,9 +102,7 @@ class _PeriodFilterSection extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.borderColor),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,6 +124,12 @@ class _PeriodFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: const VisualDensity(
+                      horizontal: -2,
+                      vertical: -2,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
@@ -135,11 +137,11 @@ class _PeriodFilterSection extends StatelessWidget {
                     selectedColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                     checkmarkColor: AppTheme.primaryColor,
                     labelStyle: TextStyle(
-                      color: selected == option 
-                          ? AppTheme.primaryColor 
+                      color: selected == option
+                          ? AppTheme.primaryColor
                           : AppTheme.textPrimary,
-                      fontWeight: selected == option 
-                          ? FontWeight.w600 
+                      fontWeight: selected == option
+                          ? FontWeight.w600
                           : FontWeight.normal,
                     ),
                   ),
@@ -170,9 +172,7 @@ class _StatusFilterSection extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.borderColor),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,6 +194,12 @@ class _StatusFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: const VisualDensity(
+                      horizontal: -2,
+                      vertical: -2,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
@@ -201,11 +207,11 @@ class _StatusFilterSection extends StatelessWidget {
                     selectedColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                     checkmarkColor: AppTheme.primaryColor,
                     labelStyle: TextStyle(
-                      color: selected == option 
-                          ? AppTheme.primaryColor 
+                      color: selected == option
+                          ? AppTheme.primaryColor
                           : AppTheme.textPrimary,
-                      fontWeight: selected == option 
-                          ? FontWeight.w600 
+                      fontWeight: selected == option
+                          ? FontWeight.w600
                           : FontWeight.normal,
                     ),
                   ),

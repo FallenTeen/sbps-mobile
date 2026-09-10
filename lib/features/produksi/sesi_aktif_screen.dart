@@ -8,6 +8,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
+import '../qc/models/qc_sample.dart';
 import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
@@ -59,7 +60,8 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
                 case 'ringkasan':
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                        builder: (_) => const ProduksiRingkasanScreen()),
+                      builder: (_) => const ProduksiRingkasanScreen(),
+                    ),
                   );
                   break;
                 case 'dokumentasi':
@@ -122,10 +124,7 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
         controller: _tabController,
         children: [
           // Tab 1: Sesi Aktif
-          _ActiveSessionsTab(
-            sesi: sesi,
-            waitingQc: waitingQc,
-          ),
+          _ActiveSessionsTab(sesi: sesi, waitingQc: waitingQc),
           // Tab 2: Progress (redirect to progress screen)
           const _ProgressTab(),
           // Tab 3: Riwayat (redirect to history screen)
@@ -137,13 +136,10 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
 }
 
 class _ActiveSessionsTab extends ConsumerWidget {
-  const _ActiveSessionsTab({
-    required this.sesi,
-    required this.waitingQc,
-  });
+  const _ActiveSessionsTab({required this.sesi, required this.waitingQc});
 
   final AsyncValue<List<ProductionSession>> sesi;
-  final AsyncValue<Map<String, List<dynamic>>> waitingQc;
+  final AsyncValue<Map<String, QcSample>> waitingQc;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,21 +167,20 @@ class _ActiveSessionsTab extends ConsumerWidget {
                     child: const AppEmptyState(
                       icon: Icons.factory_outlined,
                       title: 'Belum ada sesi aktif',
-                      subtitle: 'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
+                      subtitle:
+                          'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
                     ),
                   )
                 : SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                     sliver: SliverList.separated(
                       itemCount: items.length,
-                      separatorBuilder: (_, _) => const SliverToBoxAdapter(
-                        child: SizedBox(height: 12),
-                      ),
+                      separatorBuilder: (_, _) =>
+                          const SliverToBoxAdapter(child: SizedBox(height: 12)),
                       itemBuilder: (context, i) => _SessionCard(
                         session: items[i],
-                        hasWaitingQc: waitingQc.value
-                                ?.containsKey(items[i].id) ??
-                            false,
+                        hasWaitingQc:
+                            waitingQc.value?.containsKey(items[i].id) ?? false,
                       ),
                     ),
                   ),
@@ -360,16 +355,19 @@ class _SessionCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Chip(
                   label: const Text('Berjalan'),
-                  backgroundColor:
-                      theme.colorScheme.primaryContainer.withValues(alpha: .5),
+                  backgroundColor: theme.colorScheme.primaryContainer
+                      .withValues(alpha: .5),
                   labelStyle: TextStyle(
-                      fontSize: 11, color: theme.colorScheme.onPrimaryContainer),
+                    fontSize: 11,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ],
             ),
@@ -449,11 +447,20 @@ class _ErrorView extends StatelessWidget {
     return ListView(
       children: [
         const SizedBox(height: 140),
-        Icon(Icons.cloud_off, size: 44, color: Theme.of(context).colorScheme.error),
+        Icon(
+          Icons.cloud_off,
+          size: 44,
+          color: Theme.of(context).colorScheme.error,
+        ),
         const SizedBox(height: 12),
         Text(message, textAlign: TextAlign.center),
         const SizedBox(height: 12),
-        Center(child: OutlinedButton(onPressed: onRetry, child: const Text('Coba lagi'))),
+        Center(
+          child: OutlinedButton(
+            onPressed: onRetry,
+            child: const Text('Coba lagi'),
+          ),
+        ),
       ],
     );
   }
@@ -500,23 +507,30 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
       items.add((bahanBakuId: row.bahan!.id, jumlahTerpakai: jumlah));
     }
 
-    final result =
-        await ref.read(produksiSubmitProvider.notifier).selesai(
-              sessionId: widget.session.id,
-              hasilOutput: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
-              catatan: _catatanCtrl.text.trim(),
-              items: items,
-            );
+    final result = await ref
+        .read(produksiSubmitProvider.notifier)
+        .selesai(
+          sessionId: widget.session.id,
+          hasilOutput: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
+          catatan: _catatanCtrl.text.trim(),
+          items: items,
+        );
 
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
     if (result.delivered) {
-      messenger.showSnackBar(const SnackBar(content: Text('Sesi produksi selesai.')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Sesi produksi selesai.')),
+      );
     } else if (result.queued) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-      ));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
+        ),
+      );
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }
@@ -543,18 +557,20 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
             children: [
               Text(
                 'Selesaikan Sesi',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
-              Text('${widget.session.produkNama ?? ''} • ${widget.session.mesinNama ?? ''}'),
+              Text(
+                '${widget.session.produkNama ?? ''} • ${widget.session.mesinNama ?? ''}',
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _hasilCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
@@ -631,13 +647,15 @@ class _ItemsOverrideSection extends StatelessWidget {
                       child: DropdownButtonFormField<BahanBakuMaster>(
                         initialValue: rows[i].bahan,
                         isExpanded: true,
-                        decoration:
-                            const InputDecoration(labelText: 'Bahan baku'),
+                        decoration: const InputDecoration(
+                          labelText: 'Bahan baku',
+                        ),
                         items: [
                           for (final b in bahanList)
                             DropdownMenuItem(value: b, child: Text(b.nama)),
                         ],
-                        onChanged: (v) => setSheetState(() => rows[i].bahan = v),
+                        onChanged: (v) =>
+                            setSheetState(() => rows[i].bahan = v),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -646,7 +664,8 @@ class _ItemsOverrideSection extends StatelessWidget {
                       child: TextFormField(
                         controller: rows[i].jumlahCtrl,
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           labelText: 'Jumlah',
                           suffixText: rows[i].bahan?.satuan,
@@ -656,8 +675,7 @@ class _ItemsOverrideSection extends StatelessWidget {
                     IconButton(
                       tooltip: 'Hapus baris',
                       icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: () =>
-                          setSheetState(() => rows.removeAt(i)),
+                      onPressed: () => setSheetState(() => rows.removeAt(i)),
                     ),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,15 +31,23 @@ class NotificationHandler {
 
     final router = ref.read(appRouterProvider);
 
-    // 1. App dibuka dari killed state via notifikasi.
-    FirebaseMessaging.instance.getInitialMessage().then((message) {
-      if (message != null) _handleTap(router, message);
-    });
+    // Firebase Web bersifat opsional untuk local development. Android/iOS
+    // tetap memakai konfigurasi native saat Firebase sudah diinisialisasi.
+    if (Firebase.apps.isEmpty) return;
 
-    // 2. App di-background, user tap notifikasi.
-    _sub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      _handleTap(router, message);
-    });
+    try {
+      // 1. App dibuka dari killed state via notifikasi.
+      FirebaseMessaging.instance.getInitialMessage().then((message) {
+        if (message != null) _handleTap(router, message);
+      });
+
+      // 2. App di-background, user tap notifikasi.
+      _sub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        _handleTap(router, message);
+      });
+    } catch (error) {
+      debugPrint('[FCM] Notification handler disabled: $error');
+    }
   }
 
   void _handleTap(GoRouter router, RemoteMessage message) {

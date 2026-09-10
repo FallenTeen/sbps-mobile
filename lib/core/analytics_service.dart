@@ -1,8 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 class AnalyticsService {
-  static final _a = FirebaseAnalytics.instance;
-
   /// Panggil setiap login / ganti role
   static Future<void> setUser({
     required String role,
@@ -12,24 +11,43 @@ class AnalyticsService {
     await setPortal(portal);
   }
 
-  static Future<void> setRole(String role) =>
-      _a.setUserProperty(name: 'app_role', value: role);
+  static Future<void> setRole(String role) async {
+    if (Firebase.apps.isEmpty) return;
+    try {
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'app_role',
+        value: role,
+      );
+    } catch (_) {}
+  }
 
-  static Future<void> setPortal(String portal) =>
-      _a.setUserProperty(name: 'app_portal', value: portal);
+  static Future<void> setPortal(String portal) async {
+    if (Firebase.apps.isEmpty) return;
+    try {
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'app_portal',
+        value: portal,
+      );
+    } catch (_) {}
+  }
 
-  static Future<void> log(String name, [Map<String, Object>? p]) =>
-      _a.logEvent(name: name, parameters: p ?? const {});
+  static Future<void> log(String name, [Map<String, Object>? p]) async {
+    if (Firebase.apps.isEmpty) return;
+    try {
+      await FirebaseAnalytics.instance.logEvent(
+        name: name,
+        parameters: p ?? const {},
+      );
+    } catch (_) {}
+  }
 
   // — Event standar Fase 0 —
 
   // Presensi
   static Future<void> presensiCheckinTap(String radiusStatus) =>
       log('presensi_checkin_tap', {'radius_status': radiusStatus});
-  static Future<void> presensiCheckinQueued() =>
-      log('presensi_checkin_queued');
-  static Future<void> presensiCheckinSynced() =>
-      log('presensi_checkin_synced');
+  static Future<void> presensiCheckinQueued() => log('presensi_checkin_queued');
+  static Future<void> presensiCheckinSynced() => log('presensi_checkin_synced');
   static Future<void> radiusWarningShown() => log('radius_warning_shown');
 
   // Formulir
@@ -53,8 +71,7 @@ class AnalyticsService {
   static Future<void> servisAjuanSubmit() => log('servis_ajuan_submit');
 
   // Workshop (updated Fase 2 - proper workshop module)
-  static Future<void> workshopJobComplete() =>
-      log('workshop_job_complete');
+  static Future<void> workshopJobComplete() => log('workshop_job_complete');
 
   // Produksi
   static Future<void> produksiSesiMulai() => log('produksi_sesi_mulai');

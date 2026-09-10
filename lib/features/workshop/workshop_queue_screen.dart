@@ -174,8 +174,9 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                       return QueueCard(
                         leading: CircleAvatar(
                           radius: 20,
-                          backgroundColor:
-                              _statusColor(job.status).withValues(alpha: 0.12),
+                          backgroundColor: _statusColor(
+                            job.status,
+                          ).withValues(alpha: 0.12),
                           child: Icon(
                             _statusIcon(job.status),
                             size: 20,
@@ -186,8 +187,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                         subtitle: job.keluhan,
                         statusLabel: _statusLabel(job.status),
                         statusColor: _statusColor(job.status),
-                        onTap: () =>
-                            context.push('/workshop/job/${job.id}'),
+                        onTap: () => context.push('/workshop/job/${job.id}'),
                       );
                     },
                   ),
@@ -201,6 +201,9 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     final selected = _filter == value;
     return FilterChip(
       label: Text(label),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       selected: selected,
       onSelected: (_) => setState(() => _filter = value),
       selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),

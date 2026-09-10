@@ -30,8 +30,8 @@ class _CombinedSelectionScreenState
 
   Future<void> _loadSavedSelection() async {
     final portal = ref.read(selectedPortalProvider).value;
-    final role = ref.read(activeRoleProvider).value;
-    
+    final role = ref.read(activeRoleProvider);
+
     if (mounted) {
       setState(() {
         _selectedPortal = portal;
@@ -45,7 +45,7 @@ class _CombinedSelectionScreenState
 
     // Save portal
     await ref.read(selectedPortalProvider.notifier).select(_selectedPortal!);
-    
+
     // Save role
     await ref.read(activeRoleProvider.notifier).switchRole(_selectedRole!);
     ref.read(roleChoicePendingProvider.notifier).set(false);
@@ -65,7 +65,9 @@ class _CombinedSelectionScreenState
 
     // Auto-skip if only one portal and it's Presensi (no role needed)
     if (canPresensi && !canProyek) {
-      await ref.read(selectedPortalProvider.notifier).select(AppPortal.presensi);
+      await ref
+          .read(selectedPortalProvider.notifier)
+          .select(AppPortal.presensi);
       if (mounted) {
         context.go('/home');
       }
@@ -77,7 +79,7 @@ class _CombinedSelectionScreenState
       await ref.read(selectedPortalProvider.notifier).select(AppPortal.proyek);
       await ref.read(activeRoleProvider.notifier).switchRole(roles.first);
       ref.read(roleChoicePendingProvider.notifier).set(false);
-      
+
       if (mounted) {
         context.go('/home');
       }
@@ -90,9 +92,7 @@ class _CombinedSelectionScreenState
     final user = ref.watch(authControllerProvider).value;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final canPresensi = canAccessPresensi(user);
@@ -112,8 +112,11 @@ class _CombinedSelectionScreenState
           child: Column(
             children: [
               // Header
-              _Header(user: user, onLogout: () =>
-                  ref.read(authControllerProvider.notifier).logout()),
+              _Header(
+                user: user,
+                onLogout: () =>
+                    ref.read(authControllerProvider.notifier).logout(),
+              ),
 
               // Selection content
               Expanded(
@@ -143,7 +146,7 @@ class _CombinedSelectionScreenState
                     ],
 
                     // Role selection (only for Proyek portal)
-                    if ((canProyek && !canPresensi) || 
+                    if ((canProyek && !canPresensi) ||
                         _selectedPortal == AppPortal.proyek) ...[
                       const Text(
                         'Pilih Peran',
@@ -174,11 +177,15 @@ class _CombinedSelectionScreenState
                         onPressed: _canSubmit() ? _submit : null,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
-                          disabledBackgroundColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+                          disabledBackgroundColor: AppTheme.primaryColor
+                              .withValues(alpha: 0.3),
                         ),
                         child: const Text(
                           'Lanjut',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -273,17 +280,17 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text(
                   'Pilih pekerjaan Anda',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
                 ),
               ],
             ),
           ),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout_rounded, color: AppTheme.textTertiary),
+            icon: const Icon(
+              Icons.logout_rounded,
+              color: AppTheme.textTertiary,
+            ),
             onPressed: onLogout,
           ),
         ],
@@ -293,10 +300,7 @@ class _Header extends StatelessWidget {
 }
 
 class _PortalSelection extends StatelessWidget {
-  const _PortalSelection({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _PortalSelection({required this.selected, required this.onSelected});
 
   final AppPortal? selected;
   final ValueChanged<AppPortal> onSelected;
@@ -309,7 +313,8 @@ class _PortalSelection extends StatelessWidget {
           icon: Icons.fingerprint_rounded,
           title: 'SBPS Presensi',
           subtitle: 'Presensi & kehadiran',
-          description: 'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
+          description:
+              'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
           gradient: const LinearGradient(
             colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
             begin: Alignment.topLeft,
@@ -323,7 +328,8 @@ class _PortalSelection extends StatelessWidget {
           icon: Icons.engineering_rounded,
           title: 'SBPS Proyek',
           subtitle: 'Operasional & proyek',
-          description: 'Kelola armada, produksi, dashboard, dan modul operasional lainnya.',
+          description:
+              'Kelola armada, produksi, dashboard, dan modul operasional lainnya.',
           gradient: const LinearGradient(
             colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
             begin: Alignment.topLeft,
@@ -365,7 +371,9 @@ class _PortalOption extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         elevation: isSelected ? 2 : 1,
-        shadowColor: (gradient as LinearGradient).colors.first.withValues(alpha: 0.15),
+        shadowColor: (gradient as LinearGradient).colors.first.withValues(
+          alpha: 0.15,
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,
@@ -374,7 +382,7 @@ class _PortalOption extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected 
+                color: isSelected
                     ? (gradient as LinearGradient).colors.first
                     : AppTheme.borderColor,
                 width: isSelected ? 2 : 1,
@@ -391,17 +399,14 @@ class _PortalOption extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: (gradient as LinearGradient).colors.first.withValues(alpha: 0.3),
+                        color: (gradient as LinearGradient).colors.first
+                            .withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Icon(
-                    icon,
-                    size: 28,
-                    color: Colors.white,
-                  ),
+                  child: Icon(icon, size: 28, color: Colors.white),
                 ),
                 const SizedBox(width: 16),
                 // Text content
@@ -447,7 +452,8 @@ class _PortalOption extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: (gradient as LinearGradient).colors.first.withValues(alpha: 0.1),
+                      color: (gradient as LinearGradient).colors.first
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -519,9 +525,7 @@ class _RoleOption extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected 
-                  ? AppTheme.primaryColor 
-                  : AppTheme.borderColor,
+              color: isSelected ? AppTheme.primaryColor : AppTheme.borderColor,
               width: isSelected ? 2 : 1,
             ),
           ),

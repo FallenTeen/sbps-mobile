@@ -4,42 +4,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
-import '../../shared/widgets/app_empty_state.dart';
+import '../../core/photo_compression_service.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
+import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
-import '../../core/photo_compression_service.dart';
-
 import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
 import 'formulir_providers.dart';
 import 'models/formulir_lapangan.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import 'riwayat_formulir_screen.dart';
 
-import 'package:flutter/material.dart';
-
-/// Formulir Lapangan harian (Fase A1.5).
-/// - Belum check-in → diblokir dengan pesan jelas.
-/// - Sudah terisi hari ini → mode read-only.
-/// - Belum diisi → form teks + maks 5 foto, submit via outbox.
 class FormulirScreen extends ConsumerWidget {
   const FormulirScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final presensiAsync = ref.watch(hariIniProvider);
-
+    final presensi = ref.watch(hariIniProvider);
     return Semantics(
-      label: 'Formulir Lapangan — aplikasi presensi lapangan SBPS',
+      label: 'Formulir Lapangan, aplikasi presensi lapangan SBPS',
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Formulir Lapangan'),
           actions: [
-            Semantics(button: true, label: 'Portal switch', child: const PortalSwitchButton()),
-            Semantics(button: true, label: 'Riwayat formulir', child: IconButton(
+            const PortalSwitchButton(),
+            IconButton(
               tooltip: 'Riwayat formulir',
               icon: const Icon(Icons.history),
               onPressed: () => Navigator.of(context).push(
@@ -47,10 +39,11 @@ class FormulirScreen extends ConsumerWidget {
                   builder: (_) => const RiwayatFormulirScreen(),
                 ),
               ),
-            ),)],
-          ),
+            ),
+          ],
+        ),
         body: ResponsiveCenter(
-          child: presensiAsync.when(
+          child: presensi.when(
             loading: () => const Padding(
               padding: EdgeInsets.all(16),
               child: SkeletonDetailView(),
@@ -62,20 +55,17 @@ class FormulirScreen extends ConsumerWidget {
               actionLabel: 'Coba lagi',
               onAction: () => ref.invalidate(hariIniProvider),
             ),
-            data: (presensi) {
-              if (presensi.status == PresensiStatus.belumCheckIn) {
-                return AppEmptyState(
-                  icon: Icons.login,
-                  title: 'Belum check-in hari ini',
-                  subtitle:
-                      'Formulir lapangan hanya bisa diisi setelah Anda melakukan '
-                      'check-in presensi.',
-                  actionLabel: 'Kembali',
-                  onAction: () => Navigator.of(context).maybePop(),
-                );
-              }
-              return const _FormulirBody();
-            },
+            data: (value) => value.status == PresensiStatus.belumCheckIn
+                ? AppEmptyState(
+                    icon: Icons.login,
+                    title: 'Belum check-in hari ini',
+                    subtitle:
+                        'Formulir lapangan hanya bisa diisi setelah Anda '
+                        'melakukan check-in presensi.',
+                    actionLabel: 'Kembali',
+                    onAction: () => Navigator.of(context).maybePop(),
+                  )
+                : const _FormulirBody(),
           ),
         ),
       ),
@@ -83,40 +73,40 @@ class FormulirScreen extends ConsumerWidget {
   }
 }
 
-class _FormulirBody extends ConsumerWidget {  const _FormulirBody();
+class _FormulirBody extends ConsumerWidget {
+  const _FormulirBody();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formulirAsync = ref.watch(formulirHariIniProvider);
-
+    final formulir = ref.watch(formulirHariIniProvider);
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(formulirHariIniProvider),
-      child: formulirAsync.when(
+      child: formulir.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => ListView(children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                Text('Gagal memuat formulir hari ini.'),
-                const SizedBox(height: 8),
-                FilledButton.tonal(
-                  onPressed: () => ref.invalidate(formulirHariIniProvider),
-                  child: const Text('Coba lagi'),
-                ),
-              ],
+        error: (error, _) => ListView(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Text('Gagal memuat formulir hari ini.'),
+                  const SizedBox(height: 8),
+                  FilledButton.tonal(
+                    onPressed: () => ref.invalidate(formulirHariIniProvider),
+                    child: const Text('Coba lagi'),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ]),
-        data: (formulir) => formulir != null
-            ? _FormulirSudahTerisi(formulir)
-            : const _FormulirInput(),
+          ],
+        ),
+        data: (value) => value == null
+            ? const _FormulirInput()
+            : _FormulirSudahTerisi(value),
       ),
     );
   }
 }
-
-// -- Mode sudah terisi (read-only) -------------------------------------------
 
 class _FormulirSudahTerisi extends StatelessWidget {
   const _FormulirSudahTerisi(this.formulir);
@@ -125,34 +115,23 @@ class _FormulirSudahTerisi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
-        Row(
-          children: [
-            Semantics(label: 'Ceklis sukses', child: Icon(Icons.check_circle_outline, color: theme.colorScheme.primary)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Semantics(label: 'Formulir sudah terisi hari ini', child: Text('Formulir hari ini sudah terisi.',
-                  style: theme.textTheme.titleMedium)),
-            ),
-          ],
+        Text(
+          'Formulir hari ini sudah terisi.',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        if ((formulir.tanggal ?? '').isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Semantics(label: 'Tanggal formulir', child: Text(formulir.tanggal!, style: theme.textTheme.bodySmall)),
-          ),
+        if ((formulir.tanggal ?? '').isNotEmpty) Text(formulir.tanggal!),
         const SizedBox(height: 12),
-        _Baris(label: 'Aktivitas', nilai: formulir.aktivitasDilakukan),
-        _Baris(label: 'Kondisi area', nilai: formulir.kondisiArea),
-        _Baris(label: 'Kendala', nilai: formulir.kendala),
-        _Baris(label: 'Catatan tambahan', nilai: formulir.catatanTambahan),
+        _ValueRow('Aktivitas', formulir.aktivitasDilakukan),
+        _ValueRow('Kondisi area', formulir.kondisiArea),
+        _ValueRow('Kendala', formulir.kendala),
+        _ValueRow('Catatan tambahan', formulir.catatanTambahan),
         if (formulir.foto.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Semantics(label: 'Foto dokumentasi', child: Text('Foto', style: theme.textTheme.titleSmall)),
+          const Text('Foto'),
           const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
@@ -163,8 +142,8 @@ class _FormulirSudahTerisi extends StatelessWidget {
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
             ),
-            itemBuilder: (context, i) =>
-                Image.network(formulir.foto[i], fit: BoxFit.cover),
+            itemBuilder: (context, index) =>
+                Image.network(formulir.foto[index], fit: BoxFit.cover),
           ),
         ],
       ],
@@ -172,55 +151,24 @@ class _FormulirSudahTerisi extends StatelessWidget {
   }
 }
 
-class _Baris extends StatelessWidget {
-  const _Baris({required this.label, this.nilai});
+class _ValueRow extends StatelessWidget {
+  const _ValueRow(this.label, this.value);
 
   final String label;
-  final String? nilai;
+  final String? value;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(label: label, child: Text(label, style: theme.textTheme.labelMedium)),
-          const SizedBox(height: 2),
-          if (nilai == null || nilai!.isEmpty)
-            Semantics(label: 'Kosong', child: Text('-', style: theme.textTheme.bodySmall))
-          else
-            Semantics(label: 'Nilai: $nilai', child: Text(nilai!, style: theme.textTheme.bodySmall)),
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+          Text(value == null || value!.isEmpty ? '-' : value!),
         ],
       ),
     );
-  }
-}
-
-// -- Form input --------------------------------------------------------------
-
-/// Badge status kecil di thumbnail: kompres (spinner) → siap kirim
-/// (centang). State "terkirim" terlihat dari hilangnya thumbnail —
-/// setelah sukses layar otomatis pindah ke mode read-only.
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({this.phase});
-
-  final UploadPhase? phase;
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (phase) {
-      UploadPhase.compressing => const SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      UploadPhase.sending => Icon(Icons.cloud_upload,
-          size: 18, color: Theme.of(context).colorScheme.primary),
-      null => Icon(Icons.check_circle,
-          size: 18, color: Colors.green.shade600),
-    };
   }
 }
 
@@ -236,9 +184,8 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   final _kondisi = TextEditingController();
   final _kendala = TextEditingController();
   final _catatan = TextEditingController();
-
-  final _fotoLokal = <String>[];
-  static const _maksFoto = 5;
+  final _foto = <String>[];
+  static const _maxFoto = 5;
 
   @override
   void dispose() {
@@ -249,151 +196,95 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     super.dispose();
   }
 
-  Future<void> _tambahFoto() async {
-    final sisa = _maksFoto - _fotoLokal.length;
-    if (sisa <= 0) return;
+  Future<void> _addPhoto() async {
+    if (_foto.length >= _maxFoto) return;
     final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !mounted) return;
-    setState(() {
-      _fotoLokal.add(photo.path);
-    });
+    setState(() => _foto.add(photo.path));
   }
 
   Future<void> _submit() async {
-    final messenger = ScaffoldMessenger.of(context);
-final result = await ref.read(formulirSubmitProvider.notifier).submit(
-           aktivitasDilakukan: _aktivitas.text,
-           kondisiArea: _kondisi.text,
-           kendala: _kendala.text,
-           catatanTambahan: _catatan.text,
-           photoPaths: List.unmodifiable(_fotoLokal),
-         );
-
-     AnalyticsService.formulirSubmit();
-     if (result.delivered) {
-       messenger.showSnackBar(
-           const SnackBar(content: Text('Formulir berhasil disimpan.')));
-     } else if (result.queued) {
-      messenger.showSnackBar(const SnackBar(
-        content:
-            Text('Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-      ));
-    } else if (result.error != null && mounted) {
-      messenger.showSnackBar(SnackBar(content: Text(result.error!)));
-    }
+    final result = await ref
+        .read(formulirSubmitProvider.notifier)
+        .submit(
+          aktivitasDilakukan: _aktivitas.text,
+          kondisiArea: _kondisi.text,
+          kendala: _kendala.text,
+          catatanTambahan: _catatan.text,
+          photoPaths: List.unmodifiable(_foto),
+        );
+    AnalyticsService.formulirSubmit();
+    if (!mounted) return;
+    final message = result.delivered
+        ? 'Formulir berhasil disimpan.'
+        : result.queued
+        ? 'Tersimpan offline - akan dikirim otomatis saat online.'
+        : result.error ?? 'Formulir gagal disimpan.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final submitState = ref.watch(formulirSubmitProvider);
     final busyPhase = submitState.busy ? submitState.phase : null;
     final busy = busyPhase != null;
-
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
-        Semantics(
-          label: 'Field aktivitas dilakukan',
-          child: TextField(
-            controller: _aktivitas,
-            maxLength: 5000,
-            minLines: 3,
-            maxLines: 6,
-            decoration: const InputDecoration(
-              labelText: 'Aktivitas dilakukan *',
-              hintText: 'Uraikan pekerjaan hari ini...',
-              border: OutlineInputBorder(),
-            ),
-          ),
+        _field(
+          _aktivitas,
+          'Aktivitas dilakukan *',
+          'Aktivitas dilakukan',
+          3,
+          6,
+          5000,
         ),
         const SizedBox(height: 12),
-        Semantics(
-          label: 'Field kondisi area',
-          child: TextField(
-            controller: _kondisi,
-            maxLength: 2000,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Kondisi area',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
+        _field(_kondisi, 'Kondisi area', 'Kondisi area', 2, 4, 2000),
         const SizedBox(height: 12),
-        Semantics(
-          label: 'Field kendala',
-          child: TextField(
-            controller: _kendala,
-            maxLength: 2000,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Kendala',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
+        _field(_kendala, 'Kendala', 'Kendala', 2, 4, 2000),
         const SizedBox(height: 12),
-        Semantics(
-          label: 'Field catatan tambahan',
-          child: TextField(
-            controller: _catatan,
-            maxLength: 2000,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Catatan tambahan',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
+        _field(_catatan, 'Catatan tambahan', 'Catatan tambahan', 2, 4, 2000),
         const SizedBox(height: 8),
-Row(
+        Row(
           children: [
-            Semantics(label: 'Counter foto', child: Text('Foto (${_fotoLokal.length}/$_maksFoto)', style: theme.textTheme.labelLarge)),
+            Text('Foto (${_foto.length}/$_maxFoto)'),
             const Spacer(),
-            if (_fotoLokal.length < _maksFoto)
-              Semantics(button: true, label: 'Tambah foto', child: TextButton.icon(
-                onPressed: busy ? null : _tambahFoto,
+            if (_foto.length < _maxFoto)
+              TextButton.icon(
+                onPressed: busy ? null : _addPhoto,
                 icon: const Icon(Icons.add_a_photo_outlined),
                 label: const Text('Tambah'),
               ),
-            ),
           ],
         ),
-          ),
-        ],
-        if (_fotoLokal.isNotEmpty)
+        if (_foto.isNotEmpty)
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _fotoLokal.length,
+            itemCount: _foto.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
             ),
-            itemBuilder: (context, i) {
-              final heroTag = 'formulir_draft_photo_$i';
-              return Semantics(
-                button: true,
-                label: 'Foto ${i + 1}, tap untuk preview',
-                child: GestureDetector(
-                  onTap: () => PhotoViewerDialog.show(
-                    context: context,
-                    heroTag: heroTag,
-                    filePath: _fotoLokal[i],
-                    title: 'Preview Foto ${i + 1}',
-                  ),
-                  child: Hero(
-                    tag: heroTag,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.file(File(_fotoLokal[i]), fit: BoxFit.cover),
-                    ),
+            itemBuilder: (context, index) {
+              final tag = 'formulir_draft_photo_$index';
+              return GestureDetector(
+                onTap: () => PhotoViewerDialog.show(
+                  context: context,
+                  heroTag: tag,
+                  filePath: _foto[index],
+                  title: 'Preview Foto ${index + 1}',
+                ),
+                child: Hero(
+                  tag: tag,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.file(File(_foto[index]), fit: BoxFit.cover),
                   ),
                 ),
               );
@@ -408,7 +299,8 @@ Row(
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.send_outlined),
             label: Text(switch (busyPhase) {
               UploadPhase.compressing => 'Mengompres foto...',
@@ -418,6 +310,29 @@ Row(
           ),
         ),
       ],
+    );
+  }
+
+  Widget _field(
+    TextEditingController controller,
+    String label,
+    String semanticsLabel,
+    int minLines,
+    int maxLines,
+    int maxLength,
+  ) {
+    return Semantics(
+      label: semanticsLabel,
+      child: TextField(
+        controller: controller,
+        maxLength: maxLength,
+        minLines: minLines,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+      ),
     );
   }
 }

@@ -16,7 +16,8 @@ class RiwayatProduksiScreen extends ConsumerStatefulWidget {
   const RiwayatProduksiScreen({super.key});
 
   @override
-  ConsumerState<RiwayatProduksiScreen> createState() => _RiwayatProduksiScreenState();
+  ConsumerState<RiwayatProduksiScreen> createState() =>
+      _RiwayatProduksiScreenState();
 }
 
 class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
@@ -30,11 +31,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     'Semua',
   ];
 
-  final List<String> _statusOptions = const [
-    'Semua',
-    'Berjalan',
-    'Selesai',
-  ];
+  final List<String> _statusOptions = const ['Semua', 'Berjalan', 'Selesai'];
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +103,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
   void _handlePeriodChange(String? period, WidgetRef ref) {
     final now = DateTime.now();
     String? tanggal;
-    
+
     switch (period) {
       case 'Hari Ini':
         tanggal = now.toIso8601String().substring(0, 10);
@@ -123,11 +120,11 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
       default:
         tanggal = null;
     }
-    
+
     final currentFilter = ref.read(riwayatFilterProvider);
-    ref.read(riwayatFilterProvider.notifier).set(
-      RiwayatFilter(tanggal: tanggal, mesinId: currentFilter.mesinId),
-    );
+    ref
+        .read(riwayatFilterProvider.notifier)
+        .set(RiwayatFilter(tanggal: tanggal, mesinId: currentFilter.mesinId));
   }
 
   void _handleStatusChange(String? status, WidgetRef ref) {
@@ -153,7 +150,8 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
             title: 'Gagal Memuat Riwayat',
             subtitle: state.error,
             actionLabel: 'Coba Lagi',
-            onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
+            onAction: () =>
+                ref.read(riwayatProduksiProvider.notifier).refresh(),
           ),
         ],
       );
@@ -184,7 +182,8 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
               child: FilledButton.tonal(
                 onPressed: state.loading
                     ? null
-                    : () => ref.read(riwayatProduksiProvider.notifier).loadMore(),
+                    : () =>
+                          ref.read(riwayatProduksiProvider.notifier).loadMore(),
                 child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
               ),
             ),
@@ -216,9 +215,7 @@ class _PeriodFilterSection extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,6 +237,12 @@ class _PeriodFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: const VisualDensity(
+                      horizontal: -2,
+                      vertical: -2,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
@@ -247,11 +250,9 @@ class _PeriodFilterSection extends StatelessWidget {
                     selectedColor: Colors.teal.withValues(alpha: 0.1),
                     checkmarkColor: Colors.teal,
                     labelStyle: TextStyle(
-                      color: selected == option 
-                          ? Colors.teal 
-                          : Colors.black87,
-                      fontWeight: selected == option 
-                          ? FontWeight.w600 
+                      color: selected == option ? Colors.teal : Colors.black87,
+                      fontWeight: selected == option
+                          ? FontWeight.w600
                           : FontWeight.normal,
                     ),
                   ),
@@ -282,9 +283,7 @@ class _StatusFilterSection extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,6 +305,12 @@ class _StatusFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: const VisualDensity(
+                      horizontal: -2,
+                      vertical: -2,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
@@ -313,11 +318,9 @@ class _StatusFilterSection extends StatelessWidget {
                     selectedColor: Colors.teal.withValues(alpha: 0.1),
                     checkmarkColor: Colors.teal,
                     labelStyle: TextStyle(
-                      color: selected == option 
-                          ? Colors.teal 
-                          : Colors.black87,
-                      fontWeight: selected == option 
-                          ? FontWeight.w600 
+                      color: selected == option ? Colors.teal : Colors.black87,
+                      fontWeight: selected == option
+                          ? FontWeight.w600
                           : FontWeight.normal,
                     ),
                   ),
@@ -331,68 +334,67 @@ class _StatusFilterSection extends StatelessWidget {
   }
 }
 
-  Widget _buildList(
-    BuildContext context,
-    WidgetRef ref,
-    RiwayatProduksiState state,
-    RiwayatFilter filter,
-  ) {
-    if (state.loading && state.items.isEmpty && state.error == null) {
-      return const SkeletonListView(itemCount: 5);
-    }
-    if (state.error != null && state.items.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          AppEmptyState(
-            icon: Icons.cloud_off_outlined,
-            title: 'Gagal Memuat Riwayat',
-            subtitle: state.error,
-            actionLabel: 'Coba Lagi',
-            onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
-          ),
-        ],
-      );
-    }
-    if (state.items.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          AppEmptyState(
-            icon: Icons.inbox_outlined,
-            title: 'Belum Ada Riwayat',
-            subtitle: 'Belum ada data riwayat produksi untuk filter ini.',
-          ),
-        ],
-      );
-    }
-
-    return ListView.separated(
+Widget _buildList(
+  BuildContext context,
+  WidgetRef ref,
+  RiwayatProduksiState state,
+  RiwayatFilter filter,
+) {
+  if (state.loading && state.items.isEmpty && state.error == null) {
+    return const SkeletonListView(itemCount: 5);
+  }
+  if (state.error != null && state.items.isEmpty) {
+    return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      itemCount: state.items.length + (state.hasMore ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, i) {
-        if (i >= state.items.length) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: FilledButton.tonal(
-                onPressed: state.loading
-                    ? null
-                    : () => ref.read(riwayatProduksiProvider.notifier).loadMore(),
-                child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
-              ),
-            ),
-          );
-        }
-        return StaggeredEntrance(
-          index: i,
-          child: _RiwayatCard(session: state.items[i]),
-        );
-      },
+      children: [
+        AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal Memuat Riwayat',
+          subtitle: state.error,
+          actionLabel: 'Coba Lagi',
+          onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
+        ),
+      ],
     );
   }
+  if (state.items.isEmpty) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: const [
+        AppEmptyState(
+          icon: Icons.inbox_outlined,
+          title: 'Belum Ada Riwayat',
+          subtitle: 'Belum ada data riwayat produksi untuk filter ini.',
+        ),
+      ],
+    );
+  }
+
+  return ListView.separated(
+    physics: const AlwaysScrollableScrollPhysics(),
+    padding: const EdgeInsets.all(16),
+    itemCount: state.items.length + (state.hasMore ? 1 : 0),
+    separatorBuilder: (_, _) => const SizedBox(height: 10),
+    itemBuilder: (context, i) {
+      if (i >= state.items.length) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: FilledButton.tonal(
+              onPressed: state.loading
+                  ? null
+                  : () => ref.read(riwayatProduksiProvider.notifier).loadMore(),
+              child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
+            ),
+          ),
+        );
+      }
+      return StaggeredEntrance(
+        index: i,
+        child: _RiwayatCard(session: state.items[i]),
+      );
+    },
+  );
 }
 
 class _RiwayatCard extends StatelessWidget {
@@ -404,7 +406,9 @@ class _RiwayatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        title: Text('${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}'),
+        title: Text(
+          '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
+        ),
         subtitle: Text(
           '${fmtTanggalWaktu(session.mulai?.toLocal())} → ${fmtTanggalWaktu(session.selesai?.toLocal())}\n'
           'Titik: ${session.titikNama ?? '-'}',
@@ -415,14 +419,18 @@ class _RiwayatCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${fmtNum(session.hasilOutput)} ${session.satuanOutput ?? ''}'.trim(),
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              '${fmtNum(session.hasilOutput)} ${session.satuanOutput ?? ''}'
+                  .trim(),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             Chip(
               visualDensity: VisualDensity.compact,
-              label: Text(session.berjalan ? 'Berjalan' : 'Selesai',
-                  style: const TextStyle(fontSize: 10)),
+              label: Text(
+                session.berjalan ? 'Berjalan' : 'Selesai',
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
           ],
         ),
