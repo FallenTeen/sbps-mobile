@@ -30,7 +30,7 @@ class _WorkshopTodoScreenState extends ConsumerState<WorkshopTodoScreen> {
   bool _isSubmitting = false;
 
   Future<void> _takePhotoForTodo(String todoId) async {
-    final photo = await ref.takeWatermarkedPhoto();
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null) return;
 
     setState(() {

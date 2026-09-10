@@ -87,6 +87,7 @@ class ArmadaRepository {
       id: _uuid.v4(),
       clientUuid: _uuid.v4(),
       endpoint: PendingEndpoint.armadaChecklist,
+      payloadJson: {},
       payloadData: {
         'armada_id': armadaId,
         'kondisi_baik': kondisiBaik,
@@ -115,6 +116,7 @@ class ArmadaRepository {
       id: _uuid.v4(),
       clientUuid: _uuid.v4(),
       endpoint: PendingEndpoint.armadaOdoAwal,
+      payloadJson: {},
       payloadData: {
         'armada_id': armadaId,
         'titik_id': titikId,

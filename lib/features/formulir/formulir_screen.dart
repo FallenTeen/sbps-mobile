@@ -286,7 +286,7 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   Future<void> _tambahFoto() async {
     final sisa = _maksFoto - _fotoLokal.length;
     if (sisa <= 0) return;
-    final photo = await ref.takeWatermarkedPhoto();
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !mounted) return;
     setState(() {
       _fotoLokal.add(photo.path);

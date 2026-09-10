@@ -41,7 +41,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
           const SnackBar(content: Text('Maksimal 10 foto.')));
       return;
     }
-    final photo = await ref.takeWatermarkedPhoto();
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null) return;
     setState(() => _paths.add(photo.path));
   }

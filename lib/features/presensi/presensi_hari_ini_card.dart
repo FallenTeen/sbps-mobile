@@ -53,7 +53,7 @@ class PresensiHariIniCard extends ConsumerWidget {
   ) async {
     if (!context.mounted) return;
 
-    final photo = await ref.takeWatermarkedPhoto();
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);

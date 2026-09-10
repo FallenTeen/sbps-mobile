@@ -40,7 +40,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   }
 
   Future<void> _takePhoto(String itemLabel) async {
-    final photo = await ref.takeWatermarkedPhoto();
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null) return;
     setState(() {
       _photos[itemLabel] = photo.path;
