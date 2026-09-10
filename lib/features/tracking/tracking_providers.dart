@@ -9,6 +9,7 @@ import '../../core/app_config.dart';
 import '../auth/auth_providers.dart';
 import '../portal/portal_providers.dart';
 import '../presensi/presensi_providers.dart';
+import 'background_location_service.dart';
 import 'location_buffer_service.dart';
 import 'models.dart';
 import 'tracking_repository.dart';
@@ -54,7 +55,7 @@ class TrackingStatus {
 }
 
 /// Scheduler Live Tracking (Fase A2.4):
-/// - aktif HANYA untuk flavor proyek + role `Mandor Titik` yang login;
+/// - aktif HANYA untuk portal proyek + role `Mandor Titik` yang login;
 /// - buffer GPS via [LocationBufferService];
 /// - kirim batch tiap 4 menit ATAU begitu online kembali;
 /// - satu batch = satu batch_id: dibuat sekali sebelum kirim pertama dan
@@ -110,6 +111,15 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       return;
     }
 
+    // Start background location service untuk tracking berkelanjutan
+    // saat app di-minimize.
+    try {
+      await BackgroundLocationService.instance.initialize();
+      await BackgroundLocationService.instance.startTracking();
+    } catch (_) {
+      // Background service gagal — foreground tracking tetap jalan.
+    }
+
     state = state.copyWith(
       running: true,
       message: null,
@@ -126,6 +136,10 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
   void _stop({String? message}) {
     _teardown();
+
+    // Stop background location service.
+    BackgroundLocationService.instance.stopTracking();
+
     state = state.copyWith(
       running: false,
       message: message ??
