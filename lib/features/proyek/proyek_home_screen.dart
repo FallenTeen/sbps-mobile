@@ -288,6 +288,10 @@ class _ModuleCard extends StatelessWidget {
         context.push('/armada');
       case 'kontraktor':
         context.push('/kontraktor/proyek');
+      case 'workshop':
+        context.push('/workshop');
+      case 'inventory':
+        context.push('/inventory');
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${module.label} belum tersedia')),

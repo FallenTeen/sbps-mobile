@@ -20,6 +20,12 @@ import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/armada/riwayat_servis_screen.dart';
 import '../features/armada/ritase_input_screen.dart';
 import '../features/armada/workshop_todo_screen.dart';
+import '../features/armada/unit_saya_home_screen.dart';
+import '../features/workshop/workshop_queue_screen.dart';
+import '../features/workshop/workshop_job_detail_screen.dart';
+import '../features/inventory/inventory_home_screen.dart';
+import '../features/inventory/inventory_stok_screen.dart';
+import '../features/inventory/inventory_opname_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
 import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
@@ -116,10 +122,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             return '/home';
           }
 
-          // Guard modul armada (khusus Driver Armada).
+          // Guard modul armada.
           if (location.startsWith('/armada') &&
               !RolePermissions.canAccess(
                   ref.read(activeRoleProvider), 'armada')) {
+            return '/home';
+          }
+
+          // Guard modul workshop.
+          if (location.startsWith('/workshop') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'workshop')) {
+            return '/home';
+          }
+
+          // Guard modul inventory.
+          if (location.startsWith('/inventory') &&
+              !RolePermissions.canAccess(
+                  ref.read(activeRoleProvider), 'inventory')) {
             return '/home';
           }
 
@@ -394,6 +414,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: DetailProyekKontrakScreen(
             id: state.pathParameters['id']!,
           ),
+        ),
+      ),
+      // ── Unit Saya (Driver Armada workflow) ──
+      GoRoute(
+        path: '/armada/unit-saya',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const UnitSayaHomeScreen(),
+        ),
+      ),
+      // ── Workshop ──
+      GoRoute(
+        path: '/workshop',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const WorkshopQueueScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/workshop/job/:id',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: WorkshopJobDetailScreen(
+            jobId: state.pathParameters['id']!,
+          ),
+        ),
+      ),
+      // ── Inventory ──
+      GoRoute(
+        path: '/inventory',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const InventoryHomeScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/inventory/stok',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const InventoryStokScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/inventory/opname',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const InventoryOpnameScreen(),
         ),
       ),
     ],

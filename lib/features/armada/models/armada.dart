@@ -11,6 +11,7 @@ class ArmadaSaya {
     required this.platNomor,
     this.kodeUnit,
     this.jenis,
+    this.tipeUnit,
     this.modelTarif,
     this.tahun,
     this.kapasitas,
@@ -24,6 +25,11 @@ class ArmadaSaya {
   final String platNomor;
   final String? kodeUnit;
   final String? jenis;
+
+  /// Tipe unit: 'kendaraan' atau 'alat_berat_stasioner'.
+  /// Menentukan apakah unit pakai ODO (km) atau Jam Operasional (HM).
+  final String? tipeUnit;
+
   final String? modelTarif;
   final int? tahun;
   final String? kapasitas;
@@ -31,6 +37,12 @@ class ArmadaSaya {
   final String? unitBisnis;
   final String? titikId;
   final String? titikNama;
+
+  /// True jika unit ini alat berat stasioner (pakai Jam Operasional, bukan ODO).
+  bool get isAlatBerat => tipeUnit == 'alat_berat_stasioner';
+
+  /// True jika unit ini kendaraan (pakai ODO/km).
+  bool get isKendaraan => !isAlatBerat;
 
   factory ArmadaSaya.fromJson(Map<String, dynamic> json) {
     final titik = json['titik'] is Map
@@ -41,6 +53,7 @@ class ArmadaSaya {
       platNomor: json['plat_nomor']?.toString() ?? '',
       kodeUnit: json['kode_unit']?.toString(),
       jenis: json['jenis']?.toString(),
+      tipeUnit: json['tipe_unit']?.toString(),
       modelTarif: json['model_tarif']?.toString(),
       tahun: (json['tahun'] as num?)?.toInt(),
       kapasitas: json['kapasitas']?.toString(),

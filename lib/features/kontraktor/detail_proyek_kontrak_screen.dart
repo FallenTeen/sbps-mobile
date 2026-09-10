@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/formatters.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -138,7 +139,7 @@ class _DetailProyekKontrakScreenState
                         children: [
                           const Text('Rencana:'),
                           Text(
-                            'Rp ${data.totalRencana.toStringAsFixed(0)}',
+                            fmtRp(data.totalRencana),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -149,7 +150,7 @@ class _DetailProyekKontrakScreenState
                         children: [
                           const Text('Realisasi:'),
                           Text(
-                            'Rp ${data.totalRealisasi.toStringAsFixed(0)}',
+                            fmtRp(data.totalRealisasi),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -166,7 +167,7 @@ class _DetailProyekKontrakScreenState
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          '${data.persentaseRab.toStringAsFixed(1)}%',
+                          '${fmtNum(data.persentaseRab)}%',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -203,7 +204,7 @@ class _DetailProyekKontrakScreenState
                                   style: const TextStyle(fontWeight: FontWeight.w500),
                                 ),
                                 Text(
-                                  '${prod.totalOutput.toStringAsFixed(0)} ${prod.satuan} (${prod.sesiCount} sesi)',
+                                  '${fmtNum(prod.totalOutput)} ${prod.satuan} (${prod.sesiCount} sesi)',
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.outline,
                                   ),

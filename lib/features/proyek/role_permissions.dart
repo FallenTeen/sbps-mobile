@@ -42,6 +42,16 @@ const kProyekModules = <ProyekModule>[
     label: 'Portal Kontrak',
     icon: Icons.business_center_outlined,
   ),
+  ProyekModule(
+    key: 'workshop',
+    label: 'Workshop',
+    icon: Icons.build_rounded,
+  ),
+  ProyekModule(
+    key: 'inventory',
+    label: 'Inventory',
+    icon: Icons.inventory_2_outlined,
+  ),
 ];
 
 /// Permission matrix sisi client — HANYA lapisan UX untuk navigasi/guard
@@ -52,13 +62,14 @@ class RolePermissions {
   const RolePermissions._();
 
   static const Map<String, Set<String>> _matrix = <String, Set<String>>{
-    // Fase A2.6: Mandor Titik dapat overview + armada-status (non-finansial).
     'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
     'Kontraktor': {'dashboard', 'kontraktor'},
-    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan', 'armada', 'kontraktor'},
+    'Owner': {'produksi', 'qc', 'tracking', 'dashboard', 'keuangan', 'armada', 'kontraktor', 'workshop', 'inventory'},
     'Admin Keuangan': {'tracking', 'dashboard', 'keuangan', 'armada', 'kontraktor'},
     'Driver Armada': {'armada'},
     'Kepala Divisi Armada': {'armada', 'dashboard'},
+    'Workshop': {'workshop'},
+    'Inventory': {'inventory'},
   };
 
   static Set<String> modulesFor(String? role) =>

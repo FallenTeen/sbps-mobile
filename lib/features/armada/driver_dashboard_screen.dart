@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -296,7 +297,7 @@ class _TodaySummarySection extends StatelessWidget {
                     child: _SummaryTile(
                       icon: Icons.payments_outlined,
                       label: 'Total Upah',
-                      value: _formatRupiah(totalUpah),
+                      value: fmtRpCompact(totalUpah),
                       color: AppTheme.successColor,
                     ),
                   ),
@@ -408,7 +409,7 @@ class _ChecklistSection extends StatelessWidget {
                                   ),
                                   Text(
                                     c.sudahIsi
-                                        ? 'Sudah diisi${c.odoKm != null ? ' • ODO: ${c.odoKm!.toStringAsFixed(0)} km' : ''}'
+                                        ? 'Sudah diisi${c.odoKm != null ? ' • ODO: ${fmtKm(c.odoKm!)}' : ''}'
                                         : 'Belum diisi',
                                     style: const TextStyle(
                                       fontSize: 12,
@@ -562,7 +563,7 @@ class _RitaseTile extends StatelessWidget {
                 ),
               if (ritase.totalUpahRit != null)
                 Text(
-                  _formatRupiah(ritase.totalUpahRit!),
+                  fmtRpCompact(ritase.totalUpahRit!),
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppTheme.successColor,
@@ -710,12 +711,4 @@ String _labelJenis(String jenis) => switch (jenis) {
       _ => jenis,
     };
 
-String _formatRupiah(double amount) {
-  if (amount >= 1000000) {
-    return 'Rp${(amount / 1000000).toStringAsFixed(1)}jt';
-  }
-  if (amount >= 1000) {
-    return 'Rp${(amount / 1000).toStringAsFixed(0)}rb';
-  }
-  return 'Rp${amount.toStringAsFixed(0)}';
-}
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/animated_badge.dart';
@@ -84,7 +85,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
 
   String _formatDistance(double meters) {
     if (meters < 1000) return '${meters.round()} m';
-    return '${(meters / 1000).toStringAsFixed(1)} km';
+    return '${fmtNum(meters / 1000)} km';
   }
 
   Future<void> _refreshAll() async {

@@ -18,6 +18,9 @@ const kApp2Roles = <String>[
   'Owner',
   'Admin Keuangan',
   'Driver Armada',
+  'Kepala Divisi Armada',
+  'Workshop',
+  'Inventory',
 ];
 
 final tokenStorageProvider =

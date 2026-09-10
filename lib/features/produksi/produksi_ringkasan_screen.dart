@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/formatters.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import 'models/production_session.dart';
@@ -323,7 +324,7 @@ class _ProgressTile extends StatelessWidget {
             ),
           ),
           Text(
-            item.totalOutput.toStringAsFixed(1),
+            fmtNum(item.totalOutput),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,

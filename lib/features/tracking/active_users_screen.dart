@@ -120,13 +120,12 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                       onTap: () =>
                           context.push('/tracking/hari-ini/${u.userId}', extra: u.nama),
                     ),
-                  ),
-                );
-              },
-            );
-          }
+                  );
+                },
+              );
+            }
 
-          return ListView.separated(
+            return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/formatters.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
@@ -70,9 +71,9 @@ class DetailQcScreen extends ConsumerWidget {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          _row('Nilai slump', _fmt(s.nilaiSlump)),
+                          _row('Nilai slump', fmtNum(s.nilaiSlump)),
                           if (s.hasilUjiTekan != null)
-                            _row('Hasil uji tekan', '${_fmt(s.hasilUjiTekan)} MPa'),
+                            _row('Hasil uji tekan', '${fmtNum(s.hasilUjiTekan)} MPa'),
                           if (s.tanggalUjiTekanRencana != null)
                             _row('Rencana uji tekan', s.tanggalUjiTekanRencana!),
                           _row('Catatan', s.catatan ?? '-'),
@@ -100,8 +101,8 @@ class DetailQcScreen extends ConsumerWidget {
                           _row('Mesin', s.mesinNama ?? '-'),
                           _row('Titik', s.titikNama ?? '-'),
                           _row('Operator', s.operatorNama ?? '-'),
-                          _row('Mulai', _dt(s.sesiMulai)),
-                          _row('Selesai', _dt(s.sesiSelesai)),
+                          _row('Mulai', fmtTanggalWaktu(s.sesiMulai)),
+                          _row('Selesai', fmtTanggalWaktu(s.sesiSelesai)),
                         ],
                       ),
                     ),
@@ -129,18 +130,4 @@ class DetailQcScreen extends ConsumerWidget {
           ],
         ),
       );
-}
-
-String _fmt(double? n) => n == null
-    ? '-'
-    : n % 1 == 0
-        ? n.toInt().toString()
-        : n.toStringAsFixed(1);
-
-String _dt(DateTime? t) {
-  if (t == null) return '-';
-  final l = t.toLocal();
-  return '${l.day}/${l.month}/${l.year} '
-      '${l.hour.toString().padLeft(2, '0')}:'
-      '${l.minute.toString().padLeft(2, '0')}';
 }

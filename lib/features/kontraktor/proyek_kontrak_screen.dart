@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/formatters.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -279,7 +280,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                               children: [
                                 const Text('Total Tagihan:'),
                                 Text(
-                                  'Rp ${inv.total.toStringAsFixed(0)}',
+                                  fmtRp(inv.total),
                                   style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -290,7 +291,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                               children: [
                                 const Text('Sisa Bayar:'),
                                 Text(
-                                  'Rp ${inv.sisa.toStringAsFixed(0)}',
+                                  fmtRp(inv.sisa),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: inv.sisa > 0 ? Colors.red : Colors.green,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/formatters.dart';
 import 'produksi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -65,7 +66,7 @@ class ProgressHariIniScreen extends ConsumerWidget {
                     title: Text(item.titikNama ?? item.titikId),
                     subtitle: Text('${item.jumlahSesi} sesi selesai'),
                     trailing: Text(
-                      _fmtNum(item.totalOutput),
+                      fmtNum(item.totalOutput),
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge
@@ -81,6 +82,3 @@ class ProgressHariIniScreen extends ConsumerWidget {
     );
   }
 }
-
-String _fmtNum(double n) =>
-    n % 1 == 0 ? n.toInt().toString() : n.toStringAsFixed(1);

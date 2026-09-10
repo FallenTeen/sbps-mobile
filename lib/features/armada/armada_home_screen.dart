@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
-import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'driver_dashboard_screen.dart';
+import 'unit_saya_home_screen.dart';
 import 'models/armada.dart';
 
 /// ArmadaHomeScreen — role-aware menu.
@@ -19,6 +19,12 @@ class ArmadaHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeRole = ref.watch(activeRoleProvider);
+
+    // Driver Armada → UnitSayaHomeScreen (workflow-based)
+    if (activeRole == 'Driver Armada') {
+      return const UnitSayaHomeScreen();
+    }
+
     final sections = _buildSections(activeRole);
 
     return Scaffold(
@@ -131,7 +137,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
                   title: item.title,
                   subtitle: item.subtitle,
                   badge: item.badge,
-                  onTap: item.onTap,
+                  onTap: () => item.onTap(context),
                 ),
               const SizedBox(height: 24),
             ],
@@ -150,7 +156,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
       AsyncError(:final error) => [_ErrorView(message: '$error')],
       _ => const [
           Padding(
-            padding: EdgeInsets.vertical: 40),
+            padding: EdgeInsets.symmetric(vertical: 40),
             child: Center(child: CircularProgressIndicator()),
           ),
         ],

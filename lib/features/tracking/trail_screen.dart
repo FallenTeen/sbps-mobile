@@ -38,9 +38,6 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
     super.dispose();
   }
 
-  String _formatTime(DateTime t) =>
-      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
   @override
   Widget build(BuildContext context) {
     final trail = ref.watch(trailProvider(widget.userId));
