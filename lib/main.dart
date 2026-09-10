@@ -10,6 +10,8 @@ import 'core/push_token_service.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
 import 'features/version/version_gate.dart';
+import 'shared/theme/app_theme.dart';
+import 'shared/widgets/notification_handler.dart';
 
 /// Top-level handler untuk pesan yang diterima di background/terminated.
 /// Harus top-level function (bukan closure) menurut Firebase docs.
@@ -24,8 +26,8 @@ Future<void> main() async {
   await Hive.initFlutter();
 
   // Inisialisasi Firebase — google-services.json / GoogleService-Info.plist
-  // wajib ada di masing-masing flavor. Jika file tidak ada, Firebase
-  // akan throw dan token dikembalikan null (graceful degradation).
+  // wajib ada di android/app/src/main/ (unified). Jika file tidak ada,
+  // Firebase akan throw dan token dikembalikan null (graceful degradation).
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(
@@ -61,13 +63,16 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       } catch (_) {
         // Firebase tidak terinisialisasi — skip.
       }
+
+      // Setup notification tap handler (deep link).
+      NotificationHandler.instance.initialize(ref);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     const title = 'SBPS';
-    final theme = ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true);
+    final theme = AppTheme.lightTheme;
     final banner = !AppConfig.isProduction;
 
     final gate = ref.watch(versionGateProvider);
@@ -104,14 +109,66 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('SBPS'),
-            SizedBox(height: 16),
-            CircularProgressIndicator(),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  'S',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'SBPS',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Mobile Apps',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.textMuted,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: AppTheme.primaryColor,
+              ),
+            ),
           ],
         ),
       ),
