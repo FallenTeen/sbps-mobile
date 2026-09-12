@@ -3,22 +3,51 @@ import 'package:flutter/material.dart';
 /// Custom theme for SBPS Mobile Apps.
 ///
 /// Provides a polished, professional look with consistent design tokens
-/// across all screens. Uses a teal-blue primary palette with warm accents.
+/// across all screens. Uses a brick-red primary palette (Fase C0 UX plan)
+/// with indigo & amber accents.
 class AppTheme {
   AppTheme._();
 
   // ── Color Palette ──────────────────────────────────────────────────────────
-  static const Color _primary = Color(0xFF0D9488);
-  static const Color _primaryLight = Color(0xFF5EEAD4);
-  static const Color _primaryDark = Color(0xFF0F766E);
+  // Rencana Pengembangan UX Fase C0: primer teal → "brick red" (#DC2626).
+  // Secondary tetap indigo & tertiary tetap amber (kontras cukup dengan merah).
+  // Error digeser ke merah tua (#B91C1C) agar tidak "sama" dengan primary
+  // (dikombinasikan ikon ⚠ untuk status error, bukan hanya warna).
+  static const Color _primary = Color(0xFFDC2626);
+  static const Color _primaryLight = Color(0xFFFCA5A5);
+  static const Color _primaryDark = Color(0xFF991B1B);
   static const Color _secondary = Color(0xFF6366F1);
   static const Color _tertiary = Color(0xFFF59E0B);
   static const Color _surface = Color(0xFFFAFBFC);
   static const Color _surfaceVariant = Color(0xFFF1F5F9);
   static const Color _background = Color(0xFFF8FAFC);
-  static const Color _error = Color(0xFFEF4444);
+  static const Color _error = Color(0xFFB91C1C);
   static const Color _success = Color(0xFF10B981);
   static const Color _warning = Color(0xFFF59E0B);
+
+  // ── Brand Gradient ─────────────────────────────────────────────────────────
+  /// Gradien identitas SBPS (Fase C0/C5): dipakai di splash, header ringkasan,
+  /// AppBar modul utama, portal, dan badge "terdekat". Ganti di sini cukup
+  /// untuk mengubah semua header gradient sekaligus.
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ── Elevation & Depth (Fase C1) ────────────────────────────────────────────
+  // Tingkat shadow bertingkat untuk membedakan kedalaman visual:
+  // Lv1 = kartu list biasa (flat), Lv2 = kartu penting/interaktif,
+  // Lv3 = header/ringkasan & element mengambang.
+  static const List<BoxShadow> shadowLv1 = [
+    BoxShadow(color: Color(0x0A0F172A), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+  static const List<BoxShadow> shadowLv2 = [
+    BoxShadow(color: Color(0x140F172A), blurRadius: 8, offset: Offset(0, 2)),
+  ];
+  static const List<BoxShadow> shadowLv3 = [
+    BoxShadow(color: Color(0x1A0F172A), blurRadius: 16, offset: Offset(0, 4)),
+  ];
 
   // ── Light Color Scheme ─────────────────────────────────────────────────────
   static final ColorScheme _lightColorScheme = ColorScheme.light(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
@@ -24,7 +25,10 @@ class DetailQcScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail QC'),
+        title: const BreadcrumbTitle(
+          parentLabel: 'Quality Control',
+          title: 'Detail QC',
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: ResponsiveCenter(

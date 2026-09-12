@@ -107,19 +107,32 @@ class OfflineBanner extends ConsumerWidget {
             color: const Color(0xFFFEF3C7),
             child: SafeArea(
               bottom: false,
-              child: SizedBox(
-                width: double.infinity,
+              child: InkWell(
+                onTap: () => context.push('/data-belum-terkirim'),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  child: Text(
-                    'Anda sedang offline — data tetap tersimpan di HP.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF92400E),
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Anda sedang offline — data tetap tersimpan di HP.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF92400E),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: Color(0xFF92400E),
+                      ),
+                    ],
                   ),
                 ),
               ),

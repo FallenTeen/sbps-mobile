@@ -44,11 +44,7 @@ class PortalSelectionScreen extends ConsumerWidget {
                       title: 'SBPS Presensi',
                       subtitle: 'Presensi & kehadiran',
                       description: 'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: AppTheme.primaryGradient,
                       enabled: canPresensi,
                       disabledMessage: 'Anda tidak memiliki akses ke portal ini',
                       onTap: () async {
@@ -118,9 +114,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
-              ),
+              gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(

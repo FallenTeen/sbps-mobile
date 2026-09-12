@@ -87,6 +87,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

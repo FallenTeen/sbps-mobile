@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
@@ -80,6 +81,7 @@ class PresensiHariIniCard extends ConsumerWidget {
         .submit(endpoint: endpoint, photoPath: photo.path);
 
     if (result.delivered) {
+      HapticFeedback.mediumImpact();
       ref.invalidate(hariIniProvider);
       if (result.luarRadius) {
         AnalyticsService.radiusWarningShown();
@@ -95,6 +97,7 @@ class PresensiHariIniCard extends ConsumerWidget {
         );
       }
     } else if (result.queued) {
+      HapticFeedback.selectionClick();
       messenger.showSnackBar(
         SnackBar(
           content: Text(presensiSubmissionMessage(result)),
@@ -135,7 +138,7 @@ class _CheckInCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: siap
-              ? [const Color(0xFF0D9488), const Color(0xFF14B8A6)]
+              ? AppTheme.primaryGradient.colors
               : [Colors.grey.shade400, Colors.grey.shade500],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

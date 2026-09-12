@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
@@ -32,6 +33,7 @@ class ProyekHomeScreen extends ConsumerWidget {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: null,
+        bottom: const BrandStrip(),
         actions: [
           IconButton(
             tooltip: 'Profil',
@@ -156,11 +158,7 @@ class _GreetingHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -707,16 +705,14 @@ class _QuickActions extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 60,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: actions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => _QuickActionButton(
-              action: actions[index],
-            ),
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < actions.length; i++) ...[
+              if (i > 0) const SizedBox(width: 12),
+              Expanded(child: _QuickActionButton(action: actions[i])),
+            ],
+          ],
         ),
       ],
     );
@@ -792,8 +788,8 @@ class _QuickActionButton extends StatelessWidget {
       onTap: () => context.push(action.route),
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(12),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -816,6 +812,8 @@ class _QuickActionButton extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

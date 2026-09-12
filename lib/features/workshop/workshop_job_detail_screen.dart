@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,9 +9,11 @@ import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'workshop_models.dart';
 import 'workshop_providers.dart';
@@ -62,6 +65,7 @@ class _WorkshopJobDetailScreenState
             isDone: !item.isDone,
           );
       ref.invalidate(workshopJobDetailProvider(widget.jobId));
+      HapticFeedback.selectionClick();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +134,7 @@ class _WorkshopJobDetailScreenState
             catatan: created.catatan,
           );
       if (mounted) {
+        HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Request sparepart terkirim')),
         );
@@ -174,6 +179,7 @@ class _WorkshopJobDetailScreenState
         return;
       }
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Job berhasil ditandai selesai')),
       );
@@ -195,7 +201,10 @@ class _WorkshopJobDetailScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Job \u2014 ${_titleFor(detailAsync)}'),
+        title: BreadcrumbTitle(
+          parentLabel: 'Antrian Workshop',
+          title: 'Job \u2014 ${_titleFor(detailAsync)}',
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: detailAsync.when(
@@ -414,23 +423,11 @@ class _WorkshopJobDetailScreenState
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _statusColor(job.status).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    _statusLabel(job.status),
-                    style: TextStyle(
-                      color: _statusColor(job.status),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
+                StatusPill(
+                  label: _statusLabel(job.status),
+                  color: _statusColor(job.status),
+                  filled: job.status == WorkshopJobStatus.selesai,
+                  borderRadius: 16,
                 ),
               ],
             ),

@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/api_client.dart';
 import 'tracking_providers.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../core/formatters.dart';
 
@@ -44,7 +45,10 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.nama == null ? 'Tracking Hari Ini' : widget.nama!),
+        title: BreadcrumbTitle(
+          parentLabel: 'Monitoring',
+          title: widget.nama ?? 'Tracking Hari Ini',
+        ),
         actions: const [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,

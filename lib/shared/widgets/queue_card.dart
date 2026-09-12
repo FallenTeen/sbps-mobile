@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'status_pill.dart';
 
 /// Kartu list generik untuk "antrian kerja" — dipakai di WorkshopQueueScreen
 /// dan section request di InventoryHomeScreen. Konsisten style dengan
@@ -35,13 +36,7 @@ class QueueCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppTheme.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppTheme.shadowLv2,
       ),
       child: Material(
         color: Colors.transparent,
@@ -74,24 +69,9 @@ class QueueCard extends StatelessWidget {
                             ),
                           ),
                           if (statusLabel != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: (statusColor ?? AppTheme.primaryColor)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                statusLabel!,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: statusColor ?? AppTheme.primaryColor,
-                                ),
-                              ),
+                            StatusPill(
+                              label: statusLabel!,
+                              color: statusColor ?? AppTheme.primaryColor,
                             ),
                         ],
                       ),

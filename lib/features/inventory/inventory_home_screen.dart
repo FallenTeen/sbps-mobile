@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -34,6 +35,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Inventory'),
+        bottom: const BrandStrip(),
         actions: const [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
@@ -69,11 +71,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppTheme.primaryGradient,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(

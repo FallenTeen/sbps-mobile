@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
@@ -43,6 +44,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+        bottom: const BrandStrip(),
         actions: const [PortalSwitchButton(), SyncActionButton()],
       ),
       body: RefreshIndicator(
@@ -57,11 +59,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppTheme.primaryGradient,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(

@@ -134,9 +134,7 @@ class _Splash extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
-                ),
+                gradient: AppTheme.primaryGradient,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(

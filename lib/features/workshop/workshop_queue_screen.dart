@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -66,6 +68,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Antrian Workshop'),
+        bottom: const BrandStrip(),
         actions: const [PortalSwitchButton()],
       ),
       body: Column(
@@ -74,13 +77,22 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: AppTheme.primaryColor.withValues(alpha: 0.05),
-            child: Text(
-              '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                InfoTooltip(
+                  message: 'Urutan pengerjaan mekanik. Tap kartu untuk membuka checklist.',
+                ),
+              ],
             ),
           ),
           Padding(

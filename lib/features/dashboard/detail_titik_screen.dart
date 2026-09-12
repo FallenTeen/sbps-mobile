@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
@@ -34,7 +35,10 @@ class DetailTitikScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(nama ?? 'Detail Titik'),
+        title: BreadcrumbTitle(
+          parentLabel: 'Dashboard',
+          title: nama ?? 'Detail Titik',
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: ResponsiveCenter(

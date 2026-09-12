@@ -41,13 +41,19 @@ class _CombinedSelectionScreenState
   }
 
   Future<void> _submit() async {
-    if (_selectedPortal == null || _selectedRole == null) return;
+    final portal = _selectedPortal;
+    if (portal == null) return;
 
     // Save portal
-    await ref.read(selectedPortalProvider.notifier).select(_selectedPortal!);
+    await ref.read(selectedPortalProvider.notifier).select(portal);
 
-    // Save role
-    await ref.read(activeRoleProvider.notifier).switchRole(_selectedRole!);
+    // Portal Proyek butuh role; portal Presensi tidak.
+    if (portal == AppPortal.proyek) {
+      final role = _selectedRole;
+      if (role == null) return;
+      await ref.read(activeRoleProvider.notifier).switchRole(role);
+    }
+
     ref.read(roleChoicePendingProvider.notifier).set(false);
 
     if (mounted) {
@@ -74,8 +80,8 @@ class _CombinedSelectionScreenState
       return;
     }
 
-    // Auto-skip if only one role and Proyek portal
-    if (canProyek && roles.length == 1) {
+    // Auto-skip if only one role and Proyek portal AND user can't presensi
+    if (canProyek && !canPresensi && roles.length == 1) {
       await ref.read(selectedPortalProvider.notifier).select(AppPortal.proyek);
       await ref.read(activeRoleProvider.notifier).switchRole(roles.first);
       ref.read(roleChoicePendingProvider.notifier).set(false);
@@ -214,17 +220,14 @@ class _CombinedSelectionScreenState
     final user = ref.read(authControllerProvider).value;
     if (user == null) return false;
 
-    final canPresensi = canAccessPresensi(user);
-    final canProyek = canAccessProyek(user);
-
-    // For Presensi-only: only need portal
-    if (canPresensi && !canProyek) {
-      return _selectedPortal == AppPortal.presensi;
+    // Portal Presensi: cukup portal saja, tidak butuh role.
+    if (_selectedPortal == AppPortal.presensi) {
+      return canAccessPresensi(user);
     }
 
-    // For Proyek portal: need both portal and role
+    // Portal Proyek: butuh portal + role.
     if (_selectedPortal == AppPortal.proyek) {
-      return _selectedRole != null;
+      return canAccessProyek(user) && _selectedRole != null;
     }
 
     return false;
@@ -248,9 +251,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
-              ),
+              gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
@@ -315,11 +316,7 @@ class _PortalSelection extends StatelessWidget {
           subtitle: 'Presensi & kehadiran',
           description:
               'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppTheme.primaryGradient,
           isSelected: selected == AppPortal.presensi,
           onTap: () => onSelected(AppPortal.presensi),
         ),

@@ -6,7 +6,9 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/sync_action_button.dart';
@@ -115,6 +117,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const HomeTitle(),
+        bottom: const BrandStrip(),
         actions: [
           // Profil user
           IconButton(
@@ -202,6 +205,10 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                   const SizedBox(width: 8),
                   Text('Titik Kerja Aktif',
                       style: Theme.of(context).textTheme.titleMedium),
+                  InfoTooltip(
+                    message:
+                        'Menandai titik kerja paling dekat dengan lokasi Anda saat ini.',
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -528,9 +535,7 @@ class _TitikTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppTheme.primaryColor, Color(0xFF14B8A6)],
-                          ),
+                          gradient: AppTheme.primaryGradient,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(

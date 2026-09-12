@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -61,7 +62,10 @@ class _DetailProyekKontrakScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Proyek Kontrak'),
+        title: const BreadcrumbTitle(
+          parentLabel: 'Kontraktor',
+          title: 'Detail Proyek Kontrak',
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: detailAsync.when(

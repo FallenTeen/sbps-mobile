@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/status_pill.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
@@ -62,6 +65,7 @@ class _InventoryRequestDetailScreenState
       );
       return;
     }
+    HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Request sparepart diproses')),
     );
@@ -75,7 +79,10 @@ class _InventoryRequestDetailScreenState
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Detail Request'),
+        title: const BreadcrumbTitle(
+          parentLabel: 'Inventory',
+          title: 'Detail Request',
+        ),
         actions: const [PortalSwitchButton()],
       ),
       body: detailAsync.when(
@@ -402,20 +409,6 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: _color,
-        ),
-      ),
-    );
+    return StatusPill(label: status, color: _color);
   }
 }
