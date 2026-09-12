@@ -67,6 +67,8 @@ const kProyekRoles = <String>[
   'Owner',
   'Admin Keuangan',
   'Driver Armada',
+  'Workshop',
+  'Inventory',
 ];
 
 /// Cek apakah user bisa mengakses portal presensi.

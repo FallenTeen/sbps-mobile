@@ -45,7 +45,11 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await storage.readToken();
+        final token = await storage.readToken().timeout(
+          const Duration(seconds: 3),
+          // Web/secure storage yang macet tidak boleh menggantung request.
+          onTimeout: () => null,
+        );
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }

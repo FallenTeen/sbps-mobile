@@ -321,6 +321,8 @@ class _ModuleCard extends ConsumerWidget {
         'keuangan' => 'Chart keuangan, PO, invoice',
         'armada' => 'Kendaraan, ritase & checklist harian',
         'kontraktor' => 'Proyek kontrak, progress, invoice & chat',
+        'workshop' => 'Antrian servis, checklist pengerjaan & sparepart',
+        'inventory' => 'Stok barang, request sparepart & opname',
         _ => 'Menyusul di fase berikutnya',
       };
 }

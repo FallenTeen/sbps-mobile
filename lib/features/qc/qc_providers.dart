@@ -137,6 +137,11 @@ final waitingSamplesBySessionProvider =
   final page = await ref.watch(qcRepositoryProvider).getRiwayat(
         status: 'menunggu_hasil',
         perPage: 50,
+      ).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => throw ApiException(
+          'Server tidak merespons saat memuat data QC.\nPeriksa koneksi internet Anda\nCoba lagi atau hubungi admin.',
+        ),
       );
   final map = <String, QcSample>{};
   for (final s in page.items) {
