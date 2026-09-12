@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
+import '../../features/presensi/models/titik.dart';
+import '../presensi/presensi_providers.dart';
 import 'inventory_models.dart';
+import 'inventory_providers.dart';
 
 class InventoryOpnameScreen extends ConsumerStatefulWidget {
   const InventoryOpnameScreen({super.key});
@@ -16,55 +21,9 @@ class InventoryOpnameScreen extends ConsumerStatefulWidget {
 }
 
 class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
-  final List<OpnameItem> _mockItems = [
-    const OpnameItem(
-      id: 'op-001',
-      namaBarang: 'Oli Mesin 15W-40',
-      kategori: 'Pelumas',
-      jumlahSistem: 24,
-      satuan: 'Liter',
-    ),
-    const OpnameItem(
-      id: 'op-002',
-      namaBarang: 'Filter Udara HD-700',
-      kategori: 'Filter',
-      jumlahSistem: 3,
-      satuan: 'Pcs',
-    ),
-    const OpnameItem(
-      id: 'op-003',
-      namaBarang: 'Kampas Rem Depan',
-      kategori: 'Rem',
-      jumlahSistem: 8,
-      satuan: 'Set',
-    ),
-    const OpnameItem(
-      id: 'op-004',
-      namaBarang: 'Bearing Roda Depan',
-      kategori: 'Suku Cadang',
-      jumlahSistem: 2,
-      satuan: 'Pcs',
-    ),
-    const OpnameItem(
-      id: 'op-005',
-      namaBarang: 'Belt Alternator',
-      kategori: 'Belt',
-      jumlahSistem: 6,
-      satuan: 'Pcs',
-    ),
-  ];
-
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, int?> _fisikValues = {};
-
-  @override
-  void initState() {
-    super.initState();
-    for (final item in _mockItems) {
-      _controllers[item.id] = TextEditingController();
-      _fisikValues[item.id] = null;
-    }
-  }
+  String? _selectedTitikId;
 
   @override
   void dispose() {
@@ -74,30 +33,76 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     super.dispose();
   }
 
+  void _initControllers(List<OpnameItem> items) {
+    for (final item in items) {
+      _controllers.putIfAbsent(item.id, TextEditingController.new);
+    }
+  }
+
   void _onFisikChanged(String itemId, String value) {
     final parsed = int.tryParse(value);
-    setState(() {
-      _fisikValues[itemId] = parsed;
-    });
+    setState(() => _fisikValues[itemId] = parsed);
+  }
+
+  void _clearFisik(List<OpnameItem> items) {
+    for (final item in items) {
+      _controllers[item.id]?.clear();
+      _fisikValues[item.id] = null;
+    }
+    setState(() {});
   }
 
   bool get _hasChanges => _fisikValues.values.any((v) => v != null);
 
-  int get _selisihCount =>
-      _mockItems.where((i) => _fisikValues[i.id] != null && _fisikValues[i.id] != i.jumlahSistem).length;
+  int _selisihCount(Iterable<OpnameItem> items) => items
+      .where((i) =>
+          _fisikValues[i.id] != null && _fisikValues[i.id] != i.jumlahSistem)
+      .length;
 
-  void _submit() {
+  Future<void> _submit({
+    required String titikId,
+    required List<OpnameItem> items,
+  }) async {
+    final tanggal = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final submitItems = [
+      for (final item in items)
+        if (_fisikValues[item.id] != null)
+          OpnameSubmitItem(
+            bahanBakuId: item.id,
+            saldoFisik: _fisikValues[item.id]!,
+          ),
+    ];
+    if (submitItems.isEmpty) return;
+
+    final result = await ref
+        .read(inventoryOpnameProvider.notifier)
+        .submit(titikId: titikId, tanggal: tanggal, items: submitItems);
+
+    if (!mounted) return;
+
+    if (result.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Opname gagal: ${result.error}')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Opname disimpan \u2022 $_selisihCount item selisih',
+          'Opname disimpan \u2022 ${_selisihCount(items)} item selisih',
         ),
       ),
     );
+    _clearFisik(items);
   }
 
   @override
   Widget build(BuildContext context) {
+    final titikAsync = ref.watch(titikAktifProvider);
+    final materialsAsync = ref.watch(inventoryOpnameMaterialsProvider);
+    final opnameState = ref.watch(inventoryOpnameProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
@@ -128,42 +133,160 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                const Text(
+                  'Titik kerja',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: titikAsync.when(
+                    loading: () => const SkeletonLoader(
+                      child: SkeletonBlock(height: 36, borderRadius: 10),
+                    ),
+                    error: (error, _) => const Text(
+                      'Gagal memuat titik.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.errorColor,
+                      ),
+                    ),
+                    data: (titiks) => _buildTitikDropdown(titiks),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
-            child: _mockItems.isEmpty
-                ? const AppEmptyState(
+            child: materialsAsync.when(
+              loading: () => const SkeletonLoader(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SkeletonBlock(height: 96, borderRadius: 14),
+                      SizedBox(height: 10),
+                      SkeletonBlock(height: 96, borderRadius: 14),
+                      SizedBox(height: 10),
+                      SkeletonBlock(height: 96, borderRadius: 14),
+                    ],
+                  ),
+                ),
+              ),
+              error: (error, _) => Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.cloud_off_rounded,
+                        color: AppTheme.errorColor, size: 32),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Gagal memuat item opname.',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () =>
+                          ref.invalidate(inventoryOpnameMaterialsProvider),
+                      child: const Text('Coba lagi'),
+                    ),
+                  ],
+                ),
+              ),
+              data: (items) {
+                _initControllers(items);
+                if (items.isEmpty) {
+                  return const AppEmptyState(
                     icon: Icons.fact_check_outlined,
                     title: 'Tidak ada data stok',
                     subtitle: 'Belum ada barang untuk opname',
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _mockItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _mockItems[index];
-                      return _OpnameItemCard(
-                        item: item,
-                        controller: _controllers[item.id]!,
-                        fisikValue: _fisikValues[item.id],
-                        onChanged: (v) => _onFisikChanged(item.id, v),
-                      );
-                    },
-                  ),
+                  );
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return _OpnameItemCard(
+                      item: item,
+                      controller: _controllers[item.id]!,
+                      fisikValue: _fisikValues[item.id],
+                      onChanged: (v) => _onFisikChanged(item.id, v),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
-      bottomNavigationBar: _hasChanges
+      bottomNavigationBar: _hasChanges && _selectedTitikId != null
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: FilledButton(
-                  onPressed: _submit,
-                  child: Text(
-                    'Simpan Opname${_selisihCount > 0 ? ' ($_selisihCount selisih)' : ''}',
-                  ),
+                  onPressed: opnameState.busy
+                      ? null
+                      : () {
+                          final titikId = _selectedTitikId!;
+                          final items = materialsAsync.value ?? const [];
+                          _submit(titikId: titikId, items: items);
+                        },
+                  child: opnameState.busy
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          'Simpan Opname${_selisihCount(materialsAsync.value ?? const []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
+                        ),
                 ),
               ),
             )
           : null,
+    );
+  }
+
+  Widget _buildTitikDropdown(List<Titik> titiks) {
+    if (titiks.isEmpty) {
+      return const Text(
+        'Tidak ada titik aktif.',
+        style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+      );
+    }
+    _selectedTitikId ??= titiks.first.id;
+
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedTitikId,
+      isExpanded: true,
+      items: [
+        for (final t in titiks)
+          DropdownMenuItem(
+            value: t.id,
+            child: Text(
+              t.displayProyek != null && t.displayProyek!.isNotEmpty
+                  ? '${t.nama} (${t.displayProyek})'
+                  : t.nama,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: (v) {
+        if (v != null) setState(() => _selectedTitikId = v);
+      },
+      decoration: const InputDecoration(
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
     );
   }
 }

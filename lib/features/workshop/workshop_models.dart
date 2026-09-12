@@ -1,3 +1,5 @@
+import '../armada/models/servis_armada.dart';
+
 enum WorkshopJobStatus { menunggu, dikerjakan, selesai }
 
 class WorkshopJob {
@@ -53,8 +55,35 @@ class WorkshopJob {
     return switch (value) {
       'dikerjakan' => WorkshopJobStatus.dikerjakan,
       'selesai' => WorkshopJobStatus.selesai,
+      'disetujui' => WorkshopJobStatus.menunggu,
       _ => WorkshopJobStatus.menunggu,
     };
+  }
+
+  /// Map dari model ServisArmada (endpoint `/servis-armada`).
+  /// Status servis `disetujui` ditampilkan sebagai "Menunggu" di antrian
+  /// workshop sampai diambil/dikerjakan.
+  factory WorkshopJob.fromServisArmada(ServisArmada servis) {
+    return WorkshopJob(
+      id: servis.id,
+      armadaId: servis.armadaId,
+      platNomor: servis.platNomor ?? '-',
+      kategoriServis: servis.kategori ?? 'Servis Armada',
+      keluhan: servis.keluhan,
+      status: _parseStatus(servis.status),
+      createdAt:
+          servis.tanggalAjuan.isEmpty ? null : DateTime.tryParse(servis.tanggalAjuan),
+      assignedAt: servis.status == 'dikerjakan' || servis.status == 'selesai'
+          ? servis.tanggalAjuan.isEmpty
+              ? null
+              : DateTime.tryParse(servis.tanggalAjuan)
+          : null,
+      completedAt: servis.tanggalSelesai == null
+          ? null
+          : DateTime.tryParse(servis.tanggalSelesai!),
+      totalItems: servis.spareparts.length,
+      completedItems: 0,
+    );
   }
 }
 
@@ -95,4 +124,53 @@ class WorkshopTodoItem {
       photoPath: photoPath ?? this.photoPath,
     );
   }
+}
+
+/// Detail workshop job dengan todo items.
+class WorkshopJobDetail {
+  const WorkshopJobDetail({
+    required this.job,
+    required this.todos,
+  });
+
+  final WorkshopJob job;
+  final List<WorkshopTodoItem> todos;
+
+  factory WorkshopJobDetail.fromJson(Map<String, dynamic> json) {
+    final servis = ServisArmada.fromJson(json);
+    final todosRaw = json['todos'] as List<dynamic>?
+        ?? json['todo_items'] as List<dynamic>?
+        ?? [];
+
+    return WorkshopJobDetail(
+      job: WorkshopJob.fromServisArmada(servis),
+      todos: [
+        for (final t in todosRaw)
+          if (t is Map)
+            WorkshopTodoItem.fromJson(Map<String, dynamic>.from(t)),
+      ],
+    );
+  }
+}
+
+/// Item request sparepart.
+class SparepartRequestItem {
+  const SparepartRequestItem({
+    required this.namaBarang,
+    required this.jumlah,
+    this.satuan,
+    this.keterangan,
+  });
+
+  final String namaBarang;
+  final int jumlah;
+  final String? satuan;
+  final String? keterangan;
+
+  Map<String, dynamic> toJson() => {
+        'nama_barang': namaBarang,
+        'jumlah': jumlah,
+        if (satuan != null) 'satuan': satuan,
+        if (keterangan != null) 'keterangan': keterangan,
+      };
 }

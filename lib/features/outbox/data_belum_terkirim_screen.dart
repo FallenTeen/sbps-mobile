@@ -82,6 +82,9 @@ class _PendingActionTile extends StatelessWidget {
     PendingEndpoint.armadaChecklist => 'Checklist armada',
     PendingEndpoint.armadaOdoAwal => 'ODO awal proyek',
     PendingEndpoint.armadaRitase => 'Ritase armada',
+    PendingEndpoint.workshopMulai => 'Mulai kerja workshop',
+    PendingEndpoint.workshopSelesai => 'Selesai servis workshop',
+    PendingEndpoint.inventoryOpname => 'Stok opname inventory',
   };
 
   String get _status => switch (action.status) {

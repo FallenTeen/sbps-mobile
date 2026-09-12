@@ -1,3 +1,27 @@
+class InventorySummary {
+  const InventorySummary({
+    required this.totalItem,
+    required this.nilaiStok,
+    required this.stokRendahCount,
+    required this.requestPendingCount,
+  });
+
+  final int totalItem;
+  final double nilaiStok;
+  final int stokRendahCount;
+  final int requestPendingCount;
+
+  factory InventorySummary.fromJson(Map<String, dynamic> json) {
+    return InventorySummary(
+      totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
+      nilaiStok: (json['nilai_stok'] as num?)?.toDouble() ?? 0,
+      stokRendahCount: (json['stok_rendah_count'] as num?)?.toInt() ?? 0,
+      requestPendingCount:
+          (json['request_pending_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 class InventoryItem {
   const InventoryItem({
     required this.id,
@@ -177,4 +201,23 @@ class OpnameItem {
       satuan: json['satuan'] as String,
     );
   }
+}
+
+/// Satu baris hasil hitung fisik untuk dikirim ke POST /inventory/opname.
+class OpnameSubmitItem {
+  const OpnameSubmitItem({
+    required this.bahanBakuId,
+    required this.saldoFisik,
+    this.catatan,
+  });
+
+  final String bahanBakuId;
+  final int saldoFisik;
+  final String? catatan;
+
+  Map<String, dynamic> toJson() => {
+        'bahan_baku_id': bahanBakuId,
+        'saldo_fisik': saldoFisik,
+        if (catatan != null && catatan!.trim().isNotEmpty) 'catatan': catatan,
+      };
 }

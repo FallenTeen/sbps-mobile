@@ -17,25 +17,25 @@ final produksiRepositoryProvider = Provider<ProduksiRepository>(
 // Master data (§8.6)
 // ---------------------------------------------------------------------------
 
-final mesinProvider =
-    FutureProvider.autoDispose<List<MesinMaster>>(
-        (ref) => ref.watch(produksiRepositoryProvider).getMesin());
+final mesinProvider = FutureProvider.autoDispose<List<MesinMaster>>(
+  (ref) => ref.watch(produksiRepositoryProvider).getMesin(),
+);
 
-final produkProvider =
-    FutureProvider.autoDispose<List<ProdukMaster>>(
-        (ref) => ref.watch(produksiRepositoryProvider).getProduk());
+final produkProvider = FutureProvider.autoDispose<List<ProdukMaster>>(
+  (ref) => ref.watch(produksiRepositoryProvider).getProduk(),
+);
 
-final bahanBakuProvider =
-    FutureProvider.autoDispose<List<BahanBakuMaster>>(
-        (ref) => ref.watch(produksiRepositoryProvider).getBahanBaku());
+final bahanBakuProvider = FutureProvider.autoDispose<List<BahanBakuMaster>>(
+  (ref) => ref.watch(produksiRepositoryProvider).getBahanBaku(),
+);
 
 // ---------------------------------------------------------------------------
 // Query: sesi aktif / riwayat / progress
 // ---------------------------------------------------------------------------
 
-final sesiAktifProvider =
-    FutureProvider.autoDispose<List<ProductionSession>>(
-        (ref) => ref.watch(produksiRepositoryProvider).getSesiAktif());
+final sesiAktifProvider = FutureProvider.autoDispose<List<ProductionSession>>(
+  (ref) => ref.watch(produksiRepositoryProvider).getSesiAktif(),
+);
 
 class TitikProgressData {
   const TitikProgressData({required this.tanggal, required this.items});
@@ -44,10 +44,12 @@ class TitikProgressData {
   final List<TitikProgressItem> items;
 }
 
-final titikProgressProvider =
-    FutureProvider.autoDispose<TitikProgressData>((ref) async {
-  final (tanggal, items) =
-      await ref.watch(produksiRepositoryProvider).getTitikProgress();
+final titikProgressProvider = FutureProvider.autoDispose<TitikProgressData>((
+  ref,
+) async {
+  final (tanggal, items) = await ref
+      .watch(produksiRepositoryProvider)
+      .getTitikProgress();
   return TitikProgressData(tanggal: tanggal, items: items);
 });
 
@@ -77,7 +79,8 @@ class RiwayatFilterNotifier extends Notifier<RiwayatFilter> {
 
 final riwayatFilterProvider =
     NotifierProvider<RiwayatFilterNotifier, RiwayatFilter>(
-        RiwayatFilterNotifier.new);
+      RiwayatFilterNotifier.new,
+    );
 
 /// State riwayat ber-paginasi; [loadMore] menambah halaman berikutnya.
 class RiwayatProduksiState {
@@ -130,7 +133,9 @@ class RiwayatProduksiController extends Notifier<RiwayatProduksiState> {
 
   Future<void> _loadPage(RiwayatFilter filter, {required int page}) async {
     try {
-      final result = await ref.read(produksiRepositoryProvider).getRiwayat(
+      final result = await ref
+          .read(produksiRepositoryProvider)
+          .getRiwayat(
             tanggal: filter.tanggal,
             mesinId: filter.mesinId,
             page: page,
@@ -153,20 +158,22 @@ class RiwayatProduksiController extends Notifier<RiwayatProduksiState> {
     }
   }
 
-  Future<void> refresh() =>
-      _loadPage(ref.read(riwayatFilterProvider), page: 1);
+  Future<void> refresh() => _loadPage(ref.read(riwayatFilterProvider), page: 1);
 
   Future<void> loadMore() async {
     if (state.loading || !state.hasMore) return;
     state = state.copyWith(loading: true);
-    await _loadPage(ref.read(riwayatFilterProvider),
-        page: state.currentPage + 1);
+    await _loadPage(
+      ref.read(riwayatFilterProvider),
+      page: state.currentPage + 1,
+    );
   }
 }
 
 final riwayatProduksiProvider =
     NotifierProvider<RiwayatProduksiController, RiwayatProduksiState>(
-        RiwayatProduksiController.new);
+      RiwayatProduksiController.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Tulis: mulai / selesai via outbox (client_uuid idempotent di body)
@@ -213,7 +220,8 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     String? titikId,
     String? catatan,
   }) async {
-    if (state.busy) return const ProduksiSubmitResult(error: 'Sedang memproses.');
+    if (state.busy)
+      return const ProduksiSubmitResult(error: 'Sedang memproses.');
 
     final action = PendingAction(
       id: _uuid.v4(),
@@ -234,8 +242,9 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     state = const ProduksiSubmitState(busy: true);
     try {
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       if (result.delivered) {
         _invalidateQueries();
         return const ProduksiSubmitResult(delivered: true);
@@ -250,7 +259,7 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     }
   }
 
-  /// POST /produksi/selesai/{sessionId} — [items] opsional untuk override
+  /// POST /produksi/selesai/{sessionId} - [items] opsional untuk override
   /// konsumsi bahan baku manual (kosong = hitung otomatis dari BOM).
   Future<ProduksiSubmitResult> selesai({
     required String sessionId,
@@ -258,7 +267,8 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     String? catatan,
     List<({String bahanBakuId, double jumlahTerpakai})> items = const [],
   }) async {
-    if (state.busy) return const ProduksiSubmitResult(error: 'Sedang memproses.');
+    if (state.busy)
+      return const ProduksiSubmitResult(error: 'Sedang memproses.');
 
     final action = PendingAction(
       id: _uuid.v4(),
@@ -286,8 +296,9 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     state = const ProduksiSubmitState(busy: true);
     try {
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       if (result.delivered) {
         _invalidateQueries();
         return const ProduksiSubmitResult(delivered: true);
@@ -305,4 +316,5 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
 
 final produksiSubmitProvider =
     NotifierProvider<ProduksiSubmitController, ProduksiSubmitState>(
-        ProduksiSubmitController.new);
+      ProduksiSubmitController.new,
+    );

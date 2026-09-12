@@ -56,29 +56,36 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
     if (_mesin == null || _produk == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Pilih mesin dan produk terlebih dahulu.')),
+          content: Text('Pilih mesin dan produk terlebih dahulu.'),
+        ),
       );
       return;
     }
 
-final result = await ref.read(produksiSubmitProvider.notifier).mulai(
-           mesinId: _mesin!.id,
-           produkId: _produk!.id,
-           titikId: _titik?.id,
-           catatan: _catatanCtrl.text.trim(),
-         );
+    final result = await ref
+        .read(produksiSubmitProvider.notifier)
+        .mulai(
+          mesinId: _mesin!.id,
+          produkId: _produk!.id,
+          titikId: _titik?.id,
+          catatan: _catatanCtrl.text.trim(),
+        );
 
-      AnalyticsService.produksiSesiMulai();
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      if (result.delivered || result.queued) {
-        Navigator.of(context).pop();
-        messenger.showSnackBar(SnackBar(
-          content: Text(result.delivered
-              ? 'Sesi produksi dimulai.'
-              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-        ));
-      } else if (result.error != null) {
+    AnalyticsService.produksiSesiMulai();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (result.delivered || result.queued) {
+      Navigator.of(context).pop();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.delivered
+                ? 'Sesi produksi dimulai.'
+                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol sinkronisasi di atas untuk sinkron manual.',
+          ),
+        ),
+      );
+    } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }
   }
@@ -105,7 +112,9 @@ final result = await ref.read(produksiSubmitProvider.notifier).mulai(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(e is ApiException ? e.message : 'Gagal memuat master data.'),
+                Text(
+                  e is ApiException ? e.message : 'Gagal memuat master data.',
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: () => ref.invalidate(mesinProvider),
@@ -171,7 +180,8 @@ final result = await ref.read(produksiSubmitProvider.notifier).mulai(
                     decoration: const InputDecoration(
                       labelText: 'Titik Kerja (opsional)',
                       border: OutlineInputBorder(),
-                      helperText: 'Kosongkan untuk otomatis mengikuti titik mesin',
+                      helperText:
+                          'Kosongkan untuk otomatis mengikuti titik mesin',
                     ),
                     items: [
                       const DropdownMenuItem<Titik?>(
@@ -179,10 +189,7 @@ final result = await ref.read(produksiSubmitProvider.notifier).mulai(
                         child: Text('Otomatis (ikuti titik mesin)'),
                       ),
                       for (final t in titikAsync.value!)
-                        DropdownMenuItem<Titik?>(
-                          value: t,
-                          child: Text(t.nama),
-                        ),
+                        DropdownMenuItem<Titik?>(value: t, child: Text(t.nama)),
                     ],
                     onChanged: (v) => setState(() => _titik = v),
                   ),

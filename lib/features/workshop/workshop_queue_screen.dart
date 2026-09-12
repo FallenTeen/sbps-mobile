@@ -6,7 +6,9 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import 'workshop_models.dart';
+import 'workshop_providers.dart';
 
 enum _QueueFilter { menunggu, dikerjakan, selesaiHariIni }
 
@@ -14,90 +16,23 @@ class WorkshopQueueScreen extends ConsumerStatefulWidget {
   const WorkshopQueueScreen({super.key});
 
   @override
-  ConsumerState<WorkshopQueueScreen> createState() =>
-      _WorkshopQueueScreenState();
+  ConsumerState<WorkshopQueueScreen> createState() => _WorkshopQueueScreenState();
 }
 
 class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
   _QueueFilter _filter = _QueueFilter.menunggu;
 
-  final List<WorkshopJob> _mockJobs = [
-    WorkshopJob(
-      id: 'wj-001',
-      armadaId: 'arm-10',
-      platNomor: 'DK 1234 AB',
-      kategoriServis: 'Ganti Oli',
-      keluhan: 'Mesin suara kasar, oli sudah hitam pekat dan berbau terbakar',
-      status: WorkshopJobStatus.menunggu,
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      totalItems: 4,
-      completedItems: 0,
-    ),
-    WorkshopJob(
-      id: 'wj-002',
-      armadaId: 'arm-05',
-      platNomor: 'DK 5678 CD',
-      kategoriServis: 'Servis Rem',
-      keluhan: 'Rem belakang kurang pakem, pedal rem agak jauh',
-      status: WorkshopJobStatus.menunggu,
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      totalItems: 6,
-      completedItems: 0,
-    ),
-    WorkshopJob(
-      id: 'wj-003',
-      armadaId: 'arm-22',
-      platNomor: 'DK 9012 EF',
-      kategoriServis: 'Ganti Filter',
-      keluhan: 'Tarikan berat, filter udara sudah kotor maksimal',
-      status: WorkshopJobStatus.dikerjakan,
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      assignedAt: DateTime.now().subtract(const Duration(hours: 3)),
-      totalItems: 3,
-      completedItems: 1,
-    ),
-    WorkshopJob(
-      id: 'wj-004',
-      armadaId: 'arm-08',
-      platNomor: 'DK 3456 GH',
-      kategoriServis: 'Overhaul Ringan',
-      keluhan: 'Mesin overheat, thermostat perlu diganti',
-      status: WorkshopJobStatus.dikerjakan,
-      createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 6)),
-      assignedAt: DateTime.now().subtract(const Duration(hours: 5)),
-      totalItems: 8,
-      completedItems: 5,
-    ),
-    WorkshopJob(
-      id: 'wj-005',
-      armadaId: 'arm-15',
-      platNomor: 'DK 7890 IJ',
-      kategoriServis: 'Servis Ringan',
-      keluhan: 'Servis rutin 5000 km, ganti oli dan filter',
-      status: WorkshopJobStatus.selesai,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      assignedAt: DateTime.now().subtract(const Duration(days: 1)),
-      completedAt: DateTime.now().subtract(const Duration(hours: 4)),
-      totalItems: 5,
-      completedItems: 5,
-    ),
-  ];
-
   List<WorkshopJob> get _filteredJobs {
-    return _mockJobs.where((j) {
-      return switch (_filter) {
-        _QueueFilter.menunggu => j.status == WorkshopJobStatus.menunggu,
-        _QueueFilter.dikerjakan => j.status == WorkshopJobStatus.dikerjakan,
-        _QueueFilter.selesaiHariIni => j.status == WorkshopJobStatus.selesai,
-      };
-    }).toList();
+    final state = ref.watch(workshopQueueProvider);
+    return switch (_filter) {
+      _QueueFilter.menunggu =>
+        state.items.where((j) => j.status == WorkshopJobStatus.menunggu).toList(),
+      _QueueFilter.dikerjakan =>
+        state.items.where((j) => j.status == WorkshopJobStatus.dikerjakan).toList(),
+      _QueueFilter.selesaiHariIni =>
+        state.items.where((j) => j.status == WorkshopJobStatus.selesai).toList(),
+    };
   }
-
-  int get _menungguCount =>
-      _mockJobs.where((j) => j.status == WorkshopJobStatus.menunggu).length;
-
-  int get _dikerjakanCount =>
-      _mockJobs.where((j) => j.status == WorkshopJobStatus.dikerjakan).length;
 
   Color _statusColor(WorkshopJobStatus status) {
     return switch (status) {
@@ -125,6 +60,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final queueState = ref.watch(workshopQueueProvider);
     final filtered = _filteredJobs;
 
     return Scaffold(
@@ -139,7 +75,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: AppTheme.primaryColor.withValues(alpha: 0.05),
             child: Text(
-              '$_menungguCount menunggu \u00B7 $_dikerjakanCount sedang dikerjakan',
+              '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -160,39 +96,86 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             ),
           ),
           Expanded(
-            child: filtered.isEmpty
-                ? AppEmptyState(
-                    icon: Icons.build_circle_outlined,
-                    title: 'Tidak ada antrian servis',
-                    subtitle: 'Semua pekerjaan sudah selesai atau belum ada',
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final job = filtered[index];
-                      return QueueCard(
-                        leading: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: _statusColor(
-                            job.status,
-                          ).withValues(alpha: 0.12),
-                          child: Icon(
-                            _statusIcon(job.status),
-                            size: 20,
-                            color: _statusColor(job.status),
-                          ),
-                        ),
-                        title: '${job.platNomor} \u2022 ${job.kategoriServis}',
-                        subtitle: job.keluhan,
-                        statusLabel: _statusLabel(job.status),
-                        statusColor: _statusColor(job.status),
-                        onTap: () => context.push('/workshop/job/${job.id}'),
-                      );
-                    },
-                  ),
+            child: _buildBody(queueState, filtered),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBody(WorkshopQueueState state, List<WorkshopJob> filtered) {
+    if (state.loading && state.items.isEmpty) {
+      return const SkeletonListView(itemCount: 4);
+    }
+    if (state.error != null && state.items.isEmpty) {
+      return _buildError(state.error!);
+    }
+    if (filtered.isEmpty) {
+      return AppEmptyState(
+        icon: Icons.build_circle_outlined,
+        title: 'Tidak ada antrian servis',
+        subtitle: 'Semua pekerjaan sudah selesai atau belum ada',
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(workshopQueueProvider.notifier).refresh(),
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final job = filtered[index];
+          return QueueCard(
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: _statusColor(job.status).withValues(alpha: 0.12),
+              child: Icon(
+                _statusIcon(job.status),
+                size: 20,
+                color: _statusColor(job.status),
+              ),
+            ),
+            title: '${job.platNomor} \u2022 ${job.kategoriServis}',
+            subtitle: job.keluhan,
+            statusLabel: _statusLabel(job.status),
+            statusColor: _statusColor(job.status),
+            onTap: () => context.push('/workshop/job/${job.id}'),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: AppTheme.errorColor,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => ref.read(workshopQueueProvider.notifier).refresh(),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
       ),
     );
   }

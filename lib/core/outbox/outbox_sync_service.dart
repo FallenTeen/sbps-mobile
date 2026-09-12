@@ -24,7 +24,7 @@ class OutboxSyncService {
   Timer? _timer;
   bool _syncing = false;
 
-  /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) — dipakai
+  /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) - dipakai
   /// provider untuk me-refresh state presensi.
   void Function()? onSyncCycleDone;
 
@@ -53,6 +53,19 @@ class OutboxSyncService {
           }
           path = '$path/$sessionId';
         }
+        // Workshop: path dinamis dengan id job di payload.
+        if (action.endpoint == PendingEndpoint.workshopMulai ||
+            action.endpoint == PendingEndpoint.workshopSelesai) {
+          final jobId = body.remove('job_id');
+          if (jobId == null || jobId.toString().isEmpty) {
+            return const OutboxSendResult(
+              delivered: false,
+              permanentlyFailed: true,
+              errorMessage: 'ID job servis hilang dari antrean.',
+            );
+          }
+          path = path.replaceAll('{id}', jobId.toString());
+        }
         await _api.post<Object?>(
           path,
           body: <String, dynamic>{...body, 'client_uuid': action.clientUuid},
@@ -77,19 +90,19 @@ class OutboxSyncService {
       final specs = switch (action.endpoint) {
         // Formulir lapangan: banyak foto dengan field `photos[]`.
         PendingEndpoint.formulirSubmit => [
-            for (final path in action.photoLocalPaths)
-              MultipartFileSpec('photos[]', path),
-          ],
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('photos[]', path),
+        ],
         // Upload media generik (Fase A2.7): field `files[]`, 1-10 file.
         PendingEndpoint.uploadMedia => [
-            for (final path in action.photoLocalPaths)
-              MultipartFileSpec('files[]', path),
-          ],
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('files[]', path),
+        ],
         // Presensi & helper presensi: satu foto wajib dengan field `photo`.
         _ => [
-            if (action.photoLocalPath != null)
-              MultipartFileSpec('photo', action.photoLocalPath!),
-          ],
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('photo', action.photoLocalPath!),
+        ],
       };
       if (specs.isEmpty) {
         return const OutboxSendResult(
@@ -104,8 +117,7 @@ class OutboxSyncService {
           ...action.payloadJson,
           // Endpoint /upload mensyaratkan client_uuid sebagai form field
           // (bukan hanya header Idempotency-Key) — nilai SAMA tiap retry.
-          if (action.endpoint.isUploadMedia)
-            'client_uuid': action.clientUuid,
+          if (action.endpoint.isUploadMedia) 'client_uuid': action.clientUuid,
         },
         files: specs,
         headers: {
@@ -169,11 +181,8 @@ class OutboxSyncService {
 
   /// Mulai listener konektivitas + timer periodik. Aman dipanggil ulang.
   void start() {
-    _connectivitySub ??= Connectivity()
-        .onConnectivityChanged
-        .listen((results) {
-      final online =
-          results.any((r) => r != ConnectivityResult.none);
+    _connectivitySub ??= Connectivity().onConnectivityChanged.listen((results) {
+      final online = results.any((r) => r != ConnectivityResult.none);
       if (online) syncNow();
     });
     _timer ??= Timer.periodic(const Duration(minutes: 1), (_) => syncNow());

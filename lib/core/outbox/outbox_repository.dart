@@ -15,7 +15,7 @@ class OutboxRepository {
   Box<String>? _box;
   Future<Box<String>>? _opening;
 
-  /// Callback perubahan isi outbox — diisi oleh layer provider.
+  /// Callback perubahan isi outbox - diisi oleh layer provider.
   void Function()? onChanged;
 
   Future<Box<String>> _ensureOpen() {

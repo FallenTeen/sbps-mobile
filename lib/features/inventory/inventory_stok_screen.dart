@@ -1,105 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import 'inventory_models.dart';
+import 'inventory_providers.dart';
 
-class InventoryStokScreen extends StatefulWidget {
+class InventoryStokScreen extends ConsumerStatefulWidget {
   const InventoryStokScreen({super.key});
 
   @override
-  State<InventoryStokScreen> createState() => _InventoryStokScreenState();
+  ConsumerState<InventoryStokScreen> createState() => _InventoryStokScreenState();
 }
 
-class _InventoryStokScreenState extends State<InventoryStokScreen> {
+class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
   final _searchController = TextEditingController();
   String _selectedKategori = 'Semua';
   String _searchQuery = '';
 
-  final List<InventoryItem> _mockItems = [
-    InventoryItem(
-      id: 'inv-001',
-      nama: 'Oli Mesin 15W-40',
-      kategori: 'Pelumas',
-      stokSaatIni: 24,
-      stokMinimum: 10,
-      satuan: 'Liter',
-      lokasiGudang: 'Gudang A',
-    ),
-    InventoryItem(
-      id: 'inv-002',
-      nama: 'Filter Udara HD-700',
-      kategori: 'Filter',
-      stokSaatIni: 3,
-      stokMinimum: 5,
-      satuan: 'Pcs',
-      lokasiGudang: 'Gudang A',
-    ),
-    InventoryItem(
-      id: 'inv-003',
-      nama: 'Kampas Rem Depan',
-      kategori: 'Rem',
-      stokSaatIni: 8,
-      stokMinimum: 4,
-      satuan: 'Set',
-      lokasiGudang: 'Gudang B',
-    ),
-    InventoryItem(
-      id: 'inv-004',
-      nama: 'Bearing Roda Depan',
-      kategori: 'Suku Cadang',
-      stokSaatIni: 2,
-      stokMinimum: 4,
-      satuan: 'Pcs',
-      lokasiGudang: 'Gudang B',
-    ),
-    InventoryItem(
-      id: 'inv-005',
-      nama: 'Belt Alternator',
-      kategori: 'Belt',
-      stokSaatIni: 6,
-      stokMinimum: 3,
-      satuan: 'Pcs',
-      lokasiGudang: 'Gudang A',
-    ),
-    InventoryItem(
-      id: 'inv-006',
-      nama: 'Minyak Rem DOT-4',
-      kategori: 'Pelumas',
-      stokSaatIni: 1,
-      stokMinimum: 5,
-      satuan: 'Liter',
-      lokasiGudang: 'Gudang A',
-    ),
-    InventoryItem(
-      id: 'inv-007',
-      nama: 'V-Belt AC',
-      kategori: 'Belt',
-      stokSaatIni: 4,
-      stokMinimum: 2,
-      satuan: 'Pcs',
-      lokasiGudang: 'Gudang A',
-    ),
-    InventoryItem(
-      id: 'inv-008',
-      nama: 'Lampu Depan LED',
-      kategori: 'Kelistrikan',
-      stokSaatIni: 0,
-      stokMinimum: 2,
-      satuan: 'Pcs',
-      lokasiGudang: 'Gudang B',
-    ),
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  List<String> get _kategoriList {
-    final kategori =
-        _mockItems.map((e) => e.kategori).toSet().toList();
+  List<String> _kategoriList(List<InventoryItem> items) {
+    final kategori = items.map((e) => e.kategori).toSet().toList();
     return ['Semua', ...kategori]..sort();
   }
 
-  List<InventoryItem> get _filteredItems {
-    return _mockItems.where((item) {
+  List<InventoryItem> _filteredItems(List<InventoryItem> items) {
+    return items.where((item) {
       final matchSearch = _searchQuery.isEmpty ||
           item.nama.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.kategori.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -110,15 +43,7 @@ class _InventoryStokScreenState extends State<InventoryStokScreen> {
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final items = _filteredItems;
-
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
@@ -149,42 +74,100 @@ class _InventoryStokScreenState extends State<InventoryStokScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: DropdownButtonFormField<String>(
-              initialValue: _selectedKategori,
-              items: _kategoriList
-                  .map((k) => DropdownMenuItem(value: k, child: Text(k)))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _selectedKategori = v);
-              },
-              decoration: const InputDecoration(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                isDense: true,
-              ),
-            ),
-          ),
           const SizedBox(height: 8),
           Expanded(
-            child: items.isEmpty
-                ? AppEmptyState(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Tidak ada barang ditemukan',
-                    subtitle: 'Coba ubah filter atau kata kunci pencarian',
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return _StokItemCard(item: item);
-                    },
+            child: ref.watch(inventoryStokProvider).when(
+              loading: () => const SkeletonLoader(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      SkeletonBlock(height: 66, borderRadius: 14),
+                      SizedBox(height: 8),
+                      SkeletonBlock(height: 66, borderRadius: 14),
+                      SizedBox(height: 8),
+                      SkeletonBlock(height: 66, borderRadius: 14),
+                    ],
                   ),
+                ),
+              ),
+              error: (error, _) => Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.cloud_off_rounded,
+                        color: AppTheme.errorColor, size: 32),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Gagal memuat daftar stok.',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => ref.invalidate(inventoryStokProvider),
+                      child: const Text('Coba lagi'),
+                    ),
+                  ],
+                ),
+              ),
+              data: (items) {
+                if (items.isEmpty) {
+                  return const AppEmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Tidak ada data stok',
+                    subtitle: 'Belum ada bahan baku atau sparepart',
+                  );
+                }
+                return _buildList(items);
+              },
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildList(List<InventoryItem> items) {
+    final categories = _kategoriList(items);
+    final filtered = _filteredItems(items);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: DropdownButtonFormField<String>(
+            initialValue: _selectedKategori,
+            items: categories
+                .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) setState(() => _selectedKategori = v);
+            },
+            decoration: const InputDecoration(
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              isDense: true,
+            ),
+          ),
+        ),
+        Expanded(
+          child: filtered.isEmpty
+              ? AppEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: 'Tidak ada barang ditemukan',
+                  subtitle: 'Coba ubah filter atau kata kunci pencarian',
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final item = filtered[index];
+                    return _StokItemCard(item: item);
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

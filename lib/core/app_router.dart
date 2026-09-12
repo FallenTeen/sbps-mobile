@@ -23,6 +23,7 @@ import '../features/armada/unit_saya_home_screen.dart';
 import '../features/workshop/workshop_queue_screen.dart';
 import '../features/workshop/workshop_job_detail_screen.dart';
 import '../features/inventory/inventory_home_screen.dart';
+import '../features/inventory/inventory_request_detail_screen.dart';
 import '../features/inventory/inventory_stok_screen.dart';
 import '../features/inventory/inventory_opname_screen.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
@@ -462,6 +463,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
           child: const InventoryOpnameScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/inventory/request/:id',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: InventoryRequestDetailScreen(
+            requestId: state.pathParameters['id']!,
+          ),
         ),
       ),
     ],
