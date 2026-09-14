@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import 'auth_providers.dart';
@@ -191,33 +190,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   SizedBox(height: 16),
 
-                  // ── Register Link ──
-                  TextButton(
-                    onPressed: () => context.go('/register'),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'Belum punya akun? ',
-                        style: TextStyle(
-                          color: context.colors.textTertiary,
-                          fontSize: 14,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: 'Daftar',
-                            style: TextStyle(
-                              color: context.colors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 40),
-
                   // ── Footer ──
                   Text(
                     'SBPS Mobile v1.0',
@@ -282,8 +254,6 @@ class _CustomTextField extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(prefixIcon, color: context.colors.textMuted, size: 20),
         suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: Colors.white,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(

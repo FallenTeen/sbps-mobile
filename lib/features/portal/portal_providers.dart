@@ -54,26 +54,39 @@ class SelectedPortalNotifier extends AsyncNotifier<AppPortal?> {
   }
 }
 
-/// Role yang relevan untuk portal presensi.
+/// Daftar lengkap role SBPS. Presensi WAJIB untuk semua karyawan —
+/// setiap role (termasuk Driver Armada, Workshop, Inventory, Kontraktor,
+/// Owner, Admin Keuangan, dst.) bisa dan harus absen harian. Daftar ini
+/// menjadi referensi data role; akses nyatanya universal (lihat
+/// [canAccessPresensi]).
 const kPresensiRoles = <String>[
   'Mandor Titik',
   'SDM Lapangan Kondisional',
+  'Kontraktor',
+  'Owner',
+  'Admin Keuangan',
+  'Driver Armada',
+  'Kepala Divisi Armada',
+  'Workshop',
+  'Inventory',
 ];
 
-/// Role yang relevan untuk portal proyek.
+/// Role yang relevan untuk portal proyek (setara `kApp2Roles`).
 const kProyekRoles = <String>[
   'Mandor Titik',
   'Kontraktor',
   'Owner',
   'Admin Keuangan',
   'Driver Armada',
+  'Kepala Divisi Armada',
   'Workshop',
   'Inventory',
 ];
 
-/// Cek apakah user bisa mengakses portal presensi.
-bool canAccessPresensi(User user) =>
-    user.roles.any(kPresensiRoles.contains);
+/// Presensi tersedia untuk SEMUA user (semua role) — tiap karyawan wajib
+/// presensi harian, termasuk Driver Armada, Workshop, Inventory, dst.
+/// Jadi portal Presensi selalu bisa dipilih di layar pemilihan portal.
+bool canAccessPresensi(User user) => true;
 
 /// Cek apakah user bisa mengakses portal proyek.
 bool canAccessProyek(User user) =>
