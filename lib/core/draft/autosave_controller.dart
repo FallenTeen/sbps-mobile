@@ -8,6 +8,10 @@ import '../../core/draft/draft_repository.dart';
 /// Callback yang dipanggil saat autosave perlu membaca isi form terkini.
 typedef FieldSnapshot = Map<String, dynamic> Function();
 
+/// Callback opsional untuk snapshot daftar path foto lokal yang direferensikan
+/// draft (mis. `_foto` di formulir lapangan).
+typedef PhotoPathsSnapshot = List<String> Function();
+
 /// Callback untuk restore isi form dari draft.
 typedef DraftRestorer = void Function(FormDraft draft);
 
@@ -46,6 +50,7 @@ class AutosaveController extends WidgetsBindingObserver {
     required this.draftKey,
     required this.formType,
     required this.currentFields,
+    this.currentPhotoPaths,
     this.onRestore,
     this.duration = const Duration(milliseconds: 800),
   });
@@ -54,6 +59,12 @@ class AutosaveController extends WidgetsBindingObserver {
   final String draftKey;
   final DraftFormType formType;
   final FieldSnapshot currentFields;
+
+  /// Snapshot opsional daftar path foto lokal yang direferensikan draft
+  /// (mis. `_foto` di formulir lapangan). Bila null, draft disimpan tanpa
+  /// lampiran foto.
+  final PhotoPathsSnapshot? currentPhotoPaths;
+
   final DraftRestorer? onRestore;
 
   /// Jeda debounce antara perubahan field dan penyimpanan.
@@ -99,6 +110,7 @@ class AutosaveController extends WidgetsBindingObserver {
       draftKey: draftKey,
       formType: formType,
       fieldsJson: fields,
+      photoLocalPaths: currentPhotoPaths?.call() ?? const [],
     );
   }
 

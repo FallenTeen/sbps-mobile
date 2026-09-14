@@ -225,6 +225,7 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
       draftKey: 'formulir_lapangan',
       formType: DraftFormType.formulirLapangan,
       currentFields: _snapshot,
+      currentPhotoPaths: () => List.unmodifiable(_foto),
       onRestore: _restoreFromDraft,
     );
     _autosave.init();
@@ -337,6 +338,25 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          if (_draftFound)
+            DraftRestoreBanner(
+              savedAt: _draftSavedAt ?? DateTime.now(),
+              onContinue: () => setState(() => _draftFound = false),
+              onDiscard: () async {
+                await _autosave.clear();
+                setState(() {
+                  _draftFound = false;
+                  _aktivitas.clear();
+                  _kondisi.clear();
+                  _kendala.clear();
+                  _catatan.clear();
+                  _foto.clear();
+                });
+              },
+              warning:
+                  'Data foto mungkin sudah tidak sesuai kondisi terkini, '
+                  'disarankan periksa ulang sebelum submit.',
+            ),
           _field(
             _aktivitas,
             'Aktivitas dilakukan *',
@@ -386,25 +406,6 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (_draftFound)
-                        DraftRestoreBanner(
-                          savedAt: _draftSavedAt ?? DateTime.now(),
-                          onContinue: () => setState(() => _draftFound = false),
-                          onDiscard: () async {
-                            await _autosave.clear();
-                            setState(() {
-                              _draftFound = false;
-                              _aktivitas.clear();
-                              _kondisi.clear();
-                              _kendala.clear();
-                              _catatan.clear();
-                              _foto.clear();
-                            });
-                          },
-                          warning:
-                              'Data foto mungkin sudah tidak sesuai kondisi terkini, '
-                              'disarankan periksa ulang sebelum submit.',
-                        ),
                       Hero(
                         tag: tag,
                         child: ClipRRect(
