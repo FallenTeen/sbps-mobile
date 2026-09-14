@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../shared/theme/app_theme.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'status_chip.dart';
@@ -30,11 +31,16 @@ class PoPendingScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(24),
             children: [
               const SizedBox(height: 100),
-              Icon(Icons.cloud_off,
-                  size: 44, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.cloud_off,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 12),
-              Text(e is ApiException ? e.message : 'Gagal memuat PO pending.',
-                  textAlign: TextAlign.center),
+              Text(
+                e is ApiException ? e.message : 'Gagal memuat PO pending.',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
               Center(
                 child: OutlinedButton(
@@ -46,13 +52,17 @@ class PoPendingScreen extends ConsumerWidget {
           ),
           data: (data) {
             if (data.items.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 160),
-                Icon(Icons.task_alt, size: 48, color: Colors.green),
-                SizedBox(height: 12),
-                Text('Tidak ada PO yang menunggu approval.',
-                    textAlign: TextAlign.center),
-              ]);
+              return ListView(
+                children: [
+                  const SizedBox(height: 160),
+                  Icon(Icons.task_alt, size: 48, color: context.colors.success),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Tidak ada PO yang menunggu approval.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              );
             }
             return ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -71,16 +81,21 @@ class PoPendingScreen extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(p['kode_po']?.toString() ?? '-',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700)),
+                              child: Text(
+                                p['kode_po']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                             StatusChip(label: p['status']?.toString() ?? ''),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(p['supplier']?.toString() ?? '-',
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          p['supplier']?.toString() ?? '-',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           '${p['titik'] ?? '-'} • ${p['proyek'] ?? '-'}',
@@ -88,15 +103,18 @@ class PoPendingScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(fmtRp(
-                                (p['total'] as num?)?.toDouble() ?? 0),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700)),
-                            Text('Diperlukan: ${p['tanggal_diperlukan'] ?? '-'}',
-                                style: Theme.of(context).textTheme.bodySmall),
+                            Text(
+                              fmtRp((p['total'] as num?)?.toDouble() ?? 0),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'Diperlukan: ${p['tanggal_diperlukan'] ?? '-'}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                           ],
                         ),
                       ],
@@ -126,7 +144,7 @@ class _CappedBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 18, color: Colors.orange.shade800),
+          Icon(Icons.info_outline, size: 18, color: context.colors.warning),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

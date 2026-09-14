@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_preferences.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import 'auth_providers.dart';
 
@@ -233,6 +234,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ],
             ),
+          ),
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 16),
+
+          // Tampilan (theme) — Rencana Pengembangan UX §Bagian 2 (D7).
+          Text('Tampilan', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 8),
+          SegmentedButton<ThemeMode>(
+            segments: const [
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: Icon(Icons.light_mode_outlined),
+                label: Text('Terang'),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: Icon(Icons.dark_mode_outlined),
+                label: Text('Gelap'),
+              ),
+              ButtonSegment(
+                value: ThemeMode.system,
+                icon: Icon(Icons.settings_brightness_outlined),
+                label: Text('Sistem'),
+              ),
+            ],
+            selected: {
+              ref.watch(themeModeProvider).value ?? ThemeMode.light,
+            },
+            onSelectionChanged: (selection) {
+              ref
+                  .read(themeModeProvider.notifier)
+                  .select(selection.first);
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Mode gelap nyaman untuk shift malam dan hemat baterai di layar '
+            'AMOLED. "Sistem" mengikuti pengaturan HP Anda.',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.outline),
           ),
 
           const SizedBox(height: 32),

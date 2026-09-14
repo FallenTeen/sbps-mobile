@@ -38,9 +38,9 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
 
   Color _statusColor(WorkshopJobStatus status) {
     return switch (status) {
-      WorkshopJobStatus.menunggu => AppTheme.warningColor,
-      WorkshopJobStatus.dikerjakan => AppTheme.infoColor,
-      WorkshopJobStatus.selesai => AppTheme.successColor,
+      WorkshopJobStatus.menunggu => context.colors.warning,
+      WorkshopJobStatus.dikerjakan => context.colors.info,
+      WorkshopJobStatus.selesai => context.colors.success,
     };
   }
 
@@ -69,23 +69,23 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       appBar: AppBar(
         title: const Text('Antrian Workshop'),
         bottom: const BrandStrip(),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: Column(
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: AppTheme.primaryColor.withValues(alpha: 0.05),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: context.colors.primary.withValues(alpha: 0.05),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ),
@@ -166,18 +166,18 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               size: 48,
-              color: AppTheme.errorColor,
+              color: context.colors.error,
             ),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -197,16 +197,16 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     return FilterChip(
       label: Text(label),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+      visualDensity: VisualDensity(horizontal: -2, vertical: -2),
+      labelPadding: EdgeInsets.symmetric(horizontal: 4),
       selected: selected,
       onSelected: (_) => setState(() => _filter = value),
-      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-      checkmarkColor: AppTheme.primaryColor,
+      selectedColor: context.colors.primary.withValues(alpha: 0.15),
+      checkmarkColor: context.colors.primary,
       labelStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: selected ? AppTheme.primaryColor : AppTheme.textSecondary,
+        color: selected ? context.colors.primary : context.colors.textSecondary,
       ),
     );
   }

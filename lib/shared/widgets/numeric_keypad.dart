@@ -96,16 +96,16 @@ class _Key extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.borderColor),
+              border: Border.all(color: context.colors.border),
             ),
             child: icon != null
-                ? Icon(icon, size: 22, color: AppTheme.textSecondary)
+                ? Icon(icon, size: 22, color: context.colors.textSecondary)
                 : Text(
                     label ?? '',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
           ),

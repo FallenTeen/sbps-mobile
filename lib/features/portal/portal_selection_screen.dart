@@ -16,7 +16,7 @@ class PortalSelectionScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).value;
 
     if (user == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -27,7 +27,7 @@ class PortalSelectionScreen extends ConsumerWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: context.colors.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -74,14 +74,14 @@ class PortalSelectionScreen extends ConsumerWidget {
                         if (context.mounted) context.go('/home');
                       },
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     // ── Footer ──
                     Center(
                       child: Text(
                         'SBPS Mobile v1.0',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textMuted,
+                          color: context.colors.textMuted,
                         ),
                       ),
                     ),
@@ -135,18 +135,18 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   'Halo, ${user.name ?? ''}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Pilih portal yang ingin Anda gunakan',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.textTertiary,
+                    color: context.colors.textTertiary,
                   ),
                 ),
               ],
@@ -154,7 +154,7 @@ class _Header extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout_rounded, color: AppTheme.textTertiary),
+            icon: Icon(Icons.logout_rounded, color: context.colors.textTertiary),
             onPressed: onLogout,
           ),
         ],
@@ -188,23 +188,23 @@ class _PortalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         elevation: enabled ? 1 : 0,
-        shadowColor: AppTheme.primaryColor.withValues(alpha: 0.15),
+        shadowColor: context.colors.primary.withValues(alpha: 0.15),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: enabled ? onTap : null,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: enabled
                   ? null
-                  : Border.all(color: AppTheme.borderColor, width: 1),
+                  : Border.all(color: context.colors.border, width: 1),
             ),
             child: Row(
               children: [
@@ -214,7 +214,7 @@ class _PortalCard extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: enabled ? gradient : null,
-                    color: enabled ? null : AppTheme.surfaceVariantColor,
+                    color: enabled ? null : context.colors.surfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: enabled
                         ? [
@@ -222,7 +222,7 @@ class _PortalCard extends StatelessWidget {
                               color: (gradient as LinearGradient).colors.first
                                   .withValues(alpha: 0.3),
                               blurRadius: 12,
-                              offset: const Offset(0, 4),
+                              offset: Offset(0, 4),
                             ),
                           ]
                         : null,
@@ -230,10 +230,10 @@ class _PortalCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 28,
-                    color: enabled ? Colors.white : AppTheme.textMuted,
+                    color: enabled ? Colors.white : context.colors.textMuted,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 // Text content
                 Expanded(
                   child: Column(
@@ -245,29 +245,29 @@ class _PortalCard extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: enabled
-                              ? AppTheme.textPrimary
-                              : AppTheme.textMuted,
+                              ? context.colors.textPrimary
+                              : context.colors.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         subtitle,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: enabled
-                              ? AppTheme.primaryColor
-                              : AppTheme.textMuted,
+                              ? context.colors.primary
+                              : context.colors.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         enabled ? description : disabledMessage,
                         style: TextStyle(
                           fontSize: 12,
                           color: enabled
-                              ? AppTheme.textTertiary
-                              : AppTheme.textMuted,
+                              ? context.colors.textTertiary
+                              : context.colors.textMuted,
                           height: 1.3,
                         ),
                         maxLines: 2,
@@ -276,20 +276,20 @@ class _PortalCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 // Arrow
                 if (enabled)
                   Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                      color: context.colors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 16,
-                      color: AppTheme.primaryColor,
+                      color: context.colors.primary,
                     ),
                   ),
               ],

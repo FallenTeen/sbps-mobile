@@ -229,10 +229,10 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Input Muatan'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (_, __) => AppEmptyState(
           icon: Icons.cloud_off_outlined,
           title: 'Gagal memuat data armada',
@@ -256,24 +256,24 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               // === DAFTAR RECORD ===
               if (_records.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
                   ),
-                  color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                  color: context.colors.primary.withValues(alpha: 0.05),
                   child: Row(
                     children: [
                       Icon(
                         Icons.list_alt,
                         size: 18,
-                        color: AppTheme.primaryColor,
+                        color: context.colors.primary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         '${_records.length} Record Tersimpan',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const Spacer(),
@@ -300,15 +300,15 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                       return Container(
                         width: 150,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.all(10),
+                        padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: isActive
-                              ? AppTheme.primaryColor.withValues(alpha: 0.12)
+                              ? context.colors.primary.withValues(alpha: 0.12)
                               : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isActive
-                                ? AppTheme.primaryColor
+                                ? context.colors.primary
                                 : Colors.grey.shade300,
                             width: isActive ? 2 : 1,
                           ),
@@ -348,7 +348,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                 const Spacer(),
                                 if (record.isComplete)
                                   const Icon(
-                                    Icons.check_circle,
+                                    Icons.check_circle_outline,
                                     size: 14,
                                     color: Colors.green,
                                   )
@@ -376,7 +376,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             GestureDetector(
                               onTap: () => _editRecord(record.index),
                               behavior: HitTestBehavior.opaque,
@@ -392,12 +392,12 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: 2),
                                   Text(
                                     '${record.jumlah ?? '-'} ${record.satuan}',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.textTertiary,
+                                      color: context.colors.textTertiary,
                                     ),
                                   ),
                                 ],
@@ -421,29 +421,29 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                     children: [
                       // Header record
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                          color: context.colors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.edit_note,
-                              color: AppTheme.primaryColor,
+                              color: context.colors.primary,
                               size: 20,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(
                               _currentRecordIndex == -1
                                   ? 'Record Baru #$_nextIndex'
                                   : 'Edit Record #$_currentRecordIndex',
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.primaryColor,
+                                color: context.colors.primary,
                               ),
                             ),
                           ],
@@ -629,14 +629,14 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
+            child: Text('Batal'),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deleteRecord(recordIndex);
             },
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error),
             child: const Text('Hapus'),
           ),
         ],

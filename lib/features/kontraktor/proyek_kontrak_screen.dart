@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -53,7 +54,10 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.business_center_outlined), text: 'Proyek Kontrak'),
+            Tab(
+              icon: Icon(Icons.business_center_outlined),
+              text: 'Proyek Kontrak',
+            ),
             Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Invoice'),
           ],
         ),
@@ -63,7 +67,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
         children: [
           // TAB 1: Daftar Proyek Kontrak
           RefreshIndicator(
-            onRefresh: () async => ref.refresh(proyekKontrakListProvider.future),
+            onRefresh: () async =>
+                ref.refresh(proyekKontrakListProvider.future),
             child: proyeksAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Center(
@@ -73,7 +78,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                     Text('Gagal memuat proyek: $err'),
                     const SizedBox(height: 8),
                     FilledButton(
-                      onPressed: () => ref.invalidate(proyekKontrakListProvider),
+                      onPressed: () =>
+                          ref.invalidate(proyekKontrakListProvider),
                       child: const Text('Coba Lagi'),
                     ),
                   ],
@@ -82,11 +88,15 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
               data: (items) {
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
-                      SizedBox(height: 140),
-                      Icon(Icons.folder_open_outlined, size: 48, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Text(
+                    children: [
+                      const SizedBox(height: 140),
+                      Icon(
+                        Icons.folder_open_outlined,
+                        size: 48,
+                        color: context.colors.textMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
                         'Belum ada proyek kontrak terdaftar.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey),
@@ -106,7 +116,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                     return Card(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () => context.push('/kontraktor/proyek/${item.id}'),
+                        onTap: () =>
+                            context.push('/kontraktor/proyek/${item.id}'),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -158,7 +169,9 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                     Icon(
                                       Icons.location_on_outlined,
                                       size: 14,
-                                      color: Theme.of(context).colorScheme.outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
@@ -166,7 +179,9 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                         item.lokasi!,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Theme.of(context).colorScheme.outline,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outline,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -187,7 +202,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
 
           // TAB 2: Daftar Invoice Kontrak
           RefreshIndicator(
-            onRefresh: () async => ref.refresh(invoiceKontrakListProvider.future),
+            onRefresh: () async =>
+                ref.refresh(invoiceKontrakListProvider.future),
             child: invoicesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Center(
@@ -197,7 +213,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                     Text('Gagal memuat invoice: $err'),
                     const SizedBox(height: 8),
                     FilledButton(
-                      onPressed: () => ref.invalidate(invoiceKontrakListProvider),
+                      onPressed: () =>
+                          ref.invalidate(invoiceKontrakListProvider),
                       child: const Text('Coba Lagi'),
                     ),
                   ],
@@ -206,11 +223,15 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
               data: (invoices) {
                 if (invoices.isEmpty) {
                   return ListView(
-                    children: const [
-                      SizedBox(height: 140),
-                      Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Text(
+                    children: [
+                      const SizedBox(height: 140),
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 48,
+                        color: context.colors.textMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
                         'Belum ada invoice kontrak.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey),
@@ -281,7 +302,9 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                 const Text('Total Tagihan:'),
                                 Text(
                                   fmtRp(inv.total),
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -294,7 +317,9 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                   fmtRp(inv.sisa),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: inv.sisa > 0 ? Colors.red : Colors.green,
+                                    color: inv.sisa > 0
+                                        ? Colors.red
+                                        : Colors.green,
                                   ),
                                 ),
                               ],

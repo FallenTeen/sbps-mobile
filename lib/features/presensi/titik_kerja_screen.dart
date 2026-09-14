@@ -126,7 +126,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
             icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push('/profile'),
           ),
-          const PortalSwitchButton(),
+          PortalSwitchButton(),
           IconButton(
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),
@@ -201,12 +201,12 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                     ref.read(locationServiceProvider).openSettings(),
                 onRetry: _loadPosition,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               Row(
                 children: [
                   Icon(Icons.place_outlined,
-                      size: 20, color: AppTheme.primaryColor),
+                      size: 20, color: context.colors.primary),
                   const SizedBox(width: 8),
                   Text('Titik Kerja Aktif',
                       style: Theme.of(context).textTheme.titleMedium),
@@ -412,7 +412,7 @@ class _LocationCard extends StatelessWidget {
           subtitle: Text(problem!),
           isThreeLine: true,
           trailing: PopupMenuButton<String>(
-            itemBuilder: (context) => const [
+            itemBuilder: (context) =>  [
               PopupMenuItem(value: 'retry', child: Text('Coba lagi')),
               PopupMenuItem(value: 'settings', child: Text('Pengaturan lokasi')),
             ],
@@ -455,18 +455,18 @@ class _TitikTile extends StatelessWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppTheme.primaryColor.withValues(alpha: 0.05)
+            ? context.colors.primary.withValues(alpha: 0.05)
             : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? AppTheme.primaryColor
+              ? context.colors.primary
               : isNearest
-                  ? AppTheme.primaryColor.withValues(alpha: 0.3)
-                  : AppTheme.borderColor,
+                  ? context.colors.primary.withValues(alpha: 0.3)
+                  : context.colors.border,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -477,7 +477,7 @@ class _TitikTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14),
             child: Row(
               children: [
                 // Location icon
@@ -486,17 +486,17 @@ class _TitikTile extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primaryColor.withValues(alpha: 0.1)
-                        : AppTheme.surfaceVariantColor,
+                        ? context.colors.primary.withValues(alpha: 0.1)
+                        : context.colors.surfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     isSelected ? Icons.place_rounded : Icons.location_on_outlined,
-                    color: isSelected ? AppTheme.primaryColor : AppTheme.textTertiary,
+                    color: isSelected ? context.colors.primary : context.colors.textTertiary,
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 // Title + subtitle
                 Expanded(
                   child: Column(
@@ -508,23 +508,23 @@ class _TitikTile extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                           color: isSelected
-                              ? AppTheme.primaryColor
-                              : AppTheme.textPrimary,
+                              ? context.colors.primary
+                              : context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       if (proyekLabel != null && proyekLabel.isNotEmpty)
                         Text(
                           proyekLabel,
-                          style: const TextStyle(
-                            color: AppTheme.textTertiary,
+                          style: TextStyle(
+                            color: context.colors.textTertiary,
                             fontSize: 12,
                           ),
                         ),
                       Text(
                         'Radius ${titik.radiusPresensiMeter.round()} m',
-                        style: const TextStyle(
-                          color: AppTheme.textMuted,
+                        style: TextStyle(
+                          color: context.colors.textMuted,
                           fontSize: 11,
                         ),
                       ),
@@ -553,17 +553,17 @@ class _TitikTile extends StatelessWidget {
                         ),
                       )
                     else if (isSelected)
-                      const Icon(Icons.check_circle_rounded,
-                          color: AppTheme.primaryColor, size: 22),
+                      Icon(Icons.check_circle_rounded,
+                          color: context.colors.primary, size: 22),
                     if (distanceText != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           distanceText!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ),

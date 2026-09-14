@@ -49,11 +49,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final submitting = auth.isLoading;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: EdgeInsets.symmetric(horizontal: 28),
             child: Form(
               key: _formKey,
               child: Column(
@@ -70,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                            color: context.colors.primary.withValues(alpha: 0.3),
                             blurRadius: 24,
                             offset: const Offset(0, 10),
                           ),
@@ -91,22 +91,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 28),
 
                   // ── Title ──
-                  const Text(
+                  Text(
                     'Selamat Datang',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                       letterSpacing: -0.5,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     'Masuk ke akun SBPS Anda',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textTertiary,
+                      color: context.colors.textTertiary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -125,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? 'Email wajib diisi'
                             : null,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // ── Password Field ──
                   _CustomTextField(
@@ -141,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _obscurePassword
                             ? Icons.visibility_off_rounded
                             : Icons.visibility_rounded,
-                        color: AppTheme.textMuted,
+                        color: context.colors.textMuted,
                         size: 20,
                       ),
                       onPressed: () =>
@@ -156,24 +156,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (auth.hasError) ...[
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.errorColor.withValues(alpha: 0.06),
+                        color: context.colors.error.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.errorColor.withValues(alpha: 0.15),
+                          color: context.colors.error.withValues(alpha: 0.15),
                         ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: AppTheme.errorColor, size: 18),
+                          Icon(Icons.error_outline_rounded,
+                              color: context.colors.error, size: 18),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               auth.error.toString(),
-                              style: const TextStyle(
-                                color: AppTheme.errorColor,
+                              style: TextStyle(
+                                color: context.colors.error,
                                 fontSize: 13,
                               ),
                             ),
@@ -189,7 +189,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: submitting ? null : _submit,
                     isLoading: submitting,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // ── Register Link ──
                   TextButton(
@@ -198,17 +198,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         text: 'Belum punya akun? ',
                         style: TextStyle(
-                          color: AppTheme.textTertiary,
+                          color: context.colors.textTertiary,
                           fontSize: 14,
                         ),
                         children: [
                           TextSpan(
                             text: 'Daftar',
                             style: TextStyle(
-                              color: AppTheme.primaryColor,
+                              color: context.colors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -216,14 +216,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
 
                   // ── Footer ──
                   Text(
                     'SBPS Mobile v1.0',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textMuted,
+                      color: context.colors.textMuted,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -273,14 +273,14 @@ class _CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       onFieldSubmitted: onFieldSubmitted,
       validator: validator,
-      style: const TextStyle(
-        color: AppTheme.textPrimary,
+      style: TextStyle(
+        color: context.colors.textPrimary,
         fontSize: 15,
       ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(prefixIcon, color: AppTheme.textMuted, size: 20),
+        prefixIcon: Icon(prefixIcon, color: context.colors.textMuted, size: 20),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white,
@@ -288,28 +288,28 @@ class _CustomTextField extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppTheme.borderColor),
+          borderSide: BorderSide(color: context.colors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppTheme.borderColor),
+          borderSide: BorderSide(color: context.colors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide:
-              const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+               BorderSide(color: context.colors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppTheme.errorColor),
+          borderSide: BorderSide(color: context.colors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppTheme.errorColor, width: 1.5),
+          borderSide: BorderSide(color: context.colors.error, width: 1.5),
         ),
-        labelStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 14),
-        hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 14),
-        errorStyle: const TextStyle(color: AppTheme.errorColor, fontSize: 12),
+        labelStyle: TextStyle(color: context.colors.textTertiary, fontSize: 14),
+        hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14),
+        errorStyle: TextStyle(color: context.colors.error, fontSize: 12),
       ),
     );
   }
@@ -330,14 +330,14 @@ class _LoginButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
+          backgroundColor: context.colors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: AppTheme.primaryColor.withValues(alpha: 0.5),
+          disabledBackgroundColor: context.colors.primary.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
           elevation: 2,
-          shadowColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+          shadowColor: context.colors.primary.withValues(alpha: 0.3),
         ),
         child: isLoading
             ? const SizedBox(

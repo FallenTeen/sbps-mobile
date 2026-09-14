@@ -41,7 +41,7 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat Muatan'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -68,7 +68,7 @@ class _HariIniTab extends ConsumerWidget {
     final armadaAsync = ref.watch(armadaSayaProvider);
 
     return armadaAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Center(child: CircularProgressIndicator()),
       error: (e, _) => AppEmptyState(
         icon: Icons.cloud_off_outlined,
         title: 'Gagal memuat data',
@@ -89,12 +89,12 @@ class _HariIniTab extends ConsumerWidget {
           children: [
             // Summary card
             Container(
-              padding: const EdgeInsets.all(16),
-              color: AppTheme.primaryColor.withValues(alpha: 0.05),
+              padding: EdgeInsets.all(16),
+              color: context.colors.primary.withValues(alpha: 0.05),
               child: Row(
                 children: [
-                  Icon(Icons.today, color: AppTheme.primaryColor, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.today, color: context.colors.primary, size: 20),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,18 +103,18 @@ class _HariIniTab extends ConsumerWidget {
                           'Ritase Hari Ini',
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Text(
                           '${armadaList.length} kendaraan aktif',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.colors.textTertiary,
                           ),
                         ),
                         if (armadaList.length == 1) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             armadaList.first.isAlatBerat
                                 ? (armadaList.first.jamOperasionalTerkini != null
@@ -126,7 +126,7 @@ class _HariIniTab extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryColor,
+                              color: context.colors.primary,
                             ),
                           ),
                         ],
@@ -177,19 +177,19 @@ class _ArmadaRitaseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-          child: Icon(Icons.local_shipping, color: AppTheme.primaryColor, size: 20),
+          backgroundColor: context.colors.primary.withValues(alpha: 0.1),
+          child: Icon(Icons.local_shipping, color: context.colors.primary, size: 20),
         ),
         title: Text(
           armada.platNomor,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
-          style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
         ),
         trailing: const Icon(Icons.chevron_right),
       ),

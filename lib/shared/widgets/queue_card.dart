@@ -31,11 +31,11 @@ class QueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
         boxShadow: AppTheme.shadowLv2,
       ),
       child: Material(
@@ -61,17 +61,17 @@ class QueueCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                                color: context.colors.textPrimary,
                               ),
                             ),
                           ),
                           if (statusLabel != null)
                             StatusPill(
                               label: statusLabel!,
-                              color: statusColor ?? AppTheme.primaryColor,
+                              color: statusColor ?? context.colors.primary,
                             ),
                         ],
                       ),
@@ -79,9 +79,9 @@ class QueueCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           subtitle!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.colors.textTertiary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

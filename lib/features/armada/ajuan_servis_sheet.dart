@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
+import '../../core/draft/autosave_controller.dart';
+import '../../core/draft/draft_repository.dart';
+import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/draft_restore_banner.dart';
 import 'armada_providers.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
-import '../../shared/widgets/bouncing_button.dart';
 
 /// Simplified Ajuan Servis Sheet (Fase 2) - Converted from full screen to sheet
 /// Form sederhana: pilih armada, kategori, keluhan. 
@@ -29,6 +32,35 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
   String _kategori = 'rutin';
   bool _isLoading = false;
   bool _initialized = false;
+  bool _draftFound = false;
+  DateTime? _draftSavedAt;
+
+  late final AutosaveController _autosave;
+
+  String get _draftKey =>
+      'servis_ajuan_${widget.initialArmadaId ?? 'new'}';
+
+  Map<String, dynamic> _snapshot() => {
+    'armadaId': _selectedArmada?.id,
+    'kategori': _kategori,
+    'keluhan': _keluhanController.text,
+  };
+
+  void _restoreFromDraft(FormDraft draft) {
+    final fields = draft.fieldsJson;
+    _keluhanController.text = fields['keluhan'] as String? ?? '';
+    if (fields['kategori'] is String) _kategori = fields['kategori']!;
+    // Armada restore dilakukan saat data masterArmada sudah dimuat
+    final armadaId = fields['armadaId'] as String?;
+    if (armadaId != null) {
+      final armadaList = ref.read(masterArmadaProvider).value;
+      if (armadaList != null) {
+        final match = armadaList.where((a) => a.id == armadaId).toList();
+        if (match.isNotEmpty) setState(() => _selectedArmada = match.first);
+      }
+    }
+    setState(() { _draftFound = true; _draftSavedAt = draft.savedAt; });
+  }
 
   final List<String> _kategoriOptions = const [
     'rutin',
@@ -40,11 +72,21 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialArmadaId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _prefillArmada();
-      });
-    }
+    _autosave = AutosaveController(
+      ref: ref,
+      draftKey: _draftKey,
+      formType: DraftFormType.servisAjuan,
+      currentFields: _snapshot,
+      onRestore: _restoreFromDraft,
+    );
+    _autosave.init();
+
+    _keluhanController.addListener(_autosave.onFieldChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _autosave.load();
+      if (widget.initialArmadaId != null) _prefillArmada();
+    });
   }
 
   void _prefillArmada() {
@@ -59,6 +101,7 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
 
   @override
   void dispose() {
+    _autosave.dispose();
     _keluhanController.dispose();
     super.dispose();
   }
@@ -95,6 +138,7 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
           );
 
       AnalyticsService.servisAjuanSubmit();
+      await _autosave.clear();
       if (!mounted) return;
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,6 +215,20 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                 ),
               ),
               const Divider(height: 1),
+              if (_draftFound)
+                DraftRestoreBanner(
+                  savedAt: _draftSavedAt ?? DateTime.now(),
+                  onContinue: () => setState(() => _draftFound = false),
+                  onDiscard: () async {
+                    await _autosave.clear();
+                    setState(() {
+                      _draftFound = false;
+                      _keluhanController.clear();
+                      _selectedArmada = null;
+                      _kategori = 'rutin';
+                    });
+                  },
+                ),
               // Content
               Expanded(
                 child: masterArmadaAsync.when(
@@ -233,7 +291,9 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                               onChanged: (val) {
                                 setState(() {
                                   _selectedArmada = val;
+                                  _draftFound = false;
                                 });
+                                _autosave.onFieldChanged();
                               },
                               validator: (val) => val == null ? 'Pilih armada' : null,
                             ),
@@ -255,6 +315,7 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                               }).toList(),
                               onChanged: (val) {
                                 if (val != null) setState(() => _kategori = val);
+                                _autosave.onFieldChanged();
                               },
                             ),
                             const SizedBox(height: 16),

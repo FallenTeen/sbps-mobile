@@ -19,10 +19,10 @@ class DriverDashboardScreen extends ConsumerWidget {
     final checklistAsync = ref.watch(checklistHariIniProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: null,
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -58,35 +58,35 @@ class _VehicleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return armadaAsync.when(
-      loading: () => const SkeletonCard(),
+      loading: () => SkeletonCard(),
       error: (e, _) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.errorColor.withValues(alpha: 0.05),
+          color: context.colors.error.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.2)),
+          border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
         ),
         child: Text('Gagal memuat kendaraan: $e',
-            style: const TextStyle(color: AppTheme.errorColor)),
+            style: TextStyle(color: context.colors.error)),
       ),
       data: (items) {
         if (items.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderColor),
+              border: Border.all(color: context.colors.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Icon(Icons.local_shipping_outlined,
-                    size: 40, color: AppTheme.textMuted),
+                    size: 40, color: context.colors.textMuted),
                 SizedBox(height: 10),
                 Text(
                   'Belum ada kendaraan yang ditugaskan',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textTertiary),
+                  style: TextStyle(color: context.colors.textTertiary),
                 ),
               ],
             ),
@@ -96,17 +96,17 @@ class _VehicleSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.directions_bus_rounded,
-                    size: 20, color: AppTheme.primaryColor),
+                    size: 20, color: context.colors.primary),
                 SizedBox(width: 8),
                 Text(
                   'Kendaraan Saya',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],
@@ -131,11 +131,11 @@ class _VehicleCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,13 +147,13 @@ class _VehicleCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: aktif
-                      ? AppTheme.successColor.withValues(alpha: 0.1)
-                      : AppTheme.warningColor.withValues(alpha: 0.1),
+                      ? context.colors.success.withValues(alpha: 0.1)
+                      : context.colors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   Icons.local_shipping_rounded,
-                  color: aktif ? AppTheme.successColor : AppTheme.warningColor,
+                  color: aktif ? context.colors.success : context.colors.warning,
                   size: 24,
                 ),
               ),
@@ -164,17 +164,17 @@ class _VehicleCard extends StatelessWidget {
                   children: [
                     Text(
                       armada.platNomor,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     if (armada.kodeUnit != null)
                       Text(
                         armada.kodeUnit!,
-                        style: const TextStyle(
-                          color: AppTheme.textTertiary,
+                        style: TextStyle(
+                          color: context.colors.textTertiary,
                           fontSize: 12,
                         ),
                       ),
@@ -182,11 +182,11 @@ class _VehicleCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: aktif
-                      ? AppTheme.successColor.withValues(alpha: 0.1)
-                      : AppTheme.warningColor.withValues(alpha: 0.1),
+                      ? context.colors.success.withValues(alpha: 0.1)
+                      : context.colors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -194,7 +194,7 @@ class _VehicleCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: aktif ? AppTheme.successColor : AppTheme.warningColor,
+                    color: aktif ? context.colors.success : context.colors.warning,
                   ),
                 ),
               ),
@@ -233,25 +233,25 @@ class _TodaySummarySection extends StatelessWidget {
     final today = DateTime.now().toIso8601String().substring(0, 10);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.today_rounded, color: AppTheme.primaryColor, size: 20),
+              Icon(Icons.today_rounded, color: context.colors.primary, size: 20),
               SizedBox(width: 8),
               Text(
                 'Ringkasan Hari Ini',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
@@ -267,10 +267,10 @@ class _TodaySummarySection extends StatelessWidget {
               }
 
               if (ritaseAsync.error != null && ritaseAsync.items.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Text('Gagal memuat data',
-                      style: TextStyle(color: AppTheme.errorColor)),
+                      style: TextStyle(color: context.colors.error)),
                 );
               }
 
@@ -289,16 +289,16 @@ class _TodaySummarySection extends StatelessWidget {
                       icon: Icons.route_rounded,
                       label: 'Total Rit',
                       value: '$totalRit',
-                      color: AppTheme.primaryColor,
+                      color: context.colors.primary,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: _SummaryTile(
                       icon: Icons.payments_outlined,
                       label: 'Total Upah',
                       value: fmtRpCompact(totalUpah),
-                      color: AppTheme.successColor,
+                      color: context.colors.success,
                     ),
                   ),
                 ],
@@ -321,46 +321,46 @@ class _ChecklistSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.checklist_rounded, color: AppTheme.primaryColor, size: 20),
+              Icon(Icons.checklist_rounded, color: context.colors.primary, size: 20),
               SizedBox(width: 8),
               Text(
                 'Checklist Hari Ini',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           checklistAsync.when(
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (e, _) => const Padding(
+            error: (e, _) => Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text('Gagal memuat checklist',
-                  style: TextStyle(color: AppTheme.errorColor)),
+                  style: TextStyle(color: context.colors.error)),
             ),
             data: (items) {
               if (items.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text('Tidak ada kendaraan untuk checklist',
-                      style: TextStyle(color: AppTheme.textTertiary)),
+                      style: TextStyle(color: context.colors.textTertiary)),
                 );
               }
 
@@ -369,16 +369,16 @@ class _ChecklistSection extends StatelessWidget {
                   for (final c in items)
                     Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: c.sudahIsi
-                            ? AppTheme.successColor.withValues(alpha: 0.04)
-                            : AppTheme.surfaceVariantColor,
+                            ? context.colors.success.withValues(alpha: 0.04)
+                            : context.colors.surfaceVariant,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: c.sudahIsi
-                              ? AppTheme.successColor.withValues(alpha: 0.2)
-                              : AppTheme.borderColor,
+                              ? context.colors.success.withValues(alpha: 0.2)
+                              : context.colors.border,
                         ),
                       ),
                       child: InkWell(
@@ -388,11 +388,11 @@ class _ChecklistSection extends StatelessWidget {
                           children: [
                             Icon(
                               c.sudahIsi
-                                  ? Icons.check_circle_rounded
+                                  ? Icons.check_circle_outline_rounded
                                   : Icons.radio_button_unchecked_rounded,
                               color: c.sudahIsi
-                                  ? AppTheme.successColor
-                                  : AppTheme.textMuted,
+                                  ? context.colors.success
+                                  : context.colors.textMuted,
                               size: 22,
                             ),
                             const SizedBox(width: 12),
@@ -402,25 +402,25 @@ class _ChecklistSection extends StatelessWidget {
                                 children: [
                                   Text(
                                     c.platNomor,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.textPrimary,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                   Text(
                                     c.sudahIsi
                                         ? 'Sudah diisi${c.odoKm != null ? ' • ODO: ${fmtKm(c.odoKm!)}' : ''}'
                                         : 'Belum diisi',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.textTertiary,
+                                      color: context.colors.textTertiary,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded,
-                                color: AppTheme.textMuted, size: 20),
+                            Icon(Icons.chevron_right_rounded,
+                                color: context.colors.textMuted, size: 20),
                           ],
                         ),
                       ),
@@ -445,26 +445,26 @@ class _RecentRitaseSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.history_rounded, color: AppTheme.primaryColor, size: 20),
+               Icon(Icons.history_rounded, color: context.colors.primary, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Riwayat Muatan Terakhir',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -485,18 +485,18 @@ class _RecentRitaseSection extends StatelessWidget {
               }
 
               if (ritaseAsync.error != null && ritaseAsync.items.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Text('Gagal memuat riwayat',
-                      style: TextStyle(color: AppTheme.errorColor)),
+                      style: TextStyle(color: context.colors.error)),
                 );
               }
 
               if (ritaseAsync.items.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text('Belum ada riwayat muatan',
-                      style: TextStyle(color: AppTheme.textTertiary)),
+                      style: TextStyle(color: context.colors.textTertiary)),
                 );
               }
 
@@ -525,9 +525,9 @@ class _RitaseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariantColor,
+        color: context.colors.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -538,9 +538,9 @@ class _RitaseTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   ritase.material ?? '-',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -554,8 +554,8 @@ class _RitaseTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     '${ritase.ruteAsal} → ${ritase.ruteTujuan}',
-                    style: const TextStyle(
-                      color: AppTheme.textTertiary,
+                    style: TextStyle(
+                      color: context.colors.textTertiary,
                       fontSize: 12,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -564,9 +564,9 @@ class _RitaseTile extends StatelessWidget {
               if (ritase.totalUpahRit != null)
                 Text(
                   fmtRpCompact(ritase.totalUpahRit!),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.successColor,
+                    color: context.colors.success,
                     fontSize: 13,
                   ),
                 ),
@@ -577,8 +577,8 @@ class _RitaseTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 ritase.tanggal!,
-                style: const TextStyle(
-                  color: AppTheme.textMuted,
+                style: TextStyle(
+                  color: context.colors.textMuted,
                   fontSize: 11,
                 ),
               ),
@@ -628,9 +628,9 @@ class _SummaryTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textTertiary,
+              color: context.colors.textTertiary,
             ),
           ),
         ],
@@ -650,19 +650,19 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariantColor,
+        color: context.colors.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppTheme.textTertiary),
+          Icon(icon, size: 14, color: context.colors.textTertiary),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
           ),
         ],
       ),
@@ -678,10 +678,10 @@ class _RitaseStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'disetujui' => AppTheme.successColor,
-      'draft' => AppTheme.warningColor,
-      'ditagih' => AppTheme.infoColor,
-      _ => AppTheme.textMuted,
+      'disetujui' => context.colors.success,
+      'draft' => context.colors.warning,
+      'ditagih' => context.colors.info,
+      _ => context.colors.textMuted,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),

@@ -109,30 +109,30 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
       appBar: AppBar(
         title: Text(
             'Checklist Serah Terima — ${_selectedArmada?.platNomor ?? ''}'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: Column(
         children: [
           // Step indicator
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            color: AppTheme.primaryColor.withValues(alpha: 0.05),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            color: context.colors.primary.withValues(alpha: 0.05),
             child: Row(
               children: [
-                Icon(Icons.check_circle, size: 16, color: AppTheme.primaryColor),
-                const SizedBox(width: 8),
+                Icon(Icons.check_circle_outline, size: 16, color: context.colors.primary),
+                SizedBox(width: 8),
                 Text(
                   'Langkah 2 dari 2 — Isi Checklist',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryColor,
+                    color: context.colors.primary,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
                 Text(
                   '10 item',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 11, color: context.colors.textTertiary),
                 ),
               ],
             ),
@@ -141,12 +141,12 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
           // Warning banner
           if (hasIssue)
             Container(
-              padding: const EdgeInsets.all(12),
-              color: AppTheme.warningColor.withValues(alpha: 0.1),
+              padding: EdgeInsets.all(12),
+              color: context.colors.warning.withValues(alpha: 0.1),
               child: Row(
                 children: [
                   Icon(Icons.warning_amber_rounded,
-                      color: AppTheme.warningColor, size: 20),
+                      color: context.colors.warning, size: 20),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -250,23 +250,23 @@ class _VehicleSelectionStep extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checklist Serah Terima'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            color: AppTheme.primaryColor.withValues(alpha: 0.05),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            color: context.colors.primary.withValues(alpha: 0.05),
             child: Row(
               children: [
-                Icon(Icons.directions_car, size: 16, color: AppTheme.primaryColor),
-                const SizedBox(width: 8),
+                Icon(Icons.directions_car, size: 16, color: context.colors.primary),
+                SizedBox(width: 8),
                 Text(
                   'Langkah 1 dari 2 — Pilih Kendaraan',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryColor,
+                    color: context.colors.primary,
                   ),
                 ),
               ],
@@ -274,7 +274,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
           ),
           Expanded(
             child: armadaAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Center(child: CircularProgressIndicator()),
               error: (_, __) => AppEmptyState(
                 icon: Icons.cloud_off_outlined,
                 title: 'Gagal memuat data armada',
@@ -296,19 +296,19 @@ class _VehicleSelectionStep extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
-                color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                padding: EdgeInsets.all(16),
+                color: context.colors.primary.withValues(alpha: 0.05),
                 child: Row(
                   children: [
                     Icon(Icons.directions_car,
-                        color: AppTheme.primaryColor, size: 20),
-                    const SizedBox(width: 8),
+                        color: context.colors.primary, size: 20),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Pilih kendaraan untuk checklist serah terima',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -322,22 +322,22 @@ class _VehicleSelectionStep extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final armada = armadaList[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      margin: EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor:
-                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                              context.colors.primary.withValues(alpha: 0.1),
                           child: Icon(Icons.local_shipping,
-                              color: AppTheme.primaryColor, size: 20),
+                              color: context.colors.primary, size: 20),
                         ),
                         title: Text(
                           armada.platNomor,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: Text(
                           '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
                           style: TextStyle(
-                              fontSize: 12, color: AppTheme.textTertiary),
+                              fontSize: 12, color: context.colors.textTertiary),
                         ),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => onSelected(armada),
@@ -490,13 +490,13 @@ class _MajorChecklistTile extends StatelessWidget {
                         side: BorderSide(
                           color: isSelected ? sColor : Colors.grey.shade300,
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: 8),
                       ),
                       child: Text(
                         _statusLabel(status),
                         style: TextStyle(
                           fontSize: 11,
-                          color: isSelected ? sColor : AppTheme.textTertiary,
+                          color: isSelected ? sColor : context.colors.textTertiary,
                         ),
                       ),
                     ),
@@ -514,11 +514,16 @@ class _MajorChecklistTile extends StatelessWidget {
                   height: 80,
                   width: 80,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => Container(
-                    height: 80,
-                    width: 80,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image, color: Colors.grey),
+                  errorBuilder: (context, error, stack) => ColoredBox(
+                    color: context.colors.surfaceVariant,
+                    child: SizedBox(
+                      height: 80,
+                      width: 80,
+                      child: Icon(
+                        Icons.image,
+                        color: context.colors.textMuted,
+                      ),
+                    ),
                   ),
                 ),
               ),

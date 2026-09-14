@@ -171,7 +171,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
                               ),
                             if (!canCheckIn && !canCheckOut)
                               const Icon(
-                                Icons.check_circle,
+                                Icons.check_circle_outline,
                                 color: Colors.green,
                               ),
                           ],

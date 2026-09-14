@@ -41,7 +41,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     final titik = ref.watch(selectedTitikProvider);
 
     return hariIniAsync.when(
-      loading: () => const SkeletonCard(height: 120),
+      loading: () => SkeletonCard(height: 120),
       error: (error, _) => _ErrorCard(
         message: '$error',
         onRetry: () => ref.invalidate(hariIniProvider),
@@ -91,8 +91,8 @@ class PresensiHariIniCard extends ConsumerWidget {
           SnackBar(
             content: Text(presensiSubmissionMessage(result)),
             backgroundColor: result.luarRadius
-                ? AppTheme.warningColor
-                : AppTheme.successColor,
+                ? context.colors.warning
+                : context.colors.success,
           ),
         );
       }
@@ -101,14 +101,14 @@ class PresensiHariIniCard extends ConsumerWidget {
       messenger.showSnackBar(
         SnackBar(
           content: Text(presensiSubmissionMessage(result)),
-          backgroundColor: AppTheme.warningColor,
+          backgroundColor: context.colors.warning,
         ),
       );
     } else if (result.error != null) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(presensiSubmissionMessage(result)),
-          backgroundColor: AppTheme.errorColor,
+          backgroundColor: context.colors.error,
         ),
       );
     }
@@ -146,7 +146,7 @@ class _CheckInCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (siap ? AppTheme.primaryColor : Colors.grey).withValues(
+            color: (siap ? context.colors.primary : Colors.grey).withValues(
               alpha: 0.25,
             ),
             blurRadius: 12,
@@ -201,7 +201,7 @@ class _CheckInCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             BouncingButton(
               onPressed: (!siap || busy) ? null : onCheckIn,
               child: SizedBox(
@@ -210,7 +210,7 @@ class _CheckInCard extends StatelessWidget {
                   onPressed: (!siap || busy) ? null : onCheckIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: siap ? AppTheme.primaryColor : Colors.grey,
+                    foregroundColor: siap ? context.colors.primary : Colors.grey,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -259,10 +259,10 @@ class _WorkingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+        border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.08),
+            color: context.colors.primary.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -276,18 +276,18 @@ class _WorkingCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.successColor.withValues(alpha: 0.1),
+                    color: context.colors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.work_rounded,
-                    color: AppTheme.successColor,
+                    color: context.colors.success,
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,16 +295,16 @@ class _WorkingCard extends StatelessWidget {
                       Text(
                         'Sedang Bekerja',
                         style: TextStyle(
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         presensi.titik?.nama ?? 'Titik Anda',
                         style: TextStyle(
-                          color: AppTheme.primaryColor,
+                          color: context.colors.primary,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -316,23 +316,23 @@ class _WorkingCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariantColor,
+                color: context.colors.surfaceVariant,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.access_time_rounded,
                     size: 16,
-                    color: AppTheme.textTertiary,
+                    color: context.colors.textTertiary,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Check-in pukul ${fmtWaktu(presensi.checkIn)}',
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -346,22 +346,22 @@ class _WorkingCard extends StatelessWidget {
                 onPressed: busy ? null : onCheckOut,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: AppTheme.errorColor),
-                  foregroundColor: AppTheme.errorColor,
+                  side: BorderSide(color: context.colors.error),
+                  foregroundColor: context.colors.error,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: busy
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.errorColor,
+                          color: context.colors.error,
                         ),
                       )
-                    : const Icon(Icons.logout_rounded),
+                    : Icon(Icons.logout_rounded),
                 label: Text(switch (busyPhase) {
                   UploadPhase.compressing => 'Mengompres foto...',
                   UploadPhase.sending => 'Mengirim...',
@@ -389,21 +389,21 @@ class _CompletedCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
+        border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppTheme.successColor.withValues(alpha: 0.1),
+                color: context.colors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: AppTheme.successColor,
+              child: Icon(
+                Icons.check_circle_outline_rounded,
+                color: context.colors.success,
                 size: 24,
               ),
             ),
@@ -412,10 +412,10 @@ class _CompletedCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Presensi Selesai',
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -423,8 +423,8 @@ class _CompletedCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Masuk ${fmtWaktu(presensi.checkIn)} — Pulang ${fmtWaktu(presensi.checkOut)}',
-                    style: const TextStyle(
-                      color: AppTheme.textTertiary,
+                    style: TextStyle(
+                      color: context.colors.textTertiary,
                       fontSize: 13,
                     ),
                   ),
@@ -449,23 +449,23 @@ class _ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.errorColor.withValues(alpha: 0.05),
+        color: context.colors.error.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.2)),
+        border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.error_outline, color: AppTheme.errorColor, size: 20),
+              Icon(Icons.error_outline, color: context.colors.error, size: 20),
               SizedBox(width: 8),
               Text(
                 'Gagal memuat status presensi',
                 style: TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -474,7 +474,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             message,
-            style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            style: TextStyle(color: context.colors.textTertiary, fontSize: 12),
           ),
           const SizedBox(height: 8),
           TextButton.icon(

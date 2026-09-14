@@ -99,7 +99,7 @@ class _CombinedSelectionScreenState
     final user = ref.watch(authControllerProvider).value;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final canPresensi = canAccessPresensi(user);
@@ -114,7 +114,7 @@ class _CombinedSelectionScreenState
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: context.colors.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -136,12 +136,12 @@ class _CombinedSelectionScreenState
                   children: [
                     // Portal selection
                     if (canPresensi && canProyek) ...[
-                      const Text(
+                      Text(
                         'Pilih Portal',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -159,12 +159,12 @@ class _CombinedSelectionScreenState
                     // Role selection (only for Proyek portal)
                     if ((canProyek && !canPresensi) ||
                         _selectedPortal == AppPortal.proyek) ...[
-                      const Text(
+                      Text(
                         'Pilih Peran',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -177,7 +177,7 @@ class _CombinedSelectionScreenState
                           });
                         },
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                     ],
 
                     // Submit button
@@ -187,8 +187,8 @@ class _CombinedSelectionScreenState
                       child: FilledButton(
                         onPressed: _canSubmit() ? _submit : null,
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          disabledBackgroundColor: AppTheme.primaryColor
+                          backgroundColor: context.colors.primary,
+                          disabledBackgroundColor: context.colors.primary
                               .withValues(alpha: 0.3),
                         ),
                         child: const Text(
@@ -200,14 +200,14 @@ class _CombinedSelectionScreenState
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     // Footer
                     Center(
                       child: Text(
                         'SBPS Mobile v1.0',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textMuted,
+                          color: context.colors.textMuted,
                         ),
                       ),
                     ),
@@ -277,25 +277,25 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   'Halo, ${user.name ?? ''}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Pilih pekerjaan Anda',
-                  style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
                 ),
               ],
             ),
           ),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(
+            icon: Icon(
               Icons.logout_rounded,
-              color: AppTheme.textTertiary,
+              color: context.colors.textTertiary,
             ),
             onPressed: onLogout,
           ),
@@ -380,13 +380,13 @@ class _PortalOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
                     ? (gradient as LinearGradient).colors.first
-                    : AppTheme.borderColor,
+                    : context.colors.border,
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -418,10 +418,10 @@ class _PortalOption extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -436,9 +436,9 @@ class _PortalOption extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         description,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.colors.textTertiary,
                           height: 1.3,
                         ),
                         maxLines: 2,
@@ -523,11 +523,11 @@ class _RoleOption extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppTheme.primaryColor : AppTheme.borderColor,
+              color: isSelected ? context.colors.primary : context.colors.border,
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -537,13 +537,13 @@ class _RoleOption extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                  color: context.colors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _iconForRole(role),
                   size: 24,
-                  color: AppTheme.primaryColor,
+                  color: context.colors.primary,
                 ),
               ),
               const SizedBox(width: 14),
@@ -553,17 +553,17 @@ class _RoleOption extends StatelessWidget {
                   children: [
                     Text(
                       role,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _descriptionForRole(role),
-                      style: const TextStyle(
-                        color: AppTheme.textTertiary,
+                      style: TextStyle(
+                        color: context.colors.textTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -573,7 +573,7 @@ class _RoleOption extends StatelessWidget {
               if (isSelected)
                 Icon(
                   Icons.check_circle,
-                  color: AppTheme.primaryColor,
+                  color: context.colors.primary,
                   size: 24,
                 ),
             ],

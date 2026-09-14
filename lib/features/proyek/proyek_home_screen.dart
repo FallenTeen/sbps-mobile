@@ -24,14 +24,14 @@ class ProyekHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).value;
     final role = ref.watch(activeRoleProvider);
-    final roles = user == null ? const <String>[] : app2RolesOf(user);
+    final roles = user == null ?  <String>[] : app2RolesOf(user);
     final allowed = kProyekModules
         .where((m) => RolePermissions.canAccess(role, m.key))
         .where((m) => m.key != 'tracking' || RolePermissions.isAdminLike(role))
         .toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: null,
         bottom: const BrandStrip(),
@@ -94,20 +94,20 @@ class ProyekHomeScreen extends ConsumerWidget {
 
                   // Quick Actions per role (Fase 2)
                   _QuickActions(role: role),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Section: Modul
                   Row(
                     children: [
                       Icon(Icons.grid_view_rounded,
-                          size: 20, color: AppTheme.primaryColor),
+                          size: 20, color: context.colors.primary),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Modul',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ],
@@ -162,13 +162,13 @@ class _GreetingHeader extends StatelessWidget {
             : 'Selamat Sore';
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.25),
+            color: context.colors.primary.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -230,11 +230,11 @@ class _ModuleCard extends ConsumerWidget {
     final role = ref.watch(activeRoleProvider);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -243,17 +243,17 @@ class _ModuleCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () => _navigate(context),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                    color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(module.icon, color: AppTheme.primaryColor, size: 22),
+                  child: Icon(module.icon, color: context.colors.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -262,17 +262,17 @@ class _ModuleCard extends ConsumerWidget {
                     children: [
                       Text(
                         module.label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         _subtitleFor(module.key),
-                        style: const TextStyle(
-                          color: AppTheme.textTertiary,
+                        style: TextStyle(
+                          color: context.colors.textTertiary,
                           fontSize: 11,
                         ),
                       ),
@@ -282,8 +282,8 @@ class _ModuleCard extends ConsumerWidget {
                 // Pending badge (Fase 2)
                 _PendingBadge(moduleKey: module.key, role: role),
                 const SizedBox(width: 8),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppTheme.textMuted, size: 20),
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textMuted, size: 20),
               ],
             ),
           ),
@@ -352,29 +352,29 @@ class _TrackingStatusCard extends ConsumerWidget {
     final status = ref.watch(trackingSchedulerProvider);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: status.running
-              ? AppTheme.successColor.withValues(alpha: 0.3)
-              : AppTheme.borderColor,
+              ? context.colors.success.withValues(alpha: 0.3)
+              : context.colors.border,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: status.running
-                  ? AppTheme.successColor.withValues(alpha: 0.1)
-                  : AppTheme.surfaceVariantColor,
+                  ? context.colors.success.withValues(alpha: 0.1)
+                  : context.colors.surfaceVariant,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               status.running ? Icons.location_on_rounded : Icons.location_off_rounded,
-              color: status.running ? AppTheme.successColor : AppTheme.textMuted,
+              color: status.running ? context.colors.success : context.colors.textMuted,
               size: 20,
             ),
           ),
@@ -385,33 +385,33 @@ class _TrackingStatusCard extends ConsumerWidget {
               children: [
                 Text(
                   status.running ? 'Lokasi Dipantau' : 'Tracking Tidak Aktif',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 if (status.message != null)
                   Text(
                     status.message!,
-                    style: const TextStyle(color: AppTheme.errorColor, fontSize: 11),
+                    style: TextStyle(color: context.colors.error, fontSize: 11),
                   ),
               ],
             ),
           ),
           if (status.pendingPoints > 0)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.warningColor.withValues(alpha: 0.1),
+                color: context.colors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 '${status.pendingPoints} antre',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.warningColor,
+                  color: context.colors.warning,
                 ),
               ),
             ),
@@ -460,19 +460,19 @@ class _NoActiveRoleView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariantColor,
+                color: context.colors.surfaceVariant,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.person_off_outlined,
-                  size: 40, color: AppTheme.textMuted),
+              child: Icon(Icons.person_off_outlined,
+                  size: 40, color: context.colors.textMuted),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Peran aktif tidak tersedia untuk App Proyek.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textTertiary),
+              style: TextStyle(color: context.colors.textTertiary),
             ),
           ],
         ),
@@ -645,9 +645,9 @@ class _PendingBadge extends ConsumerWidget {
         }
         
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppTheme.warningColor,
+            color: context.colors.warning,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -691,7 +691,7 @@ class _QuickActions extends StatelessWidget {
     final actions = _getActionsForRole(role);
     
     if (actions.isEmpty) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     return Column(
@@ -700,19 +700,19 @@ class _QuickActions extends StatelessWidget {
         Row(
           children: [
             Icon(Icons.flash_on_rounded,
-                size: 20, color: AppTheme.primaryColor),
+                size: 20, color: context.colors.primary),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Aksi Cepat',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -797,27 +797,27 @@ class _QuickActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.borderColor),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               action.icon,
-              color: AppTheme.primaryColor,
+              color: context.colors.primary,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               action.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,

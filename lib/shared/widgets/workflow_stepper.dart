@@ -45,7 +45,7 @@ class WorkflowStepper extends StatelessWidget {
             'Alur Hari Ini',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -78,17 +78,17 @@ class _StepTile extends StatelessWidget {
   final bool isLast;
   final ThemeData theme;
 
-  Color _statusColor() {
+  Color _statusColor(BuildContext context) {
     return switch (step.status) {
-      WorkflowStepStatus.selesai => AppTheme.successColor,
-      WorkflowStepStatus.sedang => AppTheme.primaryColor,
+      WorkflowStepStatus.selesai => context.colors.success,
+      WorkflowStepStatus.sedang => context.colors.primary,
       WorkflowStepStatus.belum => theme.colorScheme.outlineVariant,
     };
   }
 
   IconData _statusIcon() {
     return switch (step.status) {
-      WorkflowStepStatus.selesai => Icons.check_circle,
+      WorkflowStepStatus.selesai => Icons.check_circle_outline,
       WorkflowStepStatus.sedang => Icons.radio_button_checked,
       WorkflowStepStatus.belum => Icons.radio_button_unchecked,
     };
@@ -96,7 +96,7 @@ class _StepTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _statusColor();
+    final color = _statusColor(context);
     final isActive = step.status != WorkflowStepStatus.belum;
     final statusText = switch (step.status) {
       WorkflowStepStatus.selesai => 'Sudah selesai',
@@ -136,7 +136,7 @@ class _StepTile extends StatelessWidget {
               // Content
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: EdgeInsets.symmetric(vertical: 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -147,22 +147,22 @@ class _StepTile extends StatelessWidget {
                           fontWeight:
                               isActive ? FontWeight.w600 : FontWeight.w500,
                           color: isActive
-                              ? AppTheme.textPrimary
-                              : AppTheme.textTertiary,
+                              ? context.colors.textPrimary
+                              : context.colors.textTertiary,
                           decoration: step.status == WorkflowStepStatus.selesai
                               ? TextDecoration.lineThrough
                               : null,
                         ),
                       ),
                       if (step.subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           step.subtitle!,
                           style: TextStyle(
                             fontSize: 12,
                             color: step.status == WorkflowStepStatus.selesai
-                                ? AppTheme.successColor
-                                : AppTheme.textTertiary,
+                                ? context.colors.success
+                                : context.colors.textTertiary,
                           ),
                         ),
                       ],

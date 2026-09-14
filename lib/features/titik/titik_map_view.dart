@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../presensi/models/titik.dart';
+import '../../shared/theme/app_theme.dart';
 
 /// Widget reusable Peta Interaktif berbasis OpenStreetMap (OSM) dan flutter_map.
 ///
@@ -345,7 +346,7 @@ class _TitikMapViewState extends State<TitikMapView> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.place, size: 16, color: Colors.redAccent),
+                  Icon(Icons.place, size: 16, color: context.colors.primary),
                   const SizedBox(width: 4),
                   Text(
                     '${_validTitik.length} Titik',

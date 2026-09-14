@@ -26,13 +26,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
 
     // Driver Armada → UnitSayaHomeScreen (workflow-based)
     if (activeRole == 'Driver Armada') {
-      return const UnitSayaHomeScreen();
+      return UnitSayaHomeScreen();
     }
 
     final sections = _buildSections(activeRole);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +45,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
           ],
         ),
         bottom: const BrandStrip(),
-        actions: const [PortalSwitchButton(), SyncActionButton()],
+        actions:  [PortalSwitchButton(), SyncActionButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -57,13 +57,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: AppTheme.primaryGradient,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.25),
+                    color: context.colors.primary.withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -96,40 +96,40 @@ class ArmadaHomeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Kendaraan Saya section
             Row(
               children: [
                 Icon(Icons.directions_bus_rounded,
-                    size: 20, color: AppTheme.primaryColor),
+                    size: 20, color: context.colors.primary),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Kendaraan Saya',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             ..._armadaSection(ref),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Role-aware menu sections
             for (final section in sections) ...[
               Row(
                 children: [
-                  Icon(section.icon, size: 20, color: AppTheme.primaryColor),
+                  Icon(section.icon, size: 20, color: context.colors.primary),
                   const SizedBox(width: 8),
                   Text(
                     section.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
@@ -382,11 +382,11 @@ class _MenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -395,17 +395,17 @@ class _MenuTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                    color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+                  child: Icon(icon, color: context.colors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -414,17 +414,17 @@ class _MenuTile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
-                          color: AppTheme.textTertiary,
+                        style: TextStyle(
+                          color: context.colors.textTertiary,
                           fontSize: 11,
                         ),
                       ),
@@ -433,9 +433,9 @@ class _MenuTile extends StatelessWidget {
                 ),
                 if (badge != null && badge! > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppTheme.warningColor.withValues(alpha: 0.12),
+                      color: context.colors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -443,12 +443,12 @@ class _MenuTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.warningColor,
+                        color: context.colors.warning,
                       ),
                     ),
                   ),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppTheme.textMuted, size: 20),
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textMuted, size: 20),
               ],
             ),
           ),
@@ -471,11 +471,11 @@ class _ArmadaCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,29 +486,29 @@ class _ArmadaCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                  color: context.colors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.directions_bus_rounded,
-                    color: AppTheme.primaryColor, size: 22),
+                child: Icon(Icons.directions_bus_rounded,
+                    color: context.colors.primary, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   armada.platNomor,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: aktif
-                      ? AppTheme.successColor.withValues(alpha: 0.1)
-                      : AppTheme.warningColor.withValues(alpha: 0.1),
+                      ? context.colors.success.withValues(alpha: 0.1)
+                      : context.colors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -516,7 +516,7 @@ class _ArmadaCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: aktif ? AppTheme.successColor : AppTheme.warningColor,
+                    color: aktif ? context.colors.success : context.colors.warning,
                   ),
                 ),
               ),
@@ -550,9 +550,9 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariantColor,
+        color: context.colors.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -560,14 +560,14 @@ class _InfoChip extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            style: TextStyle(color: context.colors.textTertiary, fontSize: 12),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 12,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ],
@@ -582,20 +582,20 @@ class _EmptyArmada extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.no_crash_outlined, size: 40, color: AppTheme.textMuted),
+          Icon(Icons.no_crash_outlined, size: 40, color: context.colors.textMuted),
           SizedBox(height: 10),
           Text(
             'Belum ada armada yang ditugaskan ke Anda.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textTertiary),
+            style: TextStyle(color: context.colors.textTertiary),
           ),
         ],
       ),
@@ -611,11 +611,11 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.errorColor.withValues(alpha: 0.05),
+        color: context.colors.error.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.2)),
+        border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
       ),
       child: Text(message, textAlign: TextAlign.center),
     );

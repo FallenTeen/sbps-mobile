@@ -45,10 +45,10 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Daftar Stok'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: Column(
         children: [
@@ -96,12 +96,12 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.cloud_off_rounded,
-                        color: AppTheme.errorColor, size: 32),
+                    Icon(Icons.cloud_off_rounded,
+                        color: context.colors.error, size: 32),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Gagal memuat daftar stok.',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
@@ -182,14 +182,14 @@ class _StokItemCard extends StatelessWidget {
     final rendah = item.isStokRendah;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: rendah
-              ? AppTheme.errorColor.withValues(alpha: 0.3)
-              : AppTheme.borderColor,
+              ? context.colors.error.withValues(alpha: 0.3)
+              : context.colors.border,
         ),
       ),
       child: Material(
@@ -205,7 +205,7 @@ class _StokItemCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
@@ -213,8 +213,8 @@ class _StokItemCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: rendah
-                        ? AppTheme.errorColor.withValues(alpha: 0.08)
-                        : AppTheme.primaryColor.withValues(alpha: 0.08),
+                        ? context.colors.error.withValues(alpha: 0.08)
+                        : context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -222,7 +222,7 @@ class _StokItemCard extends StatelessWidget {
                         ? Icons.warning_amber_rounded
                         : Icons.inventory_2_outlined,
                     size: 20,
-                    color: rendah ? AppTheme.errorColor : AppTheme.primaryColor,
+                    color: rendah ? context.colors.error : context.colors.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -232,18 +232,18 @@ class _StokItemCard extends StatelessWidget {
                     children: [
                       Text(
                         item.nama,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         item.kategori,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.colors.textTertiary,
                         ),
                       ),
                     ],
@@ -257,21 +257,21 @@ class _StokItemCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: rendah ? AppTheme.errorColor : AppTheme.textPrimary,
+                        color: rendah ? context.colors.error : context.colors.textPrimary,
                       ),
                     ),
                     Text(
                       '/ ${item.stokMinimum} ${item.satuan}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textMuted,
+                        color: context.colors.textMuted,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppTheme.textMuted, size: 20),
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textMuted, size: 20),
               ],
             ),
           ),

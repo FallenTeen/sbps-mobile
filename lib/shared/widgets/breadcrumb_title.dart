@@ -38,10 +38,10 @@ class BreadcrumbTitle extends StatelessWidget {
             parentLabel!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
         Row(
@@ -56,10 +56,10 @@ class BreadcrumbTitle extends StatelessWidget {
                 title ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),

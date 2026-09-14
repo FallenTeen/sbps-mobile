@@ -32,11 +32,11 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
     final requestsAsync = ref.watch(inventoryRequestsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Inventory'),
         bottom: const BrandStrip(),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -69,13 +69,13 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       ),
       data: (summary) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: AppTheme.primaryGradient,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryColor.withValues(alpha: 0.25),
+                color: context.colors.primary.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -107,12 +107,12 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                         if (summary.stokRendahCount > 0) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.errorColor,
+                              color: context.colors.error,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -131,7 +131,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         'Nilai stok: ${_rupiah.format(summary.nilaiStok)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -154,28 +154,28 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.input_rounded, size: 20, color: AppTheme.primaryColor),
+            Icon(Icons.input_rounded, size: 20, color: context.colors.primary),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Request Masuk dari Workshop',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        const Text(
+        Text(
           'Request Pending',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         requestsAsync.when(
           loading: () => const SkeletonLoader(
             child: Column(
@@ -196,22 +196,22 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             if (pending.isEmpty) {
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.borderColor),
+                  border: Border.all(color: context.colors.border),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
-                        size: 32, color: AppTheme.successColor),
+                        size: 32, color: context.colors.success),
                     SizedBox(height: 8),
                     Text(
                       'Tidak ada request pending',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppTheme.textTertiary,
+                        color: context.colors.textTertiary,
                       ),
                     ),
                   ],
@@ -225,17 +225,17 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                     leading: CircleAvatar(
                       radius: 20,
                       backgroundColor:
-                          AppTheme.warningColor.withValues(alpha: 0.12),
-                      child: const Icon(
+                          context.colors.warning.withValues(alpha: 0.12),
+                      child: Icon(
                         Icons.build_rounded,
                         size: 20,
-                        color: AppTheme.warningColor,
+                        color: context.colors.warning,
                       ),
                     ),
                     title: '${request.platNomor} \u2022 ${request.kategoriServis}',
                     subtitle: '${request.totalItems} item diminta',
                     statusLabel: request.status.label,
-                    statusColor: AppTheme.warningColor,
+                    statusColor: context.colors.warning,
                     onTap: () => context.push('/inventory/request/${request.id}'),
                   ),
               ],
@@ -252,14 +252,14 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.grid_view_rounded, size: 20, color: AppTheme.primaryColor),
+            Icon(Icons.grid_view_rounded, size: 20, color: context.colors.primary),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Menu',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],
@@ -319,20 +319,20 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_rounded, color: AppTheme.errorColor, size: 22),
+           Icon(Icons.cloud_off_rounded, color: context.colors.error, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
             ),
           ),
           TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
@@ -359,7 +359,7 @@ class _ShortcutTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -368,25 +368,25 @@ class _ShortcutTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 14),
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 14),
             child: Column(
               children: [
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                    color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryColor, size: 22),
+                  child: Icon(icon, color: context.colors.primary, size: 22),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],

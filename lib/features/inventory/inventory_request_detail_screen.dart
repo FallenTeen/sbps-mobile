@@ -59,7 +59,7 @@ class _InventoryRequestDetailScreenState
     }
     HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Request sparepart diproses')),
+      SnackBar(content: Text('Request sparepart diproses')),
     );
   }
 
@@ -69,13 +69,13 @@ class _InventoryRequestDetailScreenState
     final prosesState = ref.watch(inventoryProsesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const BreadcrumbTitle(
           parentLabel: 'Inventory',
           title: 'Detail Request',
         ),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: detailAsync.when(
         loading: () => const SkeletonLoader(
@@ -96,12 +96,12 @@ class _InventoryRequestDetailScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off_rounded,
-                    color: AppTheme.errorColor, size: 32),
+                Icon(Icons.cloud_off_rounded,
+                    color: context.colors.error, size: 32),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Gagal memuat detail request.',
-                  style: TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.colors.textSecondary),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
@@ -127,18 +127,18 @@ class _InventoryRequestDetailScreenState
                     padding: const EdgeInsets.all(16),
                     children: [
                       _HeaderCard(request: request),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       Row(
                         children: [
                           Icon(Icons.list_alt_rounded,
-                              size: 20, color: AppTheme.primaryColor),
+                              size: 20, color: context.colors.primary),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'Item Diminta',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ],
@@ -187,11 +187,11 @@ class _HeaderCard extends StatelessWidget {
     final selesai = request.status == InventoryRequestStatus.selesai;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,12 +202,12 @@ class _HeaderCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.warningColor.withValues(alpha: 0.12),
+                  color: context.colors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.directions_bus_filled_rounded,
-                  color: selesai ? AppTheme.successColor : AppTheme.warningColor,
+                  color: selesai ? context.colors.success : context.colors.warning,
                   size: 22,
                 ),
               ),
@@ -218,18 +218,18 @@ class _HeaderCard extends StatelessWidget {
                   children: [
                     Text(
                       request.platNomor,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${request.kategoriServis} \u2022 ${request.totalItems} item',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textTertiary,
+                        color: context.colors.textTertiary,
                       ),
                     ),
                   ],
@@ -238,24 +238,24 @@ class _HeaderCard extends StatelessWidget {
               _StatusBadge(status: request.status.label),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.event_rounded, size: 15, color: AppTheme.textMuted),
+               Icon(Icons.event_rounded, size: 15, color: context.colors.textMuted),
               const SizedBox(width: 6),
               Text(
                 _requestDateFormat.format(request.createdAt),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppTheme.textMuted,
+                  color: context.colors.textMuted,
                 ),
               ),
-              const SizedBox(width: 16),
-              const Icon(Icons.sync_alt_rounded, size: 15, color: AppTheme.textMuted),
+              SizedBox(width: 16),
+               Icon(Icons.sync_alt_rounded, size: 15, color: context.colors.textMuted),
               const SizedBox(width: 6),
-              const Text(
+              Text(
                 'Workshop',
-                style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                style: TextStyle(fontSize: 12, color: context.colors.textMuted),
               ),
             ],
           ),
@@ -263,15 +263,15 @@ class _HeaderCard extends StatelessWidget {
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppTheme.successColor.withValues(alpha: 0.08),
+                color: context.colors.success.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.check_circle_outline_rounded,
-                      size: 18, color: AppTheme.successColor),
+                      size: 18, color: context.colors.success),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -279,7 +279,7 @@ class _HeaderCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.successColor,
+                        color: context.colors.success,
                       ),
                     ),
                   ),
@@ -298,10 +298,10 @@ class _ItemCard extends StatelessWidget {
 
   final InventoryRequestItem item;
 
-  Color get _statusColor => switch (item.status) {
-    InventoryRequestItemStatus.tersedia => AppTheme.successColor,
-    InventoryRequestItemStatus.kurang => AppTheme.warningColor,
-    InventoryRequestItemStatus.tidakTersedia => AppTheme.errorColor,
+  Color _statusColor(BuildContext context) => switch (item.status) {
+    InventoryRequestItemStatus.tersedia => context.colors.success,
+    InventoryRequestItemStatus.kurang => context.colors.warning,
+    InventoryRequestItemStatus.tidakTersedia => context.colors.error,
   };
 
   @override
@@ -310,14 +310,14 @@ class _ItemCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: tersedia
-              ? AppTheme.successColor.withValues(alpha: 0.3)
-              : AppTheme.borderColor,
+              ? context.colors.success.withValues(alpha: 0.3)
+              : context.colors.border,
         ),
       ),
       child: Row(
@@ -326,13 +326,13 @@ class _ItemCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: _statusColor.withValues(alpha: 0.08),
+              color: _statusColor(context).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               tersedia ? Icons.check_rounded : Icons.build_rounded,
               size: 19,
-              color: _statusColor,
+              color: _statusColor(context),
             ),
           ),
           const SizedBox(width: 12),
@@ -342,18 +342,18 @@ class _ItemCard extends StatelessWidget {
               children: [
                 Text(
                   item.namaBarang,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${item.jumlahDiminta} ${item.satuan} diminta',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textTertiary,
+                    color: context.colors.textTertiary,
                   ),
                 ),
               ],
@@ -367,16 +367,16 @@ class _ItemCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: _statusColor,
+                  color: _statusColor(context),
                 ),
               ),
               if (item.jumlahTersedia != null) ...[
                 const SizedBox(height: 2),
                 Text(
                   '${item.jumlahTersedia} tersedia',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textTertiary,
+                    color: context.colors.textTertiary,
                   ),
                 ),
               ],
@@ -393,14 +393,14 @@ class _StatusBadge extends StatelessWidget {
 
   final String status;
 
-  Color get _color => switch (status) {
-    'Selesai' => AppTheme.successColor,
-    'Diproses' => AppTheme.infoColor,
-    _ => AppTheme.warningColor,
+  Color _color(BuildContext context) => switch (status) {
+    'Selesai' => context.colors.success,
+    'Diproses' => context.colors.info,
+    _ => context.colors.warning,
   };
 
   @override
   Widget build(BuildContext context) {
-    return StatusPill(label: status, color: _color);
+    return StatusPill(label: status, color: _color(context));
   }
 }

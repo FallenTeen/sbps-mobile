@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../dashboard_providers.dart';
 import '../fmt.dart';
@@ -103,7 +104,7 @@ class EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          Icon(Icons.inbox_outlined, size: 20, color: Colors.grey[600]),
+          Icon(Icons.inbox_outlined, size: 20, color: context.colors.textTertiary),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
         ],

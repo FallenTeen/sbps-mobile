@@ -61,12 +61,12 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     final checklist = ref.watch(checklistHariIniProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(
           widget.isAkhir ? 'Checklist akhir' : 'Checklist harian',
         ),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(checklistHariIniProvider),
@@ -81,7 +81,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   onAction: () => ref.invalidate(checklistHariIniProvider),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => _ChecklistCard(
@@ -115,10 +115,10 @@ class _ChecklistCard extends StatelessWidget {
     final filled = item.sudahIsi;
     return Card(
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(
-          filled ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: filled ? AppTheme.successColor : AppTheme.textMuted,
+          filled ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+          color: filled ? context.colors.success : context.colors.textMuted,
           size: 28,
         ),
         title: Text(
@@ -312,7 +312,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
               const SizedBox(height: 8),
               Text(
                 widget.item.platNomor,
-                style: const TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.colors.textSecondary),
               ),
               const SizedBox(height: 16),
               Text(
@@ -337,7 +337,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
                   child: const Text('Kirim checklist'),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               SizedBox(
                 height: 48,
                 child: TextButton(
@@ -404,7 +404,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
               'Gagal menyimpan checklist.\nPeriksa koneksi lalu coba lagi.',
             ),
@@ -419,7 +419,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(widget.item.platNomor),
       ),
@@ -431,9 +431,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 _draftHint!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppTheme.textTertiary,
+                  color: context.colors.textTertiary,
                 ),
               ),
             ),
@@ -441,9 +441,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
             widget.isAkhir
                 ? 'Periksa kondisi unit di akhir hari. Ketuk Baik / Tidak baik pada tiap item.'
                 : 'Periksa kondisi unit. Ketuk Baik / Tidak baik pada tiap item.',
-            style: const TextStyle(color: AppTheme.textSecondary),
+            style: TextStyle(color: context.colors.textSecondary),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           for (final item in _items) ...[
             _ItemTile(
               item: item,
@@ -528,40 +528,40 @@ class _ItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             item.label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _ToggleChip(
                   label: 'Baik',
                   selected: item.baik,
-                  selectedColor: AppTheme.successColor,
+                  selectedColor: context.colors.success,
                   onTap: onBaik,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _ToggleChip(
                   label: 'Tidak baik',
                   selected: !item.baik,
-                  selectedColor: AppTheme.errorColor,
+                  selectedColor: context.colors.error,
                   onTap: onTidakBaik,
                 ),
               ),
@@ -624,7 +624,7 @@ class _ToggleChip extends StatelessWidget {
       child: Material(
         color: selected
             ? selectedColor.withValues(alpha: 0.12)
-            : AppTheme.surfaceVariantColor,
+            : context.colors.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -634,7 +634,7 @@ class _ToggleChip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: selected ? selectedColor : AppTheme.borderColor,
+                color: selected ? selectedColor : context.colors.border,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -642,7 +642,7 @@ class _ToggleChip extends StatelessWidget {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: selected ? selectedColor : AppTheme.textSecondary,
+                color: selected ? selectedColor : context.colors.textSecondary,
               ),
             ),
           ),

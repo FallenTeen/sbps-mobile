@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 /// - [warning]: aksi reversibel/ringan (keluar form dengan draft, hapus foto draft) —
 ///   tombol confirm netral (bukan merah).
 /// - [destructive]: aksi permanen/final (logout, reject, hapus permanen, selesaikan job) —
-///   tombol confirm merah error ([AppTheme.errorColor]).
+///   tombol confirm merah error ([context.colors.error]).
 /// - [critical]: aksi berdampak luas (logout semua device) —
 ///   tombol merah + icon warning di header, barrier tidak bisa di-dismiss.
 enum ConfirmSeverity { warning, destructive, critical }
@@ -123,10 +123,10 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
   /// Aksen warna per severity: warn-amber untuk ringan, error-red untuk
   /// destruktif/kritikal.
   Color get _accent => switch (_severity) {
-        ConfirmSeverity.warning => AppTheme.warningColor,
+        ConfirmSeverity.warning => context.colors.warning,
         ConfirmSeverity.destructive ||
         ConfirmSeverity.critical =>
-          AppTheme.errorColor,
+          context.colors.error,
       };
 
   IconData get _defaultIcon => switch (_severity) {
@@ -191,7 +191,7 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
               widget.message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppTheme.textSecondary,
+                color: context.colors.textSecondary,
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -215,7 +215,7 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
           ],
         ),
       ),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      actionsPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         // Tombol batal selalu di kiri & jadi default focus (aman).
@@ -223,23 +223,23 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
           child: OutlinedButton(
             autofocus: true,
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textSecondary,
-              side: BorderSide(color: AppTheme.borderColor),
+              foregroundColor: context.colors.textSecondary,
+              side: BorderSide(color: context.colors.border),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             onPressed: () => Navigator.of(context).pop(),
             child: Text(widget.cancelLabel),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: switch (_severity) {
-                ConfirmSeverity.warning => AppTheme.secondaryColor,
+                ConfirmSeverity.warning => context.colors.secondary,
                 ConfirmSeverity.destructive ||
                 ConfirmSeverity.critical =>
-                  AppTheme.errorColor,
+                  context.colors.error,
               },
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),

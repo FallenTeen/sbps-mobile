@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'app_colors.dart';
+
+export 'app_colors.dart';
+
 /// Custom theme for SBPS Mobile Apps.
 ///
 /// Provides a polished, professional look with consistent design tokens
@@ -216,127 +220,250 @@ class AppTheme {
     hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
   );
 
-  // ── Button Themes ──────────────────────────────────────────────────────────
-  static final ElevatedButtonThemeData _elevatedButtonTheme =
-      ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      backgroundColor: _primary,
-      foregroundColor: Colors.white,
-      textStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
-      ),
-    ),
-  );
-
-  static final FilledButtonThemeData _filledButtonTheme = FilledButtonThemeData(
-    style: FilledButton.styleFrom(
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      backgroundColor: _primary,
-      foregroundColor: Colors.white,
-      textStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
-      ),
-    ),
-  );
-
-  static final OutlinedButtonThemeData _outlinedButtonTheme =
-      OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      side: const BorderSide(color: Color(0xFFE2E8F0)),
-      foregroundColor: const Color(0xFF475569),
-      textStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
-      ),
-    ),
-  );
-
-  static final TextButtonThemeData _textButtonTheme = TextButtonThemeData(
-    style: TextButton.styleFrom(
-      foregroundColor: _primary,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
-
-  // ── Chip Theme ─────────────────────────────────────────────────────────────
-  static final ChipThemeData _chipTheme = ChipThemeData(
-    backgroundColor: _surfaceVariant,
-    selectedColor: _primary.withValues(alpha: 0.15),
-    labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-    ),
-    side: BorderSide.none,
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  );
-
-  // ── Bottom Sheet Theme ─────────────────────────────────────────────────────
-  static final BottomSheetThemeData _bottomSheetTheme = BottomSheetThemeData(
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    showDragHandle: true,
-    dragHandleColor: const Color(0xFFCBD5E1),
-  );
-
-  // ── Dialog Theme ───────────────────────────────────────────────────────────
-  static final DialogThemeData _dialogTheme = DialogThemeData(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    backgroundColor: Colors.white,
-    elevation: 8,
-  );
-
-  // ── Snackbar Theme ─────────────────────────────────────────────────────────
-  static final SnackBarThemeData _snackBarTheme = SnackBarThemeData(
-    backgroundColor: const Color(0xFF1E293B),
-    contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    behavior: SnackBarBehavior.floating,
-  );
-
   // ── Main ThemeData ─────────────────────────────────────────────────────────
   static ThemeData get lightTheme {
+    return _baseTheme(
+      colorScheme: _lightColorScheme,
+      scaffoldBackgroundColor: _background,
+      isDark: false,
+    );
+  }
+
+  /// Dark mode (Rencana Pengembangan UX §Bagian 2 — D1/D2).
+  static ThemeData get darkTheme {
+    return _baseTheme(
+      colorScheme: _darkColorScheme,
+      scaffoldBackgroundColor: _darkBackground,
+      isDark: true,
+    );
+  }
+
+  // ── Dark Color Tokens ──────────────────────────────────────────────────────
+  // Primary dicerahkan ke tone merah muda (#F87171) agar kontras AA terhadap
+  // surface gelap; surface mengikuti M3 dark (#1E1E1E..~).
+  static const Color _darkBackground = Color(0xFF0F1115);
+  static const Color _darkSurface = Color(0xFF1A1D23);
+  static const Color _darkSurfaceVariant = Color(0xFF23272F);
+  static const Color _darkCard = Color(0xFF1E2228);
+  static const Color _darkBorder = Color(0xFF2E3440);
+  static const Color _darkTextPrimary = Color(0xFFF1F5F9);
+  static const Color _darkTextSecondary = Color(0xFFC7CDD8);
+  static const Color _darkTextTertiary = Color(0xFF9AA3B2);
+  static const Color _darkTextMuted = Color(0xFF6B7280);
+  static const Color _darkPrimary = Color(0xFFF87171);
+  static const Color _darkOnPrimary = Color(0xFF3D0A0A);
+
+  static final ColorScheme _darkColorScheme = ColorScheme.dark(
+    primary: _darkPrimary,
+    onPrimary: _darkOnPrimary,
+    primaryContainer: _darkPrimary.withValues(alpha: 0.2),
+    onPrimaryContainer: const Color(0xFFFFD8D8),
+    secondary: const Color(0xFFA5B4FC),
+    onSecondary: const Color(0xFF1E1B4B),
+    secondaryContainer: const Color(0xFFA5B4FC).withValues(alpha: 0.16),
+    onSecondaryContainer: const Color(0xFFC7D2FE),
+    tertiary: const Color(0xFFFBBF24),
+    onTertiary: const Color(0xFF451A03),
+    tertiaryContainer: const Color(0xFFFBBF24).withValues(alpha: 0.16),
+    onTertiaryContainer: const Color(0xFFFDE68A),
+    surface: _darkSurface,
+    onSurface: _darkTextPrimary,
+    onSurfaceVariant: _darkTextTertiary,
+    error: const Color(0xFFF28B82),
+    onError: const Color(0xFF3D0A0A),
+    outline: const Color(0xFF475069),
+    outlineVariant: _darkBorder,
+    shadow: const Color(0xFF000000),
+  );
+
+  static ThemeData _baseTheme({
+    required ColorScheme colorScheme,
+    required Color scaffoldBackgroundColor,
+    required bool isDark,
+  }) {
+    final colors = isDark ? AppColors.dark : AppColors.light;
+    final textTheme = isDark ? _darkTextTheme : _textTheme;
+    final cardTheme = isDark ? _darkCardTheme : _cardTheme;
+    final appBarTheme = isDark ? _darkAppBarTheme : _appBarTheme;
+    final inputTheme = isDark ? _darkInputTheme : _inputTheme;
+    final buttonBg = colorScheme.primary;
+    final buttonFg = colorScheme.onPrimary;
+    final borderColor = colors.border;
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: _lightColorScheme,
-      textTheme: _textTheme,
-      scaffoldBackgroundColor: _background,
-      cardTheme: _cardTheme,
-      appBarTheme: _appBarTheme,
-      inputDecorationTheme: _inputTheme,
-      elevatedButtonTheme: _elevatedButtonTheme,
-      filledButtonTheme: _filledButtonTheme,
-      outlinedButtonTheme: _outlinedButtonTheme,
-      textButtonTheme: _textButtonTheme,
-      chipTheme: _chipTheme,
-      bottomSheetTheme: _bottomSheetTheme,
-      dialogTheme: _dialogTheme,
-      snackBarTheme: _snackBarTheme,
-      splashColor: _primary.withValues(alpha: 0.08),
-      highlightColor: _primary.withValues(alpha: 0.04),
-      dividerColor: const Color(0xFFE2E8F0),
-      dividerTheme: const DividerThemeData(
-        color: Color(0xFFE2E8F0),
+      colorScheme: colorScheme,
+      extensions: [colors],
+      textTheme: textTheme,
+      scaffoldBackgroundColor: scaffoldBackgroundColor,
+      canvasColor: colors.background,
+      cardTheme: cardTheme,
+      cardColor: colors.card,
+      appBarTheme: appBarTheme,
+      inputDecorationTheme: inputTheme,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: buttonBg,
+          foregroundColor: buttonFg,
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: buttonBg,
+          foregroundColor: buttonFg,
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide(color: borderColor),
+          foregroundColor: colors.textSecondary,
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: buttonBg,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: colors.surfaceVariant,
+        selectedColor: colorScheme.primary.withValues(alpha: isDark ? 0.25 : 0.15),
+        labelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: colors.textSecondary,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        side: BorderSide.none,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.card,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        showDragHandle: true,
+        dragHandleColor: isDark
+            ? const Color(0xFF475069)
+            : const Color(0xFFCBD5E1),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: colors.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark
+            ? const Color(0xFF2A2F38)
+            : const Color(0xFF1E293B),
+        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      splashColor: colorScheme.primary.withValues(alpha: 0.08),
+      highlightColor: colorScheme.primary.withValues(alpha: 0.04),
+      dividerColor: borderColor,
+      dividerTheme: DividerThemeData(
+        color: borderColor,
         thickness: 1,
         space: 1,
       ),
     );
   }
+
+  // ── Dark Theme Component Styles ────────────────────────────────────────────
+  static final TextTheme _darkTextTheme = _textTheme.apply(
+    bodyColor: _darkTextPrimary,
+    displayColor: _darkTextPrimary,
+    decorationColor: _darkTextPrimary,
+  );
+
+  static final CardThemeData _darkCardTheme = CardThemeData(
+    elevation: 0,
+    margin: const EdgeInsets.only(bottom: 10),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: const BorderSide(color: _darkBorder),
+    ),
+    color: _darkCard,
+    shadowColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+  );
+
+  static final AppBarTheme _darkAppBarTheme = AppBarTheme(
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    backgroundColor: _darkBackground,
+    foregroundColor: _darkTextPrimary,
+    titleTextStyle: const TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      color: _darkTextPrimary,
+      letterSpacing: -0.3,
+    ),
+    iconTheme: const IconThemeData(
+      color: _darkTextSecondary,
+      size: 22,
+    ),
+    actionsIconTheme: const IconThemeData(
+      color: _darkTextSecondary,
+      size: 22,
+    ),
+  );
+
+  static final InputDecorationTheme _darkInputTheme = InputDecorationTheme(
+    filled: true,
+    fillColor: _darkSurfaceVariant,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _darkBorder),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _darkBorder),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _darkPrimary, width: 1.5),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Color(0xFFF28B82)),
+    ),
+    labelStyle: const TextStyle(color: _darkTextTertiary, fontSize: 14),
+    hintStyle: const TextStyle(color: _darkTextMuted, fontSize: 14),
+  );
 
   // ── Design Tokens (for inline use) ─────────────────────────────────────────
   static const Color primaryColor = _primary;

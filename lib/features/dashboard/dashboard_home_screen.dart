@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/models/titik.dart';
@@ -198,7 +199,7 @@ class TitikOverviewTile extends StatelessWidget {
                   child: Text(titik.titik,
                       style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
-                Icon(Icons.chevron_right, size: 20, color: Colors.grey[600]),
+                Icon(Icons.chevron_right, size: 20, color: context.colors.textTertiary),
               ],
             ),
             Text(titik.proyek, style: Theme.of(context).textTheme.bodySmall),
@@ -243,7 +244,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: Colors.grey.shade700),
+          Icon(icon, size: 13, color: context.colors.textSecondary),
           const SizedBox(width: 4),
           Text(label,
               style: TextStyle(fontSize: 11, color: Colors.grey.shade800)),

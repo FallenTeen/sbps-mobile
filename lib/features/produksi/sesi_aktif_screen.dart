@@ -176,7 +176,7 @@ class _ActiveSessionsTab extends ConsumerWidget {
                     sliver: SliverList.separated(
                       itemCount: items.length,
                       separatorBuilder: (_, _) =>
-                          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                          SliverToBoxAdapter(child: SizedBox(height: 12)),
                       itemBuilder: (context, i) => _SessionCard(
                         session: items[i],
                         hasWaitingQc:
@@ -271,16 +271,16 @@ class _ProgressTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.bar_chart, size: 64, color: AppTheme.textMuted),
+           Icon(Icons.bar_chart, size: 64, color: context.colors.textMuted),
           const SizedBox(height: 16),
           const Text(
             'Progress Hari Ini',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Lihat progress produksi hari ini',
-            style: TextStyle(color: AppTheme.textTertiary),
+            style: TextStyle(color: context.colors.textTertiary),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
@@ -303,16 +303,16 @@ class _HistoryTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.history, size: 64, color: AppTheme.textMuted),
+           Icon(Icons.history, size: 64, color: context.colors.textMuted),
           const SizedBox(height: 16),
           const Text(
             'Riwayat Produksi',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Lihat riwayat sesi produksi',
-            style: TextStyle(color: AppTheme.textTertiary),
+            style: TextStyle(color: context.colors.textTertiary),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(

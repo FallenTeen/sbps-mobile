@@ -52,7 +52,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), actions: const []),
+      appBar: AppBar(title: Text(widget.title), actions:  []),
       body: Column(
         children: [
           // Period Filter Chips (Fase 2)
@@ -99,20 +99,20 @@ class _PeriodFilterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+        border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Periode',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
+              color: context.colors.textTertiary,
             ),
           ),
           const SizedBox(height: 8),
@@ -129,17 +129,17 @@ class _PeriodFilterSection extends StatelessWidget {
                       horizontal: -2,
                       vertical: -2,
                     ),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    labelPadding: EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
                     },
-                    selectedColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    checkmarkColor: AppTheme.primaryColor,
+                    selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                    checkmarkColor: context.colors.primary,
                     labelStyle: TextStyle(
                       color: selected == option
-                          ? AppTheme.primaryColor
-                          : AppTheme.textPrimary,
+                          ? context.colors.primary
+                          : context.colors.textPrimary,
                       fontWeight: selected == option
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -169,20 +169,20 @@ class _StatusFilterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+        border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Status',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
+              color: context.colors.textTertiary,
             ),
           ),
           const SizedBox(height: 8),
@@ -199,17 +199,17 @@ class _StatusFilterSection extends StatelessWidget {
                       horizontal: -2,
                       vertical: -2,
                     ),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    labelPadding: EdgeInsets.symmetric(horizontal: 4),
                     selected: selected == option,
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
                     },
-                    selectedColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    checkmarkColor: AppTheme.primaryColor,
+                    selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                    checkmarkColor: context.colors.primary,
                     labelStyle: TextStyle(
                       color: selected == option
-                          ? AppTheme.primaryColor
-                          : AppTheme.textPrimary,
+                          ? context.colors.primary
+                          : context.colors.textPrimary,
                       fontWeight: selected == option
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -242,12 +242,12 @@ class PaginationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!hasMore) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.all(16),
         child: Center(
           child: Text(
             'Tidak ada data lagi',
-            style: TextStyle(color: AppTheme.textTertiary),
+            style: TextStyle(color: context.colors.textTertiary),
           ),
         ),
       );

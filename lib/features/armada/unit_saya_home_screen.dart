@@ -27,7 +27,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
     final ritaseAsync = ref.watch(ritaseRiwayatProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text(
           'Unit Saya',
@@ -68,7 +68,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
             if (items.isEmpty) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
+                children:  [
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 48),
                     child: AppEmptyState(
@@ -129,12 +129,12 @@ class _UnitHeader extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withValues(alpha: 0.8),
+            context.colors.primary,
+            context.colors.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -142,7 +142,7 @@ class _UnitHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.25),
+            color: context.colors.primary.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -217,7 +217,7 @@ class _UnitHeader extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: aktif ? const Color(0xFF4ADE80) : AppTheme.warningColor,
+                        color: aktif ? Color(0xFF4ADE80) : context.colors.warning,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -414,14 +414,14 @@ class _HariIniStatusCard extends StatelessWidget {
     final allDone = next == null;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: allDone
-              ? AppTheme.successColor.withValues(alpha: 0.35)
-              : AppTheme.primaryColor.withValues(alpha: 0.25),
+              ? context.colors.success.withValues(alpha: 0.35)
+              : context.colors.primary.withValues(alpha: 0.25),
         ),
       ),
       child: Column(
@@ -431,10 +431,10 @@ class _HariIniStatusCard extends StatelessWidget {
             allDone
                 ? '$doneCount dari $total selesai — kerja hari ini tuntas'
                 : '$doneCount dari $total selesai — sisa: ${next!.label}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           if (!allDone) ...[
@@ -486,7 +486,7 @@ class _RingkasanKerja extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -497,20 +497,20 @@ class _RingkasanKerja extends StatelessWidget {
                         ? Icons.timer_outlined
                         : Icons.assessment_outlined,
                     size: 18,
-                    color: AppTheme.primaryColor,
+                    color: context.colors.primary,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     'Ringkasan Kerja',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                   children: [
                     Expanded(
@@ -521,16 +521,16 @@ class _RingkasanKerja extends StatelessWidget {
                         value: armada.isAlatBerat
                             ? fmtRitase(ritCount, 'jam')
                             : fmtRitase(ritCount),
-                        color: AppTheme.primaryColor,
+                        color: context.colors.primary,
                       ),
                     ),
                     if (armada.isKendaraan) ...[
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: _StatBox(
                           label: 'Estimasi Pendapatan',
                           value: fmtRp(totalUpah),
-                          color: AppTheme.successColor,
+                          color: context.colors.success,
                         ),
                       ),
                     ],
@@ -589,9 +589,9 @@ class _StatBox extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppTheme.textTertiary,
+              color: context.colors.textTertiary,
             ),
           ),
           const SizedBox(height: 4),
@@ -623,12 +623,12 @@ class _ShortcutSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Akses Cepat',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
@@ -677,11 +677,11 @@ class _ShortcutTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: context.colors.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -690,17 +690,17 @@ class _ShortcutTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                    color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+                  child: Icon(icon, color: context.colors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -709,25 +709,25 @@ class _ShortcutTile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
-                          color: AppTheme.textTertiary,
+                        style: TextStyle(
+                          color: context.colors.textTertiary,
                           fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppTheme.textMuted, size: 20),
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textMuted, size: 20),
               ],
             ),
           ),

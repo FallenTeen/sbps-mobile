@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
+import '../../core/draft/autosave_controller.dart';
+import '../../core/draft/draft_repository.dart';
 import '../../core/photo_compression_service.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -186,10 +189,57 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   final _kendala = TextEditingController();
   final _catatan = TextEditingController();
   final _foto = <String>[];
+  bool _draftFound = false;
+  DateTime? _draftSavedAt;
   static const _maxFoto = 5;
+
+  late final AutosaveController _autosave;
+
+  Map<String, dynamic> _snapshot() => {
+    'aktivitas': _aktivitas.text,
+    'kondisi': _kondisi.text,
+    'kendala': _kendala.text,
+    'catatan': _catatan.text,
+  };
+
+  void _restoreFromDraft(FormDraft draft) {
+    final fields = draft.fieldsJson;
+    _aktivitas.text = fields['aktivitas'] as String? ?? '';
+    _kondisi.text = fields['kondisi'] as String? ?? '';
+    _kendala.text = fields['kendala'] as String? ?? '';
+    _catatan.text = fields['catatan'] as String? ?? '';
+    _foto
+      ..clear()
+      ..addAll(draft.photoLocalPaths);
+    setState(() {
+      _draftFound = true;
+      _draftSavedAt = draft.savedAt;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _autosave = AutosaveController(
+      ref: ref,
+      draftKey: 'formulir_lapangan',
+      formType: DraftFormType.formulirLapangan,
+      currentFields: _snapshot,
+      onRestore: _restoreFromDraft,
+    );
+    _autosave.init();
+
+    _aktivitas.addListener(_autosave.onFieldChanged);
+    _kondisi.addListener(_autosave.onFieldChanged);
+    _kendala.addListener(_autosave.onFieldChanged);
+    _catatan.addListener(_autosave.onFieldChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autosave.load());
+  }
 
   @override
   void dispose() {
+    _autosave.dispose();
     _aktivitas.dispose();
     _kondisi.dispose();
     _kendala.dispose();
@@ -202,6 +252,7 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !mounted) return;
     setState(() => _foto.add(photo.path));
+    _autosave.onFieldChanged();
   }
 
   Future<void> _confirmRemovePhoto(int index) async {
@@ -209,13 +260,15 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
       context,
       severity: ConfirmSeverity.warning,
       title: 'Hapus foto ini?',
-      message: 'Foto draft ini akan dihapus dari formulir. Tangkap ulang bila '
+      message:
+          'Foto draft ini akan dihapus dari formulir. Tangkap ulang bila '
           'masih dibutuhkan.',
       confirmLabel: 'Ya, Hapus',
       icon: Icons.delete_outline_rounded,
     );
     if (confirm?.confirmed == true && mounted) {
       setState(() => _foto.removeAt(index));
+      _autosave.onFieldChanged();
     }
   }
 
@@ -233,12 +286,14 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
       context,
       severity: ConfirmSeverity.warning,
       title: 'Keluar tanpa menyimpan?',
-      message: 'Draft formulir yang belum dikirim akan hilang. '
+      message:
+          'Draft formulir yang belum dikirim akan hilang. '
           'Lanjutkan keluar?',
       confirmLabel: 'Ya, Keluar',
       icon: Icons.arrow_back_rounded,
     );
     if (confirm?.confirmed == true && mounted) {
+      await _autosave.clear();
       Navigator.of(context).pop();
     }
   }
@@ -254,6 +309,7 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
           photoPaths: List.unmodifiable(_foto),
         );
     AnalyticsService.formulirSubmit();
+    await _autosave.clear();
     if (!mounted) return;
     final message = result.delivered
         ? 'Formulir berhasil disimpan.'
@@ -281,108 +337,127 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
-        _field(
-          _aktivitas,
-          'Aktivitas dilakukan *',
-          'Aktivitas dilakukan',
-          3,
-          6,
-          5000,
-        ),
-        const SizedBox(height: 12),
-        _field(_kondisi, 'Kondisi area', 'Kondisi area', 2, 4, 2000),
-        const SizedBox(height: 12),
-        _field(_kendala, 'Kendala', 'Kendala', 2, 4, 2000),
-        const SizedBox(height: 12),
-        _field(_catatan, 'Catatan tambahan', 'Catatan tambahan', 2, 4, 2000),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text('Foto (${_foto.length}/$_maxFoto)'),
-            const Spacer(),
-            if (_foto.length < _maxFoto)
-              TextButton.icon(
-                onPressed: busy ? null : _addPhoto,
-                icon: const Icon(Icons.add_a_photo_outlined),
-                label: const Text('Tambah'),
+          _field(
+            _aktivitas,
+            'Aktivitas dilakukan *',
+            'Aktivitas dilakukan',
+            3,
+            6,
+            5000,
+          ),
+          const SizedBox(height: 12),
+          _field(_kondisi, 'Kondisi area', 'Kondisi area', 2, 4, 2000),
+          const SizedBox(height: 12),
+          _field(_kendala, 'Kendala', 'Kendala', 2, 4, 2000),
+          const SizedBox(height: 12),
+          _field(_catatan, 'Catatan tambahan', 'Catatan tambahan', 2, 4, 2000),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text('Foto (${_foto.length}/$_maxFoto)'),
+              const Spacer(),
+              if (_foto.length < _maxFoto)
+                TextButton.icon(
+                  onPressed: busy ? null : _addPhoto,
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: const Text('Tambah'),
+                ),
+            ],
+          ),
+          if (_foto.isNotEmpty)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _foto.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
               ),
-          ],
-        ),
-        if (_foto.isNotEmpty)
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _foto.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
+              itemBuilder: (context, index) {
+                final tag = 'formulir_draft_photo_$index';
+                return GestureDetector(
+                  onTap: () => PhotoViewerDialog.show(
+                    context: context,
+                    heroTag: tag,
+                    filePath: _foto[index],
+                    title: 'Preview Foto ${index + 1}',
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (_draftFound)
+                        DraftRestoreBanner(
+                          savedAt: _draftSavedAt ?? DateTime.now(),
+                          onContinue: () => setState(() => _draftFound = false),
+                          onDiscard: () async {
+                            await _autosave.clear();
+                            setState(() {
+                              _draftFound = false;
+                              _aktivitas.clear();
+                              _kondisi.clear();
+                              _kendala.clear();
+                              _catatan.clear();
+                              _foto.clear();
+                            });
+                          },
+                          warning:
+                              'Data foto mungkin sudah tidak sesuai kondisi terkini, '
+                              'disarankan periksa ulang sebelum submit.',
+                        ),
+                      Hero(
+                        tag: tag,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.file(
+                            File(_foto[index]),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: InkWell(
+                          onTap: busy ? null : () => _confirmRemovePhoto(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            itemBuilder: (context, index) {
-              final tag = 'formulir_draft_photo_$index';
-              return GestureDetector(
-                onTap: () => PhotoViewerDialog.show(
-                  context: context,
-                  heroTag: tag,
-                  filePath: _foto[index],
-                  title: 'Preview Foto ${index + 1}',
-                ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: tag,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.file(
-                          File(_foto[index]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: InkWell(
-                        onTap: busy ? null : () => _confirmRemovePhoto(index),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        const SizedBox(height: 16),
-        BouncingButton(
-          onPressed: busy ? null : _submit,
-          child: FilledButton.icon(
+          const SizedBox(height: 16),
+          BouncingButton(
             onPressed: busy ? null : _submit,
-            icon: busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send_outlined),
-            label: Text(switch (busyPhase) {
-              UploadPhase.compressing => 'Mengompres foto...',
-              UploadPhase.sending => 'Mengirim...',
-              _ => 'Kirim Formulir',
-            }),
+            child: FilledButton.icon(
+              onPressed: busy ? null : _submit,
+              icon: busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_outlined),
+              label: Text(switch (busyPhase) {
+                UploadPhase.compressing => 'Mengompres foto...',
+                UploadPhase.sending => 'Mengirim...',
+                _ => 'Kirim Formulir',
+              }),
+            ),
           ),
-        ),
         ],
       ),
     );

@@ -129,7 +129,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('KM Harian'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -176,18 +176,18 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                     ? _selectedArmada!.jamOperasionalTerkini != null
                     : _selectedArmada!.odoTerkini != null)
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                      color: context.colors.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        color: context.colors.primary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                          color: AppTheme.primaryColor, size: 20),
+                          color: context.colors.primary, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -197,12 +197,12 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                                 _selectedArmada!.isAlatBerat
                                     ? 'Jam Kerja Unit Terakhir Tercatat'
                                     : 'KM Terakhir Tercatat',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.textTertiary,
+                                  color: context.colors.textTertiary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 _selectedArmada!.isAlatBerat
                                     ? '${_selectedArmada!.jamOperasionalTerkini} jam'
@@ -210,7 +210,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.primaryColor,
+                                  color: context.colors.primary,
                                 ),
                               ),
                             ],
@@ -221,18 +221,18 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.warningColor.withValues(alpha: 0.05),
+                      color: context.colors.warning.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppTheme.warningColor.withValues(alpha: 0.2),
+                        color: context.colors.warning.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                          color: AppTheme.warningColor, size: 20),
+                          color: context.colors.warning, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(

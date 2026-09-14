@@ -105,21 +105,21 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     final opnameState = ref.watch(inventoryOpnameProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Stok Opname'),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: Column(
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: AppTheme.infoColor.withValues(alpha: 0.08),
-            child: const Row(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: context.colors.info.withValues(alpha: 0.08),
+            child: Row(
               children: [
                 Icon(Icons.info_outline_rounded,
-                    size: 18, color: AppTheme.infoColor),
+                    size: 18, color: context.colors.info),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -127,7 +127,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.infoColor,
+                      color: context.colors.info,
                     ),
                   ),
                 ),
@@ -138,12 +138,12 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Titik kerja',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -152,11 +152,11 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                     loading: () => const SkeletonLoader(
                       child: SkeletonBlock(height: 36, borderRadius: 10),
                     ),
-                    error: (error, _) => const Text(
+                    error: (error, _) => Text(
                       'Gagal memuat titik.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.errorColor,
+                        color: context.colors.error,
                       ),
                     ),
                     data: (titiks) => _buildTitikDropdown(titiks),
@@ -186,12 +186,12 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.cloud_off_rounded,
-                        color: AppTheme.errorColor, size: 32),
+                    Icon(Icons.cloud_off_rounded,
+                        color: context.colors.error, size: 32),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Gagal memuat item opname.',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
@@ -238,17 +238,17 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                       ? null
                       : () {
                           final titikId = _selectedTitikId!;
-                          final items = materialsAsync.value ?? const [];
+                          final items = materialsAsync.value ??  [];
                           _submit(titikId: titikId, items: items);
                         },
                   child: opnameState.busy
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(
-                          'Simpan Opname${_selisihCount(materialsAsync.value ?? const []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
+                          'Simpan Opname${_selisihCount(materialsAsync.value ??  []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
                         ),
                 ),
               ),
@@ -259,9 +259,9 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
 
   Widget _buildTitikDropdown(List<Titik> titiks) {
     if (titiks.isEmpty) {
-      return const Text(
+      return Text(
         'Tidak ada titik aktif.',
-        style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+        style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
       );
     }
     _selectedTitikId ??= titiks.first.id;
@@ -315,14 +315,14 @@ class _OpnameItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _hasSelisih
-              ? AppTheme.errorColor.withValues(alpha: 0.3)
-              : AppTheme.borderColor,
+              ? context.colors.error.withValues(alpha: 0.3)
+              : context.colors.border,
         ),
       ),
       child: Column(
@@ -336,18 +336,18 @@ class _OpnameItemCard extends StatelessWidget {
                   children: [
                     Text(
                       item.namaBarang,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       item.kategori,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textTertiary,
+                        color: context.colors.textTertiary,
                       ),
                     ),
                   ],
@@ -356,19 +356,19 @@ class _OpnameItemCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     'Sistem',
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppTheme.textMuted,
+                      color: context.colors.textMuted,
                     ),
                   ),
                   Text(
                     '${item.jumlahSistem}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
@@ -398,20 +398,20 @@ class _OpnameItemCard extends StatelessWidget {
               if (_hasSelisih) ...[
                 const SizedBox(width: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withValues(alpha: 0.08),
+                    color: context.colors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '${_selisih! > 0 ? '+' : ''}$_selisih',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.errorColor,
+                      color: context.colors.error,
                     ),
                   ),
                 ),

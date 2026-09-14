@@ -10,7 +10,9 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import 'core/app_config.dart';
+import 'core/app_preferences.dart';
 import 'core/app_router.dart';
+import 'core/draft/draft_repository.dart';
 import 'core/push_token_service.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
@@ -70,6 +72,9 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       ref.read(pendingCountProvider.notifier).reload();
       ref.read(trackingSchedulerProvider.notifier).evaluate();
 
+      // Housekeeping draft autosave: buang draft yang kedaluwarsa.
+      ref.read(draftRepositoryProvider).cleanupExpired();
+
       // Setup foreground FCM handler.
       try {
         FirebaseMessaging.onMessage.listen(firebaseMessagingForegroundHandler);
@@ -86,15 +91,47 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
   Widget build(BuildContext context) {
     const title = 'SBPS';
     final theme = AppTheme.lightTheme;
+    final darkTheme = AppTheme.darkTheme;
     final banner = !AppConfig.isProduction;
 
+    final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.light;
+
+    return _App(
+      title: title,
+      theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
+      banner: banner,
+    );
+  }
+}
+
+class _App extends ConsumerWidget {
+  const _App({
+    required this.title,
+    required this.theme,
+    required this.darkTheme,
+    required this.themeMode,
+    required this.banner,
+  });
+
+  final String title;
+  final ThemeData theme;
+  final ThemeData darkTheme;
+  final ThemeMode? themeMode;
+  final bool banner;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final gate = ref.watch(versionGateProvider);
     if (gate.isLoading) {
       return MaterialApp(
         title: title,
         theme: theme,
+        darkTheme: darkTheme,
+        themeMode: themeMode,
         debugShowCheckedModeBanner: banner,
-        home: const _Splash(),
+        home: _Splash(),
       );
     }
     final blocked = gate.value?.blocked ?? false;
@@ -102,6 +139,8 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       return MaterialApp(
         title: title,
         theme: theme,
+        darkTheme: darkTheme,
+        themeMode: themeMode,
         debugShowCheckedModeBanner: banner,
         home: const UpdateRequiredScreen(),
       );
@@ -110,6 +149,8 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
     return MaterialApp.router(
       title: title,
       theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       builder: (context, child) =>
           OfflineBanner(child: child ?? const SizedBox.shrink()),
@@ -125,7 +166,7 @@ class _Splash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -138,7 +179,7 @@ class _Splash extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    color: context.colors.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -156,27 +197,27 @@ class _Splash extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'SBPS',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
                 letterSpacing: 1,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Mobile Apps',
-              style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
+              style: TextStyle(fontSize: 13, color: context.colors.textMuted),
             ),
             const SizedBox(height: 24),
-            const SizedBox(
+            SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: AppTheme.primaryColor,
+                color: context.colors.primary,
               ),
             ),
           ],

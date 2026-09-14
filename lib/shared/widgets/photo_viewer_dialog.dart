@@ -77,7 +77,7 @@ class PhotoViewerDialog extends StatelessWidget {
                 errorBuilder: (_, _, _) => const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.broken_image, size: 64, color: Colors.white54),
+                    Icon(Icons.broken_image_outlined, size: 64, color: Colors.white54),
                     SizedBox(height: 12),
                     Text(
                       'Gagal memuat foto',

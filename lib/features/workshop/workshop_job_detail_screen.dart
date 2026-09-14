@@ -40,9 +40,9 @@ class _WorkshopJobDetailScreenState
 
   Color _statusColor(WorkshopJobStatus status) {
     return switch (status) {
-      WorkshopJobStatus.menunggu => AppTheme.warningColor,
-      WorkshopJobStatus.dikerjakan => AppTheme.infoColor,
-      WorkshopJobStatus.selesai => AppTheme.successColor,
+      WorkshopJobStatus.menunggu => context.colors.warning,
+      WorkshopJobStatus.dikerjakan => context.colors.info,
+      WorkshopJobStatus.selesai => context.colors.success,
     };
   }
 
@@ -217,10 +217,10 @@ class _WorkshopJobDetailScreenState
           parentLabel: 'Antrian Workshop',
           title: 'Job \u2014 ${_titleFor(detailAsync)}',
         ),
-        actions: const [PortalSwitchButton()],
+        actions:  [PortalSwitchButton()],
       ),
       body: detailAsync.when(
-        loading: () => const SkeletonDetailView(),
+        loading: () => SkeletonDetailView(),
         error: (e, _) => _buildError(e),
         data: (detail) {
           final job = detail.job;
@@ -239,12 +239,12 @@ class _WorkshopJobDetailScreenState
                     _buildProgressCard(progress, completed, items.length),
                     const SizedBox(height: 16),
                     if (items.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(vertical: 24),
                         child: Center(
                           child: Text(
                             'Belum ada item checklist untuk job ini',
-                            style: TextStyle(color: AppTheme.textTertiary),
+                            style: TextStyle(color: context.colors.textTertiary),
                           ),
                         ),
                       )
@@ -252,14 +252,14 @@ class _WorkshopJobDetailScreenState
                       ...List.generate(items.length, (index) {
                         final item = items[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: Checkbox(
                               value: item.isDone,
                               onChanged: _isSubmitting
                                   ? null
                                   : (_) => _toggleItem(item),
-                              activeColor: AppTheme.primaryColor,
+                              activeColor: context.colors.primary,
                             ),
                             title: Text(
                               item.label,
@@ -268,14 +268,14 @@ class _WorkshopJobDetailScreenState
                                     ? TextDecoration.lineThrough
                                     : null,
                                 color: item.isDone
-                                    ? AppTheme.textTertiary
-                                    : AppTheme.textPrimary,
+                                    ? context.colors.textTertiary
+                                    : context.colors.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             subtitle: item.photoPath != null
                                 ? Padding(
-                                    padding: const EdgeInsets.only(top: 8),
+                                    padding: EdgeInsets.only(top: 8),
                                     child: InkWell(
                                       onTap: () => PhotoViewerDialog.show(
                                         context: context,
@@ -291,12 +291,12 @@ class _WorkshopJobDetailScreenState
                                   )
                                 : null,
                             trailing: item.isDone
-                                ? const Icon(
-                                    Icons.check_circle,
-                                    color: AppTheme.successColor,
+                                ? Icon(
+                                    Icons.check_circle_outline,
+                                    color: context.colors.success,
                                   )
                                 : IconButton(
-                                    icon: const Icon(Icons.camera_alt_outlined),
+                                    icon: Icon(Icons.camera_alt_outlined),
                                     onPressed: _isSubmitting
                                         ? null
                                         : () => _takeEvidencePhoto(item),
@@ -312,14 +312,14 @@ class _WorkshopJobDetailScreenState
                 child: job.status == WorkshopJobStatus.selesai
                     ? Container(
                         width: double.infinity,
-                        color: AppTheme.successColor.withValues(alpha: 0.08),
-                        padding: const EdgeInsets.all(16),
+                        color: context.colors.success.withValues(alpha: 0.08),
+                        padding: EdgeInsets.all(16),
                         child: Row(
-                          children: const [
+                          children:  [
                             Icon(
                               Icons.check_circle_outline_rounded,
                               size: 20,
-                              color: AppTheme.successColor,
+                              color: context.colors.success,
                             ),
                             SizedBox(width: 8),
                             Expanded(
@@ -328,7 +328,7 @@ class _WorkshopJobDetailScreenState
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.successColor,
+                                  color: context.colors.success,
                                 ),
                               ),
                             ),
@@ -367,7 +367,7 @@ class _WorkshopJobDetailScreenState
                                         ),
                                       )
                                     : const Icon(Icons.check, size: 18),
-                                label: const Text('Tandai Selesai'),
+                                label: Text('Tandai Selesai'),
                               ),
                             ),
                           ],
@@ -391,9 +391,9 @@ class _WorkshopJobDetailScreenState
         errorBuilder: (_, _, _) => Container(
           height: 60,
           width: 60,
-          color: AppTheme.surfaceVariantColor,
-          child: const Icon(Icons.broken_image_outlined,
-              size: 24, color: AppTheme.textTertiary),
+          color: context.colors.surfaceVariant,
+          child: Icon(Icons.broken_image_outlined,
+              size: 24, color: context.colors.textTertiary),
         ),
       );
     }
@@ -405,9 +405,9 @@ class _WorkshopJobDetailScreenState
       errorBuilder: (_, _, _) => Container(
         height: 60,
         width: 60,
-        color: AppTheme.surfaceVariantColor,
-        child: const Icon(Icons.broken_image_outlined,
-            size: 24, color: AppTheme.textTertiary),
+        color: context.colors.surfaceVariant,
+        child: Icon(Icons.broken_image_outlined,
+            size: 24, color: context.colors.textTertiary),
       ),
     );
   }
@@ -428,10 +428,10 @@ class _WorkshopJobDetailScreenState
                 Expanded(
                   child: Text(
                     job.kategoriServis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -443,45 +443,45 @@ class _WorkshopJobDetailScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               'Keluhan dari driver:',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textTertiary,
+                color: context.colors.textTertiary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariantColor,
+                color: context.colors.surfaceVariant,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 job.keluhan,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
                   size: 16,
-                  color: AppTheme.textTertiary,
+                  color: context.colors.textTertiary,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Dibuat ${fmtTanggalWaktu(job.createdAt)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textTertiary,
+                    color: context.colors.textTertiary,
                   ),
                 ),
               ],
@@ -504,28 +504,28 @@ class _WorkshopJobDetailScreenState
                 children: [
                   Text(
                     '$completed dari $total item selesai',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 6,
-                      backgroundColor: AppTheme.borderColor,
+                      backgroundColor: context.colors.border,
                       color: progress >= 1.0
-                          ? AppTheme.successColor
-                          : AppTheme.primaryColor,
+                          ? context.colors.success
+                          : context.colors.primary,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             SizedBox(
               width: 44,
               height: 44,
@@ -535,17 +535,17 @@ class _WorkshopJobDetailScreenState
                   CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 4,
-                    backgroundColor: AppTheme.borderColor,
+                    backgroundColor: context.colors.border,
                     color: progress >= 1.0
-                        ? AppTheme.successColor
-                        : AppTheme.primaryColor,
+                        ? context.colors.success
+                        : context.colors.primary,
                   ),
                   Text(
                     '${(progress * 100).round()}%',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
@@ -564,18 +564,18 @@ class _WorkshopJobDetailScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               size: 48,
-              color: AppTheme.errorColor,
+              color: context.colors.error,
             ),
             const SizedBox(height: 12),
             Text(
               error.toString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -664,23 +664,23 @@ Future<SparepartSheetResult?> showRequestSparepartSheet(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Request Sparepart',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Pilih sparepart yang dibutuhkan untuk job ini',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.colors.textTertiary,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   for (var i = 0; i < items.length; i++) _buildItemRow(
                     context,
                     items,
@@ -774,9 +774,9 @@ Widget _buildItemRow(
           onChanged: (v) => update(jumlah: int.tryParse(v) ?? 1),
         ),
       ),
-      const SizedBox(width: 8),
+      SizedBox(width: 8),
       IconButton(
-        icon: const Icon(Icons.remove_circle_outline, color: AppTheme.errorColor),
+        icon: Icon(Icons.remove_circle_outline, color: context.colors.error),
         onPressed: items.length == 1
             ? null
             : () =>

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import 'models/production_session.dart';
@@ -64,8 +65,11 @@ class _GreetingSection extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.engineering,
-                size: 36, color: theme.colorScheme.onPrimaryContainer),
+            Icon(
+              Icons.engineering,
+              size: 36,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -82,8 +86,9 @@ class _GreetingSection extends StatelessWidget {
                   Text(
                     'Berikut ringkasan produksi hari ini.',
                     style: TextStyle(
-                      color: theme.colorScheme.onPrimaryContainer
-                          .withValues(alpha: 0.8),
+                      color: theme.colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.8,
+                      ),
                     ),
                   ),
                 ],
@@ -111,12 +116,18 @@ class _ActiveSessionsSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.play_circle_outline,
-                color: theme.colorScheme.primary, size: 20),
+            Icon(
+              Icons.play_circle_outline,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 6),
-            Text('Sesi Aktif',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              'Sesi Aktif',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -125,8 +136,10 @@ class _ActiveSessionsSection extends StatelessWidget {
           error: (e, _) => Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Gagal memuat sesi: $e',
-                  style: TextStyle(color: theme.colorScheme.error)),
+              child: Text(
+                'Gagal memuat sesi: $e',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
             ),
           ),
           data: (sessions) {
@@ -137,8 +150,11 @@ class _ActiveSessionsSection extends StatelessWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.hourglass_empty,
-                            size: 36, color: theme.colorScheme.outline),
+                        Icon(
+                          Icons.hourglass_empty,
+                          size: 36,
+                          color: theme.colorScheme.outline,
+                        ),
                         const SizedBox(height: 8),
                         const Text('Belum ada sesi aktif'),
                         const SizedBox(height: 4),
@@ -155,9 +171,7 @@ class _ActiveSessionsSection extends StatelessWidget {
             }
 
             return Column(
-              children: [
-                for (final s in sessions) _SessionCard(session: s),
-              ],
+              children: [for (final s in sessions) _SessionCard(session: s)],
             );
           },
         ),
@@ -183,7 +197,7 @@ class _SessionCard extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.green.withValues(alpha: 0.1),
-          child: const Icon(Icons.play_arrow, color: Colors.green),
+          child: Icon(Icons.play_arrow, color: context.colors.success),
         ),
         title: Text(
           '${session.produkNama ?? '-'} • ${session.mesinNama ?? '-'}',
@@ -193,13 +207,16 @@ class _SessionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (session.titikNama != null)
-              Text('Titik: ${session.titikNama}',
-                  style: theme.textTheme.bodySmall),
+              Text(
+                'Titik: ${session.titikNama}',
+                style: theme.textTheme.bodySmall,
+              ),
             if (duration != null)
               Text(
                 'Berjalan: ${_formatDuration(duration)}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary),
+                  color: theme.colorScheme.primary,
+                ),
               ),
           ],
         ),
@@ -225,12 +242,18 @@ class _ProgressSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.analytics_outlined,
-                color: theme.colorScheme.primary, size: 20),
+            Icon(
+              Icons.analytics_outlined,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 6),
-            Text('Progress Hari Ini',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              'Progress Hari Ini',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -239,8 +262,10 @@ class _ProgressSection extends StatelessWidget {
           error: (e, _) => Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Gagal memuat progress: $e',
-                  style: TextStyle(color: theme.colorScheme.error)),
+              child: Text(
+                'Gagal memuat progress: $e',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
             ),
           ),
           data: (data) {
@@ -251,8 +276,11 @@ class _ProgressSection extends StatelessWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.bar_chart,
-                            size: 36, color: theme.colorScheme.outline),
+                        Icon(
+                          Icons.bar_chart,
+                          size: 36,
+                          color: theme.colorScheme.outline,
+                        ),
                         const SizedBox(height: 8),
                         const Text('Belum ada produksi hari ini'),
                       ],
@@ -274,7 +302,8 @@ class _ProgressSection extends StatelessWidget {
                         child: Text(
                           'Tanggal: ${data.tanggal}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.outline),
+                            color: theme.colorScheme.outline,
+                          ),
                         ),
                       ),
                     for (final item in data.items)
@@ -316,10 +345,14 @@ class _ProgressTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.titikNama ?? '-',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${item.jumlahSesi} sesi',
-                    style: theme.textTheme.bodySmall),
+                Text(
+                  item.titikNama ?? '-',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${item.jumlahSesi} sesi',
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -348,12 +381,18 @@ class _QuickActions extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.flash_on_outlined,
-                color: theme.colorScheme.primary, size: 20),
+            Icon(
+              Icons.flash_on_outlined,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 6),
-            Text('Aksi Cepat',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              'Aksi Cepat',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -432,11 +471,12 @@ class _ActionCard extends StatelessWidget {
             children: [
               Icon(icon, size: 28, color: theme.colorScheme.primary),
               const SizedBox(height: 8),
-              Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(subtitle,
-                  style: theme.textTheme.bodySmall,
-                  textAlign: TextAlign.center),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
