@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/status_pill.dart';
@@ -32,26 +33,17 @@ class _InventoryRequestDetailScreenState
         .toList();
     if (outstanding.isEmpty) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Proses Request'),
-        content: Text(
-          'Tandai ${outstanding.length} item sebagai tersedia? Nominal & catatan pengadaan lama tetap dipertahankan.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Proses'),
-          ),
-        ],
-      ),
+    final confirmed = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.warning,
+      title: 'Proses Request?',
+      message:
+          'Tandai ${outstanding.length} item sebagai tersedia? Nominal & '
+          'catatan pengadaan lama tetap dipertahankan.',
+      confirmLabel: 'Proses',
+      icon: Icons.inventory_2_outlined,
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed?.confirmed != true || !mounted) return;
 
     final result = await ref
         .read(inventoryProsesProvider.notifier)

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/photo_compression_service.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
@@ -113,7 +114,20 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                     child: InkWell(
                       onTap: busy.busy
                           ? null
-                          : () => setState(() => _paths.removeAt(i)),
+                          : () async {
+                              final confirmed = await ConfirmationDialog.show(
+                                context,
+                                severity: ConfirmSeverity.warning,
+                                title: 'Hapus foto ini?',
+                                message: 'Foto yang dihapus harus diambil '
+                                    'ulang jika masih dibutuhkan.',
+                                confirmLabel: 'Ya, Hapus',
+                                icon: Icons.delete_outline_rounded,
+                              );
+                              if (confirmed?.confirmed == true && mounted) {
+                                setState(() => _paths.removeAt(i));
+                              }
+                            },
                       child: CircleAvatar(
                         radius: 11,
                         backgroundColor:

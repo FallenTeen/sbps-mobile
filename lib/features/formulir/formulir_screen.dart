@@ -8,6 +8,7 @@ import '../../core/photo_compression_service.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -203,6 +204,45 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     setState(() => _foto.add(photo.path));
   }
 
+  Future<void> _confirmRemovePhoto(int index) async {
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.warning,
+      title: 'Hapus foto ini?',
+      message: 'Foto draft ini akan dihapus dari formulir. Tangkap ulang bila '
+          'masih dibutuhkan.',
+      confirmLabel: 'Ya, Hapus',
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirm?.confirmed == true && mounted) {
+      setState(() => _foto.removeAt(index));
+    }
+  }
+
+  bool get _hasDraft =>
+      _aktivitas.text.trim().isNotEmpty ||
+      _kondisi.text.trim().isNotEmpty ||
+      _kendala.text.trim().isNotEmpty ||
+      _catatan.text.trim().isNotEmpty ||
+      _foto.isNotEmpty;
+
+  /// Pola #6 (rencana UX §2 Sprint 3): cegah keluar tak sengaja saat masih
+  /// ada draft belum dikirim.
+  Future<void> _confirmDiscardDraft() async {
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.warning,
+      title: 'Keluar tanpa menyimpan?',
+      message: 'Draft formulir yang belum dikirim akan hilang. '
+          'Lanjutkan keluar?',
+      confirmLabel: 'Ya, Keluar',
+      icon: Icons.arrow_back_rounded,
+    );
+    if (confirm?.confirmed == true && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _submit() async {
     final result = await ref
         .read(formulirSubmitProvider.notifier)
@@ -230,10 +270,17 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     final submitState = ref.watch(formulirSubmitProvider);
     final busyPhase = submitState.busy ? submitState.phase : null;
     final busy = busyPhase != null;
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      children: [
+    return PopScope(
+      canPop: !_hasDraft,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (busy) return;
+        _confirmDiscardDraft();
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
         _field(
           _aktivitas,
           'Aktivitas dilakukan *',
@@ -280,12 +327,39 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
                   filePath: _foto[index],
                   title: 'Preview Foto ${index + 1}',
                 ),
-                child: Hero(
-                  tag: tag,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.file(File(_foto[index]), fit: BoxFit.cover),
-                  ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: tag,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.file(
+                          File(_foto[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: InkWell(
+                        onTap: busy ? null : () => _confirmRemovePhoto(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -309,7 +383,8 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
             }),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

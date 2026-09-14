@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import 'auth_providers.dart';
 
 /// Layar profil user — edit nama, telepon, ganti password, dan
@@ -77,25 +78,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _logoutAllDevices() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Logout Semua Perangkat?'),
-        content: const Text(
-          'Semua sesi login di perangkat lain akan dihapus. '
-          'Anda perlu login ulang di perangkat ini.',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Batal')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Logout Semua')),
-        ],
-      ),
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.critical,
+      title: 'Logout dari Semua Perangkat?',
+      message: 'Semua device yang sedang login dengan akun ini (termasuk '
+          'milik rekan kerja yang mungkin sedang memakainya) akan ikut '
+          'ter-logout dan harus login ulang. Perangkat ini juga akan keluar.',
+      confirmLabel: 'Ya, Logout Semua Perangkat',
+      icon: Icons.devices_other_rounded,
     );
-    if (confirm != true || !mounted) return;
+    if (confirm?.confirmed != true || !mounted) return;
 
     setState(() => _loggingOutAll = true);
     try {

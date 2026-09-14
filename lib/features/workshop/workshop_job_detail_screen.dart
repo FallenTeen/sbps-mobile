@@ -10,6 +10,7 @@ import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -163,6 +164,17 @@ class _WorkshopJobDetailScreenState
       );
       return;
     }
+
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.destructive,
+      title: 'Tandai Job Selesai?',
+      message: 'Job servis ini akan ditutup sebagai selesai dan tidak bisa '
+          'diubah lagi. Pastikan semua item & foto bukti sudah lengkap.',
+      confirmLabel: 'Ya, Tandai Selesai',
+      icon: Icons.check_circle_outline_rounded,
+    );
+    if (confirm?.confirmed != true || !mounted) return;
 
     setState(() => _isSubmitting = true);
     try {

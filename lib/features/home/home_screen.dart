@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_providers.dart';
 import 'home_shell.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Home sementara Fase A1.2/A2.2: verifikasi sesi, role switch, dan
@@ -100,8 +101,12 @@ class HomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
           OutlinedButton.icon(
-            onPressed: () =>
-                ref.read(authControllerProvider.notifier).logout(),
+            onPressed: () async {
+              final result = await confirmLogout(context);
+              if (result?.confirmed == true) {
+                ref.read(authControllerProvider.notifier).logout();
+              }
+            },
             icon: const Icon(Icons.logout),
             label: const Text('Logout'),
           ),

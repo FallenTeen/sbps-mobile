@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'auth_providers.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 
 /// Halaman pemilih role aktif (Fase A2.2): tampil setelah login bila user
 /// punya lebih dari satu role App 2. Tidak bisa di-back (wajib pilih).
@@ -29,7 +30,14 @@ class RolePickerScreen extends ConsumerWidget {
           title: const Text('Pilih Peran'),
         ),
         body: roles.isEmpty
-            ? _NoRoleView(onLogout: () => ref.read(authControllerProvider.notifier).logout())
+            ? _NoRoleView(
+                onLogout: () async {
+                  final result = await confirmLogout(context);
+                  if (result?.confirmed == true) {
+                    ref.read(authControllerProvider.notifier).logout();
+                  }
+                },
+              )
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [

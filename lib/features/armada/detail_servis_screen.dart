@@ -9,6 +9,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import 'servis_providers.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../core/formatters.dart';
 
@@ -49,51 +50,27 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
   }
 
   Future<void> _approveServis() async {
-    final catatanCtrl = TextEditingController();
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Setujui Pengajuan Servis?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Pengajuan servis akan diteruskan ke tim workshop untuk dikerjakan.',
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: catatanCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Catatan Persetujuan (opsional)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-          ],
-        ),
-        actions: [
-          const PortalSwitchButton(),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Setujui'),
-          ),
-        ],
-      ),
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.warning,
+      title: 'Setujui Pengajuan Servis?',
+      message: 'Pengajuan servis akan diteruskan ke tim workshop untuk '
+          'dikerjakan.',
+      confirmLabel: 'Setujui',
+      icon: Icons.check_circle_outline_rounded,
+      inputLabel: 'Catatan Persetujuan (opsional)',
+      inputRequired: false,
     );
 
-    if (confirm != true || !mounted) return;
+    if (confirm == null || !confirm.confirmed || !mounted) return;
 
     setState(() => _isProcessing = true);
     try {
       await ref.read(servisRepositoryProvider).approveServis(
             id: widget.id,
-            catatan: catatanCtrl.text.trim().isNotEmpty
-                ? catatanCtrl.text.trim()
-                : null,
+            catatan: (confirm.reason?.isEmpty ?? true)
+                ? null
+                : confirm.reason!.trim(),
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,62 +94,25 @@ class _DetailServisScreenState extends ConsumerState<DetailServisScreen> {
   }
 
   Future<void> _tolakServis() async {
-    final alasanCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Tolak Pengajuan Servis'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Masukkan alasan penolakan pengajuan servis:'),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: alasanCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Alasan Penolakan *',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (val) => (val == null || val.trim().isEmpty)
-                    ? 'Alasan wajib diisi'
-                    : null,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          const PortalSwitchButton(),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(ctx, true);
-              }
-            },
-            child: const Text('Tolak'),
-          ),
-        ],
-      ),
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.destructive,
+      title: 'Tolak Pengajuan Servis?',
+      message: 'Pengajuan ini akan ditolak dan berstatus "Ditolak" secara '
+          'permanen. Alasan wajib diisi sebagai catatan keputusan.',
+      confirmLabel: 'Tolak Pengajuan',
+      icon: Icons.block_rounded,
+      inputLabel: 'Alasan Penolakan *',
+      inputRequired: true,
     );
 
-    if (confirm != true || !mounted) return;
+    if (confirm == null || !confirm.confirmed || !mounted) return;
 
     setState(() => _isProcessing = true);
     try {
       await ref.read(servisRepositoryProvider).tolakServis(
             id: widget.id,
-            alasan: alasanCtrl.text.trim(),
+            alasan: confirm.reason ?? '',
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

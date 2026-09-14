@@ -14,6 +14,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
 import '../formulir/formulir_screen.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../notifikasi/notifikasi_screen.dart';
@@ -140,8 +141,12 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
-            onPressed: () =>
-                ref.read(authControllerProvider.notifier).logout(),
+            onPressed: () async {
+              final result = await confirmLogout(context);
+              if (result?.confirmed == true) {
+                ref.read(authControllerProvider.notifier).logout();
+              }
+            },
           ),
         ],
       ),

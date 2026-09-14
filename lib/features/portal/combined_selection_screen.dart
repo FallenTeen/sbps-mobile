@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../auth/auth_providers.dart';
 import 'portal_providers.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 
 /// Combined portal + role selection screen (Fase 2).
 /// Replaces separate /portal and /pilih-role screens.
@@ -120,8 +121,12 @@ class _CombinedSelectionScreenState
               // Header
               _Header(
                 user: user,
-                onLogout: () =>
-                    ref.read(authControllerProvider.notifier).logout(),
+                onLogout: () async {
+                  final result = await confirmLogout(context);
+                  if (result?.confirmed == true) {
+                    ref.read(authControllerProvider.notifier).logout();
+                  }
+                },
               ),
 
               // Selection content

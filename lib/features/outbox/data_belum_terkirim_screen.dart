@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/outbox/pending_action.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../presensi/presensi_providers.dart';
 
 class DataBelumTerkirimScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,17 @@ class _DataBelumTerkirimScreenState
   }
 
   Future<void> _remove(PendingAction action) async {
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.destructive,
+      title: 'Hapus data ini secara permanen?',
+      message: 'Aksi ini belum pernah terkirim ke server. Jika dihapus, data '
+          'dan foto yang sudah diambil akan hilang total dan tidak bisa '
+          'dikembalikan.',
+      confirmLabel: 'Ya, Hapus Permanen',
+      icon: Icons.delete_forever_rounded,
+    );
+    if (confirm?.confirmed != true || !mounted) return;
     await ref.read(outboxRepositoryProvider).remove(action.id);
     ref.invalidate(pendingActionsProvider);
   }

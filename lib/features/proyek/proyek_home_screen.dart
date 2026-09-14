@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
@@ -61,7 +62,12 @@ class ProyekHomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+            onPressed: () async {
+              final result = await confirmLogout(context);
+              if (result?.confirmed == true) {
+                ref.read(authControllerProvider.notifier).logout();
+              }
+            },
           ),
         ],
       ),
