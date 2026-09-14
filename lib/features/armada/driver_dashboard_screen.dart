@@ -74,7 +74,7 @@ class _VehicleSection extends StatelessWidget {
           return Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.colors.card,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: context.colors.border),
             ),
@@ -133,7 +133,7 @@ class _VehicleCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),
@@ -235,7 +235,7 @@ class _TodaySummarySection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),
@@ -323,7 +323,7 @@ class _ChecklistSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),
@@ -447,7 +447,7 @@ class _RecentRitaseSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),

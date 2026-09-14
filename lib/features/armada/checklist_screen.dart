@@ -10,6 +10,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/rich_list_tile.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'checklist_draft_store.dart';
@@ -86,6 +87,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => _ChecklistCard(
                     item: items[i],
+                    isAkhir: widget.isAkhir,
                     onTap: () => _openForm(items[i]),
                   ),
                 ),
@@ -105,41 +107,106 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
 }
 
 class _ChecklistCard extends StatelessWidget {
-  const _ChecklistCard({required this.item, required this.onTap});
+  const _ChecklistCard({
+    required this.item,
+    required this.isAkhir,
+    required this.onTap,
+  });
 
   final ArmadaChecklist item;
+  final bool isAkhir;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final checkDate = _parseDate(item.tanggal);
+    final daysAgo = checkDate == null ? null : _daysSince(checkDate);
     final filled = item.sudahIsi;
-    return Card(
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Icon(
-          filled ? Icons.check_circle_outline : Icons.radio_button_unchecked,
-          color: filled ? context.colors.success : context.colors.textMuted,
-          size: 28,
-        ),
-        title: Text(
-          item.platNomor,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          filled
-              ? (item.kondisiBaik == true
-                  ? 'Kondisi baik${_masalahSuffix(item.itemBermasalah)}'
-                  : 'Ada masalah${_masalahSuffix(item.itemBermasalah)}')
-              : 'Belum dicatat hari ini',
-        ),
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: onTap,
+    final overdue = !filled && (daysAgo ?? 0) > 3;
+
+    final statusColor = filled
+        ? context.colors.success
+        : overdue
+            ? context.colors.warning
+            : context.colors.textMuted;
+
+    final subtitle = filled
+        ? (item.kondisiBaik == true
+            ? 'Kondisi baik${_masalahSuffix(item.itemBermasalah)}'
+            : 'Ada masalah${_masalahSuffix(item.itemBermasalah)}')
+        : switch (daysAgo) {
+            null => 'Belum dicatat hari ini · Belum pernah dicek',
+            0 => 'Belum dicatat hari ini',
+            1 => 'Belum dicatat hari ini · Terakhir: kemarin',
+            _ => 'Belum dicatat hari ini · Terakhir: $daysAgo hari lalu',
+          };
+
+    return RichListTile(
+      title: item.platNomor,
+      subtitle: subtitle,
+      meta: isAkhir ? 'Akhir' : 'Harian',
+      metaColor: overdue ? context.colors.warning : null,
+      leading: _ChecklistStatusLeading(
+        filled: filled,
+        overdue: overdue,
+        color: statusColor,
       ),
+      onTap: onTap,
     );
+  }
+
+  DateTime? _parseDate(String? tanggal) {
+    if (tanggal == null || tanggal.isEmpty) return null;
+    return DateTime.tryParse(tanggal);
+  }
+
+  int _daysSince(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    return today.difference(target).inDays;
   }
 
   String _masalahSuffix(String? masalah) =>
       (masalah == null || masalah.isEmpty) ? '' : ' — $masalah';
+}
+
+/// Leading status checklist: hijau filled + centang (sudah dicek hari ini),
+/// amber (belum dicek & terlambat > 3 hari), abu outline (belum dicatat).
+class _ChecklistStatusLeading extends StatelessWidget {
+  const _ChecklistStatusLeading({
+    required this.filled,
+    required this.overdue,
+    required this.color,
+  });
+
+  final bool filled;
+  final bool overdue;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final tinted = color.withValues(alpha: 0.12);
+    final isHighlighted = filled || overdue;
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isHighlighted ? tinted : null,
+        border: isHighlighted ? null : Border.all(color: color, width: 2),
+      ),
+      child: Icon(
+        filled
+            ? Icons.check_rounded
+            : overdue
+                ? Icons.error_outline_rounded
+                : Icons.radio_button_unchecked_rounded,
+        color: color,
+        size: 26,
+      ),
+    );
+  }
 }
 
 class _ItemState {

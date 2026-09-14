@@ -212,6 +212,9 @@ class AuthController extends AsyncNotifier<User?> {
         role: user.roles.isNotEmpty ? user.roles.first : 'unknown',
         portal: portal?.name ?? 'unknown',
       );
+      // Login baru selalu mulai dari kondisi netral: pilihan portal dari sesi
+      // sebelumnya tidak boleh dibawa ke akun/sesi baru (lihat Rencana Dev. P2).
+      await ref.read(selectedPortalProvider.notifier).clear();
       return user;
     });
   }
@@ -255,6 +258,9 @@ class AuthController extends AsyncNotifier<User?> {
     } finally {
       ref.read(roleChoicePendingProvider.notifier).set(false);
       await ref.read(activeRoleProvider.notifier).clear();
+      // Bersihkan pilihan portal agar login berikutnya selalu netral
+      // (lihat Rencana Dev. P1 — tidak boleh ada kebocoran antar akun).
+      await ref.read(selectedPortalProvider.notifier).clear();
       state = const AsyncData(null);
     }
   }

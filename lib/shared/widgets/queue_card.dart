@@ -33,7 +33,7 @@ class QueueCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.colors.border),
         boxShadow: AppTheme.shadowLv2,

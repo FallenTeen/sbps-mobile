@@ -130,8 +130,8 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.colors.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(

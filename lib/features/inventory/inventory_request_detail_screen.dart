@@ -189,7 +189,7 @@ class _HeaderCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),
@@ -312,7 +312,7 @@ class _ItemCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: tersedia

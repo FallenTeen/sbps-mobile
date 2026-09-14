@@ -257,7 +257,7 @@ class _WorkingCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
         boxShadow: [
@@ -387,7 +387,7 @@ class _CompletedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
       ),

@@ -198,7 +198,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.card,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: context.colors.border),
                 ),
@@ -321,7 +321,7 @@ class _ErrorCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.colors.border),
       ),
@@ -357,7 +357,7 @@ class _ShortcutTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.colors.border),
       ),

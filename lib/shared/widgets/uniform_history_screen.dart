@@ -101,7 +101,7 @@ class _PeriodFilterSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Column(
@@ -171,7 +171,7 @@ class _StatusFilterSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Column(

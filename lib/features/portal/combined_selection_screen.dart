@@ -370,7 +370,7 @@ class _PortalOption extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       child: Material(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
         elevation: isSelected ? 2 : 1,
         shadowColor: (gradient as LinearGradient).colors.first.withValues(
@@ -516,7 +516,7 @@ class _RoleOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: context.colors.card,
       borderRadius: BorderRadius.circular(16),
       elevation: isSelected ? 2 : 1,
       child: InkWell(

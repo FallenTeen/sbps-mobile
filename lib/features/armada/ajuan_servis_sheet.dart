@@ -6,6 +6,7 @@ import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/draft/autosave_controller.dart';
 import '../../core/draft/draft_repository.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import 'armada_providers.dart';
@@ -177,8 +178,8 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.colors.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -189,7 +190,7 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey,
+                  color: context.colors.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

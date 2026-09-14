@@ -191,7 +191,7 @@ class _PortalCard extends StatelessWidget {
       duration: Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       child: Material(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
         elevation: enabled ? 1 : 0,
         shadowColor: context.colors.primary.withValues(alpha: 0.15),

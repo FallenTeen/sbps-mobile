@@ -83,7 +83,7 @@ class _Key extends StatelessWidget {
       button: true,
       label: semanticLabel ?? label,
       child: Material(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: () {
