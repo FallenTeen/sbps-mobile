@@ -517,7 +517,7 @@ List<StatefulShellBranch> _proyekShellBranches() => [
             ),
           ),
           GoRoute(
-            path: '/armada/servis',
+            path: 'servis',
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
               child: RiwayatServisScreen(

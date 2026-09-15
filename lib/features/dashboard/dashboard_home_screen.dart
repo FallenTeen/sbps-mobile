@@ -471,7 +471,7 @@ class _PoPendingCard extends ConsumerWidget {
                 : '${data.items.length} menunggu aksi',
           ),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/dashboard/po-pending'),
+          onTap: () => context.push('/dashboard/keuangan/po-pending'),
         ),
       ),
     );
@@ -520,7 +520,7 @@ class _InvoiceCard extends ConsumerWidget {
                 : '${data.items.length} belum lunas',
           ),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/dashboard/invoice'),
+          onTap: () => context.push('/dashboard/keuangan/invoice'),
         ),
       ),
     );

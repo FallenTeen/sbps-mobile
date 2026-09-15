@@ -123,7 +123,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                         label: Text('${u.pointCount} titik'),
                       ),
                       onTap: () => context.push(
-                        '/tracking/hari-ini/${u.userId}',
+                        '/tracking/pengguna-aktif/hari-ini/${u.userId}',
                         extra: u.nama,
                       ),
                     ),
@@ -156,7 +156,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                       label: Text('${u.pointCount} titik'),
                     ),
                     onTap: () => context.push(
-                      '/tracking/hari-ini/${u.userId}',
+                      '/tracking/pengguna-aktif/hari-ini/${u.userId}',
                       extra: u.nama,
                     ),
                   ),
