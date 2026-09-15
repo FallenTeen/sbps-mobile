@@ -221,3 +221,134 @@ class OpnameSubmitItem {
     if (catatan != null && catatan!.trim().isNotEmpty) 'catatan': catatan,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Riwayat mutasi stok (GET /inventory/mutasi & /inventory/materials/{id}/mutasi)
+// ---------------------------------------------------------------------------
+
+enum MutasiTipe {
+  masuk,
+  keluar;
+
+  factory MutasiTipe.fromString(String value) {
+    return value == 'masuk' ? MutasiTipe.masuk : MutasiTipe.keluar;
+  }
+
+  String get label =>
+      this == MutasiTipe.masuk ? 'Masuk' : 'Keluar';
+}
+
+/// Asal catatan mutasi — dipetakan dari `referensi_type` di backend
+/// (PurchaseOrder / ProductionSession / StokOpname / pengajuan servis / manual).
+enum MutasiSumber {
+  pembelian,
+  produksi,
+  opname,
+  requestSparepart,
+  manual;
+
+  factory MutasiSumber.fromString(String value) {
+    return switch (value) {
+      'pembelian' => MutasiSumber.pembelian,
+      'produksi' => MutasiSumber.produksi,
+      'opname' => MutasiSumber.opname,
+      'request_sparepart' => MutasiSumber.requestSparepart,
+      _ => MutasiSumber.manual,
+    };
+  }
+
+  String get label {
+    return switch (this) {
+      MutasiSumber.pembelian => 'Pembelian',
+      MutasiSumber.produksi => 'Produksi',
+      MutasiSumber.opname => 'Stok Opname',
+      MutasiSumber.requestSparepart => 'Request Sparepart',
+      MutasiSumber.manual => 'Manual',
+    };
+  }
+}
+
+/// Satu baris riwayat mutasi stok.
+class StokMutasi {
+  const StokMutasi({
+    required this.id,
+    required this.bahanBakuId,
+    required this.namaBarang,
+    required this.kategori,
+    required this.satuan,
+    required this.tipe,
+    required this.jumlah,
+    required this.sumber,
+    this.referensiId,
+    this.catatan,
+    required this.createdAt,
+    required this.createdBy,
+  });
+
+  final String id;
+  final String bahanBakuId;
+  final String namaBarang;
+  final String kategori;
+  final String satuan;
+  final MutasiTipe tipe;
+  final double jumlah;
+  final MutasiSumber sumber;
+  final String? referensiId;
+  final String? catatan;
+  final DateTime createdAt;
+  final String createdBy;
+
+  factory StokMutasi.fromJson(Map<String, dynamic> json) {
+    return StokMutasi(
+      id: json['id'] as String? ?? '',
+      bahanBakuId: json['bahan_baku_id'] as String? ?? '',
+      namaBarang: json['nama_barang'] as String? ?? '-',
+      kategori: json['kategori'] as String? ?? '-',
+      satuan: json['satuan'] as String? ?? '-',
+      tipe: MutasiTipe.fromString(json['tipe'] as String? ?? 'keluar'),
+      jumlah: (json['jumlah'] as num?)?.toDouble() ?? 0,
+      sumber: MutasiSumber.fromString(json['sumber'] as String? ?? ''),
+      referensiId: json['referensi_id'] as String?,
+      catatan: json['catatan'] as String?,
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      createdBy: json['created_by'] as String? ?? 'Sistem',
+    );
+  }
+}
+
+/// Halaman riwayat mutasi (`{ items, pagination }`) — format sama dengan
+/// riwayat QC / ritase.
+class StokMutasiPage {
+  const StokMutasiPage({
+    required this.items,
+    required this.currentPage,
+    required this.lastPage,
+    required this.total,
+  });
+
+  final List<StokMutasi> items;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+
+  bool get hasMore => currentPage < lastPage;
+
+  static StokMutasiPage fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    final list = map['items'];
+    final pag = map['pagination'];
+    final pagMap = pag is Map ? Map<String, dynamic>.from(pag) : const {};
+    return StokMutasiPage(
+      items: [
+        if (list is List)
+          for (final e in list)
+            if (e is Map) StokMutasi.fromJson(Map<String, dynamic>.from(e)),
+      ],
+      currentPage: (pagMap['current_page'] as num?)?.toInt() ?? 1,
+      lastPage: (pagMap['last_page'] as num?)?.toInt() ?? 1,
+      total: (pagMap['total'] as num?)?.toInt() ?? 0,
+    );
+  }
+}

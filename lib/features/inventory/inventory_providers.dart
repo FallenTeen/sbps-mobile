@@ -31,6 +31,157 @@ final inventoryRequestDetailProvider = FutureProvider.autoDispose
     );
 
 // ---------------------------------------------------------------------------
+// Riwayat mutasi stok (GET /inventory/mutasi) — filter + pagination
+// ---------------------------------------------------------------------------
+
+/// Filter layar Riwayat Inventory: tipe mutasi, kategori, rentang tanggal.
+class InventoryMutasiFilter {
+  const InventoryMutasiFilter({
+    this.tipe,
+    this.kategori,
+    this.tanggalMulai,
+    this.tanggalAkhir,
+  });
+
+  final MutasiTipe? tipe;
+  final String? kategori;
+  final DateTime? tanggalMulai;
+  final DateTime? tanggalAkhir;
+
+  @override
+  bool operator ==(Object other) =>
+      other is InventoryMutasiFilter &&
+      other.tipe == tipe &&
+      other.kategori == kategori &&
+      other.tanggalMulai == tanggalMulai &&
+      other.tanggalAkhir == tanggalAkhir;
+
+  @override
+  int get hashCode =>
+      Object.hash(tipe, kategori, tanggalMulai, tanggalAkhir);
+}
+
+class InventoryMutasiFilterNotifier extends Notifier<InventoryMutasiFilter> {
+  @override
+  InventoryMutasiFilter build() => const InventoryMutasiFilter();
+
+  void set(InventoryMutasiFilter filter) => state = filter;
+}
+
+final inventoryMutasiFilterProvider = NotifierProvider<
+  InventoryMutasiFilterNotifier,
+  InventoryMutasiFilter
+>(InventoryMutasiFilterNotifier.new);
+
+class InventoryMutasiState {
+  const InventoryMutasiState({
+    this.items = const [],
+    this.currentPage = 0,
+    this.lastPage = 1,
+    this.total = 0,
+    this.loading = false,
+    this.error,
+  });
+
+  final List<StokMutasi> items;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+  final bool loading;
+  final String? error;
+
+  bool get hasMore => currentPage < lastPage;
+
+  InventoryMutasiState copyWith({
+    List<StokMutasi>? items,
+    int? currentPage,
+    int? lastPage,
+    int? total,
+    bool? loading,
+    String? error,
+  }) => InventoryMutasiState(
+    items: items ?? this.items,
+    currentPage: currentPage ?? this.currentPage,
+    lastPage: lastPage ?? this.lastPage,
+    total: total ?? this.total,
+    loading: loading ?? this.loading,
+    error: error,
+  );
+}
+
+class InventoryMutasiController extends Notifier<InventoryMutasiState> {
+  @override
+  InventoryMutasiState build() {
+    final filter = ref.watch(inventoryMutasiFilterProvider);
+    Future.microtask(() => _loadPage(filter, page: 1));
+    return const InventoryMutasiState(loading: true);
+  }
+
+  Future<void> _loadPage(
+    InventoryMutasiFilter filter, {
+    required int page,
+  }) async {
+    try {
+      final result = await ref
+          .read(inventoryRepositoryProvider)
+          .getMutasi(
+            kategori: filter.kategori,
+            bahanBakuId: null,
+            tanggalMulai: filter.tanggalMulai,
+            tanggalAkhir: filter.tanggalAkhir,
+            page: page,
+          );
+      if (ref.read(inventoryMutasiFilterProvider) != filter) return;
+      final items = result.items.where((m) {
+        if (filter.tipe != null && m.tipe != filter.tipe) return false;
+        return true;
+      }).toList();
+      state = state.copyWith(
+        items: page == 1 ? items : [...state.items, ...items],
+        currentPage: result.currentPage,
+        lastPage: result.lastPage,
+        total: result.total,
+        loading: false,
+      );
+    } on ApiException catch (e) {
+      if (ref.read(inventoryMutasiFilterProvider) != filter) return;
+      state = state.copyWith(loading: false, error: e.message);
+    } catch (_) {
+      if (ref.read(inventoryMutasiFilterProvider) != filter) return;
+      state = state.copyWith(
+        loading: false,
+        error: 'Gagal memuat riwayat mutasi.',
+      );
+    }
+  }
+
+  Future<void> refresh() =>
+      _loadPage(ref.read(inventoryMutasiFilterProvider), page: 1);
+
+  Future<void> loadMore() async {
+    if (state.loading || !state.hasMore) return;
+    state = state.copyWith(loading: true);
+    await _loadPage(
+      ref.read(inventoryMutasiFilterProvider),
+      page: state.currentPage + 1,
+    );
+  }
+}
+
+final inventoryMutasiProvider = NotifierProvider<
+  InventoryMutasiController,
+  InventoryMutasiState
+>(InventoryMutasiController.new);
+
+/// Riwayat mutasi untuk 1 barang spesifik (layar Detail Stok) — muat 50
+/// item pertama agar panel detail cukup informatif tanpa pagination token.
+final inventoryMaterialMutasiProvider = FutureProvider.autoDispose
+    .family<StokMutasiPage, String>(
+      (ref, id) =>
+          ref.watch(inventoryRepositoryProvider).getMaterialMutasi(id, perPage: 50),
+    );
+
+// ---------------------------------------------------------------------------
 // Proses request sparepart dari workshop
 // ---------------------------------------------------------------------------
 

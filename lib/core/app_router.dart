@@ -23,6 +23,8 @@ import '../features/armada/unit_saya_home_screen.dart';
 import '../features/workshop/workshop_queue_screen.dart';
 import '../features/workshop/workshop_job_detail_screen.dart';
 import '../features/inventory/inventory_home_screen.dart';
+import '../features/inventory/inventory_detail_stok_screen.dart';
+import '../features/inventory/inventory_riwayat_screen.dart';
 import '../features/inventory/inventory_request_detail_screen.dart';
 import '../features/inventory/inventory_stok_screen.dart';
 import '../features/inventory/inventory_opname_screen.dart';
@@ -607,7 +609,27 @@ List<StatefulShellBranch> _proyekShellBranches() => [
             path: 'stok',
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
-              child: const InventoryStokScreen(),
+              child: InventoryStokScreen(
+                initialSelectedId: state.uri.queryParameters['selected'],
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: ':id',
+                pageBuilder: (context, state) => buildAppTransitionPage(
+                  key: state.pageKey,
+                  child: InventoryDetailStokScreen(
+                    itemId: state.pathParameters['id']!,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'riwayat',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const InventoryRiwayatScreen(),
             ),
           ),
           GoRoute(

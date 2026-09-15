@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/date_grouping.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/notification_routes.dart';
@@ -157,7 +158,8 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     final rows = <Object>[];
     String? lastHeader;
     for (final n in items) {
-      final header = _dateHeader(n.time);
+      final dt = DateTime.tryParse(n.time ?? '');
+      final header = dt == null ? 'Lebih Lama' : dateGroupLabel(dt);
       if (header != lastHeader) {
         rows.add(_HeaderRow(header));
         lastHeader = header;
@@ -165,20 +167,6 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
       rows.add(_TileRow(n));
     }
     return rows;
-  }
-
-  /// Kelompok tanggal: Hari Ini / Kemarin / Minggu Ini / tanggal penuh.
-  String _dateHeader(String? time) {
-    final dt = DateTime.tryParse(time ?? '');
-    final now = DateTime.now();
-    if (dt == null) return 'Lebih Lama';
-    final today = DateTime(now.year, now.month, now.day);
-    final that = DateTime(dt.year, dt.month, dt.day);
-    final diff = today.difference(that).inDays;
-    if (diff <= 0) return 'Hari Ini';
-    if (diff == 1) return 'Kemarin';
-    if (diff < 7) return 'Minggu Ini';
-    return fmtTanggal(dt);
   }
 }
 

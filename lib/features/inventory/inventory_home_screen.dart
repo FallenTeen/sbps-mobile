@@ -304,11 +304,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             _ShortcutTile(
               icon: Icons.history_rounded,
               title: 'Riwayat',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Riwayat akan segera hadir')),
-                );
-              },
+              onTap: () => context.push('/inventory/riwayat'),
             ),
           ],
         ),

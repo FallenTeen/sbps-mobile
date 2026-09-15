@@ -103,7 +103,60 @@ class InventoryRepository {
     return res.data ?? const [];
   }
 
+  /// GET /inventory/mutasi?kategori=&bahan_baku_id=&tanggal_mulai=&tanggal_akhir=&per_page=&page=
+  /// Riwayat mutasi lintas semua barang.
+  Future<StokMutasiPage> getMutasi({
+    String? kategori,
+    String? bahanBakuId,
+    DateTime? tanggalMulai,
+    DateTime? tanggalAkhir,
+    int perPage = 20,
+    int page = 1,
+  }) async {
+    final res = await _api.get<StokMutasiPage>(
+      '/inventory/mutasi',
+      query: {
+        if (kategori != null && kategori.isNotEmpty) 'kategori': kategori,
+        if (bahanBakuId != null && bahanBakuId.isNotEmpty)
+          'bahan_baku_id': bahanBakuId,
+        if (tanggalMulai != null)
+          'tanggal_mulai': _isoDate(tanggalMulai),
+        if (tanggalAkhir != null) 'tanggal_akhir': _isoDate(tanggalAkhir),
+        'per_page': perPage,
+        'page': page,
+      },
+      parse: StokMutasiPage.fromRaw,
+    );
+    return res.data ??
+        const StokMutasiPage(items: [], currentPage: 1, lastPage: 1, total: 0);
+  }
+
+  /// GET /inventory/materials/{id}/mutasi — riwayat mutasi khusus 1 barang.
+  Future<StokMutasiPage> getMaterialMutasi(
+    String id, {
+    DateTime? tanggalMulai,
+    DateTime? tanggalAkhir,
+    int perPage = 20,
+    int page = 1,
+  }) async {
+    final res = await _api.get<StokMutasiPage>(
+      '/inventory/materials/$id/mutasi',
+      query: {
+        if (tanggalMulai != null) 'tanggal_mulai': _isoDate(tanggalMulai),
+        if (tanggalAkhir != null) 'tanggal_akhir': _isoDate(tanggalAkhir),
+        'per_page': perPage,
+        'page': page,
+      },
+      parse: StokMutasiPage.fromRaw,
+    );
+    return res.data ??
+        const StokMutasiPage(items: [], currentPage: 1, lastPage: 1, total: 0);
+  }
+
   void _ensureSuccess(ApiResponse<dynamic> res) {
     if (!res.isSuccess) throw ApiException(res.message);
   }
 }
+
+String _isoDate(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

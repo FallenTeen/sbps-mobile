@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import 'inventory_detail_stok_screen.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
 class InventoryStokScreen extends ConsumerStatefulWidget {
-  const InventoryStokScreen({super.key});
+  const InventoryStokScreen({super.key, this.initialSelectedId});
+
+  /// Id awal dari query `?selected=` (deep-link, mode Expanded).
+  final String? initialSelectedId;
 
   @override
   ConsumerState<InventoryStokScreen> createState() =>
@@ -52,93 +58,116 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
         title: const Text('Daftar Stok'),
         actions: [PortalSwitchButton()],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (v) => setState(() => _searchQuery = v),
-              decoration: InputDecoration(
-                hintText: 'Cari barang...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+      body: AdaptiveMasterDetail(
+        initialSelectedId: widget.initialSelectedId,
+        pushRouteFor: (id) => '/inventory/stok/$id',
+        emptyDetailPlaceholder: const MasterDetailEmptyPlaceholder(
+          icon: Icons.inventory_2_outlined,
+          title: 'Pilih barang',
+          subtitle: 'Detail stok & riwayat mutasi akan tampil di panel ini',
+        ),
+        detailBuilder: (context, selectedId) =>
+            InventoryDetailStokContent(itemId: selectedId),
+        masterBuilder: (context, selectedId, onSelect) => ResponsiveCenter(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: 'Cari barang...',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _buildBody(context, selectedId, onSelect),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ref
-                .watch(inventoryStokProvider)
-                .when(
-                  loading: () => const SkeletonLoader(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          SkeletonBlock(height: 66, borderRadius: 14),
-                          SizedBox(height: 8),
-                          SkeletonBlock(height: 66, borderRadius: 14),
-                          SizedBox(height: 8),
-                          SkeletonBlock(height: 66, borderRadius: 14),
-                        ],
-                      ),
-                    ),
-                  ),
-                  error: (error, _) => Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.cloud_off_rounded,
-                          color: context.colors.error,
-                          size: 32,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Gagal memuat daftar stok.',
-                          style: TextStyle(color: context.colors.textSecondary),
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: () =>
-                              ref.invalidate(inventoryStokProvider),
-                          child: const Text('Coba lagi'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  data: (items) {
-                    if (items.isEmpty) {
-                      return const AppEmptyState(
-                        icon: Icons.inventory_2_outlined,
-                        title: 'Tidak ada data stok',
-                        subtitle: 'Belum ada bahan baku atau sparepart',
-                      );
-                    }
-                    return _buildList(items);
-                  },
-                ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildList(List<InventoryItem> items) {
+  Widget _buildBody(
+    BuildContext context,
+    String? selectedId,
+    void Function(String id) onSelect,
+  ) {
+    final async = ref.watch(inventoryStokProvider);
+    return async.when(
+      loading: () => const SkeletonLoader(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              SkeletonBlock(height: 66, borderRadius: 14),
+              SizedBox(height: 8),
+              SkeletonBlock(height: 66, borderRadius: 14),
+              SizedBox(height: 8),
+              SkeletonBlock(height: 66, borderRadius: 14),
+            ],
+          ),
+        ),
+      ),
+      error: (error, _) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              color: context.colors.error,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Gagal memuat daftar stok.',
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () => ref.invalidate(inventoryStokProvider),
+              child: const Text('Coba lagi'),
+            ),
+          ],
+        ),
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return const AppEmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'Tidak ada data stok',
+            subtitle: 'Belum ada bahan baku atau sparepart',
+          );
+        }
+        return _buildList(items, selectedId ?? '', onSelect);
+      },
+    );
+  }
+
+  Widget _buildList(
+    List<InventoryItem> items,
+    String selectedId,
+    void Function(String id) onSelect,
+  ) {
     final categories = _kategoriList(items);
     final filtered = _filteredItems(items);
 
@@ -175,7 +204,11 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final item = filtered[index];
-                    return _StokItemCard(item: item);
+                    return _StokItemCard(
+                      item: item,
+                      selected: item.id == selectedId,
+                      onTap: () => onSelect(item.id),
+                    );
                   },
                 ),
         ),
@@ -185,9 +218,15 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
 }
 
 class _StokItemCard extends StatelessWidget {
-  const _StokItemCard({required this.item});
+  const _StokItemCard({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
   final InventoryItem item;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -209,11 +248,7 @@ class _StokItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Detail ${item.nama} — segera hadir')),
-            );
-          },
+          onTap: onTap,
           child: Padding(
             padding: EdgeInsets.all(14),
             child: Row(
