@@ -41,11 +41,22 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
         state.items
             .where((j) => j.status == WorkshopJobStatus.dikerjakan)
             .toList(),
-      _QueueFilter.selesaiHariIni =>
-        state.items
-            .where((j) => j.status == WorkshopJobStatus.selesai)
-            .toList(),
+      _QueueFilter.selesaiHariIni => state.items
+          .where(
+            (j) =>
+                j.status == WorkshopJobStatus.selesai &&
+                _isToday(j.completedAt),
+          )
+          .toList(),
     };
+  }
+
+  bool _isToday(DateTime? dt) {
+    if (dt == null) return false;
+    final now = DateTime.now();
+    return dt.year == now.year &&
+        dt.month == now.month &&
+        dt.day == now.day;
   }
 
   Color _statusColor(WorkshopJobStatus status) {

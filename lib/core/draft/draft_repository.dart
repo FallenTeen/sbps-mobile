@@ -15,7 +15,8 @@ enum DraftFormType {
   checklistMajor,
   slumpTest,
   ujiTekan,
-  inventoryOpname;
+  inventoryOpname,
+  ritaseInput;
 
   String get label => switch (this) {
     servisAjuan => 'Ajuan Servis',
@@ -26,6 +27,7 @@ enum DraftFormType {
     slumpTest => 'Slump Test',
     ujiTekan => 'Uji Tekan',
     inventoryOpname => 'Inventory Opname',
+    ritaseInput => 'Input Muatan',
   };
 }
 

@@ -25,9 +25,15 @@ class WorkshopRepository {
           if (items is List)
             for (final e in items)
               if (e is Map)
-                WorkshopJob.fromServisArmada(
+                // Hanya pekerjaan yang benar-benar masuk antrian:
+                // disetujui (menunggu), dikerjakan, atau selesai.
+                // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop.
+                if (isWorkForWorkshop(
                   ServisArmada.fromJson(Map<String, dynamic>.from(e)),
-                ),
+                ))
+                  WorkshopJob.fromServisArmada(
+                    ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+                  ),
         ];
       },
     );
@@ -116,4 +122,8 @@ class WorkshopRepository {
   void _ensureSuccess(ApiResponse<dynamic> res) {
     if (!res.isSuccess) throw ApiException(res.message);
   }
+
+  /// True jika servis adalah pekerjaan yang valid untuk antrian workshop.
+  static bool isWorkForWorkshop(ServisArmada servis) =>
+      servis.isDisetujui || servis.isDikerjakan || servis.isSelesai;
 }

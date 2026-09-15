@@ -83,8 +83,35 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Tombol Aksi'));
+      await tester.tap(find.byType(BouncingButton));
       expect(pressed, isTrue);
+    });
+
+    testWidgets(
+        'BouncingButton with a child button fires callback exactly once',
+        (tester) async {
+      var pressed = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BouncingButton(
+              onPressed: () => pressed++,
+              child: FilledButton(
+                onPressed: () => pressed++,
+                child: const Text('Tap'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(BouncingButton));
+      expect(
+        pressed,
+        1,
+        reason: 'Callback must fire exactly once',
+      );
     });
 
     testWidgets('StaggeredEntrance renders child with fade & translate',

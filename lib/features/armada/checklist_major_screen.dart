@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,14 +63,73 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
     HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
     try {
-      // TODO: Kirim ke backend POST /armada/checklist-major
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      final armada = _selectedArmada;
+      if (armada == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pilih kendaraan terlebih dahulu')),
+        );
+        return;
+      }
+
+      final photoPaths = <String>[];
+      final items = <Map<String, dynamic>>[];
+      for (final item in _items) {
+        final entry = <String, dynamic>{
+          'label': item.label,
+          'status': switch (item.status) {
+            _ItemStatus.baik => 'baik',
+            _ItemStatus.rusakRingan => 'rusak_ringan',
+            _ItemStatus.rusakBerat => 'rusak_berat',
+          },
+        };
+        final photo = _photos[item.label];
+        if (photo != null) {
+          entry['photo_index'] = photoPaths.length;
+          photoPaths.add(photo);
+        }
+        items.add(entry);
+      }
+
+      final result = await ref
+          .read(armadaRepositoryProvider)
+          .submitChecklistMajor(
+            armadaId: armada.id,
+            items: items,
+            catatan: _catatanCtrl.text.trim(),
+            photoPaths: photoPaths,
+          );
       if (!mounted) return;
-      HapticFeedback.lightImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checklist Serah Terima tersimpan')),
-      );
-      Navigator.of(context).pop();
+
+      if (result.delivered) {
+        HapticFeedback.lightImpact();
+        AnalyticsService.checklistSubmit(
+          _items.every((i) => i.status == _ItemStatus.baik),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Checklist Serah Terima tersimpan & tersinkron.'),
+          ),
+        );
+        Navigator.of(context).pop();
+      } else if (result.permanentlyFailed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.errorMessage ?? 'Gagal menyimpan checklist. Coba lagi.',
+            ),
+          ),
+        );
+      } else {
+        HapticFeedback.lightImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Checklist tersimpan di perangkat — dikirim saat online.',
+            ),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -539,8 +600,8 @@ class _MajorChecklistTile extends StatelessWidget {
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  photoPath!,
+                child: Image.file(
+                  File(photoPath!),
                   height: 80,
                   width: 80,
                   fit: BoxFit.cover,
@@ -549,7 +610,10 @@ class _MajorChecklistTile extends StatelessWidget {
                     child: SizedBox(
                       height: 80,
                       width: 80,
-                      child: Icon(Icons.image, color: context.colors.textMuted),
+                      child: Icon(
+                        Icons.image,
+                        color: context.colors.textMuted,
+                      ),
                     ),
                   ),
                 ),

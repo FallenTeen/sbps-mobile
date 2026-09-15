@@ -76,11 +76,19 @@ class _BouncingButtonState extends State<BouncingButton>
         onTapUp: _onTapUp,
         onTapCancel: _onTapCancel,
         onTap: widget.onPressed,
-        child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          builder: (context, child) =>
-              Transform.scale(scale: _scaleAnimation.value, child: child),
-          child: widget.child,
+        // IgnorePointer prevents the child (e.g. FilledButton) from also
+        // responding to taps — wrapper is the single source of the action.
+        // When wrapper is enabled (onPressed != null), block child taps;
+        // when disabled, pointer passes through so child shows its own
+        // disabled visual (greyed) naturally.
+        child: IgnorePointer(
+          ignoring: widget.onPressed != null,
+          child: AnimatedBuilder(
+            animation: _scaleAnimation,
+            builder: (context, child) =>
+                Transform.scale(scale: _scaleAnimation.value, child: child),
+            child: widget.child,
+          ),
         ),
       ),
     );

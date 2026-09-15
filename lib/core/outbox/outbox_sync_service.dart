@@ -93,6 +93,12 @@ class OutboxSyncService {
           for (final path in action.photoLocalPaths)
             MultipartFileSpec('photos[]', path),
         ],
+        // Checklist major: foto per item dikirim dengan field `photos[]`
+        // (posisi sesuai `photo_index` di payload items).
+        PendingEndpoint.armadaChecklistMajor => [
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('photos[]', path),
+        ],
         // Upload media generik (Fase A2.7): field `files[]`, 1-10 file.
         PendingEndpoint.uploadMedia => [
           for (final path in action.photoLocalPaths)
@@ -104,7 +110,9 @@ class OutboxSyncService {
             MultipartFileSpec('photo', action.photoLocalPath!),
         ],
       };
-      if (specs.isEmpty) {
+      if (specs.isEmpty &&
+          action.endpoint != PendingEndpoint.armadaChecklistMajor &&
+          action.endpoint != PendingEndpoint.formulirSubmit) {
         return const OutboxSendResult(
           delivered: false,
           permanentlyFailed: true,

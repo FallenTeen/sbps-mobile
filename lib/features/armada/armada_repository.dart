@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
@@ -107,6 +109,35 @@ class ArmadaRepository {
     return result.delivered;
   }
 
+  /// POST /armada/checklist-major — serah terima kendaraan (Section 21.10).
+  /// Menggunakan outbox untuk offline support. [items] berupa daftar peta
+  /// `{label, status, photo_index?}`; [photoPaths] berisi path foto item
+  /// (urutan sesuai `photo_index`), dikirim sebagai field multipart `photos[]`.
+  Future<OutboxSendResult> submitChecklistMajor({
+    required String armadaId,
+    required List<Map<String, dynamic>> items,
+    String? catatan,
+    List<String> photoPaths = const [],
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.armadaChecklistMajor,
+      payloadJson: {
+        'armada_id': armadaId,
+        'items': jsonEncode(items),
+        if (catatan != null && catatan.trim().isNotEmpty)
+          'catatan': catatan.trim(),
+      },
+      payloadData: const {},
+      photoLocalPaths: photoPaths,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    return _outbox.enqueue(action, _sync.send);
+  }
+
   /// POST /armada/odo-awal-proyek — input sekali per armada per proyek.
   /// Menggunakan outbox untuk offline support.
   Future<bool> submitOdoAwalProyek({
@@ -155,11 +186,12 @@ class ArmadaRepository {
   }
 
   /// POST /armada/ritase/input — satu catatan muatan via outbox.
-  Future<bool> submitRitase({
+  Future<OutboxSendResult> submitRitase({
     required String armadaId,
     required int jumlahRit,
     required String satuanVolume,
     String? catatan,
+    double? odoPerTrip,
   }) async {
     final action = PendingAction(
       id: _uuid.v4(),
@@ -172,13 +204,13 @@ class ArmadaRepository {
         'satuan_volume': satuanVolume,
         if (catatan != null && catatan.trim().isNotEmpty)
           'catatan': catatan.trim(),
+        if (odoPerTrip != null) 'odo_per_trip': odoPerTrip,
       },
       createdAt: DateTime.now(),
       idempotencyKey: _uuid.v4(),
     );
 
-    final result = await _outbox.enqueue(action, _sync.send);
-    return result.delivered;
+    return _outbox.enqueue(action, _sync.send);
   }
 
   // ---------------------------------------------------------------------------

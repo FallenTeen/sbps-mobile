@@ -608,6 +608,21 @@ class _PendingItemsList extends StatelessWidget {
     if (counts.workshop > 0) {
       items.add(_PendingItem(label: 'Workshop', count: counts.workshop));
     }
+    if (counts.inventory > 0) {
+      items.add(
+          _PendingItem(label: 'Inventory', count: counts.inventory));
+    }
+    if (counts.formulir > 0) {
+      items
+          .add(_PendingItem(label: 'Formulir', count: counts.formulir));
+    }
+    if (counts.upload > 0) {
+      items.add(_PendingItem(label: 'Unggah', count: counts.upload));
+    }
+    if (counts.presensi > 0) {
+      items
+          .add(_PendingItem(label: 'Presensi', count: counts.presensi));
+    }
 
     return Wrap(spacing: 8, runSpacing: 8, children: items);
   }
@@ -690,6 +705,14 @@ class _PendingBadge extends ConsumerWidget {
         return counts.qc;
       case 'workshop':
         return counts.workshop;
+      case 'inventory':
+        return counts.inventory;
+      case 'formulir':
+        return counts.formulir;
+      case 'upload':
+        return counts.upload;
+      case 'presensi':
+        return counts.presensi;
       default:
         return 0;
     }

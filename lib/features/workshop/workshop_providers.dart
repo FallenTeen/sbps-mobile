@@ -110,7 +110,17 @@ final workshopJobDetailProvider = FutureProvider.autoDispose
 
 /// Hasil alur submit di detail job.
 class WorkshopSubmitResult {
-  const WorkshopSubmitResult({this.error});
+  const WorkshopSubmitResult({
+    this.delivered = false,
+    this.queued = false,
+    this.error,
+  });
+
+  /// true = server sudah menerima (sync langsung sukses).
+  final bool delivered;
+
+  /// true = tersimpan di perangkat, dikirim saat online.
+  final bool queued;
 
   final String? error;
 }
@@ -128,8 +138,9 @@ class WorkshopSubmitController extends Notifier<WorkshopSubmitState> {
   @override
   WorkshopSubmitState build() => const WorkshopSubmitState();
 
-  void _invalidateQueries() {
+  void _invalidateQueries(String jobId) {
     ref.invalidate(workshopQueueProvider);
+    ref.invalidate(workshopJobDetailProvider(jobId));
   }
 
   /// Mulai mengerjakan job (status menunggu -> dikerjakan).
@@ -147,9 +158,20 @@ class WorkshopSubmitController extends Notifier<WorkshopSubmitState> {
         idempotencyKey: _uuid.v4(),
       );
       final sync = ref.read(outboxSyncServiceProvider);
-      await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
-      _invalidateQueries();
-      return const WorkshopSubmitResult();
+      final result = await ref.read(outboxRepositoryProvider).enqueue(
+        action,
+        sync.send,
+      );
+      if (result.delivered) {
+        _invalidateQueries(jobId);
+        return const WorkshopSubmitResult(delivered: true);
+      }
+      if (result.permanentlyFailed) {
+        return WorkshopSubmitResult(
+          error: result.errorMessage ?? 'Gagal memulai pengerjaan.',
+        );
+      }
+      return const WorkshopSubmitResult(queued: true);
     } on ApiException catch (e) {
       return WorkshopSubmitResult(error: e.message);
     } catch (_) {
@@ -181,9 +203,20 @@ class WorkshopSubmitController extends Notifier<WorkshopSubmitState> {
         idempotencyKey: _uuid.v4(),
       );
       final sync = ref.read(outboxSyncServiceProvider);
-      await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
-      _invalidateQueries();
-      return const WorkshopSubmitResult();
+      final result = await ref.read(outboxRepositoryProvider).enqueue(
+        action,
+        sync.send,
+      );
+      if (result.delivered) {
+        _invalidateQueries(jobId);
+        return const WorkshopSubmitResult(delivered: true);
+      }
+      if (result.permanentlyFailed) {
+        return WorkshopSubmitResult(
+          error: result.errorMessage ?? 'Gagal menandai selesai.',
+        );
+      }
+      return const WorkshopSubmitResult(queued: true);
     } on ApiException catch (e) {
       return WorkshopSubmitResult(error: e.message);
     } catch (_) {

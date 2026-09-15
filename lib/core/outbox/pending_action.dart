@@ -16,7 +16,8 @@ enum PendingEndpoint {
   armadaRitase('/armada/ritase/input'),
   workshopMulai('/servis-armada/{id}/mulai'),
   workshopSelesai('/servis-armada/{id}/selesai'),
-  inventoryOpname('/inventory/opname');
+  inventoryOpname('/inventory/opname'),
+  armadaChecklistMajor('/armada/checklist-major');
 
   const PendingEndpoint(this.path);
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
+import '../../core/draft/draft_repository.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
@@ -53,6 +54,7 @@ class RitaseInputScreen extends ConsumerStatefulWidget {
 class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   final List<RitaseRecord> _records = [];
   int _currentRecordIndex = -1; // -1 = mode tambah baru
+  bool _draftLoaded = false;
 
   final _jumlahRitCtrl = TextEditingController();
   final _catatanCtrl = TextEditingController();
@@ -72,12 +74,82 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     'kloter',
   ];
 
+  static const _draftKey = 'ritase_input';
+
   @override
   void dispose() {
     _jumlahRitCtrl.dispose();
     _catatanCtrl.dispose();
     _odoPerTripCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDraft(List<ArmadaSaya> armadaList) async {
+    if (_draftLoaded) return;
+    _draftLoaded = true;
+    try {
+      final draft = await ref
+          .read(draftRepositoryProvider)
+          .load(_draftKey);
+      if (draft == null) return;
+      final rawRecords = draft.fieldsJson['records'];
+      if (rawRecords is! List) return;
+      final byId = {for (final a in armadaList) a.id: a};
+      final restored = <RitaseRecord>[];
+      for (final e in rawRecords) {
+        if (e is! Map) continue;
+        final map = Map<String, dynamic>.from(e);
+        final index = (map['index'] as num?)?.toInt();
+        if (index == null) continue;
+        restored.add(
+          RitaseRecord(
+            index: index,
+            armada: byId[map['armada_id'] as String?],
+            jumlah: (map['jumlah'] as num?)?.toInt(),
+            satuan: (map['satuan'] as String?) ?? 'rit',
+            catatan: (map['catatan'] as String?) ?? '',
+            odoPerTrip: (map['odo_per_trip'] as num?)?.toDouble(),
+          ),
+        );
+      }
+      if (restored.isNotEmpty) {
+        setState(() => _records.addAll(restored));
+      }
+    } catch (_) {
+      // Draft korup dibuang diam-diam; tidak mengganggu input baru.
+      ref.read(draftRepositoryProvider).delete(_draftKey);
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    try {
+      await ref.read(draftRepositoryProvider).save(
+        draftKey: _draftKey,
+        formType: DraftFormType.ritaseInput,
+        fieldsJson: {
+          'records': [
+            for (final r in _records)
+              {
+                'index': r.index,
+                'armada_id': r.armada?.id,
+                'jumlah': r.jumlah,
+                'satuan': r.satuan,
+                'catatan': r.catatan,
+                'odo_per_trip': r.odoPerTrip,
+              },
+          ],
+        },
+        savedAt: DateTime.now(),
+      );
+    } catch (_) {
+      // Penyimpanan draft bersifat best-effort — jangan gagalkan input.
+    }
+  }
+
+  Future<void> _clearDraft() async {
+    try {
+      await ref.read(draftRepositoryProvider).delete(_draftKey);
+    } catch (_) {}
   }
 
   int get _nextIndex => _records.isEmpty ? 1 : _records.last.index + 1;
@@ -141,6 +213,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     });
 
     AnalyticsService.ritaseRecordAdd();
+    _saveDraft();
 
     _startNewRecord();
 
@@ -155,6 +228,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       _records.removeWhere((r) => r.index == recordIndex);
       if (_currentRecordIndex == recordIndex) _startNewRecord();
     });
+    _saveDraft();
   }
 
   Future<void> _submitAll() async {
@@ -171,7 +245,13 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var delivered = true;
+      // Satu record satu kiriman outbox yang independen — tidak boleh ada
+      // satu boolean global yang menyesatkan: beberapa bisa langsung
+      // delivered, beberapa antre (offline), beberapa gagal permanen.
+      var delivered = 0;
+      var queued = 0;
+      var failed = 0;
+      String? firstFailMessage;
       for (final record in _records) {
         final satuanVolume = switch (record.satuan) {
           'rit' => 'ritase',
@@ -179,29 +259,53 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           'm³' => 'm3',
           _ => 'ritase',
         };
-        final sent = await ref
+        final result = await ref
             .read(armadaRepositoryProvider)
             .submitRitase(
               armadaId: record.armada!.id,
               jumlahRit: record.jumlah!,
               satuanVolume: satuanVolume,
               catatan: record.catatan,
+              odoPerTrip: record.odoPerTrip,
             );
-        delivered = delivered && sent;
+        if (result.delivered) {
+          delivered++;
+        } else if (result.permanentlyFailed) {
+          failed++;
+          firstFailMessage ??= result.errorMessage;
+        } else {
+          queued++;
+        }
       }
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
       AnalyticsService.ritaseSubmitAll(_records.length);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            delivered
-                ? '${_records.length} muatan berhasil dikirim'
-                : '${_records.length} muatan tersimpan dan akan dikirim saat online',
+      if (queued == 0 && failed == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$delivered muatan berhasil dikirim'),
           ),
-        ),
-      );
+        );
+      } else if (failed == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$delivered muatan terkirim, $queued tersimpan dan akan dikirim saat online.',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$delivered terkirim, $queued antre, $failed gagal — '
+              '$firstFailMessage',
+            ),
+          ),
+        );
+      }
+      _clearDraft();
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -250,6 +354,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                   'Hubungi admin untuk mendapatkan penugasan unit kendaraan.',
             );
           }
+
+          _loadDraft(armadaList);
 
           return Column(
             children: [

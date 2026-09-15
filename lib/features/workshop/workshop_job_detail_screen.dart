@@ -193,7 +193,51 @@ class _WorkshopJobDetailContentState
     }
   }
 
+  Future<void> _startWork() async {
+    setState(() => _isSubmitting = true);
+    try {
+      final result = await ref
+          .read(workshopSubmitProvider.notifier)
+          .mulaiPengerjaan(widget.jobId);
+      if (result.error != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(result.error!)));
+        }
+        return;
+      }
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      if (result.delivered) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengerjaan dimulai — job masuk Dikerjakan.'),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Pengerjaan disimpan di perangkat — dikirim saat online.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
   Future<void> _markComplete(int totalItems) async {
+    if (jobStatusNow != WorkshopJobStatus.dikerjakan) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mulai pengerjaan dulu sebelum menandai selesai'),
+        ),
+      );
+      return;
+    }
     if (_completedCount < totalItems) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selesaikan semua item terlebih dahulu')),
@@ -229,9 +273,19 @@ class _WorkshopJobDetailContentState
       }
       if (!mounted) return;
       HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Job berhasil ditandai selesai')),
-      );
+      if (result.delivered) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job berhasil ditandai selesai')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Job tersimpan di perangkat — dikirim saat online.',
+            ),
+          ),
+        );
+      }
       if (widget.onJobCompleted != null) {
         ref.read(workshopQueueProvider.notifier).refresh();
         widget.onJobCompleted!();
@@ -248,6 +302,9 @@ class _WorkshopJobDetailContentState
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
+
+  WorkshopJobStatus? get jobStatusNow =>
+      ref.read(workshopJobDetailProvider(widget.jobId)).value?.job.status;
 
   @override
   Widget build(BuildContext context) {
@@ -371,28 +428,16 @@ class _WorkshopJobDetailContentState
                         ],
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _isSubmitting
-                                  ? null
-                                  : () => _requestSparepart(),
-                              icon: const Icon(
-                                Icons.inventory_2_outlined,
-                                size: 18,
-                              ),
-                              label: const Text('Request Sparepart'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                  : job.status == WorkshopJobStatus.menunggu
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 48,
                             child: FilledButton.icon(
                               onPressed: _isSubmitting
                                   ? null
-                                  : () => _markComplete(items.length),
+                                  : () => _startWork(),
                               icon: _isSubmitting
                                   ? const SizedBox(
                                       width: 18,
@@ -402,13 +447,49 @@ class _WorkshopJobDetailContentState
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Icon(Icons.check, size: 18),
-                              label: Text('Tandai Selesai'),
+                                  : const Icon(Icons.play_arrow, size: 20),
+                              label: Text('Mulai Pengerjaan'),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _isSubmitting
+                                      ? null
+                                      : () => _requestSparepart(),
+                                  icon: const Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Request Sparepart'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: _isSubmitting
+                                      ? null
+                                      : () => _markComplete(items.length),
+                                  icon: _isSubmitting
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(Icons.check, size: 18),
+                                  label: Text('Tandai Selesai'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
             ),
           ],
         );

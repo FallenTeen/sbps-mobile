@@ -36,7 +36,9 @@ class WorkshopJob {
       platNomor: json['platNomor'] as String? ?? '-',
       kategoriServis: json['kategoriServis'] as String? ?? '-',
       keluhan: json['keluhan'] as String? ?? '',
-      status: _parseStatus(json['status'] as String?),
+      status:
+          _parseStatus(json['status'] as String?) ??
+          WorkshopJobStatus.menunggu,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
@@ -51,12 +53,14 @@ class WorkshopJob {
     );
   }
 
-  static WorkshopJobStatus _parseStatus(String? value) {
+  static WorkshopJobStatus? _parseStatus(String? value) {
     return switch (value) {
+      'disetujui' => WorkshopJobStatus.menunggu,
       'dikerjakan' => WorkshopJobStatus.dikerjakan,
       'selesai' => WorkshopJobStatus.selesai,
-      'disetujui' => WorkshopJobStatus.menunggu,
-      _ => WorkshopJobStatus.menunggu,
+      // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop — jangan pernah
+      // ditampilkan sebagai "Menunggu" (antrian hanya untuk yang disetujui).
+      _ => null,
     };
   }
 
@@ -70,7 +74,7 @@ class WorkshopJob {
       platNomor: servis.platNomor ?? '-',
       kategoriServis: servis.kategori ?? 'Servis Armada',
       keluhan: servis.keluhan,
-      status: _parseStatus(servis.status),
+      status: _parseStatus(servis.status) ?? WorkshopJobStatus.menunggu,
       createdAt: servis.tanggalAjuan.isEmpty
           ? null
           : DateTime.tryParse(servis.tanggalAjuan),
