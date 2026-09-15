@@ -59,15 +59,17 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () async =>
-            ref.refresh(trailProvider(widget.userId).future),
+        onRefresh: () async => ref.refresh(trailProvider(widget.userId).future),
         child: trail.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(
             children: [
               const SizedBox(height: 140),
-              Icon(Icons.cloud_off,
-                  size: 44, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.cloud_off,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 12),
               Text(
                 e is ApiException ? e.message : 'Gagal memuat jejak lokasi.',
@@ -97,9 +99,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
               );
             }
 
-            final points = data.items
-                .map((p) => LatLng(p.lat, p.lng))
-                .toList();
+            final points = data.items.map((p) => LatLng(p.lat, p.lng)).toList();
             final firstPoint = points.first;
             final lastPoint = points.last;
             final firstTime = data.items.first.timestamp.toLocal();
@@ -190,9 +190,9 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                                     '${fmtWaktu(firstTime)} → ${fmtWaktu(lastTime)}',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
                                   ),
                                 ],

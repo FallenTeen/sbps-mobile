@@ -98,7 +98,10 @@ class _NoRoleView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: onLogout, child: const Text('Keluar')),
+            FilledButton.tonal(
+              onPressed: onLogout,
+              child: const Text('Keluar'),
+            ),
           ],
         ),
       ),

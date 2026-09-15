@@ -89,8 +89,7 @@ class RiwayatPresensi {
       checkOut: json['check_out'] as String?,
       status: json['status'] as String?,
       statusValidasi: json['status_validasi'] as String?,
-      namaTitik:
-          titikJson is Map ? titikJson['nama']?.toString() : null,
+      namaTitik: titikJson is Map ? titikJson['nama']?.toString() : null,
     );
   }
 }
@@ -114,8 +113,9 @@ class RiwayatPresensiPage {
       return const RiwayatPresensiPage(items: [], currentPage: 1, lastPage: 1);
     }
     final json = Map<String, dynamic>.from(raw);
-    final pagination =
-        json['pagination'] is Map ? Map<String, dynamic>.from(json['pagination'] as Map) : <String, dynamic>{};
+    final pagination = json['pagination'] is Map
+        ? Map<String, dynamic>.from(json['pagination'] as Map)
+        : <String, dynamic>{};
     final itemsRaw = json['items'];
     return RiwayatPresensiPage(
       items: itemsRaw is List

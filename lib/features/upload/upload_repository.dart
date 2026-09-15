@@ -8,8 +8,8 @@ import 'models/uploaded_file.dart';
 /// controller sebelum path file masuk sini / ke outbox.
 class UploadRepository {
   UploadRepository({required ApiClient api, Uuid? uuid})
-      : _api = api,
-        _uuid = uuid ?? const Uuid();
+    : _api = api,
+      _uuid = uuid ?? const Uuid();
 
   final ApiClient _api;
   final Uuid _uuid;
@@ -38,9 +38,7 @@ class UploadRepository {
         if ((subjectId ?? '').isNotEmpty) 'subject_id': subjectId!,
         if ((catatan ?? '').trim().isNotEmpty) 'catatan': catatan!.trim(),
       },
-      files: [
-        for (final path in paths) MultipartFileSpec('files[]', path),
-      ],
+      files: [for (final path in paths) MultipartFileSpec('files[]', path)],
       parse: (raw) => [
         if (raw is List)
           for (final e in raw)

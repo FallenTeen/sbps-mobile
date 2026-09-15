@@ -19,8 +19,7 @@ class ServisRepository {
         return <MasterArmada>[
           if (items is List)
             for (final e in items)
-              if (e is Map)
-                MasterArmada.fromJson(Map<String, dynamic>.from(e)),
+              if (e is Map) MasterArmada.fromJson(Map<String, dynamic>.from(e)),
         ];
       },
     );
@@ -58,14 +57,16 @@ class ServisRepository {
   }) async {
     final res = await _api.get<ServisArmadaPage>(
       '/servis-armada',
-      query: {
-        'page': page,
-        'status': ?status,
-      },
+      query: {'page': page, 'status': ?status},
       parse: ServisArmadaPage.fromRaw,
     );
     return res.data ??
-        const ServisArmadaPage(items: [], currentPage: 1, lastPage: 1, total: 0);
+        const ServisArmadaPage(
+          items: [],
+          currentPage: 1,
+          lastPage: 1,
+          total: 0,
+        );
   }
 
   /// GET /servis-armada/{id} — Detail ajuan servis beserta sparepart dan workshop log.
@@ -80,29 +81,19 @@ class ServisRepository {
   }
 
   /// POST /servis-armada/{id}/approve — Persetujuan servis oleh Kepala Divisi / Admin.
-  Future<void> approveServis({
-    required String id,
-    String? catatan,
-  }) async {
+  Future<void> approveServis({required String id, String? catatan}) async {
     final res = await _api.post<Object?>(
       '/servis-armada/$id/approve',
-      body: {
-        'catatan': ?catatan,
-      },
+      body: {'catatan': ?catatan},
     );
     _ensureSuccess(res);
   }
 
   /// POST /servis-armada/{id}/tolak — Penolakan servis dengan alasan.
-  Future<void> tolakServis({
-    required String id,
-    required String alasan,
-  }) async {
+  Future<void> tolakServis({required String id, required String alasan}) async {
     final res = await _api.post<Object?>(
       '/servis-armada/$id/tolak',
-      body: {
-        'alasan': alasan,
-      },
+      body: {'alasan': alasan},
     );
     _ensureSuccess(res);
   }

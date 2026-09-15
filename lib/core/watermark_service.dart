@@ -29,7 +29,7 @@ class WatermarkResult {
 /// Menggunakan package `image` untuk manipulasi pixel, bukan EXIF metadata.
 class WatermarkService {
   WatermarkService({LocationService? locationService})
-      : _locationService = locationService ?? LocationService();
+    : _locationService = locationService ?? LocationService();
 
   final LocationService _locationService;
 

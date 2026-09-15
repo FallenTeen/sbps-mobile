@@ -1,64 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/searchable_list_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import 'detail_qc_screen.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
-import '../../shared/widgets/portal_switch_button.dart';
-import '../../core/formatters.dart';
 
-/// Riwayat QC: filter status, badge warna per status, pagination
+/// Riwayat QC: search + filter status, badge warna per status, pagination
 /// tombol "Muat lagi" (Fase A2.5).
-class RiwayatQcScreen extends ConsumerWidget {
-  const RiwayatQcScreen({super.key});
+class RiwayatQcScreen extends ConsumerStatefulWidget {
+  const RiwayatQcScreen({super.key, this.initialSelectedId});
+
+  /// Id awal dari query `?selected=` (deep-link, mode Expanded).
+  final String? initialSelectedId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RiwayatQcScreen> createState() => _RiwayatQcScreenState();
+}
+
+class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(qcRiwayatProvider);
     final filter = ref.watch(qcRiwayatFilterProvider);
+
+    final q = _searchQuery.toLowerCase();
+    final items = q.isEmpty
+        ? state.items
+        : state.items
+              .where(
+                (s) =>
+                    (s.produkNama ?? '').toLowerCase().contains(q) ||
+                    (s.mesinNama ?? '').toLowerCase().contains(q) ||
+                    (s.titikNama ?? '').toLowerCase().contains(q) ||
+                    (s.operatorNama ?? '').toLowerCase().contains(q),
+              )
+              .toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat QC'),
         actions: const [PortalSwitchButton()],
       ),
-      body: ResponsiveCenter(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: DropdownButtonFormField<String>(
-                initialValue: filter.status,
-                isExpanded: true,
-                decoration:
-                    const InputDecoration(labelText: 'Semua status'),
-                items: [
-                  for (final s in kQcStatuses)
-                    DropdownMenuItem(value: s, child: Text(_statusLabel(s))),
-                ],
-                onChanged: (v) => ref
-                    .read(qcRiwayatFilterProvider.notifier)
-                    .set(QcRiwayatFilter(status: v)),
-              ),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => ref.read(qcRiwayatProvider.notifier).refresh(),
-                child: _buildList(context, ref, state),
-              ),
-            ),
-          ],
+      body: AdaptiveMasterDetail(
+        initialSelectedId: widget.initialSelectedId,
+        pushRouteFor: (id) => '/qc/riwayat/detail/$id',
+        emptyDetailPlaceholder: const MasterDetailEmptyPlaceholder(
+          icon: Icons.science_outlined,
+          title: 'Pilih hasil pengujian',
+          subtitle: 'Detail sampel QC akan tampil di panel ini',
         ),
+        masterBuilder: (context, selectedId, onSelect) => ResponsiveCenter(
+          child: Column(
+            children: [
+              SearchableListHeader(
+                hintText: 'Cari sampel...',
+                onChanged: (v) => setState(() => _searchQuery = v),
+                child: DropdownButtonFormField<String>(
+                  initialValue: filter.status,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Semua status'),
+                  items: [
+                    for (final s in kQcStatuses)
+                      DropdownMenuItem(value: s, child: Text(_statusLabel(s))),
+                  ],
+                  onChanged: (v) => ref
+                      .read(qcRiwayatFilterProvider.notifier)
+                      .set(QcRiwayatFilter(status: v)),
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(qcRiwayatProvider.notifier).refresh(),
+                  child: _buildList(
+                    context,
+                    ref,
+                    state,
+                    items,
+                    selectedId,
+                    onSelect,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        detailBuilder: (context, selectedId) =>
+            DetailQcContent(sampleId: selectedId),
       ),
     );
   }
 
   Widget _buildList(
-      BuildContext context, WidgetRef ref, QcRiwayatState state) {
+    BuildContext context,
+    WidgetRef ref,
+    QcRiwayatState state,
+    List<dynamic> items,
+    String? selectedId,
+    void Function(String id) onSelect,
+  ) {
     if (state.loading && state.items.isEmpty && state.error == null) {
       return const SkeletonListView(itemCount: 5);
     }
@@ -76,14 +127,20 @@ class RiwayatQcScreen extends ConsumerWidget {
         ],
       );
     }
-    if (state.items.isEmpty) {
+    if (items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
+        children: [
           AppEmptyState(
-            icon: Icons.science_outlined,
-            title: 'Belum Ada Data QC',
-            subtitle: 'Belum ada data pengujian sampel untuk filter status ini.',
+            icon: _searchQuery.isNotEmpty
+                ? Icons.search_off_outlined
+                : Icons.science_outlined,
+            title: _searchQuery.isNotEmpty
+                ? 'Tidak Ada Hasil Pencarian'
+                : 'Belum Ada Data QC',
+            subtitle: _searchQuery.isNotEmpty
+                ? 'Tidak ditemukan data yang cocok dengan "$_searchQuery".'
+                : 'Belum ada data pengujian sampel untuk filter status ini.',
           ),
         ],
       );
@@ -92,10 +149,10 @@ class RiwayatQcScreen extends ConsumerWidget {
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: state.items.length + (state.hasMore ? 1 : 0),
+      itemCount: items.length + (state.hasMore ? 1 : 0),
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, i) {
-        if (i >= state.items.length) {
+        if (i >= items.length) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -108,12 +165,17 @@ class RiwayatQcScreen extends ConsumerWidget {
             ),
           );
         }
-        final s = state.items[i];
+        final s = items[i];
         return StaggeredEntrance(
           index: i,
           child: Card(
             child: ListTile(
-              title: Text('${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}'),
+              tileColor: selectedId == s.id
+                  ? context.colors.primary.withValues(alpha: 0.06)
+                  : null,
+              title: Text(
+                '${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}',
+              ),
               subtitle: Text(
                 'Slump ${_fmt(s.nilaiSlump)}'
                 '${s.hasilUjiTekan != null ? ' • Uji tekan ${_fmt(s.hasilUjiTekan)} MPa' : ''}\n'
@@ -122,7 +184,7 @@ class RiwayatQcScreen extends ConsumerWidget {
               ),
               isThreeLine: true,
               trailing: QcStatusBadge(status: s.status),
-              onTap: () => context.push('/qc/detail', extra: s.id),
+              onTap: () => onSelect(s.id),
             ),
           ),
         );
@@ -132,14 +194,14 @@ class RiwayatQcScreen extends ConsumerWidget {
 }
 
 String _statusLabel(String status) => switch (status) {
-      'menunggu_hasil' => 'Menunggu hasil',
-      'lolos' => 'Lolos',
-      'tidak_lolos' => 'Tidak lolos',
-      _ => status,
-    };
+  'menunggu_hasil' => 'Menunggu hasil',
+  'lolos' => 'Lolos',
+  'tidak_lolos' => 'Tidak lolos',
+  _ => status,
+};
 
 String _fmt(double? n) => n == null
     ? '-'
     : n % 1 == 0
-        ? n.toInt().toString()
-        : n.toStringAsFixed(1);
+    ? n.toInt().toString()
+    : n.toStringAsFixed(1);

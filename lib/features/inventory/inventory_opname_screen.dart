@@ -55,8 +55,10 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
   bool get _hasChanges => _fisikValues.values.any((v) => v != null);
 
   int _selisihCount(Iterable<OpnameItem> items) => items
-      .where((i) =>
-          _fisikValues[i.id] != null && _fisikValues[i.id] != i.jumlahSistem)
+      .where(
+        (i) =>
+            _fisikValues[i.id] != null && _fisikValues[i.id] != i.jumlahSistem,
+      )
       .length;
 
   Future<void> _submit({
@@ -81,9 +83,9 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     if (!mounted) return;
 
     if (result.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Opname gagal: ${result.error}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Opname gagal: ${result.error}')));
       return;
     }
 
@@ -108,7 +110,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
       backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Stok Opname'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: Column(
         children: [
@@ -118,8 +120,11 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
             color: context.colors.info.withValues(alpha: 0.08),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 18, color: context.colors.info),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: context.colors.info,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -186,8 +191,11 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.cloud_off_rounded,
-                        color: context.colors.error, size: 32),
+                    Icon(
+                      Icons.cloud_off_rounded,
+                      color: context.colors.error,
+                      size: 32,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Gagal memuat item opname.',
@@ -238,7 +246,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                       ? null
                       : () {
                           final titikId = _selectedTitikId!;
-                          final items = materialsAsync.value ??  [];
+                          final items = materialsAsync.value ?? [];
                           _submit(titikId: titikId, items: items);
                         },
                   child: opnameState.busy
@@ -248,7 +256,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(
-                          'Simpan Opname${_selisihCount(materialsAsync.value ??  []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
+                          'Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
                         ),
                 ),
               ),
@@ -305,8 +313,7 @@ class _OpnameItemCard extends StatelessWidget {
   final int? fisikValue;
   final ValueChanged<String> onChanged;
 
-  bool get _hasSelisih =>
-      fisikValue != null && fisikValue != item.jumlahSistem;
+  bool get _hasSelisih => fisikValue != null && fisikValue != item.jumlahSistem;
 
   int? get _selisih =>
       fisikValue != null ? fisikValue! - item.jumlahSistem : null;
@@ -398,10 +405,7 @@ class _OpnameItemCard extends StatelessWidget {
               if (_hasSelisih) ...[
                 const SizedBox(width: 10),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: context.colors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),

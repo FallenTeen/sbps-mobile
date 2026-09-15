@@ -68,7 +68,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
             if (items.isEmpty) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children:  [
+                children: [
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 48),
                     child: AppEmptyState(
@@ -85,8 +85,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
             final checklists = checklistAsync.value ?? [];
             final ritItems = ritaseAsync.items;
             final akhirDone =
-                ref.watch(checklistAkhirDoneProvider(armada.id)).value ??
-                    false;
+                ref.watch(checklistAkhirDoneProvider(armada.id)).value ?? false;
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -101,10 +100,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                   akhirDone: akhirDone,
                 ),
                 const SizedBox(height: 4),
-                _RingkasanKerja(
-                  armada: armada,
-                  ritItems: ritItems,
-                ),
+                _RingkasanKerja(armada: armada, ritItems: ritItems),
                 const SizedBox(height: 8),
                 _ShortcutSection(armada: armada),
               ],
@@ -194,7 +190,9 @@ class _UnitHeader extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -217,7 +215,9 @@ class _UnitHeader extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: aktif ? Color(0xFF4ADE80) : context.colors.warning,
+                        color: aktif
+                            ? Color(0xFF4ADE80)
+                            : context.colors.warning,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -290,15 +290,19 @@ class _WorkflowSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final myChecklist =
-        checklists.where((c) => c.armadaId == armada.id).toList();
+    final myChecklist = checklists
+        .where((c) => c.armadaId == armada.id)
+        .toList();
     final hasChecklistPagi = myChecklist.any((c) => c.sudahIsi);
-    final hasOdoAwal = myChecklist.any((c) => armada.isAlatBerat
-        ? (c.jamOperasional != null && c.jamOperasional! > 0)
-        : (c.odoKm != null && c.odoKm! > 0)) ||
+    final hasOdoAwal =
+        myChecklist.any(
+          (c) => armada.isAlatBerat
+              ? (c.jamOperasional != null && c.jamOperasional! > 0)
+              : (c.odoKm != null && c.odoKm! > 0),
+        ) ||
         (armada.isAlatBerat
             ? (armada.jamOperasionalTerkini != null &&
-                armada.jamOperasionalTerkini! > 0)
+                  armada.jamOperasionalTerkini! > 0)
             : (armada.odoTerkini != null && armada.odoTerkini! > 0));
     final ritCount = ritItems.length;
     final hasRitase = ritCount > 0;
@@ -353,12 +357,12 @@ class _WorkflowSection extends StatelessWidget {
         subtitle: hasOdoAwal
             ? 'Sudah diisi'
             : (armada.isAlatBerat
-                ? (armada.jamOperasionalTerkini != null
-                    ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
-                    : 'Belum diisi')
-                : (armada.odoTerkini != null
-                    ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
-                    : 'Belum diisi')),
+                  ? (armada.jamOperasionalTerkini != null
+                        ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
+                        : 'Belum diisi')
+                  : (armada.odoTerkini != null
+                        ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
+                        : 'Belum diisi')),
         status: hasOdoAwal
             ? WorkflowStepStatus.selesai
             : WorkflowStepStatus.belum,
@@ -367,12 +371,11 @@ class _WorkflowSection extends StatelessWidget {
       WorkflowStep(
         label: 'Muatan (Ritase)',
         subtitle: hasRitase
-            ? (armada.isAlatBerat
-                ? 'Aktif'
-                : '$ritCount muatan tercatat')
+            ? (armada.isAlatBerat ? 'Aktif' : '$ritCount muatan tercatat')
             : 'Belum ada muatan',
-        status:
-            hasRitase ? WorkflowStepStatus.selesai : WorkflowStepStatus.belum,
+        status: hasRitase
+            ? WorkflowStepStatus.selesai
+            : WorkflowStepStatus.belum,
         onTap: () => context.push('/armada/ritase-input'),
       ),
       WorkflowStep(
@@ -466,10 +469,7 @@ class _HariIniStatusCard extends StatelessWidget {
 // ── Ringkasan Kerja ──────────────────────────────────────────────────────────
 
 class _RingkasanKerja extends StatelessWidget {
-  const _RingkasanKerja({
-    required this.armada,
-    required this.ritItems,
-  });
+  const _RingkasanKerja({required this.armada, required this.ritItems});
 
   final ArmadaSaya armada;
   final List<RitaseItem> ritItems;
@@ -512,30 +512,30 @@ class _RingkasanKerja extends StatelessWidget {
               ),
               SizedBox(height: 12),
               Row(
-                  children: [
+                children: [
+                  Expanded(
+                    child: _StatBox(
+                      label: armada.isAlatBerat
+                          ? 'Jam Kerja'
+                          : 'Muatan Hari Ini (Rit)',
+                      value: armada.isAlatBerat
+                          ? fmtRitase(ritCount, 'jam')
+                          : fmtRitase(ritCount),
+                      color: context.colors.primary,
+                    ),
+                  ),
+                  if (armada.isKendaraan) ...[
+                    SizedBox(width: 10),
                     Expanded(
                       child: _StatBox(
-                        label: armada.isAlatBerat
-                            ? 'Jam Kerja'
-                            : 'Muatan Hari Ini (Rit)',
-                        value: armada.isAlatBerat
-                            ? fmtRitase(ritCount, 'jam')
-                            : fmtRitase(ritCount),
-                        color: context.colors.primary,
+                        label: 'Estimasi Pendapatan',
+                        value: fmtRp(totalUpah),
+                        color: context.colors.success,
                       ),
                     ),
-                    if (armada.isKendaraan) ...[
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatBox(
-                          label: 'Estimasi Pendapatan',
-                          value: fmtRp(totalUpah),
-                          color: context.colors.success,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                ],
+              ),
               if (armada.isKendaraan) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -589,10 +589,7 @@ class _StatBox extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: context.colors.textTertiary,
-            ),
+            style: TextStyle(fontSize: 11, color: context.colors.textTertiary),
           ),
           const SizedBox(height: 4),
           Text(
@@ -636,9 +633,8 @@ class _ShortcutSection extends StatelessWidget {
             icon: Icons.build_outlined,
             title: 'Ajukan Servis',
             subtitle: 'Laporkan kerusakan unit',
-            onTap: () => context.push(
-              '/armada/servis/ajuan?armadaId=${armada.id}',
-            ),
+            onTap: () =>
+                context.push('/armada/servis/ajuan?armadaId=${armada.id}'),
           ),
           _ShortcutTile(
             icon: Icons.history_rounded,
@@ -726,8 +722,11 @@ class _ShortcutTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    color: context.colors.textMuted, size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: context.colors.textMuted,
+                  size: 20,
+                ),
               ],
             ),
           ),

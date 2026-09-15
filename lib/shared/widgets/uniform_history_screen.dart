@@ -52,7 +52,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), actions:  []),
+      appBar: AppBar(title: Text(widget.title), actions: []),
       body: Column(
         children: [
           // Period Filter Chips (Fase 2)
@@ -134,7 +134,9 @@ class _PeriodFilterSection extends StatelessWidget {
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
                     },
-                    selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                    selectedColor: context.colors.primary.withValues(
+                      alpha: 0.1,
+                    ),
                     checkmarkColor: context.colors.primary,
                     labelStyle: TextStyle(
                       color: selected == option
@@ -204,7 +206,9 @@ class _StatusFilterSection extends StatelessWidget {
                     onSelected: (bool isSelected) {
                       onChanged(isSelected ? option : null);
                     },
-                    selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                    selectedColor: context.colors.primary.withValues(
+                      alpha: 0.1,
+                    ),
                     checkmarkColor: context.colors.primary,
                     labelStyle: TextStyle(
                       color: selected == option

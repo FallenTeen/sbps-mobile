@@ -40,9 +40,7 @@ class InfoTooltip extends StatelessWidget {
   void _showTooltip(BuildContext context) {
     final overlay = Overlay.of(context);
     final renderBox = context.findRenderObject() as RenderBox;
-    final target = renderBox.localToGlobal(
-      renderBox.size.center(Offset.zero),
-    );
+    final target = renderBox.localToGlobal(renderBox.size.center(Offset.zero));
 
     final entry = OverlayEntry(
       builder: (_) => _TooltipOverlay(target: target, message: message),
@@ -78,17 +76,17 @@ class InfoTooltip extends StatelessWidget {
             if (title != null) ...[
               Text(
                 title!,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
             ],
             Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -150,7 +148,10 @@ class _TooltipOverlayState extends State<_TooltipOverlay>
               color: Colors.transparent,
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 240),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
                   borderRadius: BorderRadius.circular(8),

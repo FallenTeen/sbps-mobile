@@ -40,11 +40,7 @@ extension ResponsiveContext on BuildContext {
   bool get isTablet => screenWidth >= AppBreakpoints.mediumMin;
 
   /// Helper untuk memilih nilai sesuai kelas ukuran layar
-  T responsiveValue<T>({
-    required T compact,
-    T? medium,
-    T? expanded,
-  }) {
+  T responsiveValue<T>({required T compact, T? medium, T? expanded}) {
     switch (screenClass) {
       case ScreenClass.expanded:
         return expanded ?? medium ?? compact;

@@ -15,6 +15,7 @@ import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard operasional per role (Fase A2.6):
 /// - Owner/Admin Keuangan: overview + armada + kehadiran divisi +
@@ -69,8 +70,9 @@ class DashboardHomeScreen extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.payments_outlined),
                     title: const Text('Dashboard Finansial'),
-                    subtitle:
-                        const Text('Chart keuangan mingguan, PO & invoice'),
+                    subtitle: const Text(
+                      'Chart keuangan mingguan, PO & invoice',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/dashboard/keuangan'),
                   ),
@@ -114,7 +116,9 @@ class _SectionOverviewState extends State<_SectionOverview> {
           title: 'Ringkasan Titik Hari Ini',
           trailing: IconButton(
             tooltip: _showMap ? 'Tampilkan Daftar' : 'Tampilkan Peta',
-            icon: Icon(_showMap ? Icons.format_list_bulleted : Icons.map_outlined),
+            icon: Icon(
+              _showMap ? Icons.format_list_bulleted : Icons.map_outlined,
+            ),
             onPressed: () => setState(() => _showMap = !_showMap),
           ),
           child: overview.when(
@@ -130,15 +134,17 @@ class _SectionOverviewState extends State<_SectionOverview> {
 
               if (_showMap) {
                 final titikList = data.items
-                    .map((t) => Titik(
-                          id: t.titikId,
-                          nama: t.titik,
-                          proyek: t.proyek,
-                          latitude: t.latitude ?? 0,
-                          longitude: t.longitude ?? 0,
-                          radiusPresensiMeter: 0,
-                          status: 'aktif',
-                        ))
+                    .map(
+                      (t) => Titik(
+                        id: t.titikId,
+                        nama: t.titik,
+                        proyek: t.proyek,
+                        latitude: t.latitude ?? 0,
+                        longitude: t.longitude ?? 0,
+                        radiusPresensiMeter: 0,
+                        status: 'aktif',
+                      ),
+                    )
                     .toList();
 
                 return TitikMapView(
@@ -196,10 +202,16 @@ class TitikOverviewTile extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(titik.titik,
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  child: Text(
+                    titik.titik,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
-                Icon(Icons.chevron_right, size: 20, color: context.colors.textTertiary),
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: context.colors.textTertiary,
+                ),
               ],
             ),
             Text(titik.proyek, style: Theme.of(context).textTheme.bodySmall),
@@ -210,14 +222,17 @@ class TitikOverviewTile extends StatelessWidget {
               children: [
                 _MiniChip(icon: Icons.people, label: '${titik.sdmCount} SDM'),
                 _MiniChip(
-                    icon: Icons.local_shipping,
-                    label: '${titik.armadaCount} armada'),
+                  icon: Icons.local_shipping,
+                  label: '${titik.armadaCount} armada',
+                ),
                 _MiniChip(
-                    icon: Icons.fact_check,
-                    label: '${titik.presensiToday} hadir'),
+                  icon: Icons.fact_check,
+                  label: '${titik.presensiToday} hadir',
+                ),
                 _MiniChip(
-                    icon: Icons.precision_manufacturing,
-                    label: '${fmtNum(titik.produksiToday)} output'),
+                  icon: Icons.precision_manufacturing,
+                  label: '${fmtNum(titik.produksiToday)} output',
+                ),
               ],
             ),
           ],
@@ -246,8 +261,10 @@ class _MiniChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: context.colors.textSecondary),
           const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade800)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade800),
+          ),
         ],
       ),
     );
@@ -287,22 +304,23 @@ class _SectionArmada extends ConsumerWidget {
                     children: [
                       SizedBox(
                         width: 110,
-                        child: Text(_labelArmada(item.status),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
+                        child: Text(
+                          _labelArmada(item.status),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
                       Expanded(
                         child: LinearProgressIndicator(
-                          value: data.total == 0
-                              ? 0
-                              : item.jumlah / data.total,
+                          value: data.total == 0 ? 0 : item.jumlah / data.total,
                           minHeight: 8,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('${item.jumlah}',
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        '${item.jumlah}',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ],
                   ),
                 ),
@@ -314,11 +332,11 @@ class _SectionArmada extends ConsumerWidget {
   }
 
   static String _labelArmada(String s) => switch (s) {
-        'aktif' => 'Aktif',
-        'servis' => 'Servis',
-        'idle' => 'Idle',
-        _ => s,
-      };
+    'aktif' => 'Aktif',
+    'servis' => 'Servis',
+    'idle' => 'Idle',
+    _ => s,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -349,8 +367,10 @@ class _SectionKehadiran extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text('Total hadir: ${d.totalHadir}',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Total hadir: ${d.totalHadir}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               for (final item in d.items)
                 Padding(
@@ -358,8 +378,10 @@ class _SectionKehadiran extends ConsumerWidget {
                   child: Row(
                     children: [
                       Expanded(child: Text(item.divisi)),
-                      Text('${item.checkOut}/${item.hadir} check-out',
-                          style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        '${item.checkOut}/${item.hadir} check-out',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ),
@@ -387,17 +409,14 @@ class _SectionChartProduksi extends ConsumerWidget {
       title: 'Produksi Mingguan',
       trailing: PeriodPicker(),
       child: chart.when(
-        loading: () => const SizedBox(
-          height: 160,
-          child: CenteredProgress(),
-        ),
+        loading: () => const ChartSkeleton(height: 160),
         error: (e, _) => SizedBox(
           height: 160,
           child: ErrorRetry(
-            message:
-                e is ApiException ? e.message : 'Gagal memuat chart produksi.',
-            onRetry: () =>
-                ref.invalidate(produksiChartProvider(period)),
+            message: e is ApiException
+                ? e.message
+                : 'Gagal memuat chart produksi.',
+            onRetry: () => ref.invalidate(produksiChartProvider(period)),
           ),
         ),
         data: (data) => ProduksiBarChart(items: data.items),
@@ -425,8 +444,10 @@ class _PoPendingCard extends ConsumerWidget {
           subtitle: CenteredProgress(),
         ),
         error: (e, _) => ListTile(
-          leading: Icon(Icons.error_outline,
-              color: Theme.of(context).colorScheme.error),
+          leading: Icon(
+            Icons.error_outline,
+            color: Theme.of(context).colorScheme.error,
+          ),
           title: const Text('PO Menunggu Approval'),
           subtitle: Text(e is ApiException ? e.message : 'Gagal memuat.'),
           onTap: () => ref.invalidate(poPendingProvider),
@@ -444,9 +465,11 @@ class _PoPendingCard extends ConsumerWidget {
             ],
           ),
           title: const Text('PO Menunggu Approval'),
-          subtitle: Text(data.cappedAtLimit
-              ? '${data.total}+ pending — menampilkan $kPoPendingLimit terbaru'
-              : '${data.items.length} menunggu aksi'),
+          subtitle: Text(
+            data.cappedAtLimit
+                ? '${data.total}+ pending — menampilkan $kPoPendingLimit terbaru'
+                : '${data.items.length} menunggu aksi',
+          ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/dashboard/po-pending'),
         ),
@@ -470,8 +493,10 @@ class _InvoiceCard extends ConsumerWidget {
           subtitle: CenteredProgress(),
         ),
         error: (e, _) => ListTile(
-          leading: Icon(Icons.error_outline,
-              color: Theme.of(context).colorScheme.error),
+          leading: Icon(
+            Icons.error_outline,
+            color: Theme.of(context).colorScheme.error,
+          ),
           title: const Text('Invoice Belum Dibayar'),
           subtitle: Text(e is ApiException ? e.message : 'Gagal memuat.'),
           onTap: () => ref.invalidate(invoiceBelumDibayarProvider),
@@ -489,9 +514,11 @@ class _InvoiceCard extends ConsumerWidget {
             ],
           ),
           title: const Text('Invoice Belum Dibayar'),
-          subtitle: Text(data.cappedAtLimit
-              ? '${data.total}+ invoice — menampilkan 20 terbaru'
-              : '${data.items.length} belum lunas'),
+          subtitle: Text(
+            data.cappedAtLimit
+                ? '${data.total}+ invoice — menampilkan 20 terbaru'
+                : '${data.items.length} belum lunas',
+          ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/dashboard/invoice'),
         ),

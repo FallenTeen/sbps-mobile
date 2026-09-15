@@ -1,38 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import 'workshop_job_detail_screen.dart';
 import 'workshop_models.dart';
 import 'workshop_providers.dart';
 
 enum _QueueFilter { menunggu, dikerjakan, selesaiHariIni }
 
 class WorkshopQueueScreen extends ConsumerStatefulWidget {
-  const WorkshopQueueScreen({super.key});
+  const WorkshopQueueScreen({super.key, this.initialSelectedId});
+
+  /// Id job awal dari query `?selected=` (deep-link, mode Expanded).
+  final String? initialSelectedId;
 
   @override
-  ConsumerState<WorkshopQueueScreen> createState() => _WorkshopQueueScreenState();
+  ConsumerState<WorkshopQueueScreen> createState() =>
+      _WorkshopQueueScreenState();
 }
 
 class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
   _QueueFilter _filter = _QueueFilter.menunggu;
+  final _masterDetailKey = GlobalKey<AdaptiveMasterDetailState>();
 
   List<WorkshopJob> get _filteredJobs {
     final state = ref.watch(workshopQueueProvider);
     return switch (_filter) {
       _QueueFilter.menunggu =>
-        state.items.where((j) => j.status == WorkshopJobStatus.menunggu).toList(),
+        state.items
+            .where((j) => j.status == WorkshopJobStatus.menunggu)
+            .toList(),
       _QueueFilter.dikerjakan =>
-        state.items.where((j) => j.status == WorkshopJobStatus.dikerjakan).toList(),
+        state.items
+            .where((j) => j.status == WorkshopJobStatus.dikerjakan)
+            .toList(),
       _QueueFilter.selesaiHariIni =>
-        state.items.where((j) => j.status == WorkshopJobStatus.selesai).toList(),
+        state.items
+            .where((j) => j.status == WorkshopJobStatus.selesai)
+            .toList(),
     };
   }
 
@@ -69,53 +81,70 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       appBar: AppBar(
         title: const Text('Antrian Workshop'),
         bottom: const BrandStrip(),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: context.colors.primary.withValues(alpha: 0.05),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
+      body: AdaptiveMasterDetail(
+        key: _masterDetailKey,
+        initialSelectedId: widget.initialSelectedId,
+        pushRouteFor: (id) => '/workshop/job/$id',
+        emptyDetailPlaceholder: const MasterDetailEmptyPlaceholder(
+          icon: Icons.construction_rounded,
+          title: 'Pilih job dari antrian',
+          subtitle: 'Checklist pekerjaan akan tampil di panel ini',
+        ),
+        masterBuilder: (context, selectedId, onSelect) => Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: context.colors.primary.withValues(alpha: 0.05),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textSecondary,
+                      ),
                     ),
                   ),
-                ),
-                InfoTooltip(
-                  message: 'Urutan pengerjaan mekanik. Tap kartu untuk membuka checklist.',
-                ),
-              ],
+                  InfoTooltip(
+                    message:
+                        'Urutan pengerjaan mekanik. Tap kartu untuk membuka checklist.',
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
-              children: [
-                _buildChip('Menunggu', _QueueFilter.menunggu),
-                const SizedBox(width: 8),
-                _buildChip('Sedang Dikerjakan', _QueueFilter.dikerjakan),
-                const SizedBox(width: 8),
-                _buildChip('Selesai Hari Ini', _QueueFilter.selesaiHariIni),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  _buildChip('Menunggu', _QueueFilter.menunggu),
+                  const SizedBox(width: 8),
+                  _buildChip('Sedang Dikerjakan', _QueueFilter.dikerjakan),
+                  const SizedBox(width: 8),
+                  _buildChip('Selesai Hari Ini', _QueueFilter.selesaiHariIni),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: _buildBody(queueState, filtered),
-          ),
-        ],
+            Expanded(child: _buildBody(queueState, filtered, onSelect)),
+          ],
+        ),
+        detailBuilder: (context, selectedId) => WorkshopJobDetailContent(
+          jobId: selectedId,
+          onJobCompleted: () => _masterDetailKey.currentState?.clearSelection(),
+        ),
       ),
     );
   }
 
-  Widget _buildBody(WorkshopQueueState state, List<WorkshopJob> filtered) {
+  Widget _buildBody(
+    WorkshopQueueState state,
+    List<WorkshopJob> filtered,
+    void Function(String id) onSelect,
+  ) {
     if (state.loading && state.items.isEmpty) {
       return const SkeletonListView(itemCount: 4);
     }
@@ -130,8 +159,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       );
     }
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(workshopQueueProvider.notifier).refresh(),
+      onRefresh: () => ref.read(workshopQueueProvider.notifier).refresh(),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -152,7 +180,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             subtitle: job.keluhan,
             statusLabel: _statusLabel(job.status),
             statusColor: _statusColor(job.status),
-            onTap: () => context.push('/workshop/job/${job.id}'),
+            onTap: () => onSelect(job.id),
           );
         },
       ),
@@ -182,7 +210,8 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () => ref.read(workshopQueueProvider.notifier).refresh(),
+              onPressed: () =>
+                  ref.read(workshopQueueProvider.notifier).refresh(),
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Coba Lagi'),
             ),

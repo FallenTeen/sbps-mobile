@@ -38,8 +38,9 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
   Future<void> _pilihFoto() async {
     final sisa = _maksFile - _paths.length;
     if (sisa <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Maksimal 10 foto.')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Maksimal 10 foto.')));
       return;
     }
     final photo = await takeWatermarkedPhoto(ref);
@@ -48,10 +49,11 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
   }
 
   Future<void> _submit() async {
-    final result = await ref.read(uploadSubmitProvider.notifier).submitDokumentasi(
+    final result = await ref
+        .read(uploadSubmitProvider.notifier)
+        .submitDokumentasi(
           photoPaths: List.of(_paths),
-          subjectType:
-              _sesi == null ? null : 'ProductionSession',
+          subjectType: _sesi == null ? null : 'ProductionSession',
           subjectId: _sesi?.id,
           catatan: _catatanCtrl.text.trim(),
         );
@@ -59,11 +61,15 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     if (result.delivered || result.queued) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(result.delivered
-            ? 'Dokumentasi berhasil diunggah.'
-            : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.delivered
+                ? 'Dokumentasi berhasil diunggah.'
+                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
+        ),
+      );
       context.pop();
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
@@ -85,9 +91,11 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(_paths.isEmpty
-                ? 'Ambil Foto (1-$_maksFile)'
-                : '${_paths.length} foto — ambil lagi'),
+            label: Text(
+              _paths.isEmpty
+                  ? 'Ambil Foto (1-$_maksFile)'
+                  : '${_paths.length} foto — ambil lagi',
+            ),
             onPressed: busy.busy ? null : _pilihFoto,
           ),
           const SizedBox(height: 12),
@@ -119,7 +127,8 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                                 context,
                                 severity: ConfirmSeverity.warning,
                                 title: 'Hapus foto ini?',
-                                message: 'Foto yang dihapus harus diambil '
+                                message:
+                                    'Foto yang dihapus harus diambil '
                                     'ulang jika masih dibutuhkan.',
                                 confirmLabel: 'Ya, Hapus',
                                 icon: Icons.delete_outline_rounded,
@@ -130,10 +139,12 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                             },
                       child: CircleAvatar(
                         radius: 11,
-                        backgroundColor:
-                            Colors.black.withValues(alpha: 0.55),
-                        child: const Icon(Icons.close,
-                            size: 14, color: Colors.white),
+                        backgroundColor: Colors.black.withValues(alpha: 0.55),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -153,7 +164,8 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                 DropdownMenuItem(
                   value: s,
                   child: Text(
-                      '${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}'),
+                    '${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}',
+                  ),
                 ),
             ],
             onChanged: (v) => setState(() => _sesi = v),
@@ -174,7 +186,8 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.cloud_upload_outlined),
             label: Text(switch (busy.phase) {
               UploadPhase.compressing => 'Mengompres...',

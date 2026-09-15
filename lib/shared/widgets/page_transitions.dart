@@ -33,10 +33,7 @@ CustomTransitionPage<T> buildAppTransitionPage<T>({
 
       return SlideTransition(
         position: slideAnimation,
-        child: FadeTransition(
-          opacity: fadeAnimation,
-          child: child,
-        ),
+        child: FadeTransition(opacity: fadeAnimation, child: child),
       );
     },
   );
@@ -49,28 +46,30 @@ class AppPageRoute<T> extends PageRouteBuilder<T> {
     Duration duration = const Duration(milliseconds: 250),
     super.settings,
   }) : super(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              builder(context),
-          transitionDuration: duration,
-          reverseTransitionDuration: duration,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final curvedAnimation = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-              reverseCurve: Curves.easeInCubic,
-            );
+         pageBuilder: (context, animation, secondaryAnimation) =>
+             builder(context),
+         transitionDuration: duration,
+         reverseTransitionDuration: duration,
+         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           final curvedAnimation = CurvedAnimation(
+             parent: animation,
+             curve: Curves.easeOutCubic,
+             reverseCurve: Curves.easeInCubic,
+           );
 
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.06, 0),
-                end: Offset.zero,
-              ).animate(curvedAnimation),
-              child: FadeTransition(
-                opacity: Tween<double>(begin: 0.0, end: 1.0)
-                    .animate(curvedAnimation),
-                child: child,
-              ),
-            );
-          },
-        );
+           return SlideTransition(
+             position: Tween<Offset>(
+               begin: const Offset(0.06, 0),
+               end: Offset.zero,
+             ).animate(curvedAnimation),
+             child: FadeTransition(
+               opacity: Tween<double>(
+                 begin: 0.0,
+                 end: 1.0,
+               ).animate(curvedAnimation),
+               child: child,
+             ),
+           );
+         },
+       );
 }

@@ -38,7 +38,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
-    await ref.read(authControllerProvider.notifier).register(
+    await ref
+        .read(authControllerProvider.notifier)
+        .register(
           name: _nameController.text,
           email: _emailController.text,
           password: _passwordController.text,
@@ -51,7 +53,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     ref.listen(sessionMessageProvider, (previous, next) {
       if (next != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next)));
         ref.read(sessionMessageProvider.notifier).consume();
       }
     });
@@ -80,8 +84,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     validator: (value) =>
                         (value == null || value.trim().isEmpty)
-                            ? 'Nama wajib diisi'
-                            : null,
+                        ? 'Nama wajib diisi'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -95,8 +99,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     validator: (value) =>
                         (value == null || value.trim().isEmpty)
-                            ? 'Email wajib diisi'
-                            : null,
+                        ? 'Email wajib diisi'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -119,10 +123,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: OutlineInputBorder(),
                     ),
                     items: kRegistrableRoles
-                        .map((role) => DropdownMenuItem(
-                              value: role,
-                              child: Text(role),
-                            ))
+                        .map(
+                          (role) =>
+                              DropdownMenuItem(value: role, child: Text(role)),
+                        )
                         .toList(),
                     onChanged: (value) => setState(() => _selectedRole = value),
                   ),
@@ -137,10 +141,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       prefixIcon: Icon(Icons.lock_outline),
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) =>
-                        (value == null || value.length < 8)
-                            ? 'Password minimal 8 karakter'
-                            : null,
+                    validator: (value) => (value == null || value.length < 8)
+                        ? 'Password minimal 8 karakter'
+                        : null,
                   ),
                   if (auth.hasError) ...[
                     const SizedBox(height: 16),

@@ -20,10 +20,7 @@ class DriverDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: null,
-        actions:  [PortalSwitchButton()],
-      ),
+      appBar: AppBar(title: null, actions: [PortalSwitchButton()]),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(armadaSayaProvider);
@@ -64,10 +61,14 @@ class _VehicleSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.colors.error.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: context.colors.error.withValues(alpha: 0.2),
+          ),
         ),
-        child: Text('Gagal memuat kendaraan: $e',
-            style: TextStyle(color: context.colors.error)),
+        child: Text(
+          'Gagal memuat kendaraan: $e',
+          style: TextStyle(color: context.colors.error),
+        ),
       ),
       data: (items) {
         if (items.isEmpty) {
@@ -80,8 +81,11 @@ class _VehicleSection extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.local_shipping_outlined,
-                    size: 40, color: context.colors.textMuted),
+                Icon(
+                  Icons.local_shipping_outlined,
+                  size: 40,
+                  color: context.colors.textMuted,
+                ),
                 SizedBox(height: 10),
                 Text(
                   'Belum ada kendaraan yang ditugaskan',
@@ -98,8 +102,11 @@ class _VehicleSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.directions_bus_rounded,
-                    size: 20, color: context.colors.primary),
+                Icon(
+                  Icons.directions_bus_rounded,
+                  size: 20,
+                  color: context.colors.primary,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'Kendaraan Saya',
@@ -153,7 +160,9 @@ class _VehicleCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.local_shipping_rounded,
-                  color: aktif ? context.colors.success : context.colors.warning,
+                  color: aktif
+                      ? context.colors.success
+                      : context.colors.warning,
                   size: 24,
                 ),
               ),
@@ -194,7 +203,9 @@ class _VehicleCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: aktif ? context.colors.success : context.colors.warning,
+                    color: aktif
+                        ? context.colors.success
+                        : context.colors.warning,
                   ),
                 ),
               ),
@@ -206,7 +217,10 @@ class _VehicleCard extends StatelessWidget {
             runSpacing: 6,
             children: [
               if (armada.jenis != null)
-                _InfoChip(icon: Icons.category_outlined, label: _labelJenis(armada.jenis!)),
+                _InfoChip(
+                  icon: Icons.category_outlined,
+                  label: _labelJenis(armada.jenis!),
+                ),
               if (armada.tahun != null)
                 _InfoChip(icon: Icons.calendar_today, label: '${armada.tahun}'),
               if (armada.titikNama != null)
@@ -244,7 +258,11 @@ class _TodaySummarySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.today_rounded, color: context.colors.primary, size: 20),
+              Icon(
+                Icons.today_rounded,
+                color: context.colors.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Ringkasan Hari Ini',
@@ -269,18 +287,24 @@ class _TodaySummarySection extends StatelessWidget {
               if (ritaseAsync.error != null && ritaseAsync.items.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('Gagal memuat data',
-                      style: TextStyle(color: context.colors.error)),
+                  child: Text(
+                    'Gagal memuat data',
+                    style: TextStyle(color: context.colors.error),
+                  ),
                 );
               }
 
               final todayItems = ritaseAsync.items
-                  .where((r) => r.tanggal != null && r.tanggal!.startsWith(today))
+                  .where(
+                    (r) => r.tanggal != null && r.tanggal!.startsWith(today),
+                  )
                   .toList();
 
               final totalRit = todayItems.length;
               final totalUpah = todayItems.fold<double>(
-                  0, (sum, r) => sum + (r.totalUpahRit ?? 0));
+                0,
+                (sum, r) => sum + (r.totalUpahRit ?? 0),
+              );
 
               return Row(
                 children: [
@@ -332,7 +356,11 @@ class _ChecklistSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.checklist_rounded, color: context.colors.primary, size: 20),
+              Icon(
+                Icons.checklist_rounded,
+                color: context.colors.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Checklist Hari Ini',
@@ -352,15 +380,19 @@ class _ChecklistSection extends StatelessWidget {
             ),
             error: (e, _) => Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text('Gagal memuat checklist',
-                  style: TextStyle(color: context.colors.error)),
+              child: Text(
+                'Gagal memuat checklist',
+                style: TextStyle(color: context.colors.error),
+              ),
             ),
             data: (items) {
               if (items.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Tidak ada kendaraan untuk checklist',
-                      style: TextStyle(color: context.colors.textTertiary)),
+                  child: Text(
+                    'Tidak ada kendaraan untuk checklist',
+                    style: TextStyle(color: context.colors.textTertiary),
+                  ),
                 );
               }
 
@@ -419,8 +451,11 @@ class _ChecklistSection extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Icon(Icons.chevron_right_rounded,
-                                color: context.colors.textMuted, size: 20),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: context.colors.textMuted,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -456,7 +491,11 @@ class _RecentRitaseSection extends StatelessWidget {
         children: [
           Row(
             children: [
-               Icon(Icons.history_rounded, color: context.colors.primary, size: 20),
+              Icon(
+                Icons.history_rounded,
+                color: context.colors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -487,26 +526,27 @@ class _RecentRitaseSection extends StatelessWidget {
               if (ritaseAsync.error != null && ritaseAsync.items.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('Gagal memuat riwayat',
-                      style: TextStyle(color: context.colors.error)),
+                  child: Text(
+                    'Gagal memuat riwayat',
+                    style: TextStyle(color: context.colors.error),
+                  ),
                 );
               }
 
               if (ritaseAsync.items.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Belum ada riwayat muatan',
-                      style: TextStyle(color: context.colors.textTertiary)),
+                  child: Text(
+                    'Belum ada riwayat muatan',
+                    style: TextStyle(color: context.colors.textTertiary),
+                  ),
                 );
               }
 
               final recent = ritaseAsync.items.take(5).toList();
 
               return Column(
-                children: [
-                  for (final r in recent)
-                    _RitaseTile(ritase: r),
-                ],
+                children: [for (final r in recent) _RitaseTile(ritase: r)],
               );
             },
           ),
@@ -577,10 +617,7 @@ class _RitaseTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 ritase.tanggal!,
-                style: TextStyle(
-                  color: context.colors.textMuted,
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: context.colors.textMuted, fontSize: 11),
               ),
             ),
         ],
@@ -628,10 +665,7 @@ class _SummaryTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.colors.textTertiary,
-            ),
+            style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
           ),
         ],
       ),
@@ -704,11 +738,9 @@ class _RitaseStatusBadge extends StatelessWidget {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 String _labelJenis(String jenis) => switch (jenis) {
-      'dump_truck' => 'Dump Truck',
-      'mixer_beton' => 'Mixer Beton',
-      'excavator' => 'Excavator',
-      'mobil_pickup' => 'Mobil Pickup',
-      _ => jenis,
-    };
-
-
+  'dump_truck' => 'Dump Truck',
+  'mixer_beton' => 'Mixer Beton',
+  'excavator' => 'Excavator',
+  'mobil_pickup' => 'Mobil Pickup',
+  _ => jenis,
+};

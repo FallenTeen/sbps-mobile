@@ -16,9 +16,7 @@ class PortalSelectionScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).value;
 
     if (user == null) {
-      return Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final canPresensi = canAccessPresensi(user);
@@ -32,7 +30,11 @@ class PortalSelectionScreen extends ConsumerWidget {
           child: Column(
             children: [
               // ── Header ──
-              _Header(user: user, onLogout: () => ref.read(authControllerProvider.notifier).logout()),
+              _Header(
+                user: user,
+                onLogout: () =>
+                    ref.read(authControllerProvider.notifier).logout(),
+              ),
 
               // ── Portal Cards ──
               Expanded(
@@ -43,10 +45,12 @@ class PortalSelectionScreen extends ConsumerWidget {
                       icon: Icons.fingerprint_rounded,
                       title: 'SBPS Presensi',
                       subtitle: 'Presensi & kehadiran',
-                      description: 'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
+                      description:
+                          'Catat kehadiran, lihat riwayat presensi, dan kelola formulir lapangan.',
                       gradient: AppTheme.primaryGradient,
                       enabled: canPresensi,
-                      disabledMessage: 'Anda tidak memiliki akses ke portal ini',
+                      disabledMessage:
+                          'Anda tidak memiliki akses ke portal ini',
                       onTap: () async {
                         await ref
                             .read(selectedPortalProvider.notifier)
@@ -59,14 +63,16 @@ class PortalSelectionScreen extends ConsumerWidget {
                       icon: Icons.engineering_rounded,
                       title: 'SBPS Proyek',
                       subtitle: 'Operasional & proyek',
-                      description: 'Kelola armada, produksi, dashboard, dan modul operasional lainnya.',
+                      description:
+                          'Kelola armada, produksi, dashboard, dan modul operasional lainnya.',
                       gradient: const LinearGradient(
                         colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       enabled: canProyek,
-                      disabledMessage: 'Anda tidak memiliki akses ke portal ini',
+                      disabledMessage:
+                          'Anda tidak memiliki akses ke portal ini',
                       onTap: () async {
                         await ref
                             .read(selectedPortalProvider.notifier)
@@ -154,7 +160,10 @@ class _Header extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Logout',
-            icon: Icon(Icons.logout_rounded, color: context.colors.textTertiary),
+            icon: Icon(
+              Icons.logout_rounded,
+              color: context.colors.textTertiary,
+            ),
             onPressed: onLogout,
           ),
         ],

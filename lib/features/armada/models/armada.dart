@@ -66,7 +66,8 @@ class ArmadaSaya {
       titikId: titik?['id']?.toString(),
       titikNama: titik?['nama']?.toString(),
       odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
-      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)?.toDouble(),
+      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)
+          ?.toDouble(),
     );
   }
 }

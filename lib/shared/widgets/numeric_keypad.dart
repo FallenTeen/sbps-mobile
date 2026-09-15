@@ -35,7 +35,9 @@ class NumericKeypad extends StatelessWidget {
               children: [
                 for (var i = 0; i < row.length; i++) ...[
                   if (i > 0) const SizedBox(width: 8),
-                  Expanded(child: _Key(label: row[i], onTap: () => onDigit(row[i]))),
+                  Expanded(
+                    child: _Key(label: row[i], onTap: () => onDigit(row[i])),
+                  ),
                 ],
               ],
             ),
@@ -48,7 +50,9 @@ class NumericKeypad extends StatelessWidget {
                   : const SizedBox(height: 56),
             ),
             const SizedBox(width: 8),
-            Expanded(child: _Key(label: '0', onTap: () => onDigit('0'))),
+            Expanded(
+              child: _Key(label: '0', onTap: () => onDigit('0')),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: _Key(
@@ -65,12 +69,7 @@ class NumericKeypad extends StatelessWidget {
 }
 
 class _Key extends StatelessWidget {
-  const _Key({
-    this.label,
-    this.icon,
-    required this.onTap,
-    this.semanticLabel,
-  });
+  const _Key({this.label, this.icon, required this.onTap, this.semanticLabel});
 
   final String? label;
   final IconData? icon;

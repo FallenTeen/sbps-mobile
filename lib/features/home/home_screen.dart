@@ -25,9 +25,7 @@ class HomeScreen extends ConsumerWidget {
     });
 
     if (auth.isLoading || auth.value == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final user = auth.value!;
@@ -47,10 +45,10 @@ class HomeScreen extends ConsumerWidget {
                   value: activeRole,
                   hint: const Text('Role'),
                   items: roles
-                      .map((role) => DropdownMenuItem(
-                            value: role,
-                            child: Text(role),
-                          ))
+                      .map(
+                        (role) =>
+                            DropdownMenuItem(value: role, child: Text(role)),
+                      )
                       .toList(),
                   onChanged: (role) {
                     if (role != null) {
@@ -85,11 +83,8 @@ class HomeScreen extends ConsumerWidget {
                 'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
               ),
               actions: [
-          const PortalSwitchButton(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Tutup'),
-                ),
+                const PortalSwitchButton(),
+                TextButton(onPressed: () {}, child: const Text('Tutup')),
               ],
             ),
           ],

@@ -26,7 +26,8 @@ Future<Box<String>> _openBox() async {
 /// Portal yang sedang dipilih user (null = belum pilih).
 final selectedPortalProvider =
     AsyncNotifierProvider<SelectedPortalNotifier, AppPortal?>(
-        SelectedPortalNotifier.new);
+      SelectedPortalNotifier.new,
+    );
 
 class SelectedPortalNotifier extends AsyncNotifier<AppPortal?> {
   @override
@@ -89,8 +90,7 @@ const kProyekRoles = <String>[
 bool canAccessPresensi(User user) => true;
 
 /// Cek apakah user bisa mengakses portal proyek.
-bool canAccessProyek(User user) =>
-    user.roles.any(kProyekRoles.contains);
+bool canAccessProyek(User user) => user.roles.any(kProyekRoles.contains);
 
 /// Jika user hanya bisa akses 1 portal, return portal itu. Jika bisa 2,
 /// return null (perlu pilih manual). Jika 0, return null.

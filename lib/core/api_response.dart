@@ -2,11 +2,7 @@
 /// `{ "status": "success"|"error", "message": string, "data": mixed }`
 /// (lihat docs/api-mobile.md bagian 3).
 class ApiResponse<T> {
-  const ApiResponse({
-    required this.status,
-    required this.message,
-    this.data,
-  });
+  const ApiResponse({required this.status, required this.message, this.data});
 
   final String status;
   final String message;

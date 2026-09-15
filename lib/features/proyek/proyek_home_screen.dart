@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
@@ -11,7 +12,6 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
 import '../notifikasi/notifikasi_providers.dart';
-import '../notifikasi/notifikasi_screen.dart';
 import '../../shared/widgets/sync_action_button.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
@@ -24,7 +24,7 @@ class ProyekHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).value;
     final role = ref.watch(activeRoleProvider);
-    final roles = user == null ?  <String>[] : app2RolesOf(user);
+    final roles = user == null ? <String>[] : app2RolesOf(user);
     final allowed = kProyekModules
         .where((m) => RolePermissions.canAccess(role, m.key))
         .where((m) => m.key != 'tracking' || RolePermissions.isAdminLike(role))
@@ -99,8 +99,11 @@ class ProyekHomeScreen extends ConsumerWidget {
                   // Section: Modul
                   Row(
                     children: [
-                      Icon(Icons.grid_view_rounded,
-                          size: 20, color: context.colors.primary),
+                      Icon(
+                        Icons.grid_view_rounded,
+                        size: 20,
+                        color: context.colors.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Modul',
@@ -120,11 +123,11 @@ class ProyekHomeScreen extends ConsumerWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 3.2,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                      ),
+                            crossAxisCount: 2,
+                            childAspectRatio: 3.2,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                          ),
                       itemCount: allowed.length,
                       itemBuilder: (context, i) => StaggeredEntrance(
                         index: i,
@@ -158,8 +161,8 @@ class _GreetingHeader extends StatelessWidget {
     final greeting = hour < 11
         ? 'Selamat Pagi'
         : hour < 15
-            ? 'Selamat Siang'
-            : 'Selamat Sore';
+        ? 'Selamat Siang'
+        : 'Selamat Sore';
 
     return Container(
       padding: EdgeInsets.all(20),
@@ -228,7 +231,7 @@ class _ModuleCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final role = ref.watch(activeRoleProvider);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -253,7 +256,11 @@ class _ModuleCard extends ConsumerWidget {
                     color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(module.icon, color: context.colors.primary, size: 22),
+                  child: Icon(
+                    module.icon,
+                    color: context.colors.primary,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -282,8 +289,11 @@ class _ModuleCard extends ConsumerWidget {
                 // Pending badge (Fase 2)
                 _PendingBadge(moduleKey: module.key, role: role),
                 const SizedBox(width: 8),
-                Icon(Icons.chevron_right_rounded,
-                    color: context.colors.textMuted, size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: context.colors.textMuted,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -320,27 +330,27 @@ class _ModuleCard extends ConsumerWidget {
   }
 
   String _subtitleFor(String key) => switch (key) {
-        'produksi' => 'Sesi aktif, mulai, riwayat, progress, QC',
-        'qc' => 'Slump test & uji tekan, riwayat QC',
-        'tracking' => 'User aktif & jejak lokasi',
-        'dashboard' => 'Ringkasan titik & operasional',
-        'keuangan' => 'Chart keuangan, PO, invoice',
-        'armada' => 'Kendaraan, ritase & checklist harian',
-        'kontraktor' => 'Proyek kontrak, progress, invoice & chat',
-        'workshop' => 'Antrian servis, checklist pengerjaan & sparepart',
-        'inventory' => 'Stok barang, request sparepart & opname',
-        _ => 'Menyusul di fase berikutnya',
-      };
+    'produksi' => 'Sesi aktif, mulai, riwayat, progress, QC',
+    'qc' => 'Slump test & uji tekan, riwayat QC',
+    'tracking' => 'User aktif & jejak lokasi',
+    'dashboard' => 'Ringkasan titik & operasional',
+    'keuangan' => 'Chart keuangan, PO, invoice',
+    'armada' => 'Kendaraan, ritase & checklist harian',
+    'kontraktor' => 'Proyek kontrak, progress, invoice & chat',
+    'workshop' => 'Antrian servis, checklist pengerjaan & sparepart',
+    'inventory' => 'Stok barang, request sparepart & opname',
+    _ => 'Menyusul di fase berikutnya',
+  };
 }
 
 IconData _iconForRole(String role) => switch (role) {
-      'Mandor Titik' => Icons.engineering_rounded,
-      'Kontraktor' => Icons.business_center_rounded,
-      'Admin Keuangan' => Icons.account_balance_wallet_rounded,
-      'Owner' => Icons.supervisor_account_rounded,
-      'Driver Armada' => Icons.local_shipping_rounded,
-      _ => Icons.badge_rounded,
-    };
+  'Mandor Titik' => Icons.engineering_rounded,
+  'Kontraktor' => Icons.business_center_rounded,
+  'Admin Keuangan' => Icons.account_balance_wallet_rounded,
+  'Owner' => Icons.supervisor_account_rounded,
+  'Driver Armada' => Icons.local_shipping_rounded,
+  _ => Icons.badge_rounded,
+};
 
 // ── Tracking Status ───────────────────────────────────────────────────────────
 
@@ -373,8 +383,12 @@ class _TrackingStatusCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              status.running ? Icons.location_on_rounded : Icons.location_off_rounded,
-              color: status.running ? context.colors.success : context.colors.textMuted,
+              status.running
+                  ? Icons.location_on_rounded
+                  : Icons.location_off_rounded,
+              color: status.running
+                  ? context.colors.success
+                  : context.colors.textMuted,
               size: 20,
             ),
           ),
@@ -437,9 +451,7 @@ class _NotifikasiBadgeAction extends ConsumerWidget {
         child: const Icon(Icons.notifications_outlined),
       ),
       onPressed: () async {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const NotifikasiScreen()),
-        );
+        await context.push('/notifikasi');
         ref.read(unreadCountProvider.notifier).reload();
       },
     );
@@ -465,8 +477,11 @@ class _NoActiveRoleView extends StatelessWidget {
                 color: context.colors.surfaceVariant,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.person_off_outlined,
-                  size: 40, color: context.colors.textMuted),
+              child: Icon(
+                Icons.person_off_outlined,
+                size: 40,
+                color: context.colors.textMuted,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -491,16 +506,16 @@ class _PendingWorkCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pendingSummary = ref.watch(pendingSummaryProvider);
-    
+
     return FutureBuilder<ModulePendingCounts>(
       future: pendingSummary.getSummary(role ?? ''),
       builder: (context, snapshot) {
         final counts = snapshot.data ?? const ModulePendingCounts();
-        
+
         if (!counts.hasPending) {
           return const SizedBox.shrink();
         }
-        
+
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -543,7 +558,10 @@ class _PendingWorkCard extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -577,7 +595,7 @@ class _PendingItemsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <_PendingItem>[];
-    
+
     if (counts.armada > 0) {
       items.add(_PendingItem(label: 'Armada', count: counts.armada));
     }
@@ -590,12 +608,8 @@ class _PendingItemsList extends StatelessWidget {
     if (counts.workshop > 0) {
       items.add(_PendingItem(label: 'Workshop', count: counts.workshop));
     }
-    
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items,
-    );
+
+    return Wrap(spacing: 8, runSpacing: 8, children: items);
   }
 }
 
@@ -636,17 +650,17 @@ class _PendingBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pendingSummary = ref.watch(pendingSummaryProvider);
-    
+
     return FutureBuilder<ModulePendingCounts>(
       future: pendingSummary.getSummary(role ?? ''),
       builder: (context, snapshot) {
         final counts = snapshot.data ?? const ModulePendingCounts();
         final count = _getCountForModule(counts, moduleKey);
-        
+
         if (count == 0) {
           return const SizedBox.shrink();
         }
-        
+
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -665,7 +679,7 @@ class _PendingBadge extends ConsumerWidget {
       },
     );
   }
-  
+
   int _getCountForModule(ModulePendingCounts counts, String moduleKey) {
     switch (moduleKey) {
       case 'armada':
@@ -692,18 +706,21 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = _getActionsForRole(role);
-    
+
     if (actions.isEmpty) {
       return SizedBox.shrink();
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.flash_on_rounded,
-                size: 20, color: context.colors.primary),
+            Icon(
+              Icons.flash_on_rounded,
+              size: 20,
+              color: context.colors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
               'Aksi Cepat',
@@ -716,19 +733,19 @@ class _QuickActions extends StatelessWidget {
           ],
         ),
         SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        AdaptiveGrid(
+          compactColumns: actions.length,
+          mediumColumns: 2,
+          expandedColumns: 4,
+          spacing: 12,
           children: [
-            for (var i = 0; i < actions.length; i++) ...[
-              if (i > 0) const SizedBox(width: 12),
-              Expanded(child: _QuickActionButton(action: actions[i])),
-            ],
+            for (final action in actions) _QuickActionButton(action: action),
           ],
         ),
       ],
     );
   }
-  
+
   List<_QuickAction> _getActionsForRole(String? role) {
     switch (role) {
       case 'Driver Armada':
@@ -809,11 +826,7 @@ class _QuickActionButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              action.icon,
-              color: context.colors.primary,
-              size: 24,
-            ),
+            Icon(action.icon, color: context.colors.primary, size: 24),
             const SizedBox(height: 4),
             Text(
               action.label,

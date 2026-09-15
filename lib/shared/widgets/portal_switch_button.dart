@@ -13,8 +13,7 @@ class PortalSwitchButton extends ConsumerWidget {
     return IconButton(
       tooltip: 'Ganti portal',
       icon: const Icon(Icons.apps),
-      onPressed: () =>
-          ref.read(selectedPortalProvider.notifier).clear(),
+      onPressed: () => ref.read(selectedPortalProvider.notifier).clear(),
     );
   }
 }

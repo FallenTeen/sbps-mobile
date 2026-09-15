@@ -49,9 +49,9 @@ class TitikMapRepository {
           '/titik-aktif',
           parse: (raw) => raw is List
               ? raw
-                  .whereType<Map>()
-                  .map((e) => Titik.fromJson(Map<String, dynamic>.from(e)))
-                  .toList()
+                    .whereType<Map>()
+                    .map((e) => Titik.fromJson(Map<String, dynamic>.from(e)))
+                    .toList()
               : const [],
         );
         return fallbackRes.data ?? const [];

@@ -43,7 +43,8 @@ Future<ConfirmationResult?> confirmLogout(BuildContext context) =>
       context,
       severity: ConfirmSeverity.destructive,
       title: 'Keluar dari akun?',
-      message: 'Anda perlu login kembali untuk mengakses aplikasi. '
+      message:
+          'Anda perlu login kembali untuk mengakses aplikasi. '
           'Data yang sudah tersimpan offline tetap aman dan akan tersinkron '
           'ketika Anda login lagi.',
       confirmLabel: 'Ya, Logout',
@@ -67,8 +68,9 @@ class ConfirmationDialog {
     int inputMaxLines = 3,
   }) {
     // Aksi critical tidak boleh dibatalkan tak sengaja lewat tap di luar dialog.
-    final dismissible =
-        severity == ConfirmSeverity.critical ? false : barrierDismissible;
+    final dismissible = severity == ConfirmSeverity.critical
+        ? false
+        : barrierDismissible;
     return showDialog<ConfirmationResult>(
       context: context,
       barrierDismissible: dismissible,
@@ -123,17 +125,16 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
   /// Aksen warna per severity: warn-amber untuk ringan, error-red untuk
   /// destruktif/kritikal.
   Color get _accent => switch (_severity) {
-        ConfirmSeverity.warning => context.colors.warning,
-        ConfirmSeverity.destructive ||
-        ConfirmSeverity.critical =>
-          context.colors.error,
-      };
+    ConfirmSeverity.warning => context.colors.warning,
+    ConfirmSeverity.destructive ||
+    ConfirmSeverity.critical => context.colors.error,
+  };
 
   IconData get _defaultIcon => switch (_severity) {
-        ConfirmSeverity.warning => Icons.warning_amber_rounded,
-        ConfirmSeverity.destructive => Icons.error_outline_rounded,
-        ConfirmSeverity.critical => Icons.report_gmailerrorred_rounded,
-      };
+    ConfirmSeverity.warning => Icons.warning_amber_rounded,
+    ConfirmSeverity.destructive => Icons.error_outline_rounded,
+    ConfirmSeverity.critical => Icons.report_gmailerrorred_rounded,
+  };
 
   @override
   void initState() {
@@ -155,12 +156,10 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
   }
 
   void _confirm() {
-    final reason = widget.inputLabel != null
-        ? _inputCtrl.text.trim()
-        : null;
-    Navigator.of(context).pop(
-      ConfirmationResult(confirmed: true, reason: reason),
-    );
+    final reason = widget.inputLabel != null ? _inputCtrl.text.trim() : null;
+    Navigator.of(
+      context,
+    ).pop(ConfirmationResult(confirmed: true, reason: reason));
   }
 
   @override
@@ -173,11 +172,7 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
           color: _accent.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          widget.icon ?? _defaultIcon,
-          color: _accent,
-          size: 26,
-        ),
+        child: Icon(widget.icon ?? _defaultIcon, color: _accent, size: 26),
       ),
       title: Text(widget.title, textAlign: TextAlign.center),
       // SizedBox di atas title supaya jarak icon→title rapi (icon built-in
@@ -238,8 +233,7 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
               backgroundColor: switch (_severity) {
                 ConfirmSeverity.warning => context.colors.secondary,
                 ConfirmSeverity.destructive ||
-                ConfirmSeverity.critical =>
-                  context.colors.error,
+                ConfirmSeverity.critical => context.colors.error,
               },
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),

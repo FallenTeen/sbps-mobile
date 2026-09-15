@@ -17,11 +17,11 @@ class UploadedFile {
   final String? url;
 
   factory UploadedFile.fromJson(Map<String, dynamic> json) => UploadedFile(
-        id: json['id']?.toString() ?? '',
-        nama: json['nama']?.toString() ?? '-',
-        fileType: json['file_type']?.toString() ?? '-',
-        mime: json['mime']?.toString(),
-        size: (json['size'] as num?)?.toInt(),
-        url: json['url']?.toString(),
-      );
+    id: json['id']?.toString() ?? '',
+    nama: json['nama']?.toString() ?? '-',
+    fileType: json['file_type']?.toString() ?? '-',
+    mime: json['mime']?.toString(),
+    size: (json['size'] as num?)?.toInt(),
+    url: json['url']?.toString(),
+  );
 }

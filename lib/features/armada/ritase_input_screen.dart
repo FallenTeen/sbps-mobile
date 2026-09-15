@@ -229,7 +229,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Input Muatan'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
         loading: () => Center(child: CircularProgressIndicator()),
@@ -256,10 +256,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               // === DAFTAR RECORD ===
               if (_records.isNotEmpty) ...[
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   color: context.colors.primary.withValues(alpha: 0.05),
                   child: Row(
                     children: [
@@ -627,16 +624,15 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         title: Text('Hapus Record #$recordIndex?'),
         content: const Text('Data record ini akan dihapus permanen.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Batal')),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deleteRecord(recordIndex);
             },
-            style: FilledButton.styleFrom(backgroundColor: context.colors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
             child: const Text('Hapus'),
           ),
         ],

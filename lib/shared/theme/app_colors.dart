@@ -27,6 +27,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.textSecondary,
     required this.textTertiary,
     required this.textMuted,
+    required this.chartPositive,
+    required this.chartNegative,
+    required this.chartGridLine,
+    required this.chartBarPrimary,
   });
 
   final Color background;
@@ -45,6 +49,18 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color textTertiary;
   final Color textMuted;
 
+  /// Warna data positif chart (masuk/pass-rate) — kontras AA di atas card.
+  final Color chartPositive;
+
+  /// Warna data negatif chart (keluar/gagal) — kontras AA di atas card.
+  final Color chartNegative;
+
+  /// Garis grid chart — terlihat baik di mode terang maupun gelap.
+  final Color chartGridLine;
+
+  /// Warna batang primer chart (mis. chart produksi).
+  final Color chartBarPrimary;
+
   static const light = AppColors(
     background: Color(0xFFF8FAFC),
     surface: Color(0xFFFAFBFC),
@@ -61,6 +77,10 @@ class AppColors extends ThemeExtension<AppColors> {
     textSecondary: Color(0xFF475569),
     textTertiary: Color(0xFF64748B),
     textMuted: Color(0xFF94A3B8),
+    chartPositive: Color(0xFF059669),
+    chartNegative: Color(0xFFDC2626),
+    chartGridLine: Color(0xFFE2E8F0),
+    chartBarPrimary: Color(0xFFDC2626),
   );
 
   /// Palet gelap (M3 dark): surface mendekati hitam, teks terang.
@@ -82,6 +102,10 @@ class AppColors extends ThemeExtension<AppColors> {
     textSecondary: Color(0xFFC7CDD8),
     textTertiary: Color(0xFF9AA3B2),
     textMuted: Color(0xFF6B7280),
+    chartPositive: Color(0xFF4ADE80),
+    chartNegative: Color(0xFFF87171),
+    chartGridLine: Color(0xFF3B4252),
+    chartBarPrimary: Color(0xFFF87171),
   );
 
   @override
@@ -101,6 +125,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? textSecondary,
     Color? textTertiary,
     Color? textMuted,
+    Color? chartPositive,
+    Color? chartNegative,
+    Color? chartGridLine,
+    Color? chartBarPrimary,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -118,6 +146,10 @@ class AppColors extends ThemeExtension<AppColors> {
       textSecondary: textSecondary ?? this.textSecondary,
       textTertiary: textTertiary ?? this.textTertiary,
       textMuted: textMuted ?? this.textMuted,
+      chartPositive: chartPositive ?? this.chartPositive,
+      chartNegative: chartNegative ?? this.chartNegative,
+      chartGridLine: chartGridLine ?? this.chartGridLine,
+      chartBarPrimary: chartBarPrimary ?? this.chartBarPrimary,
     );
   }
 
@@ -140,6 +172,10 @@ class AppColors extends ThemeExtension<AppColors> {
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textTertiary: Color.lerp(textTertiary, other.textTertiary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
+      chartPositive: Color.lerp(chartPositive, other.chartPositive, t)!,
+      chartNegative: Color.lerp(chartNegative, other.chartNegative, t)!,
+      chartGridLine: Color.lerp(chartGridLine, other.chartGridLine, t)!,
+      chartBarPrimary: Color.lerp(chartBarPrimary, other.chartBarPrimary, t)!,
     );
   }
 }

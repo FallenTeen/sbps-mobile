@@ -47,17 +47,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      final updatedUser =
-          await ref.read(authRepositoryProvider).updateProfile(
-                name: _nameCtrl.text,
-                phone: _phoneCtrl.text,
-                password: _passwordCtrl.text.isEmpty
-                    ? null
-                    : _passwordCtrl.text,
-                passwordConfirmation: _confirmCtrl.text.isEmpty
-                    ? null
-                    : _confirmCtrl.text,
-              );
+      final updatedUser = await ref
+          .read(authRepositoryProvider)
+          .updateProfile(
+            name: _nameCtrl.text,
+            phone: _phoneCtrl.text,
+            password: _passwordCtrl.text.isEmpty ? null : _passwordCtrl.text,
+            passwordConfirmation: _confirmCtrl.text.isEmpty
+                ? null
+                : _confirmCtrl.text,
+          );
       // Refresh auth state agar UI lain ikut update.
       ref.invalidate(authControllerProvider);
       if (!mounted) return;
@@ -83,7 +82,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context,
       severity: ConfirmSeverity.critical,
       title: 'Logout dari Semua Perangkat?',
-      message: 'Semua device yang sedang login dengan akun ini (termasuk '
+      message:
+          'Semua device yang sedang login dengan akun ini (termasuk '
           'milik rekan kerja yang mungkin sedang memakainya) akan ikut '
           'ter-logout dan harus login ulang. Perangkat ini juga akan keluar.',
       confirmLabel: 'Ya, Logout Semua Perangkat',
@@ -129,17 +129,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           Center(
-            child: Text(user?.email ?? '',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.outline)),
+            child: Text(
+              user?.email ?? '',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
           ),
           if (user != null && user.roles.isNotEmpty) ...[
             const SizedBox(height: 4),
             Center(
               child: Wrap(
                 spacing: 4,
-                children:
-                    user.roles.map((r) => Chip(label: Text(r))).toList(),
+                children: user.roles.map((r) => Chip(label: Text(r))).toList(),
               ),
             ),
           ],
@@ -158,8 +160,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     prefixIcon: Icon(Icons.person_outline),
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Nama wajib diisi'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -172,8 +175,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 24),
-                Text('Ganti Password (opsional)',
-                    style: theme.textTheme.titleSmall),
+                Text(
+                  'Ganti Password (opsional)',
+                  style: theme.textTheme.titleSmall,
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordCtrl,
@@ -183,11 +188,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (v) {
@@ -206,15 +213,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirm
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _obscureConfirm = !_obscureConfirm),
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
                   ),
                   validator: (v) {
-                    if (_passwordCtrl.text.isNotEmpty && v != _passwordCtrl.text) {
+                    if (_passwordCtrl.text.isNotEmpty &&
+                        v != _passwordCtrl.text) {
                       return 'Password tidak cocok';
                     }
                     return null;
@@ -261,21 +271,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 label: Text('Sistem'),
               ),
             ],
-            selected: {
-              ref.watch(themeModeProvider).value ?? ThemeMode.light,
-            },
+            selected: {ref.watch(themeModeProvider).value ?? ThemeMode.light},
             onSelectionChanged: (selection) {
-              ref
-                  .read(themeModeProvider.notifier)
-                  .select(selection.first);
+              ref.read(themeModeProvider.notifier).select(selection.first);
             },
           ),
           const SizedBox(height: 8),
           Text(
             'Mode gelap nyaman untuk shift malam dan hemat baterai di layar '
             'AMOLED. "Sistem" mengikuti pengaturan HP Anda.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
 
           const SizedBox(height: 32),

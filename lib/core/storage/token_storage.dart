@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// (bukan SharedPreferences — sesuai keputusan Fase A1.2).
 class TokenStorage {
   TokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const _kToken = 'auth_token';
   static const _kActiveRole = 'active_role';
@@ -13,7 +13,8 @@ class TokenStorage {
 
   Future<String?> readToken() => _storage.read(key: _kToken);
 
-  Future<void> saveToken(String token) => _storage.write(key: _kToken, value: token);
+  Future<void> saveToken(String token) =>
+      _storage.write(key: _kToken, value: token);
 
   Future<void> deleteToken() => _storage.delete(key: _kToken);
 

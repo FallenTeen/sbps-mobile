@@ -14,20 +14,18 @@ class StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = label.toLowerCase();
     final (bg, fg) = switch (l) {
-      'lolos' || 'lunas' || 'aktif' || 'diterima' => (
-          Colors.green.shade100,
-          Colors.green.shade900
-        ),
+      'lolos' ||
+      'lunas' ||
+      'aktif' ||
+      'diterima' => (Colors.green.shade100, Colors.green.shade900),
       'draft' ||
-        'diajukan' ||
-        'terkirim' ||
-        'menunggu_approval_finance' ||
-        'menunggu_approval_owner' ||
-        'lunas_sebagian' => (
-          Colors.orange.shade100,
-          Colors.orange.shade900
-        ),
-      'tidak_lolos' || 'jatuh_tempo' => (Colors.red.shade100, Colors.red.shade900),
+      'diajukan' ||
+      'terkirim' ||
+      'menunggu_approval_finance' ||
+      'menunggu_approval_owner' ||
+      'lunas_sebagian' => (Colors.orange.shade100, Colors.orange.shade900),
+      'tidak_lolos' ||
+      'jatuh_tempo' => (Colors.red.shade100, Colors.red.shade900),
       _ => (Colors.grey.shade200, Colors.grey.shade800),
     };
     return Container(
@@ -38,7 +36,11 @@ class StatusChip extends StatelessWidget {
       ),
       child: Text(
         _pretty(l),
-        style: TextStyle(fontSize: 10.5, color: fg, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 10.5,
+          color: fg,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

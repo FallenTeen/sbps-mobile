@@ -110,11 +110,13 @@ class LocationBufferService {
     if (DateTime.now().hour >= AppConfig.trackingCutoffHour) return;
     _lastSeen = position;
     _lastStoredAt = DateTime.now();
-    _addPoint(TrackPoint(
-      lat: position.latitude,
-      lng: position.longitude,
-      timestamp: position.timestamp.toLocal(),
-    ));
+    _addPoint(
+      TrackPoint(
+        lat: position.latitude,
+        lng: position.longitude,
+        timestamp: position.timestamp.toLocal(),
+      ),
+    );
   }
 
   Future<void> _addPoint(TrackPoint point) async {
@@ -127,18 +129,18 @@ class LocationBufferService {
 
   Future<void> _persist() async {
     final box = await _box();
-    await box.put(
-      'points',
-      jsonEncode([for (final p in _points) p.toJson()]),
-    );
+    await box.put('points', jsonEncode([for (final p in _points) p.toJson()]));
   }
 
   /// Buang titik dari hari sebelumnya (sisa offline semalam) — server
   /// tidak menyimpannya lagi, jadi tidak ada gunanya dikirim ulang.
   Future<void> _pruneStale() async {
     final todayStart = DateTime.now();
-    final midnight =
-        DateTime(todayStart.year, todayStart.month, todayStart.day);
+    final midnight = DateTime(
+      todayStart.year,
+      todayStart.month,
+      todayStart.day,
+    );
     final before = _points.length;
     _points.removeWhere((p) => p.timestamp.isBefore(midnight));
     if (_points.length != before) await _persist();
@@ -155,7 +157,8 @@ class LocationBufferService {
 
   // --- Batch pending -------------------------------------------------------
 
-  Future<({String batchId, List<TrackPoint> points})?> readPendingBatch() async {
+  Future<({String batchId, List<TrackPoint> points})?>
+  readPendingBatch() async {
     final box = await _box();
     final raw = box.get('pending_batch');
     if (raw == null) return null;
@@ -177,10 +180,13 @@ class LocationBufferService {
 
   Future<void> savePendingBatch(String batchId, List<TrackPoint> points) async {
     final box = await _box();
-    await box.put('pending_batch', jsonEncode({
-      'batch_id': batchId,
-      'locations': [for (final p in points) p.toJson()],
-    }));
+    await box.put(
+      'pending_batch',
+      jsonEncode({
+        'batch_id': batchId,
+        'locations': [for (final p in points) p.toJson()],
+      }),
+    );
   }
 
   Future<void> clearPendingBatch() async {

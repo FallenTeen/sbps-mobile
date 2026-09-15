@@ -99,38 +99,44 @@ class PendingAction {
   final String idempotencyKey;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'client_uuid': clientUuid,
-        'endpoint': endpoint.name,
-        'payload_json': payloadJson,
-        'payload_data': payloadData,
-        'photo_local_path': photoLocalPath,
-        'photo_local_paths': photoLocalPaths,
-        'status': status.name,
-        'created_at': createdAt.toIso8601String(),
-        'last_attempt_at': lastAttemptAt?.toIso8601String(),
-        'retry_count': retryCount,
-        'error_message': errorMessage,
-        'idempotency_key': idempotencyKey,
-      };
+    'id': id,
+    'client_uuid': clientUuid,
+    'endpoint': endpoint.name,
+    'payload_json': payloadJson,
+    'payload_data': payloadData,
+    'photo_local_path': photoLocalPath,
+    'photo_local_paths': photoLocalPaths,
+    'status': status.name,
+    'created_at': createdAt.toIso8601String(),
+    'last_attempt_at': lastAttemptAt?.toIso8601String(),
+    'retry_count': retryCount,
+    'error_message': errorMessage,
+    'idempotency_key': idempotencyKey,
+  };
 
   static PendingAction fromJson(Map<String, dynamic> json) {
     return PendingAction(
       id: json['id'] as String,
       clientUuid: json['client_uuid'] as String,
-      endpoint: PendingEndpoint.values
-          .firstWhere((e) => e.name == json['endpoint']),
+      endpoint: PendingEndpoint.values.firstWhere(
+        (e) => e.name == json['endpoint'],
+      ),
       payloadJson: Map<String, String>.from(
-          (json['payload_json'] as Map?) ?? const {}),
+        (json['payload_json'] as Map?) ?? const {},
+      ),
       payloadData: Map<String, dynamic>.from(
-          (json['payload_data'] as Map?) ?? const {}),
+        (json['payload_data'] as Map?) ?? const {},
+      ),
       photoLocalPath: json['photo_local_path'] as String?,
-      photoLocalPaths: (json['photo_local_paths'] as List?)
+      photoLocalPaths:
+          (json['photo_local_paths'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      status: PendingStatus.values
-          .firstWhere((s) => s.name == json['status'], orElse: () => PendingStatus.pending),
+      status: PendingStatus.values.firstWhere(
+        (s) => s.name == json['status'],
+        orElse: () => PendingStatus.pending,
+      ),
       createdAt: DateTime.parse(json['created_at'] as String),
       lastAttemptAt: json['last_attempt_at'] == null
           ? null

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -37,15 +38,21 @@ class ArmadaHomeScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Armada', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const Text(
+              'Armada',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
             Text(
               _subtitleForRole(activeRole),
-              style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7)),
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
             ),
           ],
         ),
         bottom: const BrandStrip(),
-        actions:  [PortalSwitchButton(), SyncActionButton()],
+        actions: [PortalSwitchButton(), SyncActionButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -88,7 +95,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
                         const SizedBox(height: 2),
                         Text(
                           _subtitleForRole(activeRole),
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -101,8 +111,11 @@ class ArmadaHomeScreen extends ConsumerWidget {
             // Kendaraan Saya section
             Row(
               children: [
-                Icon(Icons.directions_bus_rounded,
-                    size: 20, color: context.colors.primary),
+                Icon(
+                  Icons.directions_bus_rounded,
+                  size: 20,
+                  color: context.colors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Kendaraan Saya',
@@ -135,14 +148,22 @@ class ArmadaHomeScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              for (final item in section.items)
-                _MenuTile(
-                  icon: item.icon,
-                  title: item.title,
-                  subtitle: item.subtitle,
-                  badge: item.badge,
-                  onTap: () => item.onTap(context),
-                ),
+              AdaptiveGrid(
+                compactColumns: 1,
+                mediumColumns: 2,
+                expandedColumns: 3,
+                spacing: 8,
+                children: [
+                  for (final item in section.items)
+                    _MenuTile(
+                      icon: item.icon,
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      badge: item.badge,
+                      onTap: () => item.onTap(context),
+                    ),
+                ],
+              ),
               const SizedBox(height: 24),
             ],
           ],
@@ -154,29 +175,30 @@ class ArmadaHomeScreen extends ConsumerWidget {
   List<Widget> _armadaSection(WidgetRef ref) {
     final armada = ref.watch(armadaSayaProvider);
     return switch (armada) {
-      AsyncData(value: final items) => items.isEmpty
-          ? const [_EmptyArmada()]
-          : [for (final a in items) _ArmadaCard(armada: a)],
+      AsyncData(value: final items) =>
+        items.isEmpty
+            ? const [_EmptyArmada()]
+            : [for (final a in items) _ArmadaCard(armada: a)],
       AsyncError() => [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: AppEmptyState(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              icon: Icons.cloud_off_outlined,
-              title: 'Gagal memuat data armada',
-              subtitle:
-                  'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
-              actionLabel: 'Muat Ulang',
-              onAction: () => ref.invalidate(armadaSayaProvider),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: AppEmptyState(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal memuat data armada',
+            subtitle:
+                'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+            actionLabel: 'Muat Ulang',
+            onAction: () => ref.invalidate(armadaSayaProvider),
           ),
-        ],
+        ),
+      ],
       _ => const [
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ],
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
     };
   }
 
@@ -220,7 +242,9 @@ class ArmadaHomeScreen extends ConsumerWidget {
           title: 'Dashboard Saya',
           subtitle: 'Ringkasan kinerja & muatan hari ini',
           onTap: (ctx) => Navigator.of(ctx).push(
-            MaterialPageRoute<void>(builder: (_) => const DriverDashboardScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const DriverDashboardScreen(),
+            ),
           ),
         ),
         _MenuItem(
@@ -382,7 +406,6 @@ class _MenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
@@ -447,8 +470,11 @@ class _MenuTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                Icon(Icons.chevron_right_rounded,
-                    color: context.colors.textMuted, size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: context.colors.textMuted,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -489,8 +515,11 @@ class _ArmadaCard extends StatelessWidget {
                   color: context.colors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.directions_bus_rounded,
-                    color: context.colors.primary, size: 22),
+                child: Icon(
+                  Icons.directions_bus_rounded,
+                  color: context.colors.primary,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -516,7 +545,9 @@ class _ArmadaCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: aktif ? context.colors.success : context.colors.warning,
+                    color: aktif
+                        ? context.colors.success
+                        : context.colors.warning,
                   ),
                 ),
               ),
@@ -590,7 +621,11 @@ class _EmptyArmada extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.no_crash_outlined, size: 40, color: context.colors.textMuted),
+          Icon(
+            Icons.no_crash_outlined,
+            size: 40,
+            color: context.colors.textMuted,
+          ),
           SizedBox(height: 10),
           Text(
             'Belum ada armada yang ditugaskan ke Anda.',
@@ -623,9 +658,9 @@ class _ErrorView extends StatelessWidget {
 }
 
 String _labelJenis(String jenis) => switch (jenis) {
-      'dump_truck' => 'Dump Truck',
-      'mixer_beton' => 'Mixer Beton',
-      'excavator' => 'Excavator',
-      'mobil_pickup' => 'Mobil Pickup',
-      _ => jenis,
-    };
+  'dump_truck' => 'Dump Truck',
+  'mixer_beton' => 'Mixer Beton',
+  'excavator' => 'Excavator',
+  'mobil_pickup' => 'Mobil Pickup',
+  _ => jenis,
+};

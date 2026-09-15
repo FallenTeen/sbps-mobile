@@ -31,23 +31,18 @@ class DashboardRepository {
   Future<ProduksiChart> getProduksiChart({int? bulan, int? tahun}) async {
     final res = await _api.get<ProduksiChart>(
       '/dashboard/chart/produksi',
-      query: {
-        'bulan': ?bulan,
-        'tahun': ?tahun,
-      },
+      query: {'bulan': ?bulan, 'tahun': ?tahun},
       parse: (raw) => ProduksiChart.fromRaw(raw, bulan: bulan, tahun: tahun),
     );
-    return res.data ?? ProduksiChart(bulan: bulan ?? 1, tahun: tahun ?? 1, items: const []);
+    return res.data ??
+        ProduksiChart(bulan: bulan ?? 1, tahun: tahun ?? 1, items: const []);
   }
 
   /// GET /dashboard/chart/keuangan?bulan=&tahun= — Owner/Admin Keuangan.
   Future<KeuanganChart> getKeuanganChart({int? bulan, int? tahun}) async {
     final res = await _api.get<KeuanganChart>(
       '/dashboard/chart/keuangan',
-      query: {
-        'bulan': ?bulan,
-        'tahun': ?tahun,
-      },
+      query: {'bulan': ?bulan, 'tahun': ?tahun},
       parse: (raw) => KeuanganChart.fromRaw(raw, bulan: bulan, tahun: tahun),
     );
     return res.data ??
@@ -70,8 +65,7 @@ class DashboardRepository {
       parse: KehadiranDivisiData.fromRaw,
     );
     return res.data ??
-        const KehadiranDivisiData(
-            tanggal: '', totalHadir: 0, items: []);
+        const KehadiranDivisiData(tanggal: '', totalHadir: 0, items: []);
   }
 
   /// GET /dashboard/po-pending — Owner/Admin Keuangan. Server maks 20 item.

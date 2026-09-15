@@ -89,8 +89,9 @@ class FormDraft {
       final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
       final savedAt = DateTime.parse(map['savedAt'] as String);
       final expiresAt = DateTime.parse(map['expiresAt'] as String);
-      final formType = DraftFormType.values
-          .firstWhere((t) => t.name == map['formType']);
+      final formType = DraftFormType.values.firstWhere(
+        (t) => t.name == map['formType'],
+      );
       return FormDraft(
         draftKey: map['draftKey'] as String,
         formType: formType,

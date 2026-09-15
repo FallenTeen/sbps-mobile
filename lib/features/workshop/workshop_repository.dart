@@ -16,12 +16,11 @@ class WorkshopRepository {
   Future<List<WorkshopJob>> getAntrianServis({String? status}) async {
     final res = await _api.get<List<WorkshopJob>>(
       '/servis-armada',
-      query: {
-        'status': ?status,
-      },
+      query: {'status': ?status},
       parse: (raw) {
         final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
-        final items = map['data'] ?? map['items'] ?? (raw is List ? raw : const []);
+        final items =
+            map['data'] ?? map['items'] ?? (raw is List ? raw : const []);
         return <WorkshopJob>[
           if (items is List)
             for (final e in items)
@@ -39,7 +38,8 @@ class WorkshopRepository {
   Future<WorkshopJobDetail> getDetailJob(String id) async {
     final res = await _api.get<WorkshopJobDetail>(
       '/servis-armada/$id',
-      parse: (raw) => WorkshopJobDetail.fromJson(Map<String, dynamic>.from(raw as Map)),
+      parse: (raw) =>
+          WorkshopJobDetail.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;
@@ -47,9 +47,7 @@ class WorkshopRepository {
 
   /// POST /servis-armada/{id}/mulai — Mulai mengerjakan servis.
   Future<void> mulaiPengerjaan(String id) async {
-    final res = await _api.post<Object?>(
-      '/servis-armada/$id/mulai',
-    );
+    final res = await _api.post<Object?>('/servis-armada/$id/mulai');
     _ensureSuccess(res);
   }
 
@@ -61,10 +59,9 @@ class WorkshopRepository {
   }) async {
     final res = await _api.post<WorkshopTodoItem>(
       '/workshop/job/$jobId/todo/$todoId/toggle',
-      body: {
-        'is_done': isDone,
-      },
-      parse: (raw) => WorkshopTodoItem.fromJson(Map<String, dynamic>.from(raw as Map)),
+      body: {'is_done': isDone},
+      parse: (raw) =>
+          WorkshopTodoItem.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;
@@ -80,7 +77,8 @@ class WorkshopRepository {
       '/workshop/job/$jobId/todo/$todoId/photo',
       fields: {},
       files: [MultipartFileSpec('photo', photoPath)],
-      parse: (raw) => WorkshopTodoItem.fromJson(Map<String, dynamic>.from(raw as Map)),
+      parse: (raw) =>
+          WorkshopTodoItem.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;
@@ -110,9 +108,7 @@ class WorkshopRepository {
   }) async {
     final res = await _api.post<Object?>(
       '/servis-armada/$id/selesai',
-      body: {
-        'catatan_workshop': ?catatanWorkshop,
-      },
+      body: {'catatan_workshop': ?catatanWorkshop},
     );
     _ensureSuccess(res);
   }

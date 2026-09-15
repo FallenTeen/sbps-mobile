@@ -54,7 +54,11 @@ class DraftRestoreBanner extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.description_outlined, size: 20, color: cs.onTertiaryContainer),
+                Icon(
+                  Icons.description_outlined,
+                  size: 20,
+                  color: cs.onTertiaryContainer,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

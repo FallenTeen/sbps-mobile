@@ -20,7 +20,8 @@ class TrackingRepository {
         'batch_id': batchId,
         'locations': [for (final p in points) p.toApiJson()],
       },
-      parse: (raw) => raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
+      parse: (raw) =>
+          raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
     );
     final data = res.data ?? const {};
     return BatchSendResult(
@@ -34,13 +35,15 @@ class TrackingRepository {
   Future<List<ActiveUser>> getActiveUsers() async {
     final res = await _api.get<Map<String, dynamic>>(
       '/tracking/active-users',
-      parse: (raw) => raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
+      parse: (raw) =>
+          raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
     );
     final data = res.data ?? const {};
     final items = data['items'];
     return [
       if (items is List)
-        for (final e in items) ActiveUser.fromJson(Map<String, dynamic>.from(e as Map)),
+        for (final e in items)
+          ActiveUser.fromJson(Map<String, dynamic>.from(e as Map)),
     ];
   }
 

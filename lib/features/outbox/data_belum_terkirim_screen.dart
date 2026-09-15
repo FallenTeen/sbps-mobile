@@ -27,7 +27,8 @@ class _DataBelumTerkirimScreenState
       context,
       severity: ConfirmSeverity.destructive,
       title: 'Hapus data ini secara permanen?',
-      message: 'Aksi ini belum pernah terkirim ke server. Jika dihapus, data '
+      message:
+          'Aksi ini belum pernah terkirim ke server. Jika dihapus, data '
           'dan foto yang sudah diambil akan hilang total dan tidak bisa '
           'dikembalikan.',
       confirmLabel: 'Ya, Hapus Permanen',

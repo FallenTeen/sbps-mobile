@@ -29,18 +29,17 @@ class TitikOverview {
   /// Total output produksi hari ini.
   final double produksiToday;
 
-  factory TitikOverview.fromJson(Map<String, dynamic> json) =>
-      TitikOverview(
-        titikId: json['titik_id']?.toString() ?? '',
-        titik: json['titik']?.toString() ?? '-',
-        proyek: json['proyek']?.toString() ?? '-',
-        latitude: (json['latitude'] as num?)?.toDouble(),
-        longitude: (json['longitude'] as num?)?.toDouble(),
-        sdmCount: (json['sdm_count'] as num?)?.toInt() ?? 0,
-        armadaCount: (json['armada_count'] as num?)?.toInt() ?? 0,
-        presensiToday: (json['presensi_today'] as num?)?.toInt() ?? 0,
-        produksiToday: (json['produksi_today'] as num?)?.toDouble() ?? 0,
-      );
+  factory TitikOverview.fromJson(Map<String, dynamic> json) => TitikOverview(
+    titikId: json['titik_id']?.toString() ?? '',
+    titik: json['titik']?.toString() ?? '-',
+    proyek: json['proyek']?.toString() ?? '-',
+    latitude: (json['latitude'] as num?)?.toDouble(),
+    longitude: (json['longitude'] as num?)?.toDouble(),
+    sdmCount: (json['sdm_count'] as num?)?.toInt() ?? 0,
+    armadaCount: (json['armada_count'] as num?)?.toInt() ?? 0,
+    presensiToday: (json['presensi_today'] as num?)?.toInt() ?? 0,
+    produksiToday: (json['produksi_today'] as num?)?.toDouble() ?? 0,
+  );
 }
 
 class DashboardOverview {
@@ -115,10 +114,7 @@ class RabInfo {
 }
 
 class ProduksiHariIniInfo {
-  const ProduksiHariIniInfo({
-    this.totalOutput = 0,
-    this.jumlahSesi = 0,
-  });
+  const ProduksiHariIniInfo({this.totalOutput = 0, this.jumlahSesi = 0});
 
   final double totalOutput;
   final int jumlahSesi;
@@ -151,25 +147,26 @@ class TitikDetail {
 
   factory TitikDetail.fromRaw(Object? raw) {
     final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
-    final titik =
-        map['titik'] is Map ? Map<String, dynamic>.from(map['titik']) : const {};
+    final titik = map['titik'] is Map
+        ? Map<String, dynamic>.from(map['titik'])
+        : const {};
 
     List<Map<String, dynamic>> listOf(Object? raw) => [
-          if (raw is List)
-            for (final e in raw)
-              if (e is Map) Map<String, dynamic>.from(e),
-        ];
+      if (raw is List)
+        for (final e in raw)
+          if (e is Map) Map<String, dynamic>.from(e),
+    ];
 
-    DateTime? dt(Object? raw) =>
-        raw == null || raw.toString().isEmpty
-            ? null
-            : DateTime.tryParse(raw.toString());
+    DateTime? dt(Object? raw) => raw == null || raw.toString().isEmpty
+        ? null
+        : DateTime.tryParse(raw.toString());
 
     final prodMap = map['produksi_hari_ini'] is Map
         ? Map<String, dynamic>.from(map['produksi_hari_ini'])
         : const {};
-    final rabMap =
-        map['rab'] is Map ? Map<String, dynamic>.from(map['rab']) : null;
+    final rabMap = map['rab'] is Map
+        ? Map<String, dynamic>.from(map['rab'])
+        : null;
 
     return TitikDetail(
       titikNama: titik['nama']?.toString() ?? '-',
@@ -259,8 +256,7 @@ class ProduksiChart {
                 final m = Map<String, dynamic>.from(e);
                 return ProduksiChartPoint(
                   minggu: m['minggu']?.toString() ?? '',
-                  totalOutput:
-                      (m['total_output'] as num?)?.toDouble() ?? 0,
+                  totalOutput: (m['total_output'] as num?)?.toDouble() ?? 0,
                   jumlahSesi: (m['jumlah_sesi'] as num?)?.toInt() ?? 0,
                 );
               }(),
@@ -337,11 +333,10 @@ class ArmadaStatusData {
           for (final e in list)
             if (e is Map)
               (
-                status: Map<String, dynamic>.from(e)['status']
-                        ?.toString() ??
-                    '-',
-                jumlah: (Map<String, dynamic>.from(e)['jumlah'] as num?)
-                        ?.toInt() ??
+                status:
+                    Map<String, dynamic>.from(e)['status']?.toString() ?? '-',
+                jumlah:
+                    (Map<String, dynamic>.from(e)['jumlah'] as num?)?.toInt() ??
                     0,
               ),
       ],
@@ -373,16 +368,15 @@ class KehadiranDivisiData {
           for (final e in list)
             if (e is Map)
               (
-                divisi: Map<String, dynamic>.from(e)['divisi']
-                        ?.toString() ??
-                    '-',
-                hadir: (Map<String, dynamic>.from(e)['hadir'] as num?)
-                        ?.toInt() ??
+                divisi:
+                    Map<String, dynamic>.from(e)['divisi']?.toString() ?? '-',
+                hadir:
+                    (Map<String, dynamic>.from(e)['hadir'] as num?)?.toInt() ??
                     0,
                 checkOut:
                     (Map<String, dynamic>.from(e)['check_out'] as num?)
-                            ?.toInt() ??
-                        0,
+                        ?.toInt() ??
+                    0,
               ),
       ],
     );

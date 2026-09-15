@@ -53,7 +53,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
     final armadaList = ref.read(masterArmadaProvider).value;
     if (armadaList == null || _initialized) return;
     _initialized = true;
-    final match = armadaList.where((a) => a.id == widget.initialArmadaId).toList();
+    final match = armadaList
+        .where((a) => a.id == widget.initialArmadaId)
+        .toList();
     if (match.isNotEmpty) {
       setState(() => _selectedArmada = match.first);
     }
@@ -93,7 +95,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
       final odo = double.tryParse(_odoController.text);
       final jam = double.tryParse(_jamController.text);
 
-      await ref.read(servisRepositoryProvider).submitAjuanServis(
+      await ref
+          .read(servisRepositoryProvider)
+          .submitAjuanServis(
             armadaId: _selectedArmada!.id,
             keluhan: _keluhanController.text.trim(),
             kategori: _kategori,
@@ -112,9 +116,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -188,13 +192,19 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                         _selectedArmada = val;
                         if (val != null) {
                           final armadaList = ref.read(armadaSayaProvider).value;
-                          final armada = armadaList?.where((a) => a.id == val.id).firstOrNull;
+                          final armada = armadaList
+                              ?.where((a) => a.id == val.id)
+                              .firstOrNull;
                           if (armada != null) {
-                            if (_odoController.text.isEmpty && armada.odoTerkini != null) {
-                              _odoController.text = armada.odoTerkini.toString();
+                            if (_odoController.text.isEmpty &&
+                                armada.odoTerkini != null) {
+                              _odoController.text = armada.odoTerkini
+                                  .toString();
                             }
-                            if (_jamController.text.isEmpty && armada.jamOperasionalTerkini != null) {
-                              _jamController.text = armada.jamOperasionalTerkini.toString();
+                            if (_jamController.text.isEmpty &&
+                                armada.jamOperasionalTerkini != null) {
+                              _jamController.text = armada.jamOperasionalTerkini
+                                  .toString();
                             }
                           }
                         }
@@ -290,7 +300,9 @@ class _AjuanServisScreenState extends ConsumerState<AjuanServisScreen> {
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2, color: Colors.white),
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                   SizedBox(width: 8),
                                   Text('Mengirim...'),

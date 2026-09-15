@@ -23,16 +23,15 @@ class QcStatusBadge extends StatelessWidget {
       ),
       child: Text(
         qcStatusLabel(status),
-        style:
-            TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600),
       ),
     );
   }
 }
 
 String qcStatusLabel(String status) => switch (status) {
-      'menunggu_hasil' => 'Menunggu hasil',
-      'lolos' => 'Lolos',
-      'tidak_lolos' => 'Tidak lolos',
-      _ => status,
-    };
+  'menunggu_hasil' => 'Menunggu hasil',
+  'lolos' => 'Lolos',
+  'tidak_lolos' => 'Tidak lolos',
+  _ => status,
+};

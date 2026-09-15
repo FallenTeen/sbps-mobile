@@ -16,8 +16,7 @@ final armadaStatusProvider = FutureProvider.autoDispose<ArmadaStatusData>(
   (ref) => ref.watch(dashboardRepositoryProvider).getArmadaStatus(),
 );
 
-final kehadiranDivisiProvider =
-    FutureProvider.autoDispose<KehadiranDivisiData>(
+final kehadiranDivisiProvider = FutureProvider.autoDispose<KehadiranDivisiData>(
   (ref) => ref.watch(dashboardRepositoryProvider).getKehadiranDivisi(),
 );
 
@@ -29,19 +28,19 @@ ChartPeriod currentPeriod() {
   return (bulan: now.month, tahun: now.year);
 }
 
-final produksiChartProvider =
-    FutureProvider.autoDispose.family<ProduksiChart, ChartPeriod>(
-  (ref, period) => ref
-      .watch(dashboardRepositoryProvider)
-      .getProduksiChart(bulan: period.bulan, tahun: period.tahun),
-);
+final produksiChartProvider = FutureProvider.autoDispose
+    .family<ProduksiChart, ChartPeriod>(
+      (ref, period) => ref
+          .watch(dashboardRepositoryProvider)
+          .getProduksiChart(bulan: period.bulan, tahun: period.tahun),
+    );
 
-final keuanganChartProvider =
-    FutureProvider.autoDispose.family<KeuanganChart, ChartPeriod>(
-  (ref, period) => ref
-      .watch(dashboardRepositoryProvider)
-      .getKeuanganChart(bulan: period.bulan, tahun: period.tahun),
-);
+final keuanganChartProvider = FutureProvider.autoDispose
+    .family<KeuanganChart, ChartPeriod>(
+      (ref, period) => ref
+          .watch(dashboardRepositoryProvider)
+          .getKeuanganChart(bulan: period.bulan, tahun: period.tahun),
+    );
 
 final poPendingProvider = FutureProvider.autoDispose<PoPendingPage>(
   (ref) => ref.watch(dashboardRepositoryProvider).getPoPending(),
@@ -49,14 +48,14 @@ final poPendingProvider = FutureProvider.autoDispose<PoPendingPage>(
 
 final invoiceBelumDibayarProvider =
     FutureProvider.autoDispose<InvoicePendingPage>(
-  (ref) => ref.watch(dashboardRepositoryProvider).getInvoiceBelumDibayar(),
-);
+      (ref) => ref.watch(dashboardRepositoryProvider).getInvoiceBelumDibayar(),
+    );
 
-final titikDetailProvider =
-    FutureProvider.autoDispose.family<TitikDetail, String>(
-  (ref, titikId) =>
-      ref.watch(dashboardRepositoryProvider).getTitikDetail(titikId),
-);
+final titikDetailProvider = FutureProvider.autoDispose
+    .family<TitikDetail, String>(
+      (ref, titikId) =>
+          ref.watch(dashboardRepositoryProvider).getTitikDetail(titikId),
+    );
 
 /// StateProvider periode chart aktif — dipakai layar dashboard & keuangan.
 class ChartPeriodNotifier extends Notifier<ChartPeriod> {
@@ -66,19 +65,18 @@ class ChartPeriodNotifier extends Notifier<ChartPeriod> {
   void set(ChartPeriod period) => state = period;
 }
 
-final chartPeriodProvider =
-    NotifierProvider<ChartPeriodNotifier, ChartPeriod>(
-        ChartPeriodNotifier.new);
+final chartPeriodProvider = NotifierProvider<ChartPeriodNotifier, ChartPeriod>(
+  ChartPeriodNotifier.new,
+);
 
 /// Helper role untuk menentukan section dashboard yang tampil.
 DashboardSections dashboardSectionsFor(String? role) => DashboardSections(
-      showOverview:
-          RoleAccess.canSeeOverview(role),
-      showArmadaStatus: RoleAccess.canSeeArmadaStatus(role),
-      showKehadiran: RoleAccess.isAdminLike(role),
-      showChartProduksi: RoleAccess.isAdminLike(role),
-      showFinancial: RoleAccess.isAdminLike(role),
-    );
+  showOverview: RoleAccess.canSeeOverview(role),
+  showArmadaStatus: RoleAccess.canSeeArmadaStatus(role),
+  showKehadiran: RoleAccess.isAdminLike(role),
+  showChartProduksi: RoleAccess.isAdminLike(role),
+  showFinancial: RoleAccess.isAdminLike(role),
+);
 
 /// Akses section dashboard sisi client — UX saja, backend tetap 403.
 class RoleAccess {

@@ -120,10 +120,11 @@ class OfflineBanner extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           'Anda sedang offline — data tetap tersimpan di HP.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF92400E),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: const Color(0xFF92400E),
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 4),

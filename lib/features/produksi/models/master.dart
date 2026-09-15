@@ -30,10 +30,8 @@ class MesinMaster {
       kapasitas: (json['kapasitas'] as num?)?.toDouble(),
       titikId: titik is Map ? titik['id']?.toString() : null,
       titikNama: titik is Map ? titik['nama']?.toString() : null,
-      produkDefaultId:
-          produk is Map ? produk['id']?.toString() : null,
-      produkDefaultNama:
-          produk is Map ? produk['nama']?.toString() : null,
+      produkDefaultId: produk is Map ? produk['id']?.toString() : null,
+      produkDefaultNama: produk is Map ? produk['nama']?.toString() : null,
     );
   }
 }

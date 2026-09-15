@@ -128,7 +128,9 @@ class OverviewArmadaScreen extends ConsumerWidget {
                   return const Card(
                     child: Padding(
                       padding: EdgeInsets.all(24),
-                      child: Center(child: Text('Tidak ada unit armada terdaftar.')),
+                      child: Center(
+                        child: Text('Tidak ada unit armada terdaftar.'),
+                      ),
                     ),
                   );
                 }
@@ -204,10 +206,7 @@ class _ArmadaTile extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.15),
-          child: Icon(
-            Icons.local_shipping_outlined,
-            color: color,
-          ),
+          child: Icon(Icons.local_shipping_outlined, color: color),
         ),
         title: Text(
           armada.platNomor,
@@ -217,15 +216,11 @@ class _ArmadaTile extends StatelessWidget {
           [
             if (armada.kodeUnit != null && armada.kodeUnit!.isNotEmpty)
               'Unit: ${armada.kodeUnit}',
-            if (armada.jenis != null && armada.jenis!.isNotEmpty)
-              armada.jenis,
+            if (armada.jenis != null && armada.jenis!.isNotEmpty) armada.jenis,
           ].join(' • '),
         ),
         trailing: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 4,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),

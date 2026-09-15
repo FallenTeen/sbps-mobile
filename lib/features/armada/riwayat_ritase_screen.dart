@@ -41,7 +41,7 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat Muatan'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -52,10 +52,7 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _HariIniTab(),
-          _RiwayatTab(),
-        ],
+        children: [_HariIniTab(), _RiwayatTab()],
       ),
     );
   }
@@ -117,12 +114,13 @@ class _HariIniTab extends ConsumerWidget {
                           SizedBox(height: 4),
                           Text(
                             armadaList.first.isAlatBerat
-                                ? (armadaList.first.jamOperasionalTerkini != null
-                                    ? 'HM: ${armadaList.first.jamOperasionalTerkini} jam'
-                                    : 'HM: -')
+                                ? (armadaList.first.jamOperasionalTerkini !=
+                                          null
+                                      ? 'HM: ${armadaList.first.jamOperasionalTerkini} jam'
+                                      : 'HM: -')
                                 : (armadaList.first.odoTerkini != null
-                                    ? 'ODO: ${armadaList.first.odoTerkini} km'
-                                    : 'ODO: -'),
+                                      ? 'ODO: ${armadaList.first.odoTerkini} km'
+                                      : 'ODO: -'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -155,9 +153,9 @@ class _HariIniTab extends ConsumerWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                    onPressed: () => context.push('/armada/ritase-input'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Input Muatan Baru'),
+                  onPressed: () => context.push('/armada/ritase-input'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Input Muatan Baru'),
                 ),
               ),
             ),
@@ -181,7 +179,11 @@ class _ArmadaRitaseCard extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: context.colors.primary.withValues(alpha: 0.1),
-          child: Icon(Icons.local_shipping, color: context.colors.primary, size: 20),
+          child: Icon(
+            Icons.local_shipping,
+            color: context.colors.primary,
+            size: 20,
+          ),
         ),
         title: Text(
           armada.platNomor,
@@ -210,7 +212,10 @@ class _RiwayatTab extends ConsumerWidget {
   }
 
   Widget _buildList(
-      BuildContext context, WidgetRef ref, RitaseRiwayatState state) {
+    BuildContext context,
+    WidgetRef ref,
+    RitaseRiwayatState state,
+  ) {
     if (state.loading && state.items.isEmpty && state.error == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -243,8 +248,7 @@ class _RiwayatTab extends ConsumerWidget {
               child: FilledButton.tonal(
                 onPressed: state.loading
                     ? null
-                    : () =>
-                        ref.read(ritaseRiwayatProvider.notifier).loadMore(),
+                    : () => ref.read(ritaseRiwayatProvider.notifier).loadMore(),
                 child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
               ),
             ),
@@ -318,17 +322,17 @@ class _RitaseBadge extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(_labelStatus(status),
-          style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        _labelStatus(status),
+        style: TextStyle(color: color, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }
 
 String _labelStatus(String status) => switch (status) {
-      'disetujui' => 'Disetujui',
-      'ditagih' => 'Ditagih',
-      'draft' => 'Draft',
-      _ => status,
-    };
-
-
+  'disetujui' => 'Disetujui',
+  'ditagih' => 'Ditagih',
+  'draft' => 'Draft',
+  _ => status,
+};

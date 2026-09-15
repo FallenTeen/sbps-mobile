@@ -71,9 +71,9 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
 
     final odoValue = double.tryParse(_odoController.text.trim());
     if (odoValue == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Format angka tidak valid')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Format angka tidak valid')));
       return;
     }
 
@@ -81,37 +81,39 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
     setState(() => _isLoading = true);
 
     try {
-      final delivered = await ref.read(armadaRepositoryProvider).submitOdoAwalProyek(
-        armadaId: _selectedArmada!.id,
-        titikId: _selectedArmada!.titikId ?? '',
-        odoAwal: odoValue,
-      );
+      final delivered = await ref
+          .read(armadaRepositoryProvider)
+          .submitOdoAwalProyek(
+            armadaId: _selectedArmada!.id,
+            titikId: _selectedArmada!.titikId ?? '',
+            odoAwal: odoValue,
+          );
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
       AnalyticsService.odoSave();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(delivered
-              ? (_selectedArmada!.isAlatBerat
-                  ? 'Jam Kerja Unit berhasil diperbarui'
-                  : 'KM terkini berhasil diperbarui')
-              : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+          content: Text(
+            delivered
+                ? (_selectedArmada!.isAlatBerat
+                      ? 'Jam Kerja Unit berhasil diperbarui'
+                      : 'KM terkini berhasil diperbarui')
+                : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
         ),
       );
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Gagal menyimpan.\nPeriksa koneksi lalu coba lagi.',
-          ),
+          content: Text('Gagal menyimpan.\nPeriksa koneksi lalu coba lagi.'),
         ),
       );
     } finally {
@@ -174,7 +176,8 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
               // Content
               Expanded(
                 child: armadaAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (_, __) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -214,12 +217,19 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                             labelText: 'Pilih Kendaraan',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.local_shipping_outlined),
-                            helperText: 'Pilih unit yang akan Anda operasikan hari ini',
+                            helperText:
+                                'Pilih unit yang akan Anda operasikan hari ini',
                           ),
-                          items: armadaList.map((a) => DropdownMenuItem(
-                            value: a,
-                            child: Text('${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}'),
-                          )).toList(),
+                          items: armadaList
+                              .map(
+                                (a) => DropdownMenuItem(
+                                  value: a,
+                                  child: Text(
+                                    '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}',
+                                  ),
+                                ),
+                              )
+                              .toList(),
                           onChanged: _onArmadaChanged,
                         ),
 
@@ -232,20 +242,28 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                             Container(
                               padding: EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: context.colors.primary.withValues(alpha: 0.05),
+                                color: context.colors.primary.withValues(
+                                  alpha: 0.05,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: context.colors.primary.withValues(alpha: 0.2),
+                                  color: context.colors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.info_outline,
-                                    color: context.colors.primary, size: 20),
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: context.colors.primary,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           _selectedArmada!.isAlatBerat
@@ -260,7 +278,9 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                                         Text(
                                           _selectedArmada!.isAlatBerat
                                               ? '${_selectedArmada!.jamOperasionalTerkini} jam'
-                                              : fmtKm(_selectedArmada!.odoTerkini),
+                                              : fmtKm(
+                                                  _selectedArmada!.odoTerkini,
+                                                ),
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
@@ -277,16 +297,23 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                             Container(
                               padding: EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: context.colors.warning.withValues(alpha: 0.05),
+                                color: context.colors.warning.withValues(
+                                  alpha: 0.05,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: context.colors.warning.withValues(alpha: 0.2),
+                                  color: context.colors.warning.withValues(
+                                    alpha: 0.2,
+                                  ),
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.info_outline,
-                                    color: context.colors.warning, size: 20),
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: context.colors.warning,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
@@ -304,16 +331,22 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
 
                           TextFormField(
                             controller: _odoController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             decoration: InputDecoration(
                               labelText: _selectedArmada!.isAlatBerat
                                   ? 'Jam Kerja Unit Sekarang (HM)'
                                   : 'KM Sekarang (Odometer)',
-                              suffixText: _selectedArmada!.isAlatBerat ? 'HM' : 'KM',
+                              suffixText: _selectedArmada!.isAlatBerat
+                                  ? 'HM'
+                                  : 'KM',
                               border: const OutlineInputBorder(),
-                              prefixIcon: Icon(_selectedArmada!.isAlatBerat
-                                  ? Icons.timer_outlined
-                                  : Icons.speed_outlined),
+                              prefixIcon: Icon(
+                                _selectedArmada!.isAlatBerat
+                                    ? Icons.timer_outlined
+                                    : Icons.speed_outlined,
+                              ),
                               helperText: _selectedArmada!.isAlatBerat
                                   ? 'Total jam mesin menyala dari Hour Meter'
                                   : 'Angka pada odometer (penghitung km) kendaraan',
@@ -343,8 +376,8 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                                   _isLoading
                                       ? 'Menyimpan...'
                                       : _selectedArmada!.isAlatBerat
-                                          ? 'Simpan Jam Kerja Unit'
-                                          : 'Simpan KM',
+                                      ? 'Simpan Jam Kerja Unit'
+                                      : 'Simpan KM',
                                 ),
                               ),
                             ),

@@ -13,8 +13,9 @@ final servisRepositoryProvider = Provider<ServisRepository>(
 // Master Armada Dropdown
 // ---------------------------------------------------------------------------
 
-final masterArmadaProvider =
-    FutureProvider.autoDispose<List<MasterArmada>>((ref) {
+final masterArmadaProvider = FutureProvider.autoDispose<List<MasterArmada>>((
+  ref,
+) {
   return ref.watch(servisRepositoryProvider).getMasterArmada();
 });
 
@@ -51,16 +52,15 @@ class ServisRiwayatState {
     bool? loading,
     String? error,
     String? statusFilter,
-  }) =>
-      ServisRiwayatState(
-        items: items ?? this.items,
-        currentPage: currentPage ?? this.currentPage,
-        lastPage: lastPage ?? this.lastPage,
-        total: total ?? this.total,
-        loading: loading ?? this.loading,
-        error: error,
-        statusFilter: statusFilter ?? this.statusFilter,
-      );
+  }) => ServisRiwayatState(
+    items: items ?? this.items,
+    currentPage: currentPage ?? this.currentPage,
+    lastPage: lastPage ?? this.lastPage,
+    total: total ?? this.total,
+    loading: loading ?? this.loading,
+    error: error,
+    statusFilter: statusFilter ?? this.statusFilter,
+  );
 }
 
 class ServisRiwayatController extends Notifier<ServisRiwayatState> {
@@ -72,10 +72,9 @@ class ServisRiwayatController extends Notifier<ServisRiwayatState> {
 
   Future<void> _loadPage({required int page}) async {
     try {
-      final result = await ref.read(servisRepositoryProvider).getRiwayatServis(
-            page: page,
-            status: state.statusFilter,
-          );
+      final result = await ref
+          .read(servisRepositoryProvider)
+          .getRiwayatServis(page: page, status: state.statusFilter);
       state = state.copyWith(
         items: page == 1 ? result.items : [...state.items, ...result.items],
         currentPage: result.currentPage,
@@ -86,8 +85,10 @@ class ServisRiwayatController extends Notifier<ServisRiwayatState> {
     } on ApiException catch (e) {
       state = state.copyWith(loading: false, error: e.message);
     } catch (_) {
-      state =
-          state.copyWith(loading: false, error: 'Gagal memuat riwayat servis.');
+      state = state.copyWith(
+        loading: false,
+        error: 'Gagal memuat riwayat servis.',
+      );
     }
   }
 
@@ -107,13 +108,14 @@ class ServisRiwayatController extends Notifier<ServisRiwayatState> {
 
 final servisRiwayatProvider =
     NotifierProvider<ServisRiwayatController, ServisRiwayatState>(
-        ServisRiwayatController.new);
+      ServisRiwayatController.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Detail Servis Provider
 // ---------------------------------------------------------------------------
 
-final detailServisProvider =
-    FutureProvider.autoDispose.family<ServisArmada, String>((ref, id) {
-  return ref.watch(servisRepositoryProvider).getDetailServis(id);
-});
+final detailServisProvider = FutureProvider.autoDispose
+    .family<ServisArmada, String>((ref, id) {
+      return ref.watch(servisRepositoryProvider).getDetailServis(id);
+    });

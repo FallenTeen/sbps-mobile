@@ -52,8 +52,11 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
           error: (e, _) => ListView(
             children: [
               const SizedBox(height: 140),
-              Icon(Icons.cloud_off,
-                  size: 44, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.cloud_off,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 12),
               Text(
                 e is ApiException ? e.message : 'Gagal memuat user aktif.',
@@ -111,14 +114,18 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                       title: Text(u.nama),
                       subtitle: last == null
                           ? null
-                          : Text('Terakhir terlihat '
-                              '${fmtRelatif(u.lastSeen)}'),
+                          : Text(
+                              'Terakhir terlihat '
+                              '${fmtRelatif(u.lastSeen)}',
+                            ),
                       trailing: Chip(
                         visualDensity: VisualDensity.compact,
                         label: Text('${u.pointCount} titik'),
                       ),
-                      onTap: () =>
-                          context.push('/tracking/hari-ini/${u.userId}', extra: u.nama),
+                      onTap: () => context.push(
+                        '/tracking/hari-ini/${u.userId}',
+                        extra: u.nama,
+                      ),
                     ),
                   );
                 },
@@ -140,14 +147,18 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                     title: Text(u.nama),
                     subtitle: last == null
                         ? null
-                        : Text('Terakhir terlihat '
-                            '${fmtRelatif(u.lastSeen)}'),
+                        : Text(
+                            'Terakhir terlihat '
+                            '${fmtRelatif(u.lastSeen)}',
+                          ),
                     trailing: Chip(
                       visualDensity: VisualDensity.compact,
                       label: Text('${u.pointCount} titik'),
                     ),
-                    onTap: () =>
-                        context.push('/tracking/hari-ini/${u.userId}', extra: u.nama),
+                    onTap: () => context.push(
+                      '/tracking/hari-ini/${u.userId}',
+                      extra: u.nama,
+                    ),
                   ),
                 );
               },

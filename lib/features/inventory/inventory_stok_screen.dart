@@ -12,7 +12,8 @@ class InventoryStokScreen extends ConsumerStatefulWidget {
   const InventoryStokScreen({super.key});
 
   @override
-  ConsumerState<InventoryStokScreen> createState() => _InventoryStokScreenState();
+  ConsumerState<InventoryStokScreen> createState() =>
+      _InventoryStokScreenState();
 }
 
 class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
@@ -33,7 +34,8 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
 
   List<InventoryItem> _filteredItems(List<InventoryItem> items) {
     return items.where((item) {
-      final matchSearch = _searchQuery.isEmpty ||
+      final matchSearch =
+          _searchQuery.isEmpty ||
           item.nama.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.kategori.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchKategori =
@@ -48,7 +50,7 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
       backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Daftar Stok'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: Column(
         children: [
@@ -69,59 +71,67 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
                         },
                       )
                     : null,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ref.watch(inventoryStokProvider).when(
-              loading: () => const SkeletonLoader(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      SkeletonBlock(height: 66, borderRadius: 14),
-                      SizedBox(height: 8),
-                      SkeletonBlock(height: 66, borderRadius: 14),
-                      SizedBox(height: 8),
-                      SkeletonBlock(height: 66, borderRadius: 14),
-                    ],
+            child: ref
+                .watch(inventoryStokProvider)
+                .when(
+                  loading: () => const SkeletonLoader(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          SkeletonBlock(height: 66, borderRadius: 14),
+                          SizedBox(height: 8),
+                          SkeletonBlock(height: 66, borderRadius: 14),
+                          SizedBox(height: 8),
+                          SkeletonBlock(height: 66, borderRadius: 14),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              error: (error, _) => Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.cloud_off_rounded,
-                        color: context.colors.error, size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Gagal memuat daftar stok.',
-                      style: TextStyle(color: context.colors.textSecondary),
+                  error: (error, _) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          color: context.colors.error,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Gagal memuat daftar stok.',
+                          style: TextStyle(color: context.colors.textSecondary),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () =>
+                              ref.invalidate(inventoryStokProvider),
+                          child: const Text('Coba lagi'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(inventoryStokProvider),
-                      child: const Text('Coba lagi'),
-                    ),
-                  ],
+                  ),
+                  data: (items) {
+                    if (items.isEmpty) {
+                      return const AppEmptyState(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Tidak ada data stok',
+                        subtitle: 'Belum ada bahan baku atau sparepart',
+                      );
+                    }
+                    return _buildList(items);
+                  },
                 ),
-              ),
-              data: (items) {
-                if (items.isEmpty) {
-                  return const AppEmptyState(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Tidak ada data stok',
-                    subtitle: 'Belum ada bahan baku atau sparepart',
-                  );
-                }
-                return _buildList(items);
-              },
-            ),
           ),
         ],
       ),
@@ -145,8 +155,10 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
               if (v != null) setState(() => _selectedKategori = v);
             },
             decoration: const InputDecoration(
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               isDense: true,
             ),
           ),
@@ -199,9 +211,7 @@ class _StokItemCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Detail ${item.nama} — segera hadir'),
-              ),
+              SnackBar(content: Text('Detail ${item.nama} — segera hadir')),
             );
           },
           child: Padding(
@@ -222,7 +232,9 @@ class _StokItemCard extends StatelessWidget {
                         ? Icons.warning_amber_rounded
                         : Icons.inventory_2_outlined,
                     size: 20,
-                    color: rendah ? context.colors.error : context.colors.primary,
+                    color: rendah
+                        ? context.colors.error
+                        : context.colors.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -257,7 +269,9 @@ class _StokItemCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: rendah ? context.colors.error : context.colors.textPrimary,
+                        color: rendah
+                            ? context.colors.error
+                            : context.colors.textPrimary,
                       ),
                     ),
                     Text(
@@ -270,8 +284,11 @@ class _StokItemCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded,
-                    color: context.colors.textMuted, size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: context.colors.textMuted,
+                  size: 20,
+                ),
               ],
             ),
           ),

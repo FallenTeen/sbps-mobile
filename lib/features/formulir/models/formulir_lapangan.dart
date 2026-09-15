@@ -36,7 +36,9 @@ class FormulirLapangan {
       kondisiArea: json['kondisi_area']?.toString(),
       kendala: json['kendala']?.toString(),
       catatanTambahan: json['catatan_tambahan']?.toString(),
-      foto: (json['foto'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+      foto:
+          (json['foto'] as List?)?.map((e) => e.toString()).toList() ??
+          const [],
     );
   }
 }

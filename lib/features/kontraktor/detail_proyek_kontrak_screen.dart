@@ -35,22 +35,21 @@ class _DetailProyekKontrakScreenState
 
     setState(() => _isSending = true);
     try {
-      await ref.read(kontraktorRepositoryProvider).sendMessage(
-            proyekId: widget.id,
-            pesan: text,
-          );
+      await ref
+          .read(kontraktorRepositoryProvider)
+          .sendMessage(proyekId: widget.id, pesan: text);
       _messageController.clear();
       ref.invalidate(detailProyekKontrakProvider(widget.id));
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengirim pesan: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengirim pesan: $e')));
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -162,7 +161,10 @@ class _DetailProyekKontrakScreenState
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value: data.totalRencana > 0
-                            ? (data.totalRealisasi / data.totalRencana).clamp(0.0, 1.0)
+                            ? (data.totalRealisasi / data.totalRencana).clamp(
+                                0.0,
+                                1.0,
+                              )
                             : 0.0,
                         minHeight: 6,
                         borderRadius: BorderRadius.circular(3),
@@ -205,12 +207,16 @@ class _DetailProyekKontrakScreenState
                               children: [
                                 Text(
                                   prod.nama,
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 Text(
                                   '${fmtNum(prod.totalOutput)} ${prod.satuan} (${prod.sesiCount} sesi)',
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.outline,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   ),
                                 ),
                               ],
@@ -274,9 +280,9 @@ class _DetailProyekKontrakScreenState
                                       msg.pengirimRole.toUpperCase(),
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .outline,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outline,
                                       ),
                                     ),
                                   ],

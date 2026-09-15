@@ -45,13 +45,12 @@ class TrackingStatus {
     int? pendingPoints,
     DateTime? lastSentAt,
     String? message,
-  }) =>
-      TrackingStatus(
-        running: running ?? this.running,
-        pendingPoints: pendingPoints ?? this.pendingPoints,
-        lastSentAt: lastSentAt ?? this.lastSentAt,
-        message: message,
-      );
+  }) => TrackingStatus(
+    running: running ?? this.running,
+    pendingPoints: pendingPoints ?? this.pendingPoints,
+    lastSentAt: lastSentAt ?? this.lastSentAt,
+    message: message,
+  );
 }
 
 /// Scheduler Live Tracking (Fase A2.4):
@@ -142,7 +141,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
     state = state.copyWith(
       running: false,
-      message: message ??
+      message:
+          message ??
           (DateTime.now().hour >= AppConfig.trackingCutoffHour
               ? 'Tracking berhenti — melewati jam cutoff.'
               : 'Tracking tidak aktif.'),
@@ -206,16 +206,15 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 }
 
 final trackingSchedulerProvider =
-    NotifierProvider<TrackingScheduler, TrackingStatus>(
-        TrackingScheduler.new);
+    NotifierProvider<TrackingScheduler, TrackingStatus>(TrackingScheduler.new);
 
 // ---------------------------------------------------------------------------
 // Viewer (Owner / Admin Keuangan)
 // ---------------------------------------------------------------------------
 
-final activeUsersProvider =
-    FutureProvider.autoDispose<List<ActiveUser>>(
-        (ref) => ref.watch(trackingRepositoryProvider).getActiveUsers());
+final activeUsersProvider = FutureProvider.autoDispose<List<ActiveUser>>(
+  (ref) => ref.watch(trackingRepositoryProvider).getActiveUsers(),
+);
 
 final trailProvider = FutureProvider.autoDispose.family<TrailData, String>(
   (ref, userId) => ref.watch(trackingRepositoryProvider).getHariIni(userId),

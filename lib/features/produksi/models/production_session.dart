@@ -58,8 +58,8 @@ class ProductionSession {
 
   static DateTime? _parseDate(Object? raw) =>
       raw == null || raw.toString().isEmpty
-          ? null
-          : DateTime.tryParse(raw.toString());
+      ? null
+      : DateTime.tryParse(raw.toString());
 }
 
 /// Item ringkasan GET /produksi/titik-progress.

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/adaptive_form_row.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
@@ -126,44 +127,54 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
           data: (mesinList) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              DropdownButtonFormField<MesinMaster>(
-                initialValue: _mesin,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Mesin *',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (final m in mesinList)
-                    DropdownMenuItem(value: m, child: Text(m.nama)),
-                ],
-                onChanged: (v) =>
-                    _onMesinChanged(v, produkAsync.value ?? const []),
-              ),
-              if (_mesin?.titikNama != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6, left: 4),
-                  child: Text(
-                    'Titik mesin: ${_mesin!.titikNama}',
-                    style: Theme.of(context).textTheme.bodySmall,
+              AdaptiveFormRow(
+                spacing: 16,
+                fields: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DropdownButtonFormField<MesinMaster>(
+                        initialValue: _mesin,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Mesin *',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final m in mesinList)
+                            DropdownMenuItem(value: m, child: Text(m.nama)),
+                        ],
+                        onChanged: (v) =>
+                            _onMesinChanged(v, produkAsync.value ?? const []),
+                      ),
+                      if (_mesin?.titikNama != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6, left: 4),
+                          child: Text(
+                            'Titik mesin: ${_mesin!.titikNama}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<ProdukMaster>(
-                // Key agar field dibuat ulang saat produk di-prefill
-                // otomatis dari produk default mesin.
-                key: ValueKey(_produk?.id ?? 'produk-none'),
-                initialValue: _produk,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Produk *',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (final p in produkAsync.value ?? const <ProdukMaster>[])
-                    DropdownMenuItem(value: p, child: Text(p.nama)),
+                  DropdownButtonFormField<ProdukMaster>(
+                    // Key agar field dibuat ulang saat produk di-prefill
+                    // otomatis dari produk default mesin.
+                    key: ValueKey(_produk?.id ?? 'produk-none'),
+                    initialValue: _produk,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Produk *',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final p
+                          in produkAsync.value ?? const <ProdukMaster>[])
+                        DropdownMenuItem(value: p, child: Text(p.nama)),
+                    ],
+                    onChanged: (v) => setState(() => _produk = v),
+                  ),
                 ],
-                onChanged: (v) => setState(() => _produk = v),
               ),
               const SizedBox(height: 16),
 

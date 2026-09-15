@@ -71,9 +71,9 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -108,8 +108,9 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            'Checklist Serah Terima — ${_selectedArmada?.platNomor ?? ''}'),
-        actions:  [PortalSwitchButton()],
+          'Checklist Serah Terima — ${_selectedArmada?.platNomor ?? ''}',
+        ),
+        actions: [PortalSwitchButton()],
       ),
       body: Column(
         children: [
@@ -119,7 +120,11 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
             color: context.colors.primary.withValues(alpha: 0.05),
             child: Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 16, color: context.colors.primary),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 16,
+                  color: context.colors.primary,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'Langkah 2 dari 2 — Isi Checklist',
@@ -132,7 +137,10 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                 Spacer(),
                 Text(
                   '10 item',
-                  style: TextStyle(fontSize: 11, color: context.colors.textTertiary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.colors.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -145,8 +153,11 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
               color: context.colors.warning.withValues(alpha: 0.1),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: context.colors.warning, size: 20),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: context.colors.warning,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -173,7 +184,10 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                     setState(() {
                       _items[index] = item.copyWith(status: status);
                     });
-                    AnalyticsService.checklistItemToggle(item.label, status == _ItemStatus.baik);
+                    AnalyticsService.checklistItemToggle(
+                      item.label,
+                      status == _ItemStatus.baik,
+                    );
                   },
                   onTakePhoto: () => _takePhoto(item.label),
                 );
@@ -213,7 +227,9 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                               height: 18,
                               width: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             ),
                             SizedBox(width: 8),
                             Text('Menyimpan...'),
@@ -250,7 +266,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checklist Serah Terima'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: Column(
         children: [
@@ -259,7 +275,11 @@ class _VehicleSelectionStep extends ConsumerWidget {
             color: context.colors.primary.withValues(alpha: 0.05),
             child: Row(
               children: [
-                Icon(Icons.directions_car, size: 16, color: context.colors.primary),
+                Icon(
+                  Icons.directions_car,
+                  size: 16,
+                  color: context.colors.primary,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'Langkah 1 dari 2 — Pilih Kendaraan',
@@ -284,70 +304,78 @@ class _VehicleSelectionStep extends ConsumerWidget {
                 onAction: () => ref.invalidate(armadaSayaProvider),
               ),
               data: (armadaList) {
-          if (armadaList.isEmpty) {
-            return const AppEmptyState(
-              icon: Icons.local_shipping_outlined,
-              title: 'Tidak ada armada',
-              subtitle: 'Anda belum memiliki armada yang ditugaskan.',
-            );
-          }
+                if (armadaList.isEmpty) {
+                  return const AppEmptyState(
+                    icon: Icons.local_shipping_outlined,
+                    title: 'Tidak ada armada',
+                    subtitle: 'Anda belum memiliki armada yang ditugaskan.',
+                  );
+                }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                color: context.colors.primary.withValues(alpha: 0.05),
-                child: Row(
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.directions_car,
-                        color: context.colors.primary, size: 20),
-                    SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      color: context.colors.primary.withValues(alpha: 0.05),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.directions_car,
+                            color: context.colors.primary,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Pilih kendaraan untuk checklist serah terima',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Expanded(
-                      child: Text(
-                        'Pilih kendaraan untuk checklist serah terima',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: context.colors.textPrimary,
-                        ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: armadaList.length,
+                        itemBuilder: (context, index) {
+                          final armada = armadaList[index];
+                          return Card(
+                            margin: EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: context.colors.primary
+                                    .withValues(alpha: 0.1),
+                                child: Icon(
+                                  Icons.local_shipping,
+                                  color: context.colors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                armada.platNomor,
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: Text(
+                                '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.colors.textTertiary,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => onSelected(armada),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: armadaList.length,
-                  itemBuilder: (context, index) {
-                    final armada = armadaList[index];
-                    return Card(
-                      margin: EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              context.colors.primary.withValues(alpha: 0.1),
-                          child: Icon(Icons.local_shipping,
-                              color: context.colors.primary, size: 20),
-                        ),
-                        title: Text(
-                          armada.platNomor,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          '${armada.jenis ?? 'N/A'}${armada.titikNama != null ? ' • ${armada.titikNama}' : ''}',
-                          style: TextStyle(
-                              fontSize: 12, color: context.colors.textTertiary),
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => onSelected(armada),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
+                );
               },
             ),
           ),
@@ -360,19 +388,13 @@ class _VehicleSelectionStep extends ConsumerWidget {
 enum _ItemStatus { baik, rusakRingan, rusakBerat }
 
 class _ChecklistItem {
-  const _ChecklistItem({
-    required this.label,
-    required this.status,
-  });
+  const _ChecklistItem({required this.label, required this.status});
 
   final String label;
   final _ItemStatus status;
 
   _ChecklistItem copyWith({_ItemStatus? status}) {
-    return _ChecklistItem(
-      label: label,
-      status: status ?? this.status,
-    );
+    return _ChecklistItem(label: label, status: status ?? this.status);
   }
 }
 
@@ -442,7 +464,10 @@ class _MajorChecklistTile extends StatelessWidget {
                 const SizedBox(width: 8),
                 // Status badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -465,7 +490,9 @@ class _MajorChecklistTile extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(
-                    photoPath != null ? Icons.photo_camera : Icons.camera_alt_outlined,
+                    photoPath != null
+                        ? Icons.photo_camera
+                        : Icons.camera_alt_outlined,
                     color: photoPath != null ? Colors.green : null,
                   ),
                   onPressed: onTakePhoto,
@@ -485,8 +512,9 @@ class _MajorChecklistTile extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () => onStatusChanged(status),
                       style: OutlinedButton.styleFrom(
-                        backgroundColor:
-                            isSelected ? sColor.withValues(alpha: 0.1) : null,
+                        backgroundColor: isSelected
+                            ? sColor.withValues(alpha: 0.1)
+                            : null,
                         side: BorderSide(
                           color: isSelected ? sColor : Colors.grey.shade300,
                         ),
@@ -496,7 +524,9 @@ class _MajorChecklistTile extends StatelessWidget {
                         _statusLabel(status),
                         style: TextStyle(
                           fontSize: 11,
-                          color: isSelected ? sColor : context.colors.textTertiary,
+                          color: isSelected
+                              ? sColor
+                              : context.colors.textTertiary,
                         ),
                       ),
                     ),
@@ -519,10 +549,7 @@ class _MajorChecklistTile extends StatelessWidget {
                     child: SizedBox(
                       height: 80,
                       width: 80,
-                      child: Icon(
-                        Icons.image,
-                        color: context.colors.textMuted,
-                      ),
+                      child: Icon(Icons.image, color: context.colors.textMuted),
                     ),
                   ),
                 ),

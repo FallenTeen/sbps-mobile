@@ -32,11 +32,12 @@ class SectionCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
                 ?trailing,
               ],
@@ -55,20 +56,20 @@ class CenteredProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: SkeletonLoader(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SkeletonBlock(width: double.infinity, height: 16),
-              SizedBox(height: 8),
-              SkeletonBlock(width: 200, height: 12),
-              SizedBox(height: 8),
-              SkeletonBlock(width: 140, height: 12),
-            ],
-          ),
-        ),
-      );
+    padding: EdgeInsets.symmetric(vertical: 8),
+    child: SkeletonLoader(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SkeletonBlock(width: double.infinity, height: 16),
+          SizedBox(height: 8),
+          SkeletonBlock(width: 200, height: 12),
+          SizedBox(height: 8),
+          SkeletonBlock(width: 140, height: 12),
+        ],
+      ),
+    ),
+  );
 }
 
 class ErrorRetry extends StatelessWidget {
@@ -82,8 +83,11 @@ class ErrorRetry extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(Icons.cloud_off,
-            size: 32, color: Theme.of(context).colorScheme.error),
+        Icon(
+          Icons.cloud_off,
+          size: 32,
+          color: Theme.of(context).colorScheme.error,
+        ),
         const SizedBox(height: 8),
         Text(message),
         const SizedBox(height: 8),
@@ -104,7 +108,11 @@ class EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          Icon(Icons.inbox_outlined, size: 20, color: context.colors.textTertiary),
+          Icon(
+            Icons.inbox_outlined,
+            size: 20,
+            color: context.colors.textTertiary,
+          ),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
         ],
@@ -122,8 +130,7 @@ class PeriodPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(chartPeriodProvider);
     final now = DateTime.now();
-    final years =
-        [for (var y = now.year; y >= now.year - 2; y--) y];
+    final years = [for (var y = now.year; y >= now.year - 2; y--) y];
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -137,7 +144,10 @@ class PeriodPicker extends ConsumerWidget {
           ],
           onChanged: (b) => b == null
               ? null
-              : ref.read(chartPeriodProvider.notifier).set((bulan: b, tahun: period.tahun)),
+              : ref.read(chartPeriodProvider.notifier).set((
+                  bulan: b,
+                  tahun: period.tahun,
+                )),
         ),
         const SizedBox(width: 4),
         DropdownButton<int>(
@@ -149,7 +159,10 @@ class PeriodPicker extends ConsumerWidget {
           ],
           onChanged: (t) => t == null
               ? null
-              : ref.read(chartPeriodProvider.notifier).set((bulan: period.bulan, tahun: t)),
+              : ref.read(chartPeriodProvider.notifier).set((
+                  bulan: period.bulan,
+                  tahun: t,
+                )),
         ),
       ],
     );
@@ -172,65 +185,105 @@ class ProduksiBarChart extends StatelessWidget {
         .map((e) => e.totalOutput)
         .reduce((a, b) => a > b ? a : b);
 
-    return SizedBox(
-      height: 180,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          minY: 0,
-          maxY: maxOut <= 0 ? 1 : maxOut * 1.25,
-          barTouchData: const BarTouchData(enabled: false),
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: maxOut <= 0 ? 1 : maxOut / 3,
-            getDrawingHorizontalLine: (v) => const FlLine(
-              color: Color(0x22000000),
-              strokeWidth: 1,
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 26,
-                interval: 1,
-                getTitlesWidget: (value, meta) {
-                  final i = value.toInt();
-                  if (i < 0 || i >= items.length) {
-                    return const SizedBox.shrink();
+    final colors = context.colors;
+
+    return Semantics(
+      label: [
+        for (final e in items)
+          'Produksi minggu ${fmtMingguLabel(e.minggu)}: ${fmtNum(e.totalOutput)} unit',
+      ].join('. '),
+      child: SizedBox(
+        height: 180,
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceAround,
+            minY: 0,
+            maxY: maxOut <= 0 ? 1 : maxOut * 1.25,
+            barTouchData: BarTouchData(
+              enabled: true,
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipColor: (_) => colors.card,
+                tooltipPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                tooltipMargin: 4,
+                tooltipBorderRadius: BorderRadius.circular(8),
+                maxContentWidth: 200,
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  if (groupIndex < 0 || groupIndex >= items.length) {
+                    return null;
                   }
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(fmtMingguLabel(items[i].minggu),
-                        style: const TextStyle(fontSize: 10)),
+                  final item = items[groupIndex];
+                  return BarTooltipItem(
+                    '${fmtMingguLabel(item.minggu)}\n${fmtNum(item.totalOutput)} unit',
+                    TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
                   );
                 },
               ),
             ),
-          ),
-          barGroups: [
-            for (var i = 0; i < items.length; i++)
-              BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    toY: items[i].totalOutput,
-                    width: 18,
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(4)),
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: maxOut <= 0 ? 1 : maxOut / 3,
+              getDrawingHorizontalLine: (v) =>
+                  FlLine(color: colors.chartGridLine, strokeWidth: 1),
+            ),
+            borderData: FlBorderData(show: false),
+            titlesData: FlTitlesData(
+              leftTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
               ),
-          ],
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 26,
+                  interval: 1,
+                  getTitlesWidget: (value, meta) {
+                    final i = value.toInt();
+                    if (i < 0 || i >= items.length) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        fmtMingguLabel(items[i].minggu),
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            barGroups: [
+              for (var i = 0; i < items.length; i++)
+                BarChartGroupData(
+                  x: i,
+                  barRods: [
+                    BarChartRodData(
+                      toY: items[i].totalOutput,
+                      width: 18,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(4),
+                      ),
+                      color: colors.chartBarPrimary,
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -253,8 +306,9 @@ class KeuanganBarChart extends StatelessWidget {
       final local = e.masuk > e.keluar ? e.masuk : e.keluar;
       return local > m ? local : m;
     });
-    final hijau = Colors.green.shade400;
-    final merah = Colors.red.shade400;
+    final colors = context.colors;
+    final hijau = colors.chartPositive;
+    final merah = colors.chartNegative;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,81 +318,134 @@ class KeuanganBarChart extends StatelessWidget {
             _LegendDot(color: hijau, label: 'Masuk'),
             const SizedBox(width: 12),
             _LegendDot(color: merah, label: 'Keluar'),
-            const Spacer(),
-            Text(
-              'Σ ${fmtRpCompact(items.fold<double>(0, (s, e) => s + e.masuk))} • '
-              '-${fmtRpCompact(items.fold<double>(0, (s, e) => s + e.keluar))}',
-              style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Σ ${fmtRpCompact(items.fold<double>(0, (s, e) => s + e.masuk))} • '
+                '-${fmtRpCompact(items.fold<double>(0, (s, e) => s + e.keluar))}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 180,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              minY: 0,
-              maxY: maxVal <= 0 ? 1 : maxVal * 1.25,
-              barTouchData: const BarTouchData(enabled: false),
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: maxVal <= 0 ? 1 : maxVal / 3,
-                getDrawingHorizontalLine: (v) => const FlLine(
-                  color: Color(0x22000000),
-                  strokeWidth: 1,
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              titlesData: FlTitlesData(
-                leftTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 26,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      final i = value.toInt();
-                      if (i < 0 || i >= items.length) {
-                        return const SizedBox.shrink();
+        Semantics(
+          label: [
+            for (final e in items)
+              'Minggu ${fmtMingguLabel(e.minggu)}: masuk ${fmtRp(e.masuk)}, '
+                  'keluar ${fmtRp(e.keluar)}',
+          ].join('. '),
+          child: SizedBox(
+            height: 180,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                minY: 0,
+                maxY: maxVal <= 0 ? 1 : maxVal * 1.25,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (_) => colors.card,
+                    tooltipPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    tooltipMargin: 4,
+                    tooltipBorderRadius: BorderRadius.circular(8),
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      if (groupIndex < 0 || groupIndex >= items.length) {
+                        return null;
                       }
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(fmtMingguLabel(items[i].minggu),
-                            style: const TextStyle(fontSize: 10)),
+                      final item = items[groupIndex];
+                      final isMasuk = rodIndex == 0;
+                      final value = isMasuk ? item.masuk : item.keluar;
+                      final label = isMasuk ? 'Masuk' : 'Keluar';
+                      return BarTooltipItem(
+                        '${fmtMingguLabel(item.minggu)}\n',
+                        TextStyle(fontSize: 11, color: colors.textSecondary),
+                        children: [
+                          TextSpan(
+                            text: '$label ${fmtRp(value)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: isMasuk ? hijau : merah,
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
                 ),
-              ),
-              barGroups: [
-                for (var i = 0; i < items.length; i++)
-                  BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: items[i].masuk,
-                        width: 12,
-                        color: hijau,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(3)),
-                      ),
-                      BarChartRodData(
-                        toY: items[i].keluar,
-                        width: 12,
-                        color: merah,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(3)),
-                      ),
-                    ],
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxVal <= 0 ? 1 : maxVal / 3,
+                  getDrawingHorizontalLine: (v) =>
+                      FlLine(color: colors.chartGridLine, strokeWidth: 1),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
-              ],
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 26,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final i = value.toInt();
+                        if (i < 0 || i >= items.length) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            fmtMingguLabel(items[i].minggu),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                barGroups: [
+                  for (var i = 0; i < items.length; i++)
+                    BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: items[i].masuk,
+                          width: 12,
+                          color: hijau,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(3),
+                          ),
+                        ),
+                        BarChartRodData(
+                          toY: items[i].keluar,
+                          width: 12,
+                          color: merah,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(3),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -355,18 +462,18 @@ class _LegendDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+      const SizedBox(width: 4),
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
+    ],
+  );
 }

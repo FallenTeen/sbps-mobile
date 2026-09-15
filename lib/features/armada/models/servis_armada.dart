@@ -87,29 +87,28 @@ class ServisArmada {
 
     return ServisArmada(
       id: json['id']?.toString() ?? '',
-      armadaId: json['armada_id']?.toString() ??
-          armada?['id']?.toString() ??
-          '',
-      platNomor: json['plat_nomor']?.toString() ??
-          armada?['plat_nomor']?.toString(),
-      kodeUnit: json['kode_unit']?.toString() ??
-          armada?['kode_unit']?.toString(),
-      jenisArmada: json['jenis_armada']?.toString() ??
-          armada?['jenis']?.toString(),
-      tanggalAjuan: json['tanggal_ajuan']?.toString() ??
+      armadaId:
+          json['armada_id']?.toString() ?? armada?['id']?.toString() ?? '',
+      platNomor:
+          json['plat_nomor']?.toString() ?? armada?['plat_nomor']?.toString(),
+      kodeUnit:
+          json['kode_unit']?.toString() ?? armada?['kode_unit']?.toString(),
+      jenisArmada:
+          json['jenis_armada']?.toString() ?? armada?['jenis']?.toString(),
+      tanggalAjuan:
+          json['tanggal_ajuan']?.toString() ??
           json['created_at']?.toString() ??
           '',
       status: json['status']?.toString() ?? 'diajukan',
-      keluhan: json['keluhan']?.toString() ??
-          json['deskripsi']?.toString() ??
-          '',
+      keluhan:
+          json['keluhan']?.toString() ?? json['deskripsi']?.toString() ?? '',
       kategori: json['kategori']?.toString(),
       odometerSaatAjuan:
           (json['odometer_saat_ajuan'] as num?)?.toDouble() ??
-              (json['odo_km'] as num?)?.toDouble(),
+          (json['odo_km'] as num?)?.toDouble(),
       jamOperasionalSaatAjuan:
           (json['jam_operasional_saat_ajuan'] as num?)?.toDouble() ??
-              (json['jam_operasional'] as num?)?.toDouble(),
+          (json['jam_operasional'] as num?)?.toDouble(),
       diajukanOleh: json['diajukan_oleh'] is Map
           ? json['diajukan_oleh']['name']?.toString()
           : json['diajukan_oleh']?.toString(),
@@ -151,10 +150,10 @@ class ServisSparepartItem {
   factory ServisSparepartItem.fromJson(Map<String, dynamic> json) {
     return ServisSparepartItem(
       id: json['id']?.toString() ?? '',
-      namaBarang: json['nama_barang']?.toString() ??
-          json['nama']?.toString() ??
-          '',
-      jumlah: (json['jumlah'] as num?)?.toDouble() ??
+      namaBarang:
+          json['nama_barang']?.toString() ?? json['nama']?.toString() ?? '',
+      jumlah:
+          (json['jumlah'] as num?)?.toDouble() ??
           (json['qty'] as num?)?.toDouble() ??
           1.0,
       satuan: json['satuan']?.toString(),
@@ -187,8 +186,7 @@ class ServisArmadaPage {
       items: [
         if (list is List)
           for (final e in list)
-            if (e is Map)
-              ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+            if (e is Map) ServisArmada.fromJson(Map<String, dynamic>.from(e)),
       ],
       currentPage: (map['current_page'] as num?)?.toInt() ?? 1,
       lastPage: (map['last_page'] as num?)?.toInt() ?? 1,

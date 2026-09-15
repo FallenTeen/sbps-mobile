@@ -32,8 +32,7 @@ class QcRepository {
   Future<QcSample> getDetail(String id) async {
     final res = await _api.get<QcSample>(
       '/qc/$id',
-      parse: (raw) =>
-          QcSample.fromJson(Map<String, dynamic>.from(raw as Map)),
+      parse: (raw) => QcSample.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     return res.data!;
   }

@@ -14,8 +14,8 @@ import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// KM Harian — input kilometer sekali per hari.
-  /// Form tunggal: pilih kendaraan, lihat KM terakhir, update KM sekarang.
-  /// Tidak ada lagi wizard 2-step atau radio "angkutan ke berapa".
+/// Form tunggal: pilih kendaraan, lihat KM terakhir, update KM sekarang.
+/// Tidak ada lagi wizard 2-step atau radio "angkutan ke berapa".
 class OdoAwalScreen extends ConsumerStatefulWidget {
   const OdoAwalScreen({super.key});
 
@@ -74,9 +74,9 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
     final odoValue = double.tryParse(_odoController.text.trim());
     if (odoValue == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Format angka tidak valid')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Format angka tidak valid')));
       return;
     }
 
@@ -84,37 +84,39 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final delivered = await ref.read(armadaRepositoryProvider).submitOdoAwalProyek(
-        armadaId: _selectedArmada!.id,
-        titikId: _selectedArmada!.titikId ?? '',
-        odoAwal: odoValue,
-      );
+      final delivered = await ref
+          .read(armadaRepositoryProvider)
+          .submitOdoAwalProyek(
+            armadaId: _selectedArmada!.id,
+            titikId: _selectedArmada!.titikId ?? '',
+            odoAwal: odoValue,
+          );
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
       AnalyticsService.odoSave();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(delivered
-              ? (_selectedArmada!.isAlatBerat
-                  ? 'Jam Kerja Unit berhasil diperbarui'
-                  : 'KM terkini berhasil diperbarui')
-              : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+          content: Text(
+            delivered
+                ? (_selectedArmada!.isAlatBerat
+                      ? 'Jam Kerja Unit berhasil diperbarui'
+                      : 'KM terkini berhasil diperbarui')
+                : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
         ),
       );
       context.go('/armada/unit-saya');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Gagal menyimpan.\nPeriksa koneksi lalu coba lagi.',
-          ),
+          content: Text('Gagal menyimpan.\nPeriksa koneksi lalu coba lagi.'),
         ),
       );
     } finally {
@@ -129,7 +131,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('KM Harian'),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: armadaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -162,10 +164,16 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                   prefixIcon: Icon(Icons.local_shipping_outlined),
                   helperText: 'Pilih unit yang akan Anda operasikan hari ini',
                 ),
-                items: armadaList.map((a) => DropdownMenuItem(
-                  value: a,
-                  child: Text('${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}'),
-                )).toList(),
+                items: armadaList
+                    .map(
+                      (a) => DropdownMenuItem(
+                        value: a,
+                        child: Text(
+                          '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}',
+                        ),
+                      ),
+                    )
+                    .toList(),
                 onChanged: _onArmadaChanged,
               ),
 
@@ -186,8 +194,11 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline,
-                          color: context.colors.primary, size: 20),
+                        Icon(
+                          Icons.info_outline,
+                          color: context.colors.primary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -231,8 +242,11 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline,
-                          color: context.colors.warning, size: 20),
+                        Icon(
+                          Icons.info_outline,
+                          color: context.colors.warning,
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -250,16 +264,20 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
                 TextFormField(
                   controller: _odoController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: _selectedArmada!.isAlatBerat
                         ? 'Jam Kerja Unit Sekarang (HM)'
                         : 'KM Sekarang (Odometer)',
                     suffixText: _selectedArmada!.isAlatBerat ? 'HM' : 'KM',
                     border: const OutlineInputBorder(),
-                    prefixIcon: Icon(_selectedArmada!.isAlatBerat
-                        ? Icons.timer_outlined
-                        : Icons.speed_outlined),
+                    prefixIcon: Icon(
+                      _selectedArmada!.isAlatBerat
+                          ? Icons.timer_outlined
+                          : Icons.speed_outlined,
+                    ),
                     helperText: _selectedArmada!.isAlatBerat
                         ? 'Total jam mesin menyala dari Hour Meter'
                         : 'Angka pada odometer (penghitung km) kendaraan',
@@ -289,8 +307,8 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                         _isLoading
                             ? 'Menyimpan...'
                             : _selectedArmada!.isAlatBerat
-                                ? 'Simpan Jam Kerja Unit'
-                                : 'Simpan KM',
+                            ? 'Simpan Jam Kerja Unit'
+                            : 'Simpan KM',
                       ),
                     ),
                   ),

@@ -26,13 +26,16 @@ class LocationService {
     if (!await ensurePermission()) return null;
     try {
       return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
     } on TimeoutException {
       // Posisi lambat didapat (GPS cold start) — ulangi dengan akurasi rendah.
       return Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.low),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
       );
     }
   }

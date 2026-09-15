@@ -62,8 +62,9 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
     if (_loading || _page >= _lastPage) return;
     setState(() => _loading = true);
     try {
-      final res =
-          await ref.read(formulirRepositoryProvider).getRiwayat(page: _page + 1);
+      final res = await ref
+          .read(formulirRepositoryProvider)
+          .getRiwayat(page: _page + 1);
       setState(() {
         _items.addAll(res.items);
         _page = res.currentPage;
@@ -72,8 +73,7 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Gagal memuat halaman berikutnya.')),
+          const SnackBar(content: Text('Gagal memuat halaman berikutnya.')),
         );
       }
     } finally {
@@ -89,10 +89,7 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
         actions: const [PortalSwitchButton()],
       ),
       body: ResponsiveCenter(
-        child: RefreshIndicator(
-          onRefresh: _reload,
-          child: _buildBody(),
-        ),
+        child: RefreshIndicator(onRefresh: _reload, child: _buildBody()),
       ),
     );
   }
@@ -124,7 +121,8 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
           AppEmptyState(
             icon: Icons.description_outlined,
             title: 'Belum Ada Formulir',
-            subtitle: 'Riwayat pengisian formulir lapangan akan muncul di sini.',
+            subtitle:
+                'Riwayat pengisian formulir lapangan akan muncul di sini.',
           ),
         ],
       );
@@ -150,10 +148,7 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
         }
         return StaggeredEntrance(
           index: index,
-          child: _FormulirTile(
-            item: _items[index],
-            itemIndex: index,
-          ),
+          child: _FormulirTile(item: _items[index], itemIndex: index),
         );
       },
     );
@@ -180,14 +175,18 @@ class _FormulirTile extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(item.tanggal ?? '-',
-                      style: theme.textTheme.titleSmall),
+                  child: Text(
+                    item.tanggal ?? '-',
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
                 if ((item.titik ?? '').isNotEmpty)
                   Flexible(
-                    child: Text(item.titik!,
-                        style: theme.textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      item.titik!,
+                      style: theme.textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
             ),
@@ -227,8 +226,10 @@ class _FormulirTile extends StatelessWidget {
                               width: 72,
                               height: 72,
                               color: theme.colorScheme.surfaceContainerHighest,
-                              child: const Icon(Icons.broken_image_outlined,
-                                  size: 20),
+                              child: const Icon(
+                                Icons.broken_image_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ),

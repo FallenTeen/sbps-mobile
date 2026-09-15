@@ -209,7 +209,9 @@ class _TitikMapViewState extends State<TitikMapView> {
                             widget.onSelect!(titik);
                           },
                           icon: Icon(
-                            isSelected ? Icons.check : Icons.check_circle_outline,
+                            isSelected
+                                ? Icons.check
+                                : Icons.check_circle_outline,
                           ),
                           label: Text(
                             isSelected ? 'Sudah Dipilih' : 'Pilih Titik Ini',
@@ -237,7 +239,9 @@ class _TitikMapViewState extends State<TitikMapView> {
         alignment: Alignment.center,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade300),
         ),
@@ -461,10 +465,7 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

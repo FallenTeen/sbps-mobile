@@ -16,11 +16,7 @@ import '../../shared/widgets/portal_switch_button.dart';
 /// armada aktif, RAB titik (jika role berhak), dan riwayat produksi
 /// hari ini.
 class DetailTitikScreen extends ConsumerWidget {
-  const DetailTitikScreen({
-    super.key,
-    required this.titikId,
-    this.nama,
-  });
+  const DetailTitikScreen({super.key, required this.titikId, this.nama});
 
   final String titikId;
 
@@ -54,11 +50,11 @@ class DetailTitikScreen extends ConsumerWidget {
                 AppEmptyState(
                   icon: Icons.cloud_off_outlined,
                   title: 'Gagal Memuat Detail Titik',
-                  subtitle:
-                      e is ApiException ? e.message : 'Gagal memuat detail titik.',
+                  subtitle: e is ApiException
+                      ? e.message
+                      : 'Gagal memuat detail titik.',
                   actionLabel: 'Coba Lagi',
-                  onAction: () =>
-                      ref.invalidate(titikDetailProvider(titikId)),
+                  onAction: () => ref.invalidate(titikDetailProvider(titikId)),
                 ),
               ],
             ),
@@ -73,8 +69,10 @@ class DetailTitikScreen extends ConsumerWidget {
                     subtitle: '${d.proyek} • status ${d.status}',
                     rows: [
                       if (d.latitude != null && d.longitude != null)
-                        ('Koordinat',
-                            '${d.latitude!.toStringAsFixed(5)}, ${d.longitude!.toStringAsFixed(5)}'),
+                        (
+                          'Koordinat',
+                          '${d.latitude!.toStringAsFixed(5)}, ${d.longitude!.toStringAsFixed(5)}',
+                        ),
                     ],
                   ),
                 ),
@@ -96,29 +94,36 @@ class DetailTitikScreen extends ConsumerWidget {
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(14),
-                        child: Builder(builder: (context) {
-                          final rab = d.rab!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('RAB',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 8),
-                              LinearProgressIndicator(
-                                value: (rab.persentase / 100).clamp(0.0, 1.0),
-                                minHeight: 10,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              const SizedBox(height: 8),
-                              _Row('Realisasi',
-                                  '${fmtRp(rab.totalRealisasi)} dari ${fmtRp(rab.totalRencana)}'),
-                              _Row('Persentase', '${fmtNum(rab.persentase)}%'),
-                            ],
-                          );
-                        }),
+                        child: Builder(
+                          builder: (context) {
+                            final rab = d.rab!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'RAB',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 8),
+                                LinearProgressIndicator(
+                                  value: (rab.persentase / 100).clamp(0.0, 1.0),
+                                  minHeight: 10,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                const SizedBox(height: 8),
+                                _Row(
+                                  'Realisasi',
+                                  '${fmtRp(rab.totalRealisasi)} dari ${fmtRp(rab.totalRencana)}',
+                                ),
+                                _Row(
+                                  'Persentase',
+                                  '${fmtNum(rab.persentase)}%',
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -150,7 +155,8 @@ class DetailTitikScreen extends ConsumerWidget {
                       leading: const Icon(Icons.local_shipping_outlined),
                       title: Text(a.kodeUnit),
                       subtitle: Text(
-                          '${a.platNomor ?? '-'} • ${_jenisLabel(a.jenis)} • ${a.status ?? '-'}'),
+                        '${a.platNomor ?? '-'} • ${_jenisLabel(a.jenis)} • ${a.status ?? '-'}',
+                      ),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     ),
@@ -166,8 +172,10 @@ class DetailTitikScreen extends ConsumerWidget {
                     tileOf: (p) => ListTile(
                       leading: const Icon(Icons.fact_check_outlined),
                       title: Text(p.nama),
-                      subtitle: Text('Masuk ${_jam(p.checkIn)}'
-                          '${p.checkOut != null ? ' • Keluar ${_jam(p.checkOut)}' : ''}'),
+                      subtitle: Text(
+                        'Masuk ${_jam(p.checkIn)}'
+                        '${p.checkOut != null ? ' • Keluar ${_jam(p.checkOut)}' : ''}',
+                      ),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     ),
@@ -212,11 +220,12 @@ class _Card extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             if (subtitle != null) ...[
               const SizedBox(height: 2),
               Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
@@ -240,19 +249,21 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 4,
-              child: Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-            ),
-            Expanded(flex: 6, child: Text(value)),
-          ],
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
-      );
+        Expanded(flex: 6, child: Text(value)),
+      ],
+    ),
+  );
 }
 
 class _ListCard<T> extends StatelessWidget {
@@ -276,19 +287,23 @@ class _ListCard<T> extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
             if (items.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   children: [
-                    Icon(Icons.inbox_outlined,
-                        size: 18, color: Colors.grey[600]),
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 18,
+                      color: Colors.grey[600],
+                    ),
                     const SizedBox(width: 8),
                     Expanded(child: Text(emptyText)),
                   ],

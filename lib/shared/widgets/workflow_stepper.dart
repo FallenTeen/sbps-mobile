@@ -106,7 +106,8 @@ class _StepTile extends StatelessWidget {
 
     return Semantics(
       button: step.onTap != null && step.status != WorkflowStepStatus.selesai,
-      label: 'Langkah ${index + 1}: ${step.label}. Status: $statusText${step.subtitle != null ? ". " + step.subtitle! : ""}',
+      label:
+          'Langkah ${index + 1}: ${step.label}. Status: $statusText${step.subtitle != null ? ". " + step.subtitle! : ""}',
       child: InkWell(
         onTap: step.onTap,
         borderRadius: BorderRadius.circular(12),
@@ -127,7 +128,9 @@ class _StepTile extends StatelessWidget {
                         height: 28,
                         color: isActive
                             ? color.withValues(alpha: 0.4)
-                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                            : theme.colorScheme.outlineVariant.withValues(
+                                alpha: 0.5,
+                              ),
                       ),
                   ],
                 ),
@@ -144,8 +147,9 @@ class _StepTile extends StatelessWidget {
                         step.label,
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: isActive
                               ? context.colors.textPrimary
                               : context.colors.textTertiary,
@@ -171,7 +175,8 @@ class _StepTile extends StatelessWidget {
                 ),
               ),
               // Action indicator
-              if (step.onTap != null && step.status != WorkflowStepStatus.selesai)
+              if (step.onTap != null &&
+                  step.status != WorkflowStepStatus.selesai)
                 Icon(
                   Icons.chevron_right,
                   size: 20,

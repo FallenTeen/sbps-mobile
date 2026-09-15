@@ -34,8 +34,7 @@ class MultipartFileSpec {
 /// 1) — dikirim sebagai header default di setiap request. Interceptor auth
 /// (Bearer token, X-Active-Role) dipasang dari luar lewat [dio].
 class ApiClient {
-  ApiClient({Dio? dio, this.onUnauthorized})
-      : _dio = dio ?? buildBaseDio();
+  ApiClient({Dio? dio, this.onUnauthorized}) : _dio = dio ?? buildBaseDio();
 
   /// Dio dasar dengan timeout, base URL, dan header default — dipakai juga
   /// oleh provider untuk memasang interceptor auth sebelum membuat client.
@@ -89,7 +88,14 @@ class ApiClient {
     Map<String, dynamic>? headers,
     T Function(Object? raw)? parse,
   }) {
-    return _send(path, method: 'POST', body: body, query: query, headers: headers, parse: parse);
+    return _send(
+      path,
+      method: 'POST',
+      body: body,
+      query: query,
+      headers: headers,
+      parse: parse,
+    );
   }
 
   /// POST multipart/form-data — dipakai endpoint dengan unggahan file
@@ -105,12 +111,20 @@ class ApiClient {
     form.fields.addAll(fields.entries);
     for (final spec in files) {
       final fileName = spec.path.split(Platform.pathSeparator).last;
-      form.files.add(MapEntry(
-        spec.field,
-        await MultipartFile.fromFile(spec.path, filename: fileName),
-      ));
+      form.files.add(
+        MapEntry(
+          spec.field,
+          await MultipartFile.fromFile(spec.path, filename: fileName),
+        ),
+      );
     }
-    return _send(path, method: 'POST', body: form, headers: headers, parse: parse);
+    return _send(
+      path,
+      method: 'POST',
+      body: form,
+      headers: headers,
+      parse: parse,
+    );
   }
 
   /// DELETE — dipakai endpoint hapus file upload (docs/api-mobile.md §11.2).
@@ -153,8 +167,10 @@ class ApiClient {
     }
     final decoded = response.data;
     if (decoded is! Map<String, dynamic>) {
-      throw ApiException('Format respons tidak valid.',
-          statusCode: response.statusCode);
+      throw ApiException(
+        'Format respons tidak valid.',
+        statusCode: response.statusCode,
+      );
     }
     return ApiResponse.fromJson(decoded, parse: parse);
   }
@@ -200,15 +216,18 @@ class ApiClient {
     return _httpError(response);
   }
 
-  bool _isPublic(String path) =>
-      _publicPaths.any((p) => path.endsWith(p));
+  bool _isPublic(String path) => _publicPaths.any((p) => path.endsWith(p));
 
   Map<String, List<String>>? _parseErrors(Object? raw) {
     if (raw is! Map) return null;
-    return raw.map((key, value) => MapEntry(
-          key.toString(),
-          value is List ? value.map((e) => e.toString()).toList() : [value.toString()],
-        ));
+    return raw.map(
+      (key, value) => MapEntry(
+        key.toString(),
+        value is List
+            ? value.map((e) => e.toString()).toList()
+            : [value.toString()],
+      ),
+    );
   }
 
   void close() => _dio.close();
@@ -252,7 +271,8 @@ class _RateLimitInterceptor extends Interceptor {
     ResponseInterceptorHandler handler,
   ) async {
     // Parse Retry-After header (seconds); fallback exponential backoff.
-    final retryAfterRaw = response.headers.value('Retry-After') ??
+    final retryAfterRaw =
+        response.headers.value('Retry-After') ??
         response.headers.value('retry-after');
     final retryAfterSeconds = int.tryParse(retryAfterRaw ?? '');
     final delay = retryAfterSeconds != null

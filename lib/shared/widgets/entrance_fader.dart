@@ -33,10 +33,7 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     final curved = CurvedAnimation(
       parent: _controller,
@@ -44,11 +41,14 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(curved);
-    _slideAnimation =
-        Tween<double>(begin: widget.offsetY, end: 0.0).animate(curved);
+    _slideAnimation = Tween<double>(
+      begin: widget.offsetY,
+      end: 0.0,
+    ).animate(curved);
 
-    final effectiveIndex =
-        widget.index > widget.maxStaggerIndex ? widget.maxStaggerIndex : widget.index;
+    final effectiveIndex = widget.index > widget.maxStaggerIndex
+        ? widget.maxStaggerIndex
+        : widget.index;
     final delay = widget.delayStep * effectiveIndex;
 
     if (delay == Duration.zero) {

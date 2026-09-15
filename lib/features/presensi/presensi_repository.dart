@@ -18,9 +18,9 @@ class PresensiRepository {
       '/titik-aktif',
       parse: (raw) => raw is List
           ? raw
-              .whereType<Map>()
-              .map((e) => Titik.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
+                .whereType<Map>()
+                .map((e) => Titik.fromJson(Map<String, dynamic>.from(e)))
+                .toList()
           : const [],
     );
     _ensureSuccess(res);
@@ -37,9 +37,9 @@ class PresensiRepository {
         final items = raw is Map ? raw['items'] : null;
         return items is List
             ? items
-                .whereType<Map>()
-                .map((e) => Assignment.fromJson(Map<String, dynamic>.from(e)))
-                .toList()
+                  .whereType<Map>()
+                  .map((e) => Assignment.fromJson(Map<String, dynamic>.from(e)))
+                  .toList()
             : const [];
       },
     );
@@ -55,7 +55,8 @@ class PresensiRepository {
       parse: PresensiHariIni.fromJson,
     );
     _ensureSuccess(res);
-    return res.data ?? const PresensiHariIni(status: PresensiStatus.belumCheckIn);
+    return res.data ??
+        const PresensiHariIni(status: PresensiStatus.belumCheckIn);
   }
 
   /// Riwayat presensi per bulan/tahun dengan pagination.

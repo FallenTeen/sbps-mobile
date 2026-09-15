@@ -7,8 +7,8 @@ import 'models/user.dart';
 /// (docs/api-mobile.md §5). Dipakai bersama App 1 & App 2 (modul shared).
 class AuthRepository {
   AuthRepository({required ApiClient api, required TokenStorage storage})
-      : _api = api,
-        _storage = storage;
+    : _api = api,
+      _storage = storage;
 
   final ApiClient _api;
   final TokenStorage _storage;

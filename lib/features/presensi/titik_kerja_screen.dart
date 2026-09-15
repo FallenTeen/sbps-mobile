@@ -17,7 +17,6 @@ import '../formulir/formulir_screen.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
-import '../notifikasi/notifikasi_screen.dart';
 import '../titik/titik_selector.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
@@ -131,9 +130,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RiwayatScreen(),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const RiwayatScreen()),
             ),
           ),
           const _PendingBadgeAction(),
@@ -159,8 +156,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
             children: [
               if (user != null && !user.hasKaryawan) ...[
                 MaterialBanner(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.errorContainer,
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
                   contentTextStyle: TextStyle(
                     color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
@@ -168,10 +164,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                     'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
                   ),
                   actions: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Tutup'),
-                    ),
+                    TextButton(onPressed: () {}, child: const Text('Tutup')),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -179,14 +172,12 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                   assignmentsAsync.value!.isEmpty &&
                   assignmentsAsync.hasValue) ...[
                 MaterialBanner(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   content: const Text('Belum ada penugasan, hubungi admin.'),
                   actions: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Tutup'),
-                    ),
+                    TextButton(onPressed: () {}, child: const Text('Tutup')),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -205,11 +196,16 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
 
               Row(
                 children: [
-                  Icon(Icons.place_outlined,
-                      size: 20, color: context.colors.primary),
+                  Icon(
+                    Icons.place_outlined,
+                    size: 20,
+                    color: context.colors.primary,
+                  ),
                   const SizedBox(width: 8),
-                  Text('Titik Kerja Aktif',
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Titik Kerja Aktif',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   InfoTooltip(
                     message:
                         'Menandai titik kerja paling dekat dengan lokasi Anda saat ini.',
@@ -221,12 +217,17 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
               titikAsync.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: SkeletonListView(itemCount: 3, padding: EdgeInsets.zero),
+                  child: SkeletonListView(
+                    itemCount: 3,
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
                 error: (error, _) => Card(
                   child: ListTile(
-                    leading: Icon(Icons.error_outline,
-                        color: Theme.of(context).colorScheme.error),
+                    leading: Icon(
+                      Icons.error_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                     title: const Text('Gagal memuat titik kerja'),
                     subtitle: Text(error.toString()),
                     trailing: TextButton(
@@ -281,14 +282,16 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                               titik: titikList[i],
                               distanceText: position == null
                                   ? null
-                                  : _formatDistance(ref
-                                      .read(locationServiceProvider)
-                                      .distanceMeters(
-                                        fromLat: position.latitude,
-                                        fromLng: position.longitude,
-                                        toLat: titikList[i].latitude,
-                                        toLng: titikList[i].longitude,
-                                      )),
+                                  : _formatDistance(
+                                      ref
+                                          .read(locationServiceProvider)
+                                          .distanceMeters(
+                                            fromLat: position.latitude,
+                                            fromLng: position.longitude,
+                                            toLat: titikList[i].latitude,
+                                            toLng: titikList[i].longitude,
+                                          ),
+                                    ),
                               isNearest: titikList[i].id == nearestId,
                               isSelected: titikList[i].id == selectedId,
                               onTap: () => _selectTitik(titikList[i]),
@@ -319,15 +322,16 @@ class _FormulirEntryPoint extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(Icons.description_outlined,
-            color: theme.colorScheme.primary),
-        title: const Text('Formulir Lapangan'),
-        subtitle:
-            const Text('Laporan aktivitas harian terkait presensi.'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const FormulirScreen()),
+        leading: Icon(
+          Icons.description_outlined,
+          color: theme.colorScheme.primary,
         ),
+        title: const Text('Formulir Lapangan'),
+        subtitle: const Text('Laporan aktivitas harian terkait presensi.'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const FormulirScreen())),
       ),
     );
   }
@@ -349,10 +353,7 @@ class _NotifikasiBadgeAction extends ConsumerWidget {
         child: const Icon(Icons.notifications_outlined),
       ),
       onPressed: () async {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-              builder: (_) => const NotifikasiScreen()),
-        );
+        await context.push('/notifikasi');
         ref.read(unreadCountProvider.notifier).reload();
       },
     );
@@ -412,9 +413,12 @@ class _LocationCard extends StatelessWidget {
           subtitle: Text(problem!),
           isThreeLine: true,
           trailing: PopupMenuButton<String>(
-            itemBuilder: (context) =>  [
+            itemBuilder: (context) => [
               PopupMenuItem(value: 'retry', child: Text('Coba lagi')),
-              PopupMenuItem(value: 'settings', child: Text('Pengaturan lokasi')),
+              PopupMenuItem(
+                value: 'settings',
+                child: Text('Pengaturan lokasi'),
+              ),
             ],
             onSelected: (value) =>
                 value == 'retry' ? onRetry() : onOpenSettings(),
@@ -428,7 +432,10 @@ class _LocationCard extends StatelessWidget {
         leading: Icon(Icons.my_location, color: theme.colorScheme.primary),
         title: const Text('Lokasi siap'),
         subtitle: const Text('Pilih titik kerja untuk check-in.'),
-        trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: onRetry),
+        trailing: IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: onRetry,
+        ),
       ),
     );
   }
@@ -465,8 +472,8 @@ class _TitikTile extends StatelessWidget {
           color: isSelected
               ? context.colors.primary
               : isNearest
-                  ? context.colors.primary.withValues(alpha: 0.3)
-                  : context.colors.border,
+              ? context.colors.primary.withValues(alpha: 0.3)
+              : context.colors.border,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -491,8 +498,12 @@ class _TitikTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    isSelected ? Icons.place_rounded : Icons.location_on_outlined,
-                    color: isSelected ? context.colors.primary : context.colors.textTertiary,
+                    isSelected
+                        ? Icons.place_rounded
+                        : Icons.location_on_outlined,
+                    color: isSelected
+                        ? context.colors.primary
+                        : context.colors.textTertiary,
                     size: 22,
                   ),
                 ),
@@ -538,7 +549,9 @@ class _TitikTile extends StatelessWidget {
                     if (isNearest)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           gradient: AppTheme.primaryGradient,
                           borderRadius: BorderRadius.circular(20),
@@ -553,8 +566,11 @@ class _TitikTile extends StatelessWidget {
                         ),
                       )
                     else if (isSelected)
-                      Icon(Icons.check_circle_rounded,
-                          color: context.colors.primary, size: 22),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: context.colors.primary,
+                        size: 22,
+                      ),
                     if (distanceText != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),

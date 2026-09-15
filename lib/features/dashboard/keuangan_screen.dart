@@ -5,6 +5,7 @@ import '../../core/api_client.dart';
 import 'dashboard_providers.dart';
 import 'widgets/charts.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard finansial (HANYA Owner/Admin Keuangan — guard route +
 /// validasi backend 403): chart keuangan mingguan masuk vs keluar
@@ -23,8 +24,7 @@ class KeuanganScreen extends ConsumerWidget {
         actions: const [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
-        onRefresh: () async =>
-            ref.invalidate(keuanganChartProvider(period)),
+        onRefresh: () async => ref.invalidate(keuanganChartProvider(period)),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -33,10 +33,7 @@ class KeuanganScreen extends ConsumerWidget {
               title: 'Keuangan Mingguan',
               trailing: const PeriodPicker(),
               child: chart.when(
-                loading: () => const SizedBox(
-                  height: 180,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const ChartSkeleton(),
                 error: (e, _) => SizedBox(
                   height: 180,
                   child: ErrorRetry(

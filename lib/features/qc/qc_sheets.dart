@@ -34,22 +34,28 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-final result = await ref.read(qcSubmitProvider.notifier).slumpTest(
-           sessionId: widget.sessionId,
-           nilaiSlump: double.parse(_nilaiCtrl.text.replaceAll(',', '.')),
-           catatan: _catatanCtrl.text.trim(),
-         );
+    final result = await ref
+        .read(qcSubmitProvider.notifier)
+        .slumpTest(
+          sessionId: widget.sessionId,
+          nilaiSlump: double.parse(_nilaiCtrl.text.replaceAll(',', '.')),
+          catatan: _catatanCtrl.text.trim(),
+        );
 
-      AnalyticsService.qcSlumpSubmit();
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      Navigator.of(context).pop();
-      if (result.delivered || result.queued) {
-        messenger.showSnackBar(SnackBar(
-          content: Text(result.delivered
-              ? 'Slump test dicatat — menunggu hasil uji tekan.'
-              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-        ));
+    AnalyticsService.qcSlumpSubmit();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    if (result.delivered || result.queued) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.delivered
+                ? 'Slump test dicatat — menunggu hasil uji tekan.'
+                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
+        ),
+      );
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }
@@ -61,7 +67,9 @@ final result = await ref.read(qcSubmitProvider.notifier).slumpTest(
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 16, right: 16, top: 16,
+        left: 16,
+        right: 16,
+        top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
       child: Form(
@@ -70,19 +78,21 @@ final result = await ref.read(qcSubmitProvider.notifier).slumpTest(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Catat Slump Test',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Catat Slump Test',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
             Text(widget.judul),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nilaiCtrl,
               autofocus: true,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
@@ -155,31 +165,41 @@ class _UjiTekanSheetState extends ConsumerState<UjiTekanSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final targetText = _targetCtrl.text.trim().replaceAll(',', '.');
-final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
-           sessionId: widget.sessionId,
-           hasilUjiTekan: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
-           targetMpa: targetText.isEmpty ? null : double.parse(targetText),
-           catatan: _catatanCtrl.text.trim(),
-         );
+    final result = await ref
+        .read(qcSubmitProvider.notifier)
+        .ujiTekan(
+          sessionId: widget.sessionId,
+          hasilUjiTekan: double.parse(_hasilCtrl.text.replaceAll(',', '.')),
+          targetMpa: targetText.isEmpty ? null : double.parse(targetText),
+          catatan: _catatanCtrl.text.trim(),
+        );
 
-      AnalyticsService.qcUjitekanSubmit();
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      Navigator.of(context).pop();
-      if (result.delivered || result.queued) {
-        messenger.showSnackBar(SnackBar(
-          content: Text(result.delivered
-              ? 'Hasil uji tekan dicatat.'
-              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
-        ));
+    AnalyticsService.qcUjitekanSubmit();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    if (result.delivered || result.queued) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.delivered
+                ? 'Hasil uji tekan dicatat.'
+                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
+        ),
+      );
     } else if (result.error != null) {
       // Termasuk kasus 422 "tidak ada sample slump test yang menunggu
       // hasil untuk sesi ini".
-      messenger.showSnackBar(SnackBar(
-        duration: const Duration(seconds: 5),
-        content: Text('${result.error}\n'
-            'Pastikan slump test sesi ini sudah dicatat terlebih dahulu.'),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 5),
+          content: Text(
+            '${result.error}\n'
+            'Pastikan slump test sesi ini sudah dicatat terlebih dahulu.',
+          ),
+        ),
+      );
     }
   }
 
@@ -189,7 +209,9 @@ final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 16, right: 16, top: 16,
+        left: 16,
+        right: 16,
+        top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
       child: Form(
@@ -198,19 +220,21 @@ final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Catat Uji Tekan',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Catat Uji Tekan',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
             Text(widget.judul),
             const SizedBox(height: 16),
             TextFormField(
               controller: _hasilCtrl,
               autofocus: true,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
@@ -228,8 +252,9 @@ final result = await ref.read(qcSubmitProvider.notifier).ujiTekan(
             const SizedBox(height: 12),
             TextFormField(
               controller: _targetCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],

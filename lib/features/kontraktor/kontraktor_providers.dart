@@ -11,17 +11,17 @@ final kontraktorRepositoryProvider = Provider<KontraktorRepository>(
 /// Provider daftar proyek kontrak.
 final proyekKontrakListProvider =
     FutureProvider.autoDispose<List<ProyekKontrakItem>>((ref) {
-  return ref.watch(kontraktorRepositoryProvider).getProyekList();
-});
+      return ref.watch(kontraktorRepositoryProvider).getProyekList();
+    });
 
 /// Provider detail proyek kontrak.
-final detailProyekKontrakProvider =
-    FutureProvider.autoDispose.family<DetailProyekKontrak, String>((ref, id) {
-  return ref.watch(kontraktorRepositoryProvider).getProyekDetail(id);
-});
+final detailProyekKontrakProvider = FutureProvider.autoDispose
+    .family<DetailProyekKontrak, String>((ref, id) {
+      return ref.watch(kontraktorRepositoryProvider).getProyekDetail(id);
+    });
 
 /// Provider daftar invoice kontrak.
 final invoiceKontrakListProvider =
     FutureProvider.autoDispose<List<InvoiceKontrakItem>>((ref) {
-  return ref.watch(kontraktorRepositoryProvider).getInvoiceList();
-});
+      return ref.watch(kontraktorRepositoryProvider).getInvoiceList();
+    });

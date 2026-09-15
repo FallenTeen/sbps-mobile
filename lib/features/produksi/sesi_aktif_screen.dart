@@ -271,7 +271,7 @@ class _ProgressTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-           Icon(Icons.bar_chart, size: 64, color: context.colors.textMuted),
+          Icon(Icons.bar_chart, size: 64, color: context.colors.textMuted),
           const SizedBox(height: 16),
           const Text(
             'Progress Hari Ini',
@@ -303,7 +303,7 @@ class _HistoryTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-           Icon(Icons.history, size: 64, color: context.colors.textMuted),
+          Icon(Icons.history, size: 64, color: context.colors.textMuted),
           const SizedBox(height: 16),
           const Text(
             'Riwayat Produksi',

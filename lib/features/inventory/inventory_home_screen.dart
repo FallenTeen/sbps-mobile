@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
@@ -36,7 +37,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       appBar: AppBar(
         title: const Text('Inventory'),
         bottom: const BrandStrip(),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -60,9 +61,8 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
 
   Widget _buildRingkasanSection(AsyncValue<InventorySummary> summaryAsync) {
     return summaryAsync.when(
-      loading: () => SkeletonLoader(
-        child: SkeletonBlock(height: 92, borderRadius: 20),
-      ),
+      loading: () =>
+          SkeletonLoader(child: SkeletonBlock(height: 92, borderRadius: 20)),
       error: (error, _) => _ErrorCard(
         message: 'Gagal memuat ringkasan inventory.',
         onRetry: () => ref.invalidate(inventorySummaryProvider),
@@ -83,7 +83,11 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.inventory_2_outlined, color: Colors.white, size: 28),
+              const Icon(
+                Icons.inventory_2_outlined,
+                color: Colors.white,
+                size: 28,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -102,7 +106,10 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                       children: [
                         Text(
                           '${summary.totalItem} jenis barang',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                         if (summary.stokRendahCount > 0) ...[
                           const SizedBox(width: 8),
@@ -148,7 +155,9 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
     );
   }
 
-  Widget _buildRequestSection(AsyncValue<List<InventoryRequest>> requestsAsync) {
+  Widget _buildRequestSection(
+    AsyncValue<List<InventoryRequest>> requestsAsync,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -191,8 +200,9 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             onRetry: () => ref.invalidate(inventoryRequestsProvider),
           ),
           data: (requests) {
-            final pending =
-                requests.where((r) => r.status == InventoryRequestStatus.pending).toList();
+            final pending = requests
+                .where((r) => r.status == InventoryRequestStatus.pending)
+                .toList();
             if (pending.isEmpty) {
               return Container(
                 width: double.infinity,
@@ -204,8 +214,11 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle_outline_rounded,
-                        size: 32, color: context.colors.success),
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 32,
+                      color: context.colors.success,
+                    ),
                     SizedBox(height: 8),
                     Text(
                       'Tidak ada request pending',
@@ -224,19 +237,22 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                   QueueCard(
                     leading: CircleAvatar(
                       radius: 20,
-                      backgroundColor:
-                          context.colors.warning.withValues(alpha: 0.12),
+                      backgroundColor: context.colors.warning.withValues(
+                        alpha: 0.12,
+                      ),
                       child: Icon(
                         Icons.build_rounded,
                         size: 20,
                         color: context.colors.warning,
                       ),
                     ),
-                    title: '${request.platNomor} \u2022 ${request.kategoriServis}',
+                    title:
+                        '${request.platNomor} \u2022 ${request.kategoriServis}',
                     subtitle: '${request.totalItems} item diminta',
                     statusLabel: request.status.label,
                     statusColor: context.colors.warning,
-                    onTap: () => context.push('/inventory/request/${request.id}'),
+                    onTap: () =>
+                        context.push('/inventory/request/${request.id}'),
                   ),
               ],
             );
@@ -252,7 +268,11 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.grid_view_rounded, size: 20, color: context.colors.primary),
+            Icon(
+              Icons.grid_view_rounded,
+              size: 20,
+              color: context.colors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
               'Menu',
@@ -265,43 +285,31 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        Row(
+        AdaptiveGrid(
+          compactColumns: 2,
+          mediumColumns: 2,
+          expandedColumns: 4,
+          spacing: 10,
           children: [
-            Expanded(
-              child: _ShortcutTile(
-                icon: Icons.warehouse_outlined,
-                title: 'Cek Stok',
-                onTap: () => context.push('/inventory/stok'),
-              ),
+            _ShortcutTile(
+              icon: Icons.warehouse_outlined,
+              title: 'Cek Stok',
+              onTap: () => context.push('/inventory/stok'),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _ShortcutTile(
-                icon: Icons.fact_check_outlined,
-                title: 'Stok Opname',
-                onTap: () => context.push('/inventory/opname'),
-              ),
+            _ShortcutTile(
+              icon: Icons.fact_check_outlined,
+              title: 'Stok Opname',
+              onTap: () => context.push('/inventory/opname'),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _ShortcutTile(
-                icon: Icons.history_rounded,
-                title: 'Riwayat',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Riwayat akan segera hadir'),
-                    ),
-                  );
-                },
-              ),
+            _ShortcutTile(
+              icon: Icons.history_rounded,
+              title: 'Riwayat',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Riwayat akan segera hadir')),
+                );
+              },
             ),
-            const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
           ],
         ),
       ],
@@ -327,12 +335,15 @@ class _ErrorCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-           Icon(Icons.cloud_off_rounded, color: context.colors.error, size: 22),
+          Icon(Icons.cloud_off_rounded, color: context.colors.error, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.colors.textSecondary,
+              ),
             ),
           ),
           TextButton(onPressed: onRetry, child: const Text('Coba lagi')),

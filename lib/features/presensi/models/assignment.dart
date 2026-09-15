@@ -19,12 +19,12 @@ class Assignment {
   final String? tanggalSelesai;
 
   factory Assignment.fromJson(Map<String, dynamic> json) => Assignment(
-        id: json['id']?.toString() ?? '',
-        titikId: json['titik_id']?.toString() ?? '',
-        titik: json['titik']?.toString(),
-        proyek: json['proyek']?.toString(),
-        status: json['status']?.toString() ?? '',
-        tanggalMulai: json['tanggal_mulai']?.toString(),
-        tanggalSelesai: json['tanggal_selesai']?.toString(),
-      );
+    id: json['id']?.toString() ?? '',
+    titikId: json['titik_id']?.toString() ?? '',
+    titik: json['titik']?.toString(),
+    proyek: json['proyek']?.toString(),
+    status: json['status']?.toString() ?? '',
+    tanggalMulai: json['tanggal_mulai']?.toString(),
+    tanggalSelesai: json['tanggal_selesai']?.toString(),
+  );
 }

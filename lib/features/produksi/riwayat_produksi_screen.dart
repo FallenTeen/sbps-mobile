@@ -6,6 +6,7 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/searchable_list_header.dart';
 import '../../core/formatters.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
@@ -23,6 +24,7 @@ class RiwayatProduksiScreen extends ConsumerStatefulWidget {
 class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
   String? _selectedPeriod;
   String? _selectedStatus;
+  String _searchQuery = '';
 
   final List<String> _periodOptions = const [
     'Hari Ini',
@@ -39,6 +41,18 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     final filter = ref.watch(riwayatFilterProvider);
     final mesinAsync = ref.watch(mesinProvider);
 
+    final q = _searchQuery.toLowerCase();
+    final items = q.isEmpty
+        ? state.items
+        : state.items
+              .where(
+                (s) =>
+                    (s.produkNama ?? '').toLowerCase().contains(q) ||
+                    (s.mesinNama ?? '').toLowerCase().contains(q) ||
+                    (s.titikNama ?? '').toLowerCase().contains(q),
+              )
+              .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat Produksi'),
@@ -46,14 +60,19 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
       ),
       body: Column(
         children: [
-          // Period Filter Chips (Fase 2)
-          _PeriodFilterSection(
-            options: _periodOptions,
-            selected: _selectedPeriod,
-            onChanged: (value) {
-              setState(() => _selectedPeriod = value);
-              _handlePeriodChange(value, ref);
-            },
+          // Search + Period Filter Chips (Fase 2)
+          SearchableListHeader(
+            hintText: 'Cari produk atau mesin...',
+            collapsible: false,
+            onChanged: (v) => setState(() => _searchQuery = v),
+            child: _PeriodFilterSection(
+              options: _periodOptions,
+              selected: _selectedPeriod,
+              onChanged: (value) {
+                setState(() => _selectedPeriod = value);
+                _handlePeriodChange(value, ref);
+              },
+            ),
           ),
 
           // Status Filter Chips (Fase 2)
@@ -92,7 +111,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
             child: RefreshIndicator(
               onRefresh: () =>
                   ref.read(riwayatProduksiProvider.notifier).refresh(),
-              child: _buildList(context, ref, state),
+              child: _buildList(context, ref, state, items),
             ),
           ),
         ],
@@ -137,6 +156,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     BuildContext context,
     WidgetRef ref,
     RiwayatProduksiState state,
+    List<dynamic> items,
   ) {
     if (state.loading && state.items.isEmpty && state.error == null) {
       return const SkeletonListView(itemCount: 5);
@@ -156,14 +176,20 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
         ],
       );
     }
-    if (state.items.isEmpty) {
+    if (items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
+        children: [
           AppEmptyState(
-            icon: Icons.inbox_outlined,
-            title: 'Belum Ada Riwayat',
-            subtitle: 'Belum ada data riwayat produksi untuk filter ini.',
+            icon: _searchQuery.isNotEmpty
+                ? Icons.search_off_outlined
+                : Icons.inbox_outlined,
+            title: _searchQuery.isNotEmpty
+                ? 'Tidak Ada Hasil Pencarian'
+                : 'Belum Ada Riwayat',
+            subtitle: _searchQuery.isNotEmpty
+                ? 'Tidak ditemukan data yang cocok dengan "$_searchQuery".'
+                : 'Belum ada data riwayat produksi untuk filter ini.',
           ),
         ],
       );
@@ -172,10 +198,10 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: state.items.length + (state.hasMore ? 1 : 0),
+      itemCount: items.length + (state.hasMore ? 1 : 0),
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, i) {
-        if (i >= state.items.length) {
+        if (i >= items.length) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -191,7 +217,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
         }
         return StaggeredEntrance(
           index: i,
-          child: _RiwayatCard(session: state.items[i]),
+          child: _RiwayatCard(session: items[i]),
         );
       },
     );
@@ -332,69 +358,6 @@ class _StatusFilterSection extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget _buildList(
-  BuildContext context,
-  WidgetRef ref,
-  RiwayatProduksiState state,
-  RiwayatFilter filter,
-) {
-  if (state.loading && state.items.isEmpty && state.error == null) {
-    return const SkeletonListView(itemCount: 5);
-  }
-  if (state.error != null && state.items.isEmpty) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        AppEmptyState(
-          icon: Icons.cloud_off_outlined,
-          title: 'Gagal Memuat Riwayat',
-          subtitle: state.error,
-          actionLabel: 'Coba Lagi',
-          onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
-        ),
-      ],
-    );
-  }
-  if (state.items.isEmpty) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: const [
-        AppEmptyState(
-          icon: Icons.inbox_outlined,
-          title: 'Belum Ada Riwayat',
-          subtitle: 'Belum ada data riwayat produksi untuk filter ini.',
-        ),
-      ],
-    );
-  }
-
-  return ListView.separated(
-    physics: const AlwaysScrollableScrollPhysics(),
-    padding: const EdgeInsets.all(16),
-    itemCount: state.items.length + (state.hasMore ? 1 : 0),
-    separatorBuilder: (_, _) => const SizedBox(height: 10),
-    itemBuilder: (context, i) {
-      if (i >= state.items.length) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: FilledButton.tonal(
-              onPressed: state.loading
-                  ? null
-                  : () => ref.read(riwayatProduksiProvider.notifier).loadMore(),
-              child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
-            ),
-          ),
-        );
-      }
-      return StaggeredEntrance(
-        index: i,
-        child: _RiwayatCard(session: state.items[i]),
-      );
-    },
-  );
 }
 
 class _RiwayatCard extends StatelessWidget {

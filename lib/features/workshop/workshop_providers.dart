@@ -74,7 +74,9 @@ class WorkshopQueueController extends Notifier<WorkshopQueueState> {
   Future<void> _load() async {
     // Ambil sekaligus menunggu + dikerjakan + selesai tanpa filter.
     try {
-      final jobs = await ref.read(workshopRepositoryProvider).getAntrianServis();
+      final jobs = await ref
+          .read(workshopRepositoryProvider)
+          .getAntrianServis();
       state = state.copyWith(items: jobs, loading: false);
     } on ApiException catch (e) {
       state = state.copyWith(loading: false, error: e.message);
@@ -101,10 +103,10 @@ final workshopQueueProvider =
 // Detail Job
 // ---------------------------------------------------------------------------
 
-final workshopJobDetailProvider =
-    FutureProvider.autoDispose.family<WorkshopJobDetail, String>((ref, id) {
-  return ref.watch(workshopRepositoryProvider).getDetailJob(id);
-});
+final workshopJobDetailProvider = FutureProvider.autoDispose
+    .family<WorkshopJobDetail, String>((ref, id) {
+      return ref.watch(workshopRepositoryProvider).getDetailJob(id);
+    });
 
 /// Hasil alur submit di detail job.
 class WorkshopSubmitResult {

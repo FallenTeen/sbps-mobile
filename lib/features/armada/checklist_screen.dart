@@ -64,41 +64,40 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: Text(
-          widget.isAkhir ? 'Checklist akhir' : 'Checklist harian',
-        ),
-        actions:  [PortalSwitchButton()],
+        title: Text(widget.isAkhir ? 'Checklist akhir' : 'Checklist harian'),
+        actions: [PortalSwitchButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(checklistHariIniProvider),
         child: switch (checklist) {
-          AsyncData(value: final items) => items.isEmpty
-              ? AppEmptyState(
-                  icon: Icons.checklist_rtl,
-                  title: 'Belum ada armada untuk dicatat',
-                  subtitle:
-                      'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
-                  actionLabel: 'Muat Ulang',
-                  onAction: () => ref.invalidate(checklistHariIniProvider),
-                )
-              : ListView.separated(
-                  padding: EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) => _ChecklistCard(
-                    item: items[i],
-                    isAkhir: widget.isAkhir,
-                    onTap: () => _openForm(items[i]),
+          AsyncData(value: final items) =>
+            items.isEmpty
+                ? AppEmptyState(
+                    icon: Icons.checklist_rtl,
+                    title: 'Belum ada armada untuk dicatat',
+                    subtitle:
+                        'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
+                    actionLabel: 'Muat Ulang',
+                    onAction: () => ref.invalidate(checklistHariIniProvider),
+                  )
+                : ListView.separated(
+                    padding: EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, i) => _ChecklistCard(
+                      item: items[i],
+                      isAkhir: widget.isAkhir,
+                      onTap: () => _openForm(items[i]),
+                    ),
                   ),
-                ),
           AsyncError() => AppEmptyState(
-              icon: Icons.cloud_off_outlined,
-              title: 'Gagal memuat data checklist',
-              subtitle:
-                  'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
-              actionLabel: 'Coba Lagi',
-              onAction: () => ref.invalidate(checklistHariIniProvider),
-            ),
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal memuat data checklist',
+            subtitle:
+                'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+            actionLabel: 'Coba Lagi',
+            onAction: () => ref.invalidate(checklistHariIniProvider),
+          ),
           _ => const Center(child: CircularProgressIndicator()),
         },
       ),
@@ -127,13 +126,13 @@ class _ChecklistCard extends StatelessWidget {
     final statusColor = filled
         ? context.colors.success
         : overdue
-            ? context.colors.warning
-            : context.colors.textMuted;
+        ? context.colors.warning
+        : context.colors.textMuted;
 
     final subtitle = filled
         ? (item.kondisiBaik == true
-            ? 'Kondisi baik${_masalahSuffix(item.itemBermasalah)}'
-            : 'Ada masalah${_masalahSuffix(item.itemBermasalah)}')
+              ? 'Kondisi baik${_masalahSuffix(item.itemBermasalah)}'
+              : 'Ada masalah${_masalahSuffix(item.itemBermasalah)}')
         : switch (daysAgo) {
             null => 'Belum dicatat hari ini · Belum pernah dicek',
             0 => 'Belum dicatat hari ini',
@@ -200,8 +199,8 @@ class _ChecklistStatusLeading extends StatelessWidget {
         filled
             ? Icons.check_rounded
             : overdue
-                ? Icons.error_outline_rounded
-                : Icons.radio_button_unchecked_rounded,
+            ? Icons.error_outline_rounded
+            : Icons.radio_button_unchecked_rounded,
         color: color,
         size: 26,
       ),
@@ -307,11 +306,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       data: {
         'items': [
           for (final i in _items)
-            {
-              'label': i.label,
-              'baik': i.baik,
-              'photo_path': i.photoPath,
-            },
+            {'label': i.label, 'baik': i.baik, 'photo_path': i.photoPath},
         ],
         'solar': _solarCtrl.text,
         'odo': _odoCtrl.text,
@@ -352,8 +347,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     }
   }
 
-  List<_ItemState> get _bermasalah =>
-      _items.where((i) => !i.baik).toList();
+  List<_ItemState> get _bermasalah => _items.where((i) => !i.baik).toList();
 
   Future<void> _confirmAndSubmit() async {
     final issues = _bermasalah;
@@ -393,7 +387,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
                 for (final i in issues)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• ${i.label}${i.photoPath != null ? ' · ada foto' : ''}'),
+                    child: Text(
+                      '• ${i.label}${i.photoPath != null ? ' · ada foto' : ''}',
+                    ),
                   ),
               ],
               const SizedBox(height: 20),
@@ -425,23 +421,24 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     setState(() => _busy = true);
     try {
       final issues = _bermasalah;
-      final delivered =
-          await ref.read(armadaRepositoryProvider).submitChecklist(
-                armadaId: widget.item.armadaId,
-                kondisiBaik: issues.isEmpty,
-                itemBermasalah: issues.map((i) => i.label).join(', '),
-                solarLiter: double.tryParse(_solarCtrl.text),
-                odoKm: double.tryParse(_odoCtrl.text),
-                jamOperasional: double.tryParse(_jamCtrl.text),
-                itemDetails: [
-                  for (final i in _items)
-                    {
-                      'label': i.label,
-                      'baik': i.baik,
-                      if (i.photoPath != null) 'has_foto': true,
-                    },
-                ],
-              );
+      final delivered = await ref
+          .read(armadaRepositoryProvider)
+          .submitChecklist(
+            armadaId: widget.item.armadaId,
+            kondisiBaik: issues.isEmpty,
+            itemBermasalah: issues.map((i) => i.label).join(', '),
+            solarLiter: double.tryParse(_solarCtrl.text),
+            odoKm: double.tryParse(_odoCtrl.text),
+            jamOperasional: double.tryParse(_jamCtrl.text),
+            itemDetails: [
+              for (final i in _items)
+                {
+                  'label': i.label,
+                  'baik': i.baik,
+                  if (i.photoPath != null) 'has_foto': true,
+                },
+            ],
+          );
       if (widget.isAkhir) {
         await ChecklistDraftStore.markAkhirSubmitted(widget.item.armadaId);
       }
@@ -464,9 +461,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -487,9 +484,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: Text(widget.item.platNomor),
-      ),
+      appBar: AppBar(title: Text(widget.item.platNomor)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -523,9 +518,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
           const SizedBox(height: 8),
           Text(
             'Data operasional',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -541,8 +536,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
           if (widget.isAlatBerat)
             TextField(
               controller: _jamCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Jam Kerja Unit (HM)',
                 border: OutlineInputBorder(),
@@ -552,13 +548,13 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
           else
             TextField(
               controller: _odoCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'KM Sekarang (Odometer)',
                 border: OutlineInputBorder(),
-                helperText:
-                    'Angka pada odometer (penghitung km) kendaraan',
+                helperText: 'Angka pada odometer (penghitung km) kendaraan',
               ),
             ),
           const SizedBox(height: 20),

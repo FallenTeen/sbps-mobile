@@ -21,8 +21,6 @@ class DetailQcScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detail = ref.watch(qcDetailProvider(sampleId));
-
     return Scaffold(
       appBar: AppBar(
         title: const BreadcrumbTitle(
@@ -33,105 +31,125 @@ class DetailQcScreen extends ConsumerWidget {
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
-        child: RefreshIndicator(
-          onRefresh: () async => ref.refresh(qcDetailProvider(sampleId).future),
-          child: detail.when(
-            loading: () => const SkeletonDetailView(),
-            error: (e, _) => ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                AppEmptyState(
-                  icon: Icons.cloud_off_outlined,
-                  title: 'Gagal Memuat Detail QC',
-                  subtitle:
-                      e is ApiException ? e.message : 'Gagal memuat detail QC.',
-                  actionLabel: 'Coba Lagi',
-                  onAction: () =>
-                      ref.invalidate(qcDetailProvider(sampleId)),
-                ),
-              ],
+        child: DetailQcContent(sampleId: sampleId),
+      ),
+    );
+  }
+}
+
+/// Konten detail QC tanpa Scaffold/AppBar — dipakai sebagai body full-page
+/// maupun panel kanan [AdaptiveMasterDetail] saat Expanded.
+class DetailQcContent extends ConsumerWidget {
+  const DetailQcContent({super.key, required this.sampleId});
+
+  final String sampleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detail = ref.watch(qcDetailProvider(sampleId));
+
+    return RefreshIndicator(
+      onRefresh: () async => ref.refresh(qcDetailProvider(sampleId).future),
+      child: detail.when(
+        loading: () => const SkeletonDetailView(),
+        error: (e, _) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Gagal Memuat Detail QC',
+              subtitle: e is ApiException
+                  ? e.message
+                  : 'Gagal memuat detail QC.',
+              actionLabel: 'Coba Lagi',
+              onAction: () => ref.invalidate(qcDetailProvider(sampleId)),
             ),
-            data: (s) => ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              children: [
-                StaggeredEntrance(
-                  index: 0,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        data: (s) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            StaggeredEntrance(
+              index: 0,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Sample QC',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700)),
-                              QcStatusBadge(status: s.status),
-                            ],
+                          Text(
+                            'Sample QC',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(height: 10),
-                          _row('Nilai slump', fmtNum(s.nilaiSlump)),
-                          if (s.hasilUjiTekan != null)
-                            _row('Hasil uji tekan', '${fmtNum(s.hasilUjiTekan)} MPa'),
-                          if (s.tanggalUjiTekanRencana != null)
-                            _row('Rencana uji tekan', s.tanggalUjiTekanRencana!),
-                          _row('Catatan', s.catatan ?? '-'),
+                          QcStatusBadge(status: s.status),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      _row('Nilai slump', fmtNum(s.nilaiSlump)),
+                      if (s.hasilUjiTekan != null)
+                        _row(
+                          'Hasil uji tekan',
+                          '${fmtNum(s.hasilUjiTekan)} MPa',
+                        ),
+                      if (s.tanggalUjiTekanRencana != null)
+                        _row('Rencana uji tekan', s.tanggalUjiTekanRencana!),
+                      _row('Catatan', s.catatan ?? '-'),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                StaggeredEntrance(
-                  index: 1,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Sesi Produksi',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 10),
-                          _row('Produk', s.produkNama ?? '-'),
-                          _row('Mesin', s.mesinNama ?? '-'),
-                          _row('Titik', s.titikNama ?? '-'),
-                          _row('Operator', s.operatorNama ?? '-'),
-                          _row('Mulai', fmtTanggalWaktu(s.sesiMulai)),
-                          _row('Selesai', fmtTanggalWaktu(s.sesiSelesai)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+            StaggeredEntrance(
+              index: 1,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sesi Produksi',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      _row('Produk', s.produkNama ?? '-'),
+                      _row('Mesin', s.mesinNama ?? '-'),
+                      _row('Titik', s.titikNama ?? '-'),
+                      _row('Operator', s.operatorNama ?? '-'),
+                      _row('Mulai', fmtTanggalWaktu(s.sesiMulai)),
+                      _row('Selesai', fmtTanggalWaktu(s.sesiSelesai)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _row(String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 130,
-              child: Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-            ),
-            Expanded(child: Text(value)),
-          ],
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 130,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
-      );
+        Expanded(child: Text(value)),
+      ],
+    ),
+  );
 }

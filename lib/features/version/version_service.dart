@@ -19,12 +19,12 @@ class AppVersionInfo {
   final String? changelog;
 
   factory AppVersionInfo.fromJson(Map<String, dynamic> json) => AppVersionInfo(
-        minVersion: json['min_version'] as String? ?? '',
-        latestVersion: json['latest_version'] as String? ?? '',
-        forceUpdate: json['force_update'] == true,
-        updateUrl: json['update_url'] as String? ?? '',
-        changelog: json['changelog'] as String?,
-      );
+    minVersion: json['min_version'] as String? ?? '',
+    latestVersion: json['latest_version'] as String? ?? '',
+    forceUpdate: json['force_update'] == true,
+    updateUrl: json['update_url'] as String? ?? '',
+    changelog: json['changelog'] as String?,
+  );
 }
 
 class VersionService {
@@ -41,9 +41,11 @@ class VersionService {
     );
 
     if (!envelope.isSuccess || envelope.data == null) {
-      throw ApiException(envelope.message.isEmpty
-          ? 'Gagal mengambil konfigurasi versi.'
-          : envelope.message);
+      throw ApiException(
+        envelope.message.isEmpty
+            ? 'Gagal mengambil konfigurasi versi.'
+            : envelope.message,
+      );
     }
 
     return AppVersionInfo.fromJson(envelope.data!);

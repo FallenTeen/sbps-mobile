@@ -26,8 +26,11 @@ class ProgressHariIniScreen extends ConsumerWidget {
           error: (e, _) => ListView(
             children: [
               const SizedBox(height: 140),
-              Icon(Icons.cloud_off,
-                  size: 44, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.cloud_off,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 12),
               Text(
                 e is ApiException ? e.message : 'Gagal memuat progress.',
@@ -49,8 +52,10 @@ class ProgressHariIniScreen extends ConsumerWidget {
                   const SizedBox(height: 160),
                   const Icon(Icons.emoji_events_outlined, size: 44),
                   const SizedBox(height: 12),
-                  Text('Belum ada output tercatat ${data.tanggal}.',
-                      textAlign: TextAlign.center),
+                  Text(
+                    'Belum ada output tercatat ${data.tanggal}.',
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               );
             }
@@ -67,10 +72,9 @@ class ProgressHariIniScreen extends ConsumerWidget {
                     subtitle: Text('${item.jumlahSesi} sesi selesai'),
                     trailing: Text(
                       fmtNum(item.totalOutput),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 );

@@ -71,12 +71,13 @@ class WorkshopJob {
       kategoriServis: servis.kategori ?? 'Servis Armada',
       keluhan: servis.keluhan,
       status: _parseStatus(servis.status),
-      createdAt:
-          servis.tanggalAjuan.isEmpty ? null : DateTime.tryParse(servis.tanggalAjuan),
+      createdAt: servis.tanggalAjuan.isEmpty
+          ? null
+          : DateTime.tryParse(servis.tanggalAjuan),
       assignedAt: servis.status == 'dikerjakan' || servis.status == 'selesai'
           ? servis.tanggalAjuan.isEmpty
-              ? null
-              : DateTime.tryParse(servis.tanggalAjuan)
+                ? null
+                : DateTime.tryParse(servis.tanggalAjuan)
           : null,
       completedAt: servis.tanggalSelesai == null
           ? null
@@ -112,10 +113,7 @@ class WorkshopTodoItem {
     );
   }
 
-  WorkshopTodoItem copyWith({
-    bool? isDone,
-    String? photoPath,
-  }) {
+  WorkshopTodoItem copyWith({bool? isDone, String? photoPath}) {
     return WorkshopTodoItem(
       id: id,
       jobId: jobId,
@@ -128,26 +126,23 @@ class WorkshopTodoItem {
 
 /// Detail workshop job dengan todo items.
 class WorkshopJobDetail {
-  const WorkshopJobDetail({
-    required this.job,
-    required this.todos,
-  });
+  const WorkshopJobDetail({required this.job, required this.todos});
 
   final WorkshopJob job;
   final List<WorkshopTodoItem> todos;
 
   factory WorkshopJobDetail.fromJson(Map<String, dynamic> json) {
     final servis = ServisArmada.fromJson(json);
-    final todosRaw = json['todos'] as List<dynamic>?
-        ?? json['todo_items'] as List<dynamic>?
-        ?? [];
+    final todosRaw =
+        json['todos'] as List<dynamic>? ??
+        json['todo_items'] as List<dynamic>? ??
+        [];
 
     return WorkshopJobDetail(
       job: WorkshopJob.fromServisArmada(servis),
       todos: [
         for (final t in todosRaw)
-          if (t is Map)
-            WorkshopTodoItem.fromJson(Map<String, dynamic>.from(t)),
+          if (t is Map) WorkshopTodoItem.fromJson(Map<String, dynamic>.from(t)),
       ],
     );
   }
@@ -168,9 +163,9 @@ class SparepartRequestItem {
   final String? keterangan;
 
   Map<String, dynamic> toJson() => {
-        'nama_barang': namaBarang,
-        'jumlah': jumlah,
-        if (satuan != null) 'satuan': satuan,
-        if (keterangan != null) 'keterangan': keterangan,
-      };
+    'nama_barang': namaBarang,
+    'jumlah': jumlah,
+    if (satuan != null) 'satuan': satuan,
+    if (keterangan != null) 'keterangan': keterangan,
+  };
 }

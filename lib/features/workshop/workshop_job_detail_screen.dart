@@ -19,18 +19,54 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'workshop_models.dart';
 import 'workshop_providers.dart';
 
-class WorkshopJobDetailScreen extends ConsumerStatefulWidget {
+/// Screen detail job workshop (full-page) — membungkus
+/// [WorkshopJobDetailContent] dengan Scaffold + AppBar.
+/// Dipakai route push di Compact/Medium.
+class WorkshopJobDetailScreen extends ConsumerWidget {
   const WorkshopJobDetailScreen({required this.jobId, super.key});
 
   final String jobId;
 
   @override
-  ConsumerState<WorkshopJobDetailScreen> createState() =>
-      _WorkshopJobDetailScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detailAsync = ref.watch(workshopJobDetailProvider(jobId));
+    return Scaffold(
+      appBar: AppBar(
+        title: BreadcrumbTitle(
+          parentLabel: 'Antrian Workshop',
+          title:
+              'Job \u2014 ${detailAsync.value?.job.platNomor ?? 'Loading...'}',
+        ),
+        actions: const [PortalSwitchButton()],
+      ),
+      body: WorkshopJobDetailContent(jobId: jobId),
+    );
+  }
 }
 
-class _WorkshopJobDetailScreenState
-    extends ConsumerState<WorkshopJobDetailScreen> {
+/// Konten detail job workshop tanpa Scaffold/AppBar — dipakai sebagai
+/// body full-page (lewat [WorkshopJobDetailScreen]) maupun panel kanan
+/// [AdaptiveMasterDetail] saat Expanded.
+class WorkshopJobDetailContent extends ConsumerStatefulWidget {
+  const WorkshopJobDetailContent({
+    required this.jobId,
+    this.onJobCompleted,
+    super.key,
+  });
+
+  final String jobId;
+
+  /// Dipanggil setelah job berhasil ditandai selesai saat mode embedded
+  /// (panel kanan AdaptiveMasterDetail) — menggantikan `context.pop()`.
+  final VoidCallback? onJobCompleted;
+
+  @override
+  ConsumerState<WorkshopJobDetailContent> createState() =>
+      _WorkshopJobDetailContentState();
+}
+
+class _WorkshopJobDetailContentState
+    extends ConsumerState<WorkshopJobDetailContent> {
   bool _isSubmitting = false;
 
   int get _completedCount {
@@ -69,9 +105,9 @@ class _WorkshopJobDetailScreenState
       HapticFeedback.selectionClick();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -99,21 +135,21 @@ class _WorkshopJobDetailScreenState
           );
       ref.invalidate(workshopJobDetailProvider(widget.jobId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto bukti terunggah')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Foto bukti terunggah')));
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengambil foto')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gagal mengambil foto')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -142,9 +178,9 @@ class _WorkshopJobDetailScreenState
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -169,7 +205,8 @@ class _WorkshopJobDetailScreenState
       context,
       severity: ConfirmSeverity.destructive,
       title: 'Tandai Job Selesai?',
-      message: 'Job servis ini akan ditutup sebagai selesai dan tidak bisa '
+      message:
+          'Job servis ini akan ditutup sebagai selesai dan tidak bisa '
           'diubah lagi. Pastikan semua item & foto bukti sudah lengkap.',
       confirmLabel: 'Ya, Tandai Selesai',
       icon: Icons.check_circle_outline_rounded,
@@ -184,9 +221,9 @@ class _WorkshopJobDetailScreenState
           .tandaiSelesai(jobId: widget.jobId);
       if (result.error != null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result.error!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(result.error!)));
         }
         return;
       }
@@ -195,7 +232,12 @@ class _WorkshopJobDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Job berhasil ditandai selesai')),
       );
-      context.pop();
+      if (widget.onJobCompleted != null) {
+        ref.read(workshopQueueProvider.notifier).refresh();
+        widget.onJobCompleted!();
+      } else {
+        context.pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -211,173 +253,166 @@ class _WorkshopJobDetailScreenState
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(workshopJobDetailProvider(widget.jobId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: BreadcrumbTitle(
-          parentLabel: 'Antrian Workshop',
-          title: 'Job \u2014 ${_titleFor(detailAsync)}',
-        ),
-        actions:  [PortalSwitchButton()],
-      ),
-      body: detailAsync.when(
-        loading: () => SkeletonDetailView(),
-        error: (e, _) => _buildError(e),
-        data: (detail) {
-          final job = detail.job;
-          final items = detail.todos;
-          final completed = items.where((t) => t.isDone).length;
-          final progress = items.isEmpty ? 0.0 : completed / items.length;
+    return detailAsync.when(
+      loading: () => SkeletonDetailView(),
+      error: (e, _) => _buildError(e),
+      data: (detail) {
+        final job = detail.job;
+        final items = detail.todos;
+        final completed = items.where((t) => t.isDone).length;
+        final progress = items.isEmpty ? 0.0 : completed / items.length;
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildInfoCard(job),
-                    const SizedBox(height: 16),
-                    _buildProgressCard(progress, completed, items.length),
-                    const SizedBox(height: 16),
-                    if (items.isEmpty)
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Center(
-                          child: Text(
-                            'Belum ada item checklist untuk job ini',
-                            style: TextStyle(color: context.colors.textTertiary),
-                          ),
-                        ),
-                      )
-                    else
-                      ...List.generate(items.length, (index) {
-                        final item = items[index];
-                        return Card(
-                          margin: EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: Checkbox(
-                              value: item.isDone,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (_) => _toggleItem(item),
-                              activeColor: context.colors.primary,
-                            ),
-                            title: Text(
-                              item.label,
-                              style: TextStyle(
-                                decoration: item.isDone
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                color: item.isDone
-                                    ? context.colors.textTertiary
-                                    : context.colors.textPrimary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: item.photoPath != null
-                                ? Padding(
-                                    padding: EdgeInsets.only(top: 8),
-                                    child: InkWell(
-                                      onTap: () => PhotoViewerDialog.show(
-                                        context: context,
-                                        heroTag: 'todo-photo-${item.id}',
-                                        imageUrl: item.photoPath,
-                                        title: item.label,
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: _networkOrFilePhoto(item.photoPath!),
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                            trailing: item.isDone
-                                ? Icon(
-                                    Icons.check_circle_outline,
-                                    color: context.colors.success,
-                                  )
-                                : IconButton(
-                                    icon: Icon(Icons.camera_alt_outlined),
-                                    onPressed: _isSubmitting
-                                        ? null
-                                        : () => _takeEvidencePhoto(item),
-                                    tooltip: 'Ambil foto bukti',
-                                  ),
-                          ),
-                        );
-                      }),
-                  ],
-                ),
-              ),
-              SafeArea(
-                child: job.status == WorkshopJobStatus.selesai
-                    ? Container(
-                        width: double.infinity,
-                        color: context.colors.success.withValues(alpha: 0.08),
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          children:  [
-                            Icon(
-                              Icons.check_circle_outline_rounded,
-                              size: 20,
-                              color: context.colors.success,
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Job servis telah selesai dikerjakan',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: context.colors.success,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _isSubmitting
-                                    ? null
-                                    : () => _requestSparepart(),
-                                icon: const Icon(
-                                  Icons.inventory_2_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text('Request Sparepart'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: _isSubmitting
-                                    ? null
-                                    : () => _markComplete(items.length),
-                                icon: _isSubmitting
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(Icons.check, size: 18),
-                                label: Text('Tandai Selesai'),
-                              ),
-                            ),
-                          ],
+        return Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildInfoCard(job),
+                  const SizedBox(height: 16),
+                  _buildProgressCard(progress, completed, items.length),
+                  const SizedBox(height: 16),
+                  if (items.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          'Belum ada item checklist untuk job ini',
+                          style: TextStyle(color: context.colors.textTertiary),
                         ),
                       ),
+                    )
+                  else
+                    ...List.generate(items.length, (index) {
+                      final item = items[index];
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Checkbox(
+                            value: item.isDone,
+                            onChanged: _isSubmitting
+                                ? null
+                                : (_) => _toggleItem(item),
+                            activeColor: context.colors.primary,
+                          ),
+                          title: Text(
+                            item.label,
+                            style: TextStyle(
+                              decoration: item.isDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: item.isDone
+                                  ? context.colors.textTertiary
+                                  : context.colors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: item.photoPath != null
+                              ? Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: InkWell(
+                                    onTap: () => PhotoViewerDialog.show(
+                                      context: context,
+                                      heroTag: 'todo-photo-${item.id}',
+                                      imageUrl: item.photoPath,
+                                      title: item.label,
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: _networkOrFilePhoto(
+                                        item.photoPath!,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : null,
+                          trailing: item.isDone
+                              ? Icon(
+                                  Icons.check_circle_outline,
+                                  color: context.colors.success,
+                                )
+                              : IconButton(
+                                  icon: Icon(Icons.camera_alt_outlined),
+                                  onPressed: _isSubmitting
+                                      ? null
+                                      : () => _takeEvidencePhoto(item),
+                                  tooltip: 'Ambil foto bukti',
+                                ),
+                        ),
+                      );
+                    }),
+                ],
               ),
-            ],
-          );
-        },
-      ),
+            ),
+            SafeArea(
+              child: job.status == WorkshopJobStatus.selesai
+                  ? Container(
+                      width: double.infinity,
+                      color: context.colors.success.withValues(alpha: 0.08),
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 20,
+                            color: context.colors.success,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Job servis telah selesai dikerjakan',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => _requestSparepart(),
+                              icon: const Icon(
+                                Icons.inventory_2_outlined,
+                                size: 18,
+                              ),
+                              label: const Text('Request Sparepart'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => _markComplete(items.length),
+                              icon: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.check, size: 18),
+                              label: Text('Tandai Selesai'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -392,8 +427,11 @@ class _WorkshopJobDetailScreenState
           height: 60,
           width: 60,
           color: context.colors.surfaceVariant,
-          child: Icon(Icons.broken_image_outlined,
-              size: 24, color: context.colors.textTertiary),
+          child: Icon(
+            Icons.broken_image_outlined,
+            size: 24,
+            color: context.colors.textTertiary,
+          ),
         ),
       );
     }
@@ -406,14 +444,13 @@ class _WorkshopJobDetailScreenState
         height: 60,
         width: 60,
         color: context.colors.surfaceVariant,
-        child: Icon(Icons.broken_image_outlined,
-            size: 24, color: context.colors.textTertiary),
+        child: Icon(
+          Icons.broken_image_outlined,
+          size: 24,
+          color: context.colors.textTertiary,
+        ),
       ),
     );
-  }
-
-  String _titleFor(AsyncValue<WorkshopJobDetail> detailAsync) {
-    return detailAsync.value?.job.platNomor ?? 'Loading...';
   }
 
   Widget _buildInfoCard(WorkshopJob job) {
@@ -604,9 +641,10 @@ class SparepartSheetResult {
 Future<SparepartSheetResult?> showRequestSparepartSheet(
   BuildContext context,
 ) async {
-  final items = <({String nama, int jumlah, String? satuan, String? keterangan})>[
-    (nama: '', jumlah: 1, satuan: null, keterangan: null),
-  ];
+  final items =
+      <({String nama, int jumlah, String? satuan, String? keterangan})>[
+        (nama: '', jumlah: 1, satuan: null, keterangan: null),
+      ];
   final catatanController = TextEditingController();
 
   return showModalBottomSheet<SparepartSheetResult>(
@@ -620,21 +658,29 @@ Future<SparepartSheetResult?> showRequestSparepartSheet(
       return StatefulBuilder(
         builder: (context, setSheetState) {
           void addRow() {
-            setSheetState(() => items.add(
-                  (nama: '', jumlah: 1, satuan: null, keterangan: null),
-                ));
+            setSheetState(
+              () => items.add((
+                nama: '',
+                jumlah: 1,
+                satuan: null,
+                keterangan: null,
+              )),
+            );
           }
 
           void submit() {
             final valid = items
                 .where((i) => i.nama.trim().isNotEmpty)
-                .map((i) => SparepartRequestItem(
-                      namaBarang: i.nama.trim(),
-                      jumlah: i.jumlah,
-                      satuan: i.satuan?.isEmpty ?? true ? null : i.satuan,
-                      keterangan:
-                          i.keterangan?.isEmpty ?? true ? null : i.keterangan,
-                    ))
+                .map(
+                  (i) => SparepartRequestItem(
+                    namaBarang: i.nama.trim(),
+                    jumlah: i.jumlah,
+                    satuan: i.satuan?.isEmpty ?? true ? null : i.satuan,
+                    keterangan: i.keterangan?.isEmpty ?? true
+                        ? null
+                        : i.keterangan,
+                  ),
+                )
                 .toList();
             if (valid.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -681,12 +727,8 @@ Future<SparepartSheetResult?> showRequestSparepartSheet(
                     ),
                   ),
                   SizedBox(height: 16),
-                  for (var i = 0; i < items.length; i++) _buildItemRow(
-                    context,
-                    items,
-                    i,
-                    setSheetState,
-                  ),
+                  for (var i = 0; i < items.length; i++)
+                    _buildItemRow(context, items, i, setSheetState),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -731,12 +773,7 @@ Widget _buildItemRow(
   int index,
   StateSetter setSheetState,
 ) {
-  void update({
-    String? nama,
-    int? jumlah,
-    String? satuan,
-    String? keterangan,
-  }) {
+  void update({String? nama, int? jumlah, String? satuan, String? keterangan}) {
     setSheetState(() {
       final old = items[index];
       items[index] = (
@@ -779,8 +816,7 @@ Widget _buildItemRow(
         icon: Icon(Icons.remove_circle_outline, color: context.colors.error),
         onPressed: items.length == 1
             ? null
-            : () =>
-                setSheetState(() => items.removeAt(index)),
+            : () => setSheetState(() => items.removeAt(index)),
         tooltip: 'Hapus item',
       ),
     ],

@@ -43,10 +43,9 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
       _page = 1;
     });
     try {
-      final res = await ref.read(presensiRepositoryProvider).getRiwayat(
-            bulan: _bulan,
-            tahun: _tahun,
-          );
+      final res = await ref
+          .read(presensiRepositoryProvider)
+          .getRiwayat(bulan: _bulan, tahun: _tahun);
       setState(() {
         _items
           ..clear()
@@ -67,11 +66,9 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
     if (_loading || _page >= _lastPage) return;
     setState(() => _loading = true);
     try {
-      final res = await ref.read(presensiRepositoryProvider).getRiwayat(
-            bulan: _bulan,
-            tahun: _tahun,
-            page: _page + 1,
-          );
+      final res = await ref
+          .read(presensiRepositoryProvider)
+          .getRiwayat(bulan: _bulan, tahun: _tahun, page: _page + 1);
       setState(() {
         _items.addAll(res.items);
         _page = res.currentPage;
@@ -79,9 +76,9 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
       });
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -116,7 +113,10 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
                       decoration: const InputDecoration(labelText: 'Bulan'),
                       items: [
                         for (var i = 1; i <= 12; i++)
-                          DropdownMenuItem(value: i, child: Text(kBulanNama[i - 1])),
+                          DropdownMenuItem(
+                            value: i,
+                            child: Text(kBulanNama[i - 1]),
+                          ),
                       ],
                       onChanged: (v) {
                         if (v != null && v != _bulan) {
@@ -147,10 +147,7 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
               ),
             ),
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: _reload,
-                child: _buildBody(),
-              ),
+              child: RefreshIndicator(onRefresh: _reload, child: _buildBody()),
             ),
           ],
         ),
@@ -232,7 +229,9 @@ class _RiwayatTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(
-          luarRadius ? Icons.warning_amber_outlined : Icons.check_circle_outline,
+          luarRadius
+              ? Icons.warning_amber_outlined
+              : Icons.check_circle_outline,
           color: luarRadius
               ? theme.colorScheme.error
               : theme.colorScheme.primary,
@@ -242,15 +241,18 @@ class _RiwayatTile extends StatelessWidget {
           '${item.namaTitik ?? 'Titik'} • '
           'Masuk ${fmtWaktu(item.checkIn)} • Pulang ${fmtWaktu(item.checkOut)}',
         ),
-        trailing: Text(_statusLabel(item.status), style: theme.textTheme.bodySmall),
+        trailing: Text(
+          _statusLabel(item.status),
+          style: theme.textTheme.bodySmall,
+        ),
       ),
     );
   }
 
   String _statusLabel(String? status) => switch (status) {
-        'menunggu_check_out' => 'Berlangsung',
-        'selesai' => 'Selesai',
-        'belum_check_in' => 'Belum check-in',
-        _ => status ?? '-',
-      };
+    'menunggu_check_out' => 'Berlangsung',
+    'selesai' => 'Selesai',
+    'belum_check_in' => 'Belum check-in',
+    _ => status ?? '-',
+  };
 }

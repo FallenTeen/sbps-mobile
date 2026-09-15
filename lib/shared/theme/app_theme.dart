@@ -164,9 +164,7 @@ class AppTheme {
   static final CardThemeData _cardTheme = CardThemeData(
     elevation: 0,
     margin: const EdgeInsets.only(bottom: 10),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     color: Colors.white,
     shadowColor: Colors.transparent,
     surfaceTintColor: Colors.transparent,
@@ -185,14 +183,8 @@ class AppTheme {
       color: Color(0xFF0F172A),
       letterSpacing: -0.3,
     ),
-    iconTheme: const IconThemeData(
-      color: Color(0xFF475569),
-      size: 22,
-    ),
-    actionsIconTheme: const IconThemeData(
-      color: Color(0xFF475569),
-      size: 22,
-    ),
+    iconTheme: const IconThemeData(color: Color(0xFF475569), size: 22),
+    actionsIconTheme: const IconThemeData(color: Color(0xFF475569), size: 22),
   );
 
   // ── Input Decoration Theme ─────────────────────────────────────────────────
@@ -305,7 +297,9 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           backgroundColor: buttonBg,
           foregroundColor: buttonFg,
           textStyle: const TextStyle(
@@ -319,7 +313,9 @@ class AppTheme {
         style: FilledButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           backgroundColor: buttonBg,
           foregroundColor: buttonFg,
           textStyle: const TextStyle(
@@ -332,35 +328,31 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           side: BorderSide(color: borderColor),
           foregroundColor: colors.textSecondary,
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: buttonBg,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: colors.surfaceVariant,
-        selectedColor: colorScheme.primary.withValues(alpha: isDark ? 0.25 : 0.15),
+        selectedColor: colorScheme.primary.withValues(
+          alpha: isDark ? 0.25 : 0.15,
+        ),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: colors.textSecondary,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: BorderSide.none,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
@@ -431,14 +423,8 @@ class AppTheme {
       color: _darkTextPrimary,
       letterSpacing: -0.3,
     ),
-    iconTheme: const IconThemeData(
-      color: _darkTextSecondary,
-      size: 22,
-    ),
-    actionsIconTheme: const IconThemeData(
-      color: _darkTextSecondary,
-      size: 22,
-    ),
+    iconTheme: const IconThemeData(color: _darkTextSecondary, size: 22),
+    actionsIconTheme: const IconThemeData(color: _darkTextSecondary, size: 22),
   );
 
   static final InputDecorationTheme _darkInputTheme = InputDecorationTheme(

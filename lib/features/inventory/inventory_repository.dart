@@ -64,9 +64,8 @@ class InventoryRepository {
   Future<InventoryRequest> getRequestDetail(String id) async {
     final res = await _api.get<InventoryRequest>(
       '/inventory/requests/$id',
-      parse: (raw) => InventoryRequest.fromJson(
-        Map<String, dynamic>.from(raw as Map),
-      ),
+      parse: (raw) =>
+          InventoryRequest.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;
@@ -97,8 +96,7 @@ class InventoryRepository {
         return <OpnameItem>[
           if (raw is List)
             for (final e in raw)
-              if (e is Map)
-                OpnameItem.fromJson(Map<String, dynamic>.from(e)),
+              if (e is Map) OpnameItem.fromJson(Map<String, dynamic>.from(e)),
         ];
       },
     );

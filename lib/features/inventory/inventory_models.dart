@@ -216,8 +216,8 @@ class OpnameSubmitItem {
   final String? catatan;
 
   Map<String, dynamic> toJson() => {
-        'bahan_baku_id': bahanBakuId,
-        'saldo_fisik': saldoFisik,
-        if (catatan != null && catatan!.trim().isNotEmpty) 'catatan': catatan,
-      };
+    'bahan_baku_id': bahanBakuId,
+    'saldo_fisik': saldoFisik,
+    if (catatan != null && catatan!.trim().isNotEmpty) 'catatan': catatan,
+  };
 }

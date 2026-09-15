@@ -14,7 +14,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 
 /// Simplified Ajuan Servis Sheet (Fase 2) - Converted from full screen to sheet
-/// Form sederhana: pilih armada, kategori, keluhan. 
+/// Form sederhana: pilih armada, kategori, keluhan.
 /// Simplified to ≤3 fields for sheet pattern (removed ODO/Jam fields as optional).
 class AjuanServisSheet extends ConsumerStatefulWidget {
   const AjuanServisSheet({super.key, this.initialArmadaId});
@@ -38,8 +38,7 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
 
   late final AutosaveController _autosave;
 
-  String get _draftKey =>
-      'servis_ajuan_${widget.initialArmadaId ?? 'new'}';
+  String get _draftKey => 'servis_ajuan_${widget.initialArmadaId ?? 'new'}';
 
   Map<String, dynamic> _snapshot() => {
     'armadaId': _selectedArmada?.id,
@@ -60,7 +59,10 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
         if (match.isNotEmpty) setState(() => _selectedArmada = match.first);
       }
     }
-    setState(() { _draftFound = true; _draftSavedAt = draft.savedAt; });
+    setState(() {
+      _draftFound = true;
+      _draftSavedAt = draft.savedAt;
+    });
   }
 
   final List<String> _kategoriOptions = const [
@@ -94,7 +96,9 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
     final armadaList = ref.read(masterArmadaProvider).value;
     if (armadaList == null || _initialized) return;
     _initialized = true;
-    final match = armadaList.where((a) => a.id == widget.initialArmadaId).toList();
+    final match = armadaList
+        .where((a) => a.id == widget.initialArmadaId)
+        .toList();
     if (match.isNotEmpty) {
       setState(() => _selectedArmada = match.first);
     }
@@ -130,7 +134,9 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(servisRepositoryProvider).submitAjuanServis(
+      await ref
+          .read(servisRepositoryProvider)
+          .submitAjuanServis(
             armadaId: _selectedArmada!.id,
             keluhan: _keluhanController.text.trim(),
             kategori: _kategori,
@@ -150,9 +156,9 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -233,7 +239,8 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
               // Content
               Expanded(
                 child: masterArmadaAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (_, __) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -296,7 +303,8 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                                 });
                                 _autosave.onFieldChanged();
                               },
-                              validator: (val) => val == null ? 'Pilih armada' : null,
+                              validator: (val) =>
+                                  val == null ? 'Pilih armada' : null,
                             ),
                             const SizedBox(height: 16),
 
@@ -315,7 +323,9 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setState(() => _kategori = val);
+                                if (val != null) {
+                                  setState(() => _kategori = val);
+                                }
                                 _autosave.onFieldChanged();
                               },
                             ),
@@ -332,7 +342,8 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                               ),
                               maxLines: 4,
                               minLines: 3,
-                              validator: (val) => (val == null || val.trim().isEmpty)
+                              validator: (val) =>
+                                  (val == null || val.trim().isEmpty)
                                   ? 'Keluhan wajib diisi'
                                   : null,
                             ),
@@ -347,20 +358,24 @@ class _AjuanServisSheetState extends ConsumerState<AjuanServisSheet> {
                                   onPressed: _isLoading ? null : _submit,
                                   child: _isLoading
                                       ? const Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             SizedBox(
                                               width: 18,
                                               height: 18,
                                               child: CircularProgressIndicator(
-                                                  strokeWidth: 2, color: Colors.white),
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                             SizedBox(width: 8),
                                             Text('Mengirim...'),
                                           ],
                                         )
                                       : const Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Icon(Icons.send_outlined, size: 20),
                                             SizedBox(width: 8),

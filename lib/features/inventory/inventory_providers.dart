@@ -22,13 +22,13 @@ final inventoryStokProvider = FutureProvider.autoDispose<List<InventoryItem>>(
 
 final inventoryRequestsProvider =
     FutureProvider.autoDispose<List<InventoryRequest>>(
-  (ref) => ref.watch(inventoryRepositoryProvider).getRequests(),
-);
+      (ref) => ref.watch(inventoryRepositoryProvider).getRequests(),
+    );
 
-final inventoryRequestDetailProvider =
-    FutureProvider.autoDispose.family<InventoryRequest, String>(
-  (ref, id) => ref.watch(inventoryRepositoryProvider).getRequestDetail(id),
-);
+final inventoryRequestDetailProvider = FutureProvider.autoDispose
+    .family<InventoryRequest, String>(
+      (ref, id) => ref.watch(inventoryRepositoryProvider).getRequestDetail(id),
+    );
 
 // ---------------------------------------------------------------------------
 // Proses request sparepart dari workshop
@@ -83,8 +83,8 @@ final inventoryProsesProvider =
 
 final inventoryOpnameMaterialsProvider =
     FutureProvider.autoDispose<List<OpnameItem>>(
-  (ref) => ref.watch(inventoryRepositoryProvider).getOpnameMaterials(),
-);
+      (ref) => ref.watch(inventoryRepositoryProvider).getOpnameMaterials(),
+    );
 
 class InventoryOpnameResult {
   const InventoryOpnameResult({this.error});
@@ -113,7 +113,9 @@ class InventoryOpnameController extends Notifier<InventoryOpnameState> {
   }) async {
     if (state.busy) return const InventoryOpnameResult();
     if (items.isEmpty) {
-      return const InventoryOpnameResult(error: 'Belum ada item yang dihitung.');
+      return const InventoryOpnameResult(
+        error: 'Belum ada item yang dihitung.',
+      );
     }
     state = const InventoryOpnameState(busy: true);
     try {

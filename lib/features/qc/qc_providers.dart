@@ -17,11 +17,7 @@ final qcRepositoryProvider = Provider<QcRepository>(
 // Riwayat QC (filter status + pagination)
 // ---------------------------------------------------------------------------
 
-const kQcStatuses = <String>[
-  'menunggu_hasil',
-  'lolos',
-  'tidak_lolos',
-];
+const kQcStatuses = <String>['menunggu_hasil', 'lolos', 'tidak_lolos'];
 
 class QcRiwayatFilter {
   const QcRiwayatFilter({this.status});
@@ -45,7 +41,8 @@ class QcRiwayatFilterNotifier extends Notifier<QcRiwayatFilter> {
 
 final qcRiwayatFilterProvider =
     NotifierProvider<QcRiwayatFilterNotifier, QcRiwayatFilter>(
-        QcRiwayatFilterNotifier.new);
+      QcRiwayatFilterNotifier.new,
+    );
 
 class QcRiwayatState {
   const QcRiwayatState({
@@ -73,15 +70,14 @@ class QcRiwayatState {
     int? total,
     bool? loading,
     String? error,
-  }) =>
-      QcRiwayatState(
-        items: items ?? this.items,
-        currentPage: currentPage ?? this.currentPage,
-        lastPage: lastPage ?? this.lastPage,
-        total: total ?? this.total,
-        loading: loading ?? this.loading,
-        error: error,
-      );
+  }) => QcRiwayatState(
+    items: items ?? this.items,
+    currentPage: currentPage ?? this.currentPage,
+    lastPage: lastPage ?? this.lastPage,
+    total: total ?? this.total,
+    loading: loading ?? this.loading,
+    error: error,
+  );
 }
 
 class QcRiwayatController extends Notifier<QcRiwayatState> {
@@ -94,10 +90,9 @@ class QcRiwayatController extends Notifier<QcRiwayatState> {
 
   Future<void> _loadPage(QcRiwayatFilter filter, {required int page}) async {
     try {
-      final result = await ref.read(qcRepositoryProvider).getRiwayat(
-            status: filter.status,
-            page: page,
-          );
+      final result = await ref
+          .read(qcRepositoryProvider)
+          .getRiwayat(status: filter.status, page: page);
       if (ref.read(qcRiwayatFilterProvider) != filter) return;
       state = state.copyWith(
         items: page == 1 ? result.items : [...state.items, ...result.items],
@@ -115,50 +110,57 @@ class QcRiwayatController extends Notifier<QcRiwayatState> {
     }
   }
 
-  Future<void> refresh() => _loadPage(ref.read(qcRiwayatFilterProvider), page: 1);
+  Future<void> refresh() =>
+      _loadPage(ref.read(qcRiwayatFilterProvider), page: 1);
 
   Future<void> loadMore() async {
     if (state.loading || !state.hasMore) return;
     state = state.copyWith(loading: true);
-    await _loadPage(ref.read(qcRiwayatFilterProvider),
-        page: state.currentPage + 1);
+    await _loadPage(
+      ref.read(qcRiwayatFilterProvider),
+      page: state.currentPage + 1,
+    );
   }
 }
 
-final qcRiwayatProvider =
-    NotifierProvider<QcRiwayatController, QcRiwayatState>(
-        QcRiwayatController.new);
+final qcRiwayatProvider = NotifierProvider<QcRiwayatController, QcRiwayatState>(
+  QcRiwayatController.new,
+);
 
 /// Peta sessionId → sample yang masih menunggu hasil uji tekan.
 /// Dipakai halaman sesi aktif untuk memutuskan tombol mana yang tampil:
 /// "Catat Slump Test" vs "Catat Uji Tekan".
 final waitingSamplesBySessionProvider =
     FutureProvider.autoDispose<Map<String, QcSample>>((ref) async {
-  final page = await ref.watch(qcRepositoryProvider).getRiwayat(
-        status: 'menunggu_hasil',
-        perPage: 50,
-      ).timeout(
-        const Duration(seconds: 20),
-        onTimeout: () => throw ApiException(
-          'Server tidak merespons saat memuat data QC.\nPeriksa koneksi internet Anda\nCoba lagi atau hubungi admin.',
-        ),
-      );
-  final map = <String, QcSample>{};
-  for (final s in page.items) {
-    final sid = s.sessionId;
-    if (sid != null && sid.isNotEmpty && !map.containsKey(sid)) {
-      map[sid] = s;
-    }
-  }
-  return map;
-});
+      final page = await ref
+          .watch(qcRepositoryProvider)
+          .getRiwayat(status: 'menunggu_hasil', perPage: 50)
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw ApiException(
+              'Server tidak merespons saat memuat data QC.\nPeriksa koneksi internet Anda\nCoba lagi atau hubungi admin.',
+            ),
+          );
+      final map = <String, QcSample>{};
+      for (final s in page.items) {
+        final sid = s.sessionId;
+        if (sid != null && sid.isNotEmpty && !map.containsKey(sid)) {
+          map[sid] = s;
+        }
+      }
+      return map;
+    });
 
 // ---------------------------------------------------------------------------
 // Tulis: slump test / uji tekan via outbox (client_uuid idempotent)
 // ---------------------------------------------------------------------------
 
 class QcSubmitResult {
-  const QcSubmitResult({this.delivered = false, this.queued = false, this.error});
+  const QcSubmitResult({
+    this.delivered = false,
+    this.queued = false,
+    this.error,
+  });
 
   final bool delivered;
   final bool queued;
@@ -207,8 +209,9 @@ class QcSubmitController extends Notifier<QcSubmitState> {
     state = const QcSubmitState(busy: true);
     try {
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       if (result.delivered) {
         _invalidateQueries();
         return const QcSubmitResult(delivered: true);
@@ -252,8 +255,9 @@ class QcSubmitController extends Notifier<QcSubmitState> {
     state = const QcSubmitState(busy: true);
     try {
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       if (result.delivered) {
         _invalidateQueries();
         ref.invalidate(sesiAktifProvider);
@@ -272,8 +276,9 @@ class QcSubmitController extends Notifier<QcSubmitState> {
   }
 }
 
-final qcSubmitProvider =
-    NotifierProvider<QcSubmitController, QcSubmitState>(QcSubmitController.new);
+final qcSubmitProvider = NotifierProvider<QcSubmitController, QcSubmitState>(
+  QcSubmitController.new,
+);
 
 // ---------------------------------------------------------------------------
 // Detail QC

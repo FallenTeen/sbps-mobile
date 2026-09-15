@@ -58,14 +58,16 @@ class _InventoryRequestDetailScreenState
       return;
     }
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Request sparepart diproses')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Request sparepart diproses')));
   }
 
   @override
   Widget build(BuildContext context) {
-    final detailAsync = ref.watch(inventoryRequestDetailProvider(widget.requestId));
+    final detailAsync = ref.watch(
+      inventoryRequestDetailProvider(widget.requestId),
+    );
     final prosesState = ref.watch(inventoryProsesProvider);
 
     return Scaffold(
@@ -75,7 +77,7 @@ class _InventoryRequestDetailScreenState
           parentLabel: 'Inventory',
           title: 'Detail Request',
         ),
-        actions:  [PortalSwitchButton()],
+        actions: [PortalSwitchButton()],
       ),
       body: detailAsync.when(
         loading: () => const SkeletonLoader(
@@ -96,8 +98,11 @@ class _InventoryRequestDetailScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off_rounded,
-                    color: context.colors.error, size: 32),
+                Icon(
+                  Icons.cloud_off_rounded,
+                  color: context.colors.error,
+                  size: 32,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Gagal memuat detail request.',
@@ -105,8 +110,9 @@ class _InventoryRequestDetailScreenState
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () => ref
-                      .invalidate(inventoryRequestDetailProvider(widget.requestId)),
+                  onPressed: () => ref.invalidate(
+                    inventoryRequestDetailProvider(widget.requestId),
+                  ),
                   child: const Text('Coba lagi'),
                 ),
               ],
@@ -120,8 +126,9 @@ class _InventoryRequestDetailScreenState
             children: [
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () async => ref
-                      .invalidate(inventoryRequestDetailProvider(widget.requestId)),
+                  onRefresh: () async => ref.invalidate(
+                    inventoryRequestDetailProvider(widget.requestId),
+                  ),
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
@@ -130,8 +137,11 @@ class _InventoryRequestDetailScreenState
                       SizedBox(height: 16),
                       Row(
                         children: [
-                          Icon(Icons.list_alt_rounded,
-                              size: 20, color: context.colors.primary),
+                          Icon(
+                            Icons.list_alt_rounded,
+                            size: 20,
+                            color: context.colors.primary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Item Diminta',
@@ -144,8 +154,7 @@ class _InventoryRequestDetailScreenState
                         ],
                       ),
                       const SizedBox(height: 10),
-                      for (final item in request.items)
-                        _ItemCard(item: item),
+                      for (final item in request.items) _ItemCard(item: item),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -207,7 +216,9 @@ class _HeaderCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.directions_bus_filled_rounded,
-                  color: selesai ? context.colors.success : context.colors.warning,
+                  color: selesai
+                      ? context.colors.success
+                      : context.colors.warning,
                   size: 22,
                 ),
               ),
@@ -241,17 +252,22 @@ class _HeaderCard extends StatelessWidget {
           SizedBox(height: 12),
           Row(
             children: [
-               Icon(Icons.event_rounded, size: 15, color: context.colors.textMuted),
+              Icon(
+                Icons.event_rounded,
+                size: 15,
+                color: context.colors.textMuted,
+              ),
               const SizedBox(width: 6),
               Text(
                 _requestDateFormat.format(request.createdAt),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.colors.textMuted,
-                ),
+                style: TextStyle(fontSize: 12, color: context.colors.textMuted),
               ),
               SizedBox(width: 16),
-               Icon(Icons.sync_alt_rounded, size: 15, color: context.colors.textMuted),
+              Icon(
+                Icons.sync_alt_rounded,
+                size: 15,
+                color: context.colors.textMuted,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Workshop',
@@ -270,8 +286,11 @@ class _HeaderCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline_rounded,
-                      size: 18, color: context.colors.success),
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 18,
+                    color: context.colors.success,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(

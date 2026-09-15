@@ -28,8 +28,9 @@ class VersionGateController extends AsyncNotifier<VersionGateState> {
   @override
   Future<VersionGateState> build() async {
     try {
-      final info =
-          await ref.read(versionServiceProvider).fetchAppVersion('mobile');
+      final info = await ref
+          .read(versionServiceProvider)
+          .fetchAppVersion('mobile');
       if (!info.forceUpdate || info.minVersion.isEmpty) {
         return VersionGateState.ok;
       }
@@ -62,7 +63,8 @@ class VersionGateController extends AsyncNotifier<VersionGateState> {
 
 final versionGateProvider =
     AsyncNotifierProvider<VersionGateController, VersionGateState>(
-        VersionGateController.new);
+      VersionGateController.new,
+    );
 
 /// Layar wajib-update — menutup seluruh aplikasi sampai user update.
 class UpdateRequiredScreen extends ConsumerWidget {
@@ -83,12 +85,17 @@ class UpdateRequiredScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.system_update_alt,
-                    size: 64, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.system_update_alt,
+                  size: 64,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: 24),
-                Text('Versi aplikasi sudah usang',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall),
+                Text(
+                  'Versi aplikasi sudah usang',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Silakan perbarui ke versi minimal '
@@ -125,8 +132,9 @@ class UpdateRequiredScreen extends ConsumerWidget {
     if (url.isEmpty || uri == null) return;
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text('Tidak dapat membuka tautan pembaruan.')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Tidak dapat membuka tautan pembaruan.')),
+      );
     }
   }
 }

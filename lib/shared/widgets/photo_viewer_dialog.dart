@@ -11,8 +11,10 @@ class PhotoViewerDialog extends StatelessWidget {
     this.imageUrl,
     this.filePath,
     this.title,
-  }) : assert(imageUrl != null || filePath != null,
-            'Must provide either imageUrl or filePath');
+  }) : assert(
+         imageUrl != null || filePath != null,
+         'Must provide either imageUrl or filePath',
+       );
 
   final String heroTag;
   final String? imageUrl;
@@ -77,7 +79,11 @@ class PhotoViewerDialog extends StatelessWidget {
                 errorBuilder: (_, _, _) => const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.broken_image_outlined, size: 64, color: Colors.white54),
+                    Icon(
+                      Icons.broken_image_outlined,
+                      size: 64,
+                      color: Colors.white54,
+                    ),
                     SizedBox(height: 12),
                     Text(
                       'Gagal memuat foto',

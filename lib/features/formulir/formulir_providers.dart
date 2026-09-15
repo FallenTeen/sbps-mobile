@@ -32,7 +32,11 @@ class FormulirSubmitState {
 
 /// Hasil submit mengikuti pola [CheckInResult] presensi.
 class FormulirResult {
-  const FormulirResult({this.delivered = false, this.queued = false, this.error});
+  const FormulirResult({
+    this.delivered = false,
+    this.queued = false,
+    this.error,
+  });
 
   final bool delivered;
   final bool queued;
@@ -59,14 +63,16 @@ class FormulirController extends Notifier<FormulirSubmitState> {
     if (state.busy) return const FormulirResult(error: 'Sedang memproses.');
     final aktivitas = aktivitasDilakukan.trim();
     if (aktivitas.isEmpty) {
-      return const FormulirResult(
-          error: 'Uraian aktivitas wajib diisi.');
+      return const FormulirResult(error: 'Uraian aktivitas wajib diisi.');
     }
     if (photoPaths.length > _maksFoto) {
       return const FormulirResult(error: 'Maksimal $_maksFoto foto.');
     }
 
-    state = const FormulirSubmitState(busy: true, phase: UploadPhase.compressing);
+    state = const FormulirSubmitState(
+      busy: true,
+      phase: UploadPhase.compressing,
+    );
     try {
       // Fase A1.6: kompres tiap foto sebelum masuk outbox.
       final compressor = ref.read(photoCompressionProvider);
@@ -93,8 +99,9 @@ class FormulirController extends Notifier<FormulirSubmitState> {
         idempotencyKey: _uuid.v4(),
       );
 
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, _send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, _send);
 
       if (result.delivered) {
         ref.invalidate(formulirHariIniProvider);
@@ -105,7 +112,8 @@ class FormulirController extends Notifier<FormulirSubmitState> {
       return FormulirResult(error: e.message);
     } catch (_) {
       return const FormulirResult(
-          error: 'Gagal memproses formulir. Coba lagi.');
+        error: 'Gagal memproses formulir. Coba lagi.',
+      );
     } finally {
       state = const FormulirSubmitState();
     }
@@ -119,4 +127,5 @@ class FormulirController extends Notifier<FormulirSubmitState> {
 
 final formulirSubmitProvider =
     NotifierProvider<FormulirController, FormulirSubmitState>(
-        FormulirController.new);
+      FormulirController.new,
+    );

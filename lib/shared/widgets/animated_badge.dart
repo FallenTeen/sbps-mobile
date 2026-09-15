@@ -29,10 +29,8 @@ class AnimatedCountBadge extends StatelessWidget {
         textColor: fg,
         label: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          transitionBuilder: (child, animation) => ScaleTransition(
-            scale: animation,
-            child: child,
-          ),
+          transitionBuilder: (child, animation) =>
+              ScaleTransition(scale: animation, child: child),
           child: Text(
             '$count',
             key: ValueKey<int>(count),
@@ -51,11 +49,7 @@ class AnimatedCountBadge extends StatelessWidget {
 
 /// Pulsing sync indicator dot when a background sync is active.
 class PulsingSyncDot extends StatefulWidget {
-  const PulsingSyncDot({
-    super.key,
-    this.color,
-    this.size = 8.0,
-  });
+  const PulsingSyncDot({super.key, this.color, this.size = 8.0});
 
   final Color? color;
   final double size;
@@ -77,9 +71,10 @@ class _PulsingSyncDotState extends State<PulsingSyncDot>
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -90,7 +85,8 @@ class _PulsingSyncDotState extends State<PulsingSyncDot>
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = widget.color ?? Theme.of(context).colorScheme.primary;
+    final effectiveColor =
+        widget.color ?? Theme.of(context).colorScheme.primary;
 
     return AnimatedBuilder(
       animation: _animation,

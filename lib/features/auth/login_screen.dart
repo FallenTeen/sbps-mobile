@@ -27,7 +27,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
-    await ref.read(authControllerProvider.notifier).login(
+    await ref
+        .read(authControllerProvider.notifier)
+        .login(
           email: _emailController.text,
           password: _passwordController.text,
         );
@@ -69,7 +71,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: context.colors.primary.withValues(alpha: 0.3),
+                            color: context.colors.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             blurRadius: 24,
                             offset: const Offset(0, 10),
                           ),
@@ -121,8 +125,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textInputAction: TextInputAction.next,
                     validator: (value) =>
                         (value == null || value.trim().isEmpty)
-                            ? 'Email wajib diisi'
-                            : null,
+                        ? 'Email wajib diisi'
+                        : null,
                   ),
                   SizedBox(height: 16),
 
@@ -165,8 +169,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline_rounded,
-                              color: context.colors.error, size: 18),
+                          Icon(
+                            Icons.error_outline_rounded,
+                            color: context.colors.error,
+                            size: 18,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -245,17 +252,16 @@ class _CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       onFieldSubmitted: onFieldSubmitted,
       validator: validator,
-      style: TextStyle(
-        color: context.colors.textPrimary,
-        fontSize: 15,
-      ),
+      style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(prefixIcon, color: context.colors.textMuted, size: 20),
         suffixIcon: suffixIcon,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: context.colors.border),
@@ -266,8 +272,7 @@ class _CustomTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-               BorderSide(color: context.colors.primary, width: 1.5),
+          borderSide: BorderSide(color: context.colors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -302,7 +307,9 @@ class _LoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: context.colors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: context.colors.primary.withValues(alpha: 0.5),
+          disabledBackgroundColor: context.colors.primary.withValues(
+            alpha: 0.5,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),

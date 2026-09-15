@@ -37,18 +37,17 @@ class Titik {
       longitude <= 180;
 
   factory Titik.fromJson(Map<String, dynamic> json) => Titik(
-        id: json['id']?.toString() ?? json['titik_id']?.toString() ?? '',
-        nama: json['nama']?.toString() ?? json['titik']?.toString() ?? '',
-        proyek: json['proyek']?.toString() ?? json['proyek_nama']?.toString(),
-        proyekId: json['proyek_id']?.toString(),
-        proyekNama:
-            json['proyek_nama']?.toString() ?? json['proyek']?.toString(),
-        status: json['status']?.toString(),
-        latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-        longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-        radiusPresensiMeter:
-            (json['radius_presensi_meter'] as num?)?.toDouble() ?? 0,
-      );
+    id: json['id']?.toString() ?? json['titik_id']?.toString() ?? '',
+    nama: json['nama']?.toString() ?? json['titik']?.toString() ?? '',
+    proyek: json['proyek']?.toString() ?? json['proyek_nama']?.toString(),
+    proyekId: json['proyek_id']?.toString(),
+    proyekNama: json['proyek_nama']?.toString() ?? json['proyek']?.toString(),
+    status: json['status']?.toString(),
+    latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+    longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
+    radiusPresensiMeter:
+        (json['radius_presensi_meter'] as num?)?.toDouble() ?? 0,
+  );
 
   /// Parse toleran — null bila [raw] bukan objek titik yang valid.
   /// Dipakai untuk nested `titik` pada respons presensi.
@@ -61,4 +60,3 @@ class Titik {
     }
   }
 }
-

@@ -1,23 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
-import '../../shared/widgets/skeleton_loader.dart';
-import 'models/notification.dart';
+import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/rich_list_tile.dart';
+import '../../shared/widgets/searchable_list_header.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/formatters.dart';
+import 'models/notification.dart';
 import 'notifikasi_providers.dart';
 
-/// Daftar notifikasi (Fase A1.7): status baca, tap → tandai dibaca,
-/// lalu buka action_url bila ada.
-class NotifikasiScreen extends ConsumerWidget {
+/// Daftar notifikasi: status baca, tap → tandai dibaca lalu navigasi ke layar
+/// terkait (deep-link internal, bukan browser eksternal). Tersedia filter
+/// Semua/Belum Dibaca, "Tandai Semua Dibaca", dan pengelompokan tanggal.
+class NotifikasiScreen extends ConsumerStatefulWidget {
   const NotifikasiScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotifikasiScreen> createState() => _NotifikasiScreenState();
+}
+
+class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
+  bool _unreadOnly = false;
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(notificationsProvider);
 
     return Scaffold(
@@ -28,8 +42,7 @@ class NotifikasiScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Segarkan',
             icon: const Icon(Icons.refresh),
-            onPressed: () =>
-                ref.read(notificationsProvider.notifier).refresh(),
+            onPressed: () => ref.read(notificationsProvider.notifier).refresh(),
           ),
         ],
       ),
@@ -41,36 +54,185 @@ class NotifikasiScreen extends ConsumerWidget {
             title: 'Gagal Memuat Notifikasi',
             subtitle: '$error',
             actionLabel: 'Coba Lagi',
-            onAction: () =>
-                ref.read(notificationsProvider.notifier).refresh(),
+            onAction: () => ref.read(notificationsProvider.notifier).refresh(),
           ),
-          data: (page) {
-            if (page.items.isEmpty) {
-              return const AppEmptyState(
-                icon: Icons.notifications_none,
-                title: 'Belum Ada Notifikasi',
-                subtitle: 'Pemberitahuan aktivitas dan sistem akan muncul di sini.',
-              );
-            }
-            return RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(notificationsProvider.notifier).refresh(),
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(12),
-                itemCount: page.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, i) => StaggeredEntrance(
-                  index: i,
-                  child: _Tile(notification: page.items[i]),
-                ),
-              ),
-            );
-          },
+          data: (page) => _buildList(context, page),
         ),
       ),
     );
   }
+
+  Widget _buildList(BuildContext context, NotificationsPage page) {
+    final q = _searchQuery.toLowerCase();
+    final searched = q.isEmpty
+        ? page.items
+        : page.items
+              .where(
+                (n) =>
+                    (n.title ?? '').toLowerCase().contains(q) ||
+                    (n.body ?? '').toLowerCase().contains(q),
+              )
+              .toList();
+
+    final visible = _unreadOnly
+        ? searched.where((n) => !n.isRead).toList()
+        : searched;
+
+    if (page.items.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.notifications_none,
+        title: 'Belum Ada Notifikasi',
+        subtitle: 'Pemberitahuan aktivitas dan sistem akan muncul di sini.',
+      );
+    }
+    if (searched.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.search_off_outlined,
+        title: 'Tidak Ada Hasil Pencarian',
+        subtitle: 'Tidak ditemukan notifikasi yang cocok dengan pencarian.',
+      );
+    }
+    if (visible.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.done_all,
+        title: 'Semua Sudah Dibaca',
+        subtitle: 'Tidak ada notifikasi baru yang belum dibuka.',
+      );
+    }
+
+    final unreadCount = page.items.where((n) => !n.isRead).length;
+    final rows = _buildRows(visible);
+
+    return Column(
+      children: [
+        SearchableListHeader(
+          hintText: 'Cari notifikasi...',
+          onChanged: (v) => setState(() => _searchQuery = v),
+          child: _FilterBar(
+            unreadOnly: _unreadOnly,
+            unreadCount: unreadCount,
+            onChanged: (value) => setState(() => _unreadOnly = value),
+            onMarkAll: unreadCount == 0
+                ? null
+                : () => ref.read(notificationsProvider.notifier).markAllRead(),
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(12),
+              itemCount: rows.length,
+              itemBuilder: (context, i) {
+                final row = rows[i];
+                if (row is _HeaderRow) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+                    child: Text(
+                      row.label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.textTertiary,
+                      ),
+                    ),
+                  );
+                }
+                final notification = (row as _TileRow).notification;
+                return StaggeredEntrance(
+                  index: i,
+                  child: _Tile(notification: notification),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Susun baris list dengan header pengelompokan tanggal.
+  List<Object> _buildRows(List<AppNotification> items) {
+    final rows = <Object>[];
+    String? lastHeader;
+    for (final n in items) {
+      final header = _dateHeader(n.time);
+      if (header != lastHeader) {
+        rows.add(_HeaderRow(header));
+        lastHeader = header;
+      }
+      rows.add(_TileRow(n));
+    }
+    return rows;
+  }
+
+  /// Kelompok tanggal: Hari Ini / Kemarin / Minggu Ini / tanggal penuh.
+  String _dateHeader(String? time) {
+    final dt = DateTime.tryParse(time ?? '');
+    final now = DateTime.now();
+    if (dt == null) return 'Lebih Lama';
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(that).inDays;
+    if (diff <= 0) return 'Hari Ini';
+    if (diff == 1) return 'Kemarin';
+    if (diff < 7) return 'Minggu Ini';
+    return fmtTanggal(dt);
+  }
+}
+
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({
+    required this.unreadOnly,
+    required this.unreadCount,
+    required this.onChanged,
+    required this.onMarkAll,
+  });
+
+  final bool unreadOnly;
+  final int unreadCount;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback? onMarkAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ChoiceChip(
+            label: const Text('Semua'),
+            selected: !unreadOnly,
+            onSelected: (_) => onChanged(false),
+          ),
+          ChoiceChip(
+            label: Text('Belum Dibaca ($unreadCount)'),
+            selected: unreadOnly,
+            onSelected: (_) => onChanged(true),
+          ),
+          TextButton.icon(
+            onPressed: onMarkAll,
+            icon: const Icon(Icons.done_all, size: 18),
+            label: const Text('Tandai semua'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderRow {
+  const _HeaderRow(this.label);
+  final String label;
+}
+
+class _TileRow {
+  const _TileRow(this.notification);
+  final AppNotification notification;
 }
 
 class _Tile extends ConsumerWidget {
@@ -80,79 +242,79 @@ class _Tile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final bold = !notification.isRead;
+    final colors = context.colors;
+    final unread = !notification.isRead;
 
-    TextStyle style(ThemeData t) => t.textTheme.bodyMedium!.copyWith(
-          fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
-        );
-
-    return Card(
-      margin: EdgeInsets.zero,
-      color: bold
-          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.25)
-          : null,
-      child: ListTile(
-        leading: Icon(
-          notification.isRead
-              ? Icons.notifications_outlined
-              : Icons.notifications_active,
-          color: notification.isRead
-              ? theme.colorScheme.outline
-              : theme.colorScheme.primary,
+    return RichListTile(
+      title: notification.title ?? '(Tanpa judul)',
+      subtitle: (notification.body ?? '').isNotEmpty ? notification.body : null,
+      meta: notification.time != null ? fmtRelatif(notification.time!) : null,
+      metaColor: colors.textTertiary,
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: (unread ? colors.primary : colors.textMuted).withValues(
+            alpha: 0.12,
+          ),
+          shape: BoxShape.circle,
         ),
-        title: Text(notification.title ?? '(Tanpa judul)',
-            style: bold ? style(theme) : null),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if ((notification.body ?? '').isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(notification.body!, style: style(theme)),
-              ),
-            if (notification.time != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(fmtRelatif(notification.time!),
-                    style: theme.textTheme.labelSmall),
-              ),
-          ],
+        child: Icon(
+          unread ? Icons.notifications_active : Icons.notifications_outlined,
+          size: 20,
+          color: unread ? colors.primary : colors.textMuted,
         ),
-        trailing: bold
-            ? Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : null,
-        onTap: () => _onTap(context, ref),
       ),
+      trailing: unread
+          ? Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: colors.primary,
+                shape: BoxShape.circle,
+              ),
+            )
+          : null,
+      onTap: () => _onTap(context, ref),
     );
   }
 
   Future<void> _onTap(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
 
-    final error =
-        await ref.read(notificationsProvider.notifier).markRead(notification);
+    final error = await ref
+        .read(notificationsProvider.notifier)
+        .markRead(notification);
     if (error != null) {
       messenger.showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     ref.read(unreadCountProvider.notifier).reload();
 
-    final url = notification.actionUrl;
-    if (url == null || url.isEmpty || !context.mounted) return;
-    final uri = Uri.tryParse(url);
+    final actionUrl = notification.actionUrl;
+    if (actionUrl == null || actionUrl.isEmpty || !context.mounted) return;
+
+    final route = notificationActionRoute(actionUrl);
+    if (route != null) {
+      // Deep-link internal: pindah ke layar terkait di dalam app.
+      try {
+        context.go(route);
+      } on StateError {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Layar terkait belum tersedia.')),
+        );
+      }
+      return;
+    }
+
+    // Bukan tautan internal — buka eksternal sebagai fallback.
+    final uri = Uri.tryParse(actionUrl);
     if (uri == null) return;
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka tautan.')));
+        const SnackBar(content: Text('Tidak dapat membuka tautan.')),
+      );
     }
   }
 }

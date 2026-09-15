@@ -34,7 +34,10 @@ final bahanBakuProvider = FutureProvider.autoDispose<List<BahanBakuMaster>>(
 // ---------------------------------------------------------------------------
 
 final sesiAktifProvider = FutureProvider.autoDispose<List<ProductionSession>>(
-  (ref) => ref.watch(produksiRepositoryProvider).getSesiAktif().timeout(
+  (ref) => ref
+      .watch(produksiRepositoryProvider)
+      .getSesiAktif()
+      .timeout(
         const Duration(seconds: 20),
         onTimeout: () => throw ApiException(
           'Server tidak merespons saat memuat sesi.\nPeriksa koneksi internet Anda\nCoba lagi atau hubungi admin.',

@@ -15,10 +15,10 @@ class TrackPoint {
   String get id => timestamp.toIso8601String();
 
   Map<String, dynamic> toJson() => {
-        'lat': lat,
-        'lng': lng,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'lat': lat,
+    'lng': lng,
+    'timestamp': timestamp.toIso8601String(),
+  };
 
   factory TrackPoint.fromJson(Map<String, dynamic> json) {
     return TrackPoint(
@@ -30,10 +30,10 @@ class TrackPoint {
 
   /// Format body `locations[]` sesuai docs/api-mobile.md §9.1.
   Map<String, dynamic> toApiJson() => {
-        'lat': lat,
-        'lng': lng,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'lat': lat,
+    'lng': lng,
+    'timestamp': timestamp.toIso8601String(),
+  };
 }
 
 /// Item GET /tracking/active-users — user dengan GPS dalam 1 jam terakhir.
@@ -58,8 +58,9 @@ class ActiveUser {
       userId: json['user_id']?.toString() ?? '',
       nama: json['nama']?.toString() ?? '',
       karyawanId: json['karyawan_id']?.toString(),
-      lastSeen:
-          lastSeenRaw == null || lastSeenRaw.isEmpty ? null : DateTime.tryParse(lastSeenRaw),
+      lastSeen: lastSeenRaw == null || lastSeenRaw.isEmpty
+          ? null
+          : DateTime.tryParse(lastSeenRaw),
       pointCount: (json['point_count'] as num?)?.toInt() ?? 0,
     );
   }

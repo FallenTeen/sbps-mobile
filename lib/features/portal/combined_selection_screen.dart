@@ -286,7 +286,10 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Pilih pekerjaan Anda',
-                  style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -527,7 +530,9 @@ class _RoleOption extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? context.colors.primary : context.colors.border,
+              color: isSelected
+                  ? context.colors.primary
+                  : context.colors.border,
               width: isSelected ? 2 : 1,
             ),
           ),

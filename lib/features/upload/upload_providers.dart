@@ -69,8 +69,7 @@ class UploadController extends Notifier<UploadSubmitState> {
         compressed.add(await compressor.compress(path));
       }
       if (compressed.isEmpty) {
-        return const UploadResult(
-            error: 'File tidak ditemukan di perangkat.');
+        return const UploadResult(error: 'File tidak ditemukan di perangkat.');
       }
 
       state = const UploadSubmitState(busy: true, phase: UploadPhase.sending);
@@ -85,8 +84,7 @@ class UploadController extends Notifier<UploadSubmitState> {
             'subject_type': subjectType!.trim(),
           if ((subjectId ?? '').trim().isNotEmpty)
             'subject_id': subjectId!.trim(),
-          if ((catatan ?? '').trim().isNotEmpty)
-            'catatan': catatan!.trim(),
+          if ((catatan ?? '').trim().isNotEmpty) 'catatan': catatan!.trim(),
         },
         photoLocalPaths: compressed,
         createdAt: DateTime.now(),
@@ -94,8 +92,9 @@ class UploadController extends Notifier<UploadSubmitState> {
       );
 
       final sync = ref.read(outboxSyncServiceProvider);
-      final result =
-          await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       if (result.delivered) return const UploadResult(delivered: true);
       return const UploadResult(queued: true);
     } on ApiException catch (e) {
@@ -110,5 +109,4 @@ class UploadController extends Notifier<UploadSubmitState> {
 }
 
 final uploadSubmitProvider =
-    NotifierProvider<UploadController, UploadSubmitState>(
-        UploadController.new);
+    NotifierProvider<UploadController, UploadSubmitState>(UploadController.new);

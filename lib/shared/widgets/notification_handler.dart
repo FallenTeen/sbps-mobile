@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/app_router.dart';
+import 'notification_routes.dart';
 
 /// Handler untuk notification taps — navigate ke layar terkait.
 ///
@@ -52,19 +53,13 @@ class NotificationHandler {
 
   void _handleTap(GoRouter router, RemoteMessage message) {
     final data = message.data;
-    final route = data['route']?.toString();
     final id = data['id']?.toString();
 
-    if (route != null && route.isNotEmpty) {
-      // Navigate ke route spesifik dari FCM data (Fase 2 - precision deep-link).
-      // If id is provided, it can be used to construct more specific routes
-      if (id != null && id.isNotEmpty) {
-        // Example: route="/armada/servis" + id="123" → "/armada/servis/123"
-        final specificRoute = route.endsWith('/') ? '$route$id' : '$route/$id';
-        router.go(specificRoute);
-      } else {
-        router.go(route);
-      }
+    // Deep-link precision: route + id (pola sama dengan resolusi actionUrl
+    // di dalam NotifikasiScreen — lihat notification_routes.dart).
+    final specificRoute = fcmNotificationRoute(data['route']?.toString(), id);
+    if (specificRoute != null) {
+      router.go(specificRoute);
     } else if (data['screen'] != null) {
       // Fallback: map screen name ke route.
       final screen = data['screen'].toString();

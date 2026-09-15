@@ -210,7 +210,9 @@ class _CheckInCard extends StatelessWidget {
                   onPressed: (!siap || busy) ? null : onCheckIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: siap ? context.colors.primary : Colors.grey,
+                    foregroundColor: siap
+                        ? context.colors.primary
+                        : Colors.grey,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -259,7 +261,9 @@ class _WorkingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.2),
+        ),
         boxShadow: [
           BoxShadow(
             color: context.colors.primary.withValues(alpha: 0.08),
@@ -389,7 +393,9 @@ class _CompletedCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: context.colors.success.withValues(alpha: 0.3),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),

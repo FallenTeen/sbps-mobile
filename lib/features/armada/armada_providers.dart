@@ -33,10 +33,10 @@ final checklistHariIniProvider =
       return ref.watch(armadaRepositoryProvider).getChecklistHariIni();
     });
 
-final checklistAkhirDoneProvider =
-    FutureProvider.autoDispose.family<bool, String>((ref, armadaId) {
-  return ChecklistDraftStore.isAkhirSubmitted(armadaId);
-});
+final checklistAkhirDoneProvider = FutureProvider.autoDispose
+    .family<bool, String>((ref, armadaId) {
+      return ChecklistDraftStore.isAkhirSubmitted(armadaId);
+    });
 
 // ---------------------------------------------------------------------------
 // Riwayat ritase (pagination)

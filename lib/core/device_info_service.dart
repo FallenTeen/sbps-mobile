@@ -8,7 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 /// keduanya tetap dikirim sebagai praktik baik. Hasil di-cache sekali load.
 class DeviceInfoService {
   DeviceInfoService({DeviceInfoPlugin? plugin})
-      : _plugin = plugin ?? DeviceInfoPlugin();
+    : _plugin = plugin ?? DeviceInfoPlugin();
 
   final DeviceInfoPlugin _plugin;
 

@@ -15,7 +15,8 @@ class ProduksiRepository {
       '/master/mesin',
       parse: (raw) => [
         if (raw is List)
-          for (final e in raw) MesinMaster.fromJson(Map<String, dynamic>.from(e as Map)),
+          for (final e in raw)
+            MesinMaster.fromJson(Map<String, dynamic>.from(e as Map)),
       ],
     );
     return res.data ?? const [];
@@ -26,7 +27,8 @@ class ProduksiRepository {
       '/master/produk',
       parse: (raw) => [
         if (raw is List)
-          for (final e in raw) ProdukMaster.fromJson(Map<String, dynamic>.from(e as Map)),
+          for (final e in raw)
+            ProdukMaster.fromJson(Map<String, dynamic>.from(e as Map)),
       ],
     );
     return res.data ?? const [];
@@ -74,14 +76,19 @@ class ProduksiRepository {
     );
     return res.data ??
         const ProduksiRiwayatPage(
-            items: [], currentPage: 1, lastPage: 1, total: 0);
+          items: [],
+          currentPage: 1,
+          lastPage: 1,
+          total: 0,
+        );
   }
 
   /// GET /produksi/titik-progress — ringkasan output per titik hari ini.
   Future<(String, List<TitikProgressItem>)> getTitikProgress() async {
     final res = await _api.get<Map<String, dynamic>>(
       '/produksi/titik-progress',
-      parse: (raw) => raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
+      parse: (raw) =>
+          raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
     );
     final data = res.data ?? const {};
     return (

@@ -15,7 +15,11 @@ class KontraktorRepository {
     final res = await _api.get<List<ProyekKontrakItem>>(
       '/kontraktor/proyek',
       parse: (raw) {
-        final items = raw is List ? raw : (raw is Map ? (raw['items'] ?? raw['data'] ?? const []) : const []);
+        final items = raw is List
+            ? raw
+            : (raw is Map
+                  ? (raw['items'] ?? raw['data'] ?? const [])
+                  : const []);
         return <ProyekKontrakItem>[
           if (items is List)
             for (final e in items)
@@ -31,7 +35,8 @@ class KontraktorRepository {
   Future<DetailProyekKontrak> getProyekDetail(String id) async {
     final res = await _api.get<DetailProyekKontrak>(
       '/kontraktor/proyek/$id',
-      parse: (raw) => DetailProyekKontrak.fromJson(Map<String, dynamic>.from(raw as Map)),
+      parse: (raw) =>
+          DetailProyekKontrak.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;
@@ -42,7 +47,11 @@ class KontraktorRepository {
     final res = await _api.get<List<InvoiceKontrakItem>>(
       '/kontraktor/invoice',
       parse: (raw) {
-        final items = raw is List ? raw : (raw is Map ? (raw['items'] ?? raw['data'] ?? const []) : const []);
+        final items = raw is List
+            ? raw
+            : (raw is Map
+                  ? (raw['items'] ?? raw['data'] ?? const [])
+                  : const []);
         return <InvoiceKontrakItem>[
           if (items is List)
             for (final e in items)
@@ -61,11 +70,9 @@ class KontraktorRepository {
   }) async {
     final res = await _api.post<KomunikasiLogItem>(
       '/kontraktor/komunikasi',
-      body: {
-        'proyek_id': proyekId,
-        'pesan': pesan,
-      },
-      parse: (raw) => KomunikasiLogItem.fromJson(Map<String, dynamic>.from(raw as Map)),
+      body: {'proyek_id': proyekId, 'pesan': pesan},
+      parse: (raw) =>
+          KomunikasiLogItem.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
     _ensureSuccess(res);
     return res.data!;

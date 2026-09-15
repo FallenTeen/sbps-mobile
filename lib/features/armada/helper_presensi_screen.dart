@@ -38,9 +38,11 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(delivered
-              ? 'Berhasil menyimpan presensi ${helper.nama}'
-              : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.'),
+          content: Text(
+            delivered
+                ? 'Berhasil menyimpan presensi ${helper.nama}'
+                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+          ),
         ),
       );
 

@@ -18,9 +18,7 @@ class SkeletonLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultBase = isDark
-        ? Colors.grey.shade800
-        : Colors.grey.shade300;
+    final defaultBase = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
     final defaultHighlight = isDark
         ? Colors.grey.shade700
         : Colors.grey.shade100;
@@ -57,8 +55,9 @@ class SkeletonBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         shape: shape,
-        borderRadius:
-            shape == BoxShape.circle ? null : BorderRadius.circular(borderRadius),
+        borderRadius: shape == BoxShape.circle
+            ? null
+            : BorderRadius.circular(borderRadius),
       ),
     );
   }
@@ -200,7 +199,7 @@ class SkeletonDetailView extends StatelessWidget {
   }
 }
 
-/// Skeleton for Dashboard Overview
+/// Skeleton untuk Dashboard Overview
 class SkeletonDashboardOverview extends StatelessWidget {
   const SkeletonDashboardOverview({super.key});
 
@@ -222,6 +221,46 @@ class SkeletonDashboardOverview extends StatelessWidget {
           const SizedBox(height: 12),
           const SkeletonCard(height: 180),
         ],
+      ),
+    );
+  }
+}
+
+/// Skeleton khusus area chart — tinggi tetap [height] (default 180dp, sesuai
+/// tinggi spesifikasi chart) supaya tidak ada layout-shift saat data sedang
+/// di-fetch. Bentuk placeholder: batang-batang berdiri seperti bar chart.
+class ChartSkeleton extends StatelessWidget {
+  const ChartSkeleton({super.key, this.height = 180});
+
+  final double height;
+
+  static const _fractions = <double>[0.5, 0.72, 0.44, 0.86, 0.6, 0.9, 0.55];
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonLoader(
+      child: SizedBox(
+        height: height,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final f in _fractions)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: FractionallySizedBox(
+                    heightFactor: f,
+                    alignment: Alignment.bottomCenter,
+                    child: const SkeletonBlock(
+                      width: double.infinity,
+                      height: double.infinity,
+                      borderRadius: 4,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

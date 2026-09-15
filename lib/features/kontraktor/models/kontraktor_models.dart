@@ -143,8 +143,12 @@ class DetailProyekKontrak {
   final List<KomunikasiLogItem> komunikasiLogs;
 
   factory DetailProyekKontrak.fromJson(Map<String, dynamic> json) {
-    final proyekMap = json['proyek'] is Map ? Map<String, dynamic>.from(json['proyek'] as Map) : const <String, dynamic>{};
-    final rabMap = json['rab_agregat'] is Map ? Map<String, dynamic>.from(json['rab_agregat'] as Map) : const <String, dynamic>{};
+    final proyekMap = json['proyek'] is Map
+        ? Map<String, dynamic>.from(json['proyek'] as Map)
+        : const <String, dynamic>{};
+    final rabMap = json['rab_agregat'] is Map
+        ? Map<String, dynamic>.from(json['rab_agregat'] as Map)
+        : const <String, dynamic>{};
     final prodList = json['produksi_summary'];
     final invList = json['invoices'];
     final komList = json['komunikasi_logs'];

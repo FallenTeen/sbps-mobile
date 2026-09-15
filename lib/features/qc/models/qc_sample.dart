@@ -46,8 +46,11 @@ class QcSample {
   bool get lolos => status == 'lolos';
 
   factory QcSample.fromJson(Map<String, dynamic> json) {
-    String? namaOf(Object? raw) =>
-        raw == null ? null : raw is Map ? raw['nama']?.toString() : raw.toString();
+    String? namaOf(Object? raw) => raw == null
+        ? null
+        : raw is Map
+        ? raw['nama']?.toString()
+        : raw.toString();
 
     Map<String, dynamic>? sub(Object? raw) =>
         raw is Map ? Map<String, dynamic>.from(raw) : null;
@@ -55,13 +58,13 @@ class QcSample {
     final produksi = sub(json['produksi']);
     final session = sub(json['session']);
 
-    DateTime? parseDt(Object? raw) =>
-        raw == null || raw.toString().isEmpty
-            ? null
-            : DateTime.tryParse(raw.toString());
+    DateTime? parseDt(Object? raw) => raw == null || raw.toString().isEmpty
+        ? null
+        : DateTime.tryParse(raw.toString());
 
     // sessionId bisa dari produksi.session_id atau session.id.
-    final sid = produksi?['session_id']?.toString() ?? session?['id']?.toString();
+    final sid =
+        produksi?['session_id']?.toString() ?? session?['id']?.toString();
 
     return QcSample(
       id: json['id']?.toString() ?? '',
@@ -69,13 +72,11 @@ class QcSample {
       status: json['status']?.toString() ?? '',
       nilaiSlump: (json['nilai_slump'] as num?)?.toDouble(),
       hasilUjiTekan: (json['hasil_uji_tekan'] as num?)?.toDouble(),
-      tanggalUjiTekanRencana:
-          json['tanggal_uji_tekan_rencana']?.toString(),
+      tanggalUjiTekanRencana: json['tanggal_uji_tekan_rencana']?.toString(),
       catatan: json['catatan']?.toString(),
       createdAt: parseDt(json['created_at']),
       sessionId: (sid == null || sid.isEmpty) ? null : sid,
-      produkNama: namaOf(produksi?['produk']) ??
-          namaOf(session?['produk']),
+      produkNama: namaOf(produksi?['produk']) ?? namaOf(session?['produk']),
       mesinNama: namaOf(produksi?['mesin']) ?? namaOf(session?['mesin']),
       titikNama: namaOf(produksi?['titik']) ?? namaOf(session?['titik']),
       operatorNama: produksi?['operator']?.toString(),

@@ -30,10 +30,8 @@ class AppEmptyState extends StatelessWidget {
         tween: Tween<double>(begin: 0.0, end: 1.0),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
-        builder: (context, opacity, child) => Opacity(
-          opacity: opacity,
-          child: child,
-        ),
+        builder: (context, opacity, child) =>
+            Opacity(opacity: opacity, child: child),
         child: Center(
           child: Padding(
             padding: padding,
@@ -45,14 +43,12 @@ class AppEmptyState extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    size: 48,
-                    color: theme.colorScheme.outline,
-                  ),
+                  child: Icon(icon, size: 48, color: theme.colorScheme.outline),
                 ),
                 const SizedBox(height: 16),
                 Text(

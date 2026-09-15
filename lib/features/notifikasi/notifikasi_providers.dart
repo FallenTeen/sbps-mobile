@@ -19,8 +19,9 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
 
   Future<void> refresh() async {
     try {
-      final page =
-          await ref.read(notifikasiRepositoryProvider).getNotifications();
+      final page = await ref
+          .read(notifikasiRepositoryProvider)
+          .getNotifications();
       state = AsyncData(page);
       ref.read(unreadCountProvider.notifier).set(page.unreadCount);
     } on ApiException catch (e) {
@@ -33,22 +34,18 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
   Future<String?> markRead(AppNotification notification) async {
     if (notification.isRead) return null;
     try {
-      await ref
-          .read(notifikasiRepositoryProvider)
-          .markRead(notification.id);
+      await ref.read(notifikasiRepositoryProvider).markRead(notification.id);
       final current = state.value;
       if (current != null) {
-        state = AsyncData(NotificationsPage(
-          items: current.items
-              .map((n) => n.id == notification.id ? _asRead(n) : n)
-              .toList(),
-          unreadCount: current.unreadCount > 0
-              ? current.unreadCount - 1
-              : 0,
-        ));
-        ref
-            .read(unreadCountProvider.notifier)
-            .set(state.value!.unreadCount);
+        state = AsyncData(
+          NotificationsPage(
+            items: current.items
+                .map((n) => n.id == notification.id ? _asRead(n) : n)
+                .toList(),
+            unreadCount: current.unreadCount > 0 ? current.unreadCount - 1 : 0,
+          ),
+        );
+        ref.read(unreadCountProvider.notifier).set(state.value!.unreadCount);
       }
       return null;
     } on ApiException catch (e) {
@@ -57,18 +54,45 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
   }
 
   AppNotification _asRead(AppNotification n) => AppNotification(
-        id: n.id,
-        title: n.title,
-        body: n.body,
-        actionUrl: n.actionUrl,
-        isRead: true,
-        time: n.time,
-      );
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    actionUrl: n.actionUrl,
+    isRead: true,
+    time: n.time,
+  );
+
+  /// Tandai semua belum dibaca sebagai sudah dibaca: update lokal optimis,
+  /// lalu sinkron berurutan ke server. Gagal jaringan tidak menggagalkan
+  /// tampilan — state lokal tetap "dibaca", server tersinkron saat refresh.
+  Future<void> markAllRead() async {
+    final current = state.value;
+    if (current == null) return;
+    final unread = current.items.where((n) => !n.isRead).toList();
+    if (unread.isEmpty) return;
+
+    state = AsyncData(
+      NotificationsPage(
+        items: [for (final n in current.items) _asRead(n)],
+        unreadCount: 0,
+      ),
+    );
+    ref.read(unreadCountProvider.notifier).set(0);
+
+    for (final n in unread) {
+      try {
+        await ref.read(notifikasiRepositoryProvider).markRead(n.id);
+      } on ApiException {
+        // State lokal tetap konsisten; sinkronisasi ulang saat refresh.
+      }
+    }
+  }
 }
 
 final notificationsProvider =
     AsyncNotifierProvider<NotificationsController, NotificationsPage>(
-        NotificationsController.new);
+      NotificationsController.new,
+    );
 
 /// Badge jumlah belum dibaca — dipisah agar murah di-refresh tanpa
 /// memuat seluruh daftar.
@@ -81,8 +105,9 @@ class UnreadCountNotifier extends Notifier<int> {
   /// Ambil ulang dari server (dipakai saat kembali ke halaman utama).
   Future<void> reload() async {
     try {
-      final page =
-          await ref.read(notifikasiRepositoryProvider).getNotifications();
+      final page = await ref
+          .read(notifikasiRepositoryProvider)
+          .getNotifications();
       set(page.unreadCount);
     } on ApiException catch (_) {
       // Diam: badge tetap pada nilai terakhir saat gagal jaringan.
@@ -90,5 +115,6 @@ class UnreadCountNotifier extends Notifier<int> {
   }
 }
 
-final unreadCountProvider =
-    NotifierProvider<UnreadCountNotifier, int>(UnreadCountNotifier.new);
+final unreadCountProvider = NotifierProvider<UnreadCountNotifier, int>(
+  UnreadCountNotifier.new,
+);
