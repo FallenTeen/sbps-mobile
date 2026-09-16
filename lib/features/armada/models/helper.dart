@@ -23,6 +23,20 @@ class Helper {
       statusHariIni == 'check_in' || statusHariIni == 'check_out';
   bool get sudahCheckOut => statusHariIni == 'check_out';
 
+  /// Label status presensi hari ini untuk user.
+  String get statusHariIniLabel => switch (statusHariIni) {
+    'check_in' => 'Sedang Bekerja',
+    'check_out' => 'Sudah Pulang',
+    _ => 'Belum Masuk',
+  };
+
+  /// Aksi berikutnya untuk helper: presensi masuk (belum) / pulang (bekerja).
+  /// Null saat sudah pulang (tidak ada aksi lagi hari ini).
+  String? get nextActionLabel => switch (statusHariIni) {
+    'check_in' => 'Presensi Pulang',
+    _ => sudahCheckOut ? null : 'Presensi Masuk',
+  };
+
   factory Helper.fromJson(Map<String, dynamic> json) {
     return Helper(
       id: json['id']?.toString() ?? '',

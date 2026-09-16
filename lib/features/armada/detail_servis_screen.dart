@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api_client.dart';
+import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
-import '../../shared/widgets/skeleton_loader.dart';
-import '../../core/api_client.dart';
-import '../auth/auth_providers.dart';
-import 'servis_providers.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
-import '../../core/formatters.dart';
+import '../../shared/widgets/skeleton_loader.dart';
+import '../auth/auth_providers.dart';
+import 'models/servis_armada.dart';
+import 'servis_providers.dart';
+import 'servis_status.dart';
 
-/// Detail Pengajuan Servis Armada beserta riwayat sparepart, catatan workshop,
-/// dan aksi persetujuan/penolakan untuk Kepala Divisi/Admin.
+/// Detail Pengajuan Servis Armada — menampilkan timeline
+/// (Diajukan → Disetujui → Dikerjakan → Selesai), data pengajuan,
+/// catatan workshop, sparepart, dan aksi persetujuan/penolakan.
 class DetailServisScreen extends StatelessWidget {
   const DetailServisScreen({required this.id, super.key});
 
@@ -54,28 +58,6 @@ class DetailServisContent extends ConsumerStatefulWidget {
 
 class _DetailServisContentState extends ConsumerState<DetailServisContent> {
   bool _isProcessing = false;
-
-  Color _statusColor(String status) {
-    return switch (status) {
-      'diajukan' => Colors.orange,
-      'disetujui' => Colors.blue,
-      'dikerjakan' => Colors.purple,
-      'selesai' => Colors.green,
-      'ditolak' => Colors.red,
-      _ => Colors.grey,
-    };
-  }
-
-  String _statusLabel(String status) {
-    return switch (status) {
-      'diajukan' => 'Menunggu Persetujuan',
-      'disetujui' => 'Disetujui',
-      'dikerjakan' => 'Sedang Dikerjakan',
-      'selesai' => 'Selesai',
-      'ditolak' => 'Ditolak',
-      _ => status,
-    };
-  }
 
   Future<void> _approveServis() async {
     final confirm = await ConfirmationDialog.show(
@@ -169,12 +151,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(detailServisProvider(widget.id));
-    final activeRole = ref.watch(activeRoleProvider);
-    final canApprove =
-        activeRole == 'Owner' ||
-        activeRole == 'Admin Keuangan' ||
-        activeRole == 'Kepala Divisi Armada' ||
-        activeRole == 'Admin';
+    final canApprove = canApproveServis(ref.watch(activeRoleProvider));
 
     return detailAsync.when(
       loading: () => const SkeletonDetailView(),
@@ -188,7 +165,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
         ),
       ),
       data: (item) {
-        final color = _statusColor(item.status);
+        final color = servisStatusColor(item.status);
 
         return RefreshIndicator(
           onRefresh: () async =>
@@ -224,7 +201,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              _statusLabel(item.status),
+                              servisStatusLabel(item.status),
                               style: TextStyle(
                                 color: color,
                                 fontWeight: FontWeight.w600,
@@ -237,9 +214,36 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                       if (item.kodeUnit != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Unit: ${item.kodeUnit!} • Jenis: ${item.jenisArmada ?? '-'}',
+                          'Unit: ${item.kodeUnit!} • Jenis: '
+                          '${item.jenisArmada ?? '-'}',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
+                      ],
+                      if (item.kategori != null) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.colors.primary.withValues(
+                                alpha: 0.08,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              formatKategoriServis(item.kategori!),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.primary,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -247,6 +251,10 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+
+              // Timeline
+              ServisTimelineCard(item: item),
               const SizedBox(height: 12),
 
               // Data Pengajuan
@@ -263,7 +271,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                       const Divider(height: 20),
                       _infoRow('Tanggal Ajuan', fmtTanggal(item.tanggalAjuan)),
                       if (item.kategori != null)
-                        _infoRow('Kategori', item.kategori!),
+                        _infoRow('Kategori', formatKategoriServis(item.kategori!)),
                       if (item.odometerSaatAjuan != null)
                         _infoRow(
                           'ODO Saat Ajuan',
@@ -278,6 +286,14 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                         _infoRow('Diajukan Oleh', item.diajukanOleh!),
                       if (item.disetujuiOleh != null)
                         _infoRow('Disetujui Oleh', item.disetujuiOleh!),
+                      if (item.tanggalSelesai != null)
+                        _infoRow(
+                          'Tanggal Selesai',
+                          fmtTanggal(item.tanggalSelesai),
+                        ),
+                      if (item.catatanWorkshop != null) ...[
+                        _infoRow('Catatan Workshop', item.catatanWorkshop!),
+                      ],
                       const SizedBox(height: 8),
                       const Text(
                         'Keluhan / Masalah:',
@@ -338,7 +354,9 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               'Sparepart Digunakan',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
-                            Chip(label: Text('${item.spareparts.length} item')),
+                            Chip(
+                              label: Text('${item.spareparts.length} item'),
+                            ),
                           ],
                         ),
                         const Divider(height: 20),
@@ -357,7 +375,8 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                                   ),
                                 ),
                                 Text(
-                                  '${part.jumlah.toStringAsFixed(0)} ${part.satuan ?? 'pcs'}',
+                                  '${part.jumlah.toStringAsFixed(0)} '
+                                  '${part.satuan ?? 'pcs'}',
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
@@ -393,7 +412,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                 const SizedBox(height: 12),
               ],
 
-              // Action Buttons for Approval (if status is 'diajukan' and role allows)
+              // Action Buttons for Approval (if status is 'diajukan')
               if (item.isMenungguApproval && canApprove) ...[
                 const SizedBox(height: 12),
                 Row(
@@ -469,6 +488,156 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Timeline servis: Diajukan → Disetujui → Dikerjakan → Selesai, plus node
+/// terminal "Ditolak" bila pengajuan ditolak.
+class ServisTimelineCard extends StatelessWidget {
+  const ServisTimelineCard({required this.item, super.key});
+
+  final ServisArmada item;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = servisTimelineSteps(item);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Timeline Servis',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Divider(height: 20),
+            for (var i = 0; i < steps.length; i++) ...[
+              _TimelineNode(
+                step: steps[i],
+                caption: _captionFor(i),
+              ),
+              if (i != steps.length - 1)
+                _StepConnector(state: steps[i].state),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Fakta yang tersedia dari API (tidak mengarang tanggal antar-status).
+  String? _captionFor(int index) {
+    if (index == 0) {
+      final tanggal = fmtTanggal(item.tanggalAjuan);
+      return item.diajukanOleh == null
+          ? tanggal
+          : '$tanggal • ${item.diajukanOleh}';
+    }
+    if (index == 1) return item.disetujuiOleh;
+    if (index == 2) return item.catatanWorkshop;
+    if (index == 3) {
+      return item.tanggalSelesai == null
+          ? null
+          : fmtTanggal(item.tanggalSelesai);
+    }
+    // Node terminal "Ditolak": alasan penolakan sebagai caption.
+    return item.alasanPenolakan;
+  }
+}
+
+class _TimelineNode extends StatelessWidget {
+  const _TimelineNode({required this.step, this.caption});
+
+  final ServisTimelineStep step;
+  final String? caption;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (step.state) {
+      ServisTimelineState.done => context.colors.success,
+      ServisTimelineState.current => context.colors.primary,
+      ServisTimelineState.pending => Theme.of(
+        context,
+      ).colorScheme.outlineVariant,
+      ServisTimelineState.rejected => context.colors.error,
+    };
+    final icon = switch (step.state) {
+      ServisTimelineState.done => Icons.check_rounded,
+      ServisTimelineState.current => Icons.circle,
+      ServisTimelineState.pending => Icons.circle_outlined,
+      ServisTimelineState.rejected => Icons.block_rounded,
+    };
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  step.label,
+                  style: TextStyle(
+                    fontWeight: step.state == ServisTimelineState.current
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                    color: step.state == ServisTimelineState.pending
+                        ? Theme.of(context).colorScheme.outline
+                        : color,
+                  ),
+                ),
+                if (caption != null && caption!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    caption!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StepConnector extends StatelessWidget {
+  const _StepConnector({required this.state});
+
+  final ServisTimelineState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = state == ServisTimelineState.done;
+    final color = done
+        ? context.colors.success
+        : Theme.of(context).colorScheme.outlineVariant;
+    return Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: Container(
+        width: 2,
+        height: 18,
+        color: color,
       ),
     );
   }

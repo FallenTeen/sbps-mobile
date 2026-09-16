@@ -119,3 +119,55 @@ final detailServisProvider = FutureProvider.autoDispose
     .family<ServisArmada, String>((ref, id) {
       return ref.watch(servisRepositoryProvider).getDetailServis(id);
     });
+
+// ---------------------------------------------------------------------------
+// Ringkasan Work Queue (total per status dari server)
+// ---------------------------------------------------------------------------
+
+/// Ringkasan jumlah servis per status — sumber angka work queue index.
+/// Menggunakan endpoint riwayat yang sama dengan query `status` per bucket
+/// (tidak mengarang endpoint status baru).
+class ServisQueueSummary {
+  const ServisQueueSummary({
+    this.diajukan = 0,
+    this.disetujui = 0,
+    this.dikerjakan = 0,
+    this.selesai = 0,
+    this.ditolak = 0,
+  });
+
+  final int diajukan;
+  final int disetujui;
+  final int dikerjakan;
+  final int selesai;
+  final int ditolak;
+
+  int countFor(String status) => switch (status) {
+    'diajukan' => diajukan,
+    'disetujui' => disetujui,
+    'dikerjakan' => dikerjakan,
+    'selesai' => selesai,
+    'ditolak' => ditolak,
+    _ => 0,
+  };
+}
+
+final servisQueueSummaryProvider = FutureProvider.autoDispose<
+  ServisQueueSummary
+>((ref) async {
+  final repo = ref.watch(servisRepositoryProvider);
+  final results = await Future.wait([
+    repo.getRiwayatServis(page: 1, status: 'diajukan'),
+    repo.getRiwayatServis(page: 1, status: 'disetujui'),
+    repo.getRiwayatServis(page: 1, status: 'dikerjakan'),
+    repo.getRiwayatServis(page: 1, status: 'selesai'),
+    repo.getRiwayatServis(page: 1, status: 'ditolak'),
+  ]);
+  return ServisQueueSummary(
+    diajukan: results[0].total,
+    disetujui: results[1].total,
+    dikerjakan: results[2].total,
+    selesai: results[3].total,
+    ditolak: results[4].total,
+  );
+});
