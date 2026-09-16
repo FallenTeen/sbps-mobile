@@ -116,6 +116,11 @@ class FormulirController extends Notifier<FormulirSubmitState> {
         ref.invalidate(formulirHariIniProvider);
         return const FormulirResult(delivered: true);
       }
+      if (result.permanentlyFailed) {
+        return FormulirResult(
+          error: result.errorMessage ?? 'Formulir gagal diproses.',
+        );
+      }
       return const FormulirResult(queued: true);
     } on ApiException catch (e) {
       return FormulirResult(error: e.message);

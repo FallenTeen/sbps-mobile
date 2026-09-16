@@ -216,6 +216,11 @@ class QcSubmitController extends Notifier<QcSubmitState> {
         _invalidateQueries();
         return const QcSubmitResult(delivered: true);
       }
+      if (result.permanentlyFailed) {
+        return QcSubmitResult(
+          error: result.errorMessage ?? 'Gagal mencatat slump test.',
+        );
+      }
       return const QcSubmitResult(queued: true);
     } on ApiException catch (e) {
       return QcSubmitResult(error: e.message);
@@ -262,6 +267,11 @@ class QcSubmitController extends Notifier<QcSubmitState> {
         _invalidateQueries();
         ref.invalidate(sesiAktifProvider);
         return const QcSubmitResult(delivered: true);
+      }
+      if (result.permanentlyFailed) {
+        return QcSubmitResult(
+          error: result.errorMessage ?? 'Gagal mencatat uji tekan.',
+        );
       }
       return const QcSubmitResult(queued: true);
     } on ApiException catch (e) {

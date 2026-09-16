@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
@@ -181,7 +182,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
         child: AppEmptyState(
           icon: Icons.cloud_off_outlined,
           title: 'Gagal Memuat Detail Servis',
-          subtitle: '$error',
+          subtitle: friendlyErrorMessage(error),
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(detailServisProvider(widget.id)),
         ),

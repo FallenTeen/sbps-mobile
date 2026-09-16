@@ -9,6 +9,7 @@ import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -102,7 +103,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                 ? (_selectedArmada!.isAlatBerat
                       ? 'Jam Kerja Unit berhasil diperbarui'
                       : 'KM terkini berhasil diperbarui')
-                : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

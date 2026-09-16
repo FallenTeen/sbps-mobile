@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/adaptive_form_row.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -82,7 +83,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
           content: Text(
             result.delivered
                 ? 'Sesi produksi dimulai.'
-                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol sinkronisasi di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

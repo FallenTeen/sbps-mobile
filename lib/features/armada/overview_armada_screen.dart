@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../dashboard/dashboard_providers.dart';
 import 'servis_providers.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 
 /// Screen Overview Seluruh Armada & Status Operasional untuk Manajemen (Owner, Admin Keuangan, dsb).
 class OverviewArmadaScreen extends ConsumerWidget {
@@ -41,8 +44,20 @@ class OverviewArmadaScreen extends ConsumerWidget {
           children: [
             // Status Summary Cards
             armadaStatusAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SkeletonListView(
+                  itemCount: 1,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              error: (error, _) => AppEmptyState(
+                icon: Icons.cloud_off_outlined,
+                title: 'Gagal memuat ringkasan status',
+                subtitle: friendlyErrorMessage(error),
+                actionLabel: 'Coba lagi',
+                onAction: () => ref.invalidate(armadaStatusProvider),
+              ),
               data: (statusData) {
                 if (statusData.items.isEmpty) return const SizedBox.shrink();
                 return Column(
@@ -114,7 +129,15 @@ class OverviewArmadaScreen extends ConsumerWidget {
               error: (err, _) => Center(
                 child: Column(
                   children: [
-                    Text('Gagal memuat data armada: $err'),
+                    Text('Gagal memuat data armada.'),
+                    const SizedBox(height: 4),
+                    Text(
+                      friendlyErrorMessage(err),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ),
                     const SizedBox(height: 8),
                     FilledButton(
                       onPressed: () => ref.invalidate(masterArmadaProvider),

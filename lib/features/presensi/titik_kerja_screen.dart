@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
@@ -229,7 +230,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                       color: Theme.of(context).colorScheme.error,
                     ),
                     title: const Text('Gagal memuat titik kerja'),
-                    subtitle: Text(error.toString()),
+                    subtitle: Text(friendlyErrorMessage(error)),
                     trailing: TextButton(
                       onPressed: () => ref.invalidate(titikAktifProvider),
                       child: const Text('Coba lagi'),

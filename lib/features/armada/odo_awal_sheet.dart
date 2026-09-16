@@ -8,6 +8,7 @@ import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 
 /// KM Harian Sheet (Fase 2) - Converted from full screen to sheet
@@ -99,7 +100,7 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                 ? (_selectedArmada!.isAlatBerat
                       ? 'Jam Kerja Unit berhasil diperbarui'
                       : 'KM terkini berhasil diperbarui')
-                : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

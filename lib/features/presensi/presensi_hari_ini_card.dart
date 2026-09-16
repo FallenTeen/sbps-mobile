@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/analytics_service.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -19,7 +20,7 @@ String presensiSubmissionMessage(CheckInResult result) {
   }
 
   if (result.queued) {
-    return 'Tersimpan offline — akan dikirim otomatis saat online.';
+    return kCopyQueued;
   }
 
   if (result.error != null) {
@@ -44,7 +45,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     return hariIniAsync.when(
       loading: () => SkeletonCard(height: 120),
       error: (error, _) => _ErrorCard(
-        message: '$error',
+        message: friendlyErrorMessage(error),
         onRetry: () => ref.invalidate(hariIniProvider),
       ),
       data: (presensi) => switch (presensi.status) {

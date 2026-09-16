@@ -90,13 +90,23 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     }
 
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Opname disimpan \u2022 ${_selisihCount(items)} item selisih',
+    if (result.delivered) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Opname berhasil disinkronkan \u2022 ${_selisihCount(items)} item selisih',
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Opname tersimpan di perangkat \u2022 ${_selisihCount(items)} item selisih. Menunggu sinkronisasi.',
+          ),
+        ),
+      );
+    }
     _clearFisik(items);
   }
 

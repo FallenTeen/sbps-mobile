@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -123,9 +124,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
         HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Checklist tersimpan di perangkat — dikirim saat online.',
-            ),
+            content: Text(kCopyQueued),
           ),
         );
         Navigator.of(context).pop();

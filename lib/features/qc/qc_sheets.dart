@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
+import '../../shared/utils/feedback_copy.dart';
 import 'qc_providers.dart';
 
 /// Bottom sheet "Catat Slump Test" (Fase A2.5).
@@ -52,7 +53,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
           content: Text(
             result.delivered
                 ? 'Slump test dicatat — menunggu hasil uji tekan.'
-                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );
@@ -184,7 +185,7 @@ class _UjiTekanSheetState extends ConsumerState<UjiTekanSheet> {
           content: Text(
             result.delivered
                 ? 'Hasil uji tekan dicatat.'
-                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

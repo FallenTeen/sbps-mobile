@@ -257,6 +257,11 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
         _invalidateQueries();
         return const ProduksiSubmitResult(delivered: true);
       }
+      if (result.permanentlyFailed) {
+        return ProduksiSubmitResult(
+          error: result.errorMessage ?? 'Gagal memulai sesi. Coba lagi.',
+        );
+      }
       return const ProduksiSubmitResult(queued: true);
     } on ApiException catch (e) {
       return ProduksiSubmitResult(error: e.message);
@@ -310,6 +315,11 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
       if (result.delivered) {
         _invalidateQueries();
         return const ProduksiSubmitResult(delivered: true);
+      }
+      if (result.permanentlyFailed) {
+        return ProduksiSubmitResult(
+          error: result.errorMessage ?? 'Gagal menutup sesi. Coba lagi.',
+        );
       }
       return const ProduksiSubmitResult(queued: true);
     } on ApiException catch (e) {

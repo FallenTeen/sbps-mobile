@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../core/formatters.dart';
@@ -69,7 +70,7 @@ class _HariIniTab extends ConsumerWidget {
       error: (e, _) => AppEmptyState(
         icon: Icons.cloud_off_outlined,
         title: 'Gagal memuat data',
-        subtitle: '$e',
+        subtitle: friendlyErrorMessage(e),
         actionLabel: 'Coba lagi',
         onAction: () => ref.invalidate(armadaSayaProvider),
       ),

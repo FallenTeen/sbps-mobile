@@ -9,6 +9,7 @@ import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
@@ -218,9 +219,7 @@ class _WorkshopJobDetailContentState
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Pengerjaan disimpan di perangkat — dikirim saat online.',
-            ),
+            content: Text(kCopyQueued),
           ),
         );
       }
@@ -280,9 +279,7 @@ class _WorkshopJobDetailContentState
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Job tersimpan di perangkat — dikirim saat online.',
-            ),
+            content: Text(kCopyQueued),
           ),
         );
       }
@@ -294,9 +291,9 @@ class _WorkshopJobDetailContentState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(friendlyErrorMessage(e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -689,7 +686,7 @@ class _WorkshopJobDetailContentState
             ),
             const SizedBox(height: 12),
             Text(
-              error.toString(),
+              friendlyErrorMessage(error),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

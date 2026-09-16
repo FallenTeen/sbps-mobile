@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
 import '../qc/models/qc_sample.dart';
@@ -521,11 +522,7 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
       );
     } else if (result.queued) {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
-          ),
-        ),
+        const SnackBar(content: Text(kCopyQueued)),
       );
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -452,9 +453,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            delivered
-                ? 'Checklist tersimpan.'
-                : 'Menunggu Terkirim — tersimpan di HP, dikirim otomatis saat online.',
+            delivered ? 'Checklist tersimpan.' : kCopyQueued,
           ),
         ),
       );

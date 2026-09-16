@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/outbox/pending_action.dart';
+import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../presensi/presensi_providers.dart';
 
@@ -46,11 +48,21 @@ class _DataBelumTerkirimScreenState
       appBar: AppBar(title: const Text('Data Belum Terkirim')),
       body: actions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) =>
-            Center(child: Text('Data belum bisa dibuka: $error')),
+        error: (error, _) => AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal membuka antrean',
+          subtitle: friendlyErrorMessage(error),
+          actionLabel: 'Coba lagi',
+          onAction: () => ref.invalidate(pendingActionsProvider),
+        ),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('Semua data sudah terkirim.'));
+            return const AppEmptyState(
+              icon: Icons.cloud_done_outlined,
+              title: 'Semua data sudah terkirim',
+              subtitle:
+                  'Aksi yang belum tersinkron akan tampil di sini untuk dikirim ulang.',
+            );
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(pendingActionsProvider),

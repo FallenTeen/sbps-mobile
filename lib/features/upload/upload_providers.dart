@@ -96,6 +96,11 @@ class UploadController extends Notifier<UploadSubmitState> {
           .read(outboxRepositoryProvider)
           .enqueue(action, sync.send);
       if (result.delivered) return const UploadResult(delivered: true);
+      if (result.permanentlyFailed) {
+        return UploadResult(
+          error: result.errorMessage ?? 'Gagal mengunggah dokumentasi.',
+        );
+      }
       return const UploadResult(queued: true);
     } on ApiException catch (e) {
       // Termasuk 413/422 bila file melebihi 10MB atau format ditolak.

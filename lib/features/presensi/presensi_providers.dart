@@ -266,6 +266,11 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
         );
       }
       AnalyticsService.presensiCheckinQueued();
+      if (result.permanentlyFailed) {
+        return CheckInResult(
+          error: result.errorMessage ?? 'Gagal memproses presensi. Coba lagi.',
+        );
+      }
       return const CheckInResult(queued: true);
     } on ApiException catch (e) {
       return CheckInResult(error: e.message);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
@@ -41,7 +42,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
           content: Text(
             delivered
                 ? 'Berhasil menyimpan presensi ${helper.nama}'
-                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

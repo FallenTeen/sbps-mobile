@@ -8,6 +8,7 @@ import '../../core/draft/autosave_controller.dart';
 import '../../core/draft/draft_repository.dart';
 import '../../core/photo_compression_service.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
@@ -55,7 +56,7 @@ class FormulirScreen extends ConsumerWidget {
             error: (error, _) => AppEmptyState(
               icon: Icons.cloud_off_outlined,
               title: 'Gagal memuat status presensi',
-              subtitle: '$error',
+              subtitle: friendlyErrorMessage(error),
               actionLabel: 'Coba lagi',
               onAction: () => ref.invalidate(hariIniProvider),
             ),
@@ -341,7 +342,7 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
     final message = result.delivered
         ? 'Formulir berhasil disimpan.'
         : result.queued
-        ? 'Tersimpan offline - akan dikirim otomatis saat online.'
+        ? kCopyQueued
         : result.error ?? 'Formulir gagal disimpan.';
     ScaffoldMessenger.of(
       context,

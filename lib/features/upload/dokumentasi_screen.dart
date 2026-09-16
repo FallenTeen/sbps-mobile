@@ -5,12 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/photo_compression_service.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
-import '../../shared/widgets/portal_switch_button.dart';
-import '../../shared/widgets/watermarked_camera_capture.dart';
 
 /// Lampirkan dokumentasi foto produksi/QC (Fase A2.7): pilih 1-10 foto,
 /// opsional kaitkan ke sesi produksi (subject_type "ProductionSession"),
@@ -66,7 +67,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
           content: Text(
             result.delivered
                 ? 'Dokumentasi berhasil diunggah.'
-                : 'Tersimpan offline — akan dikirim otomatis saat online. Gunakan tombol ☁️ di atas untuk sinkron manual.',
+                : kCopyQueued,
           ),
         ),
       );

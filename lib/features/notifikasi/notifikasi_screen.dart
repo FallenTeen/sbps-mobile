@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/date_grouping.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/notification_routes.dart';
@@ -53,7 +54,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
           error: (error, _) => AppEmptyState(
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Notifikasi',
-            subtitle: '$error',
+            subtitle: friendlyErrorMessage(error),
             actionLabel: 'Coba Lagi',
             onAction: () => ref.read(notificationsProvider.notifier).refresh(),
           ),

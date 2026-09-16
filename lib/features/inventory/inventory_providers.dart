@@ -238,9 +238,23 @@ final inventoryOpnameMaterialsProvider =
     );
 
 class InventoryOpnameResult {
-  const InventoryOpnameResult({this.error});
+  const InventoryOpnameResult({
+    this.error,
+    this.delivered = false,
+    this.queued = false,
+    this.permanentlyFailed = false,
+  });
 
   final String? error;
+
+  /// true = server menerima opname (real ack).
+  final bool delivered;
+
+  /// true = hanya tersimpan lokal, menunggu sinkronisasi.
+  final bool queued;
+
+  /// true = error permanen, retry tidak akan pernah berhasil.
+  final bool permanentlyFailed;
 }
 
 class InventoryOpnameState {
@@ -284,11 +298,22 @@ class InventoryOpnameController extends Notifier<InventoryOpnameState> {
         idempotencyKey: _uuid.v4(),
       );
       final sync = ref.read(outboxSyncServiceProvider);
-      await ref.read(outboxRepositoryProvider).enqueue(action, sync.send);
+      final result = await ref
+          .read(outboxRepositoryProvider)
+          .enqueue(action, sync.send);
       ref.invalidate(inventoryOpnameMaterialsProvider);
       ref.invalidate(inventoryStokProvider);
       ref.invalidate(inventorySummaryProvider);
-      return const InventoryOpnameResult();
+      if (result.delivered) {
+        return const InventoryOpnameResult(delivered: true);
+      }
+      if (result.permanentlyFailed) {
+        return InventoryOpnameResult(
+          permanentlyFailed: true,
+          error: result.errorMessage,
+        );
+      }
+      return const InventoryOpnameResult(queued: true);
     } on ApiException catch (e) {
       return InventoryOpnameResult(error: e.message);
     } catch (_) {
