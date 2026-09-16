@@ -69,6 +69,9 @@ class OutboxSyncService {
         await _api.post<Object?>(
           path,
           body: <String, dynamic>{...body, 'client_uuid': action.clientUuid},
+          headers: {
+            'Idempotency-Key': action.idempotencyKey,
+          },
         );
         return const OutboxSendResult(delivered: true);
       }

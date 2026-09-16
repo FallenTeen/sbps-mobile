@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
 import '../../core/analytics_service.dart';
@@ -37,6 +38,8 @@ final pushTokenProvider = Provider<PushTokenService>(
   (ref) => PushTokenService(),
 );
 
+const _uuid = Uuid();
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = ApiClient.buildBaseDio();
   final storage = ref.read(tokenStorageProvider);
@@ -59,6 +62,14 @@ final dioProvider = Provider<Dio>((ref) {
         final role = ref.read(activeRoleProvider);
         if (role != null && role.isNotEmpty) {
           options.headers['X-Active-Role'] = role;
+        }
+        final method = options.method.toUpperCase();
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].contains(method) &&
+            !options.headers.containsKey('Idempotency-Key') &&
+            !options.headers.containsKey('idempotency-key') &&
+            !options.path.endsWith('/login') &&
+            !options.path.endsWith('/register')) {
+          options.headers['Idempotency-Key'] = _uuid.v4();
         }
         handler.next(options);
       },
