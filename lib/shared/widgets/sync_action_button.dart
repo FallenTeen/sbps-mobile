@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/presensi/presensi_providers.dart';
+import '../theme/app_theme.dart';
 import 'animated_badge.dart';
 
 /// Connectivity status: online / offline / checking.
@@ -32,6 +33,11 @@ class SyncActionButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final count = ref.watch(pendingCountProvider);
+    final badgeBg = context.colors.warning;
+    final badgeFg =
+        badgeBg.computeLuminance() > 0.45
+            ? const Color(0xFF0F172A)
+            : Colors.white;
 
     return Semantics(
       button: true,
@@ -47,7 +53,8 @@ class SyncActionButton extends ConsumerWidget {
           children: [
             AnimatedCountBadge(
               count: count,
-              badgeColor: Colors.orange.shade700,
+              badgeColor: badgeBg,
+              textColor: badgeFg,
               child: Icon(
                 count > 0
                     ? Icons.cloud_upload_outlined
@@ -100,11 +107,28 @@ class OfflineBanner extends ConsumerWidget {
           data: (value) => value == ConnectivityStatus.offline,
         ) ??
         false;
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final warning = context.colors.warning;
+    // Latar "warning container" yang mengikuti tema (gelap/terang), bukan
+    // warna amber hardcoded yang hanya cocok di mode terang.
+    final bg = Color.alphaBlend(
+      warning.withValues(alpha: isDark ? 0.2 : 0.14),
+      context.colors.surface,
+    );
+    // Teks menyesuaikan luminansi latar: coklat tua di atas amber terang,
+    // amber terang di atas olive gelap.
+    final fg =
+        bg.computeLuminance() > 0.45
+            ? const Color(0xFF92400E)
+            : warning;
+
     return Column(
       children: [
         if (offline)
           Material(
-            color: const Color(0xFFFEF3C7),
+            color: bg,
             child: SafeArea(
               bottom: false,
               child: InkWell(
@@ -120,18 +144,17 @@ class OfflineBanner extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           'Anda sedang offline — data tetap tersimpan di HP.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: const Color(0xFF92400E),
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: fg,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
+                      Icon(
                         Icons.chevron_right,
                         size: 16,
-                        color: Color(0xFF92400E),
+                        color: fg,
                       ),
                     ],
                   ),

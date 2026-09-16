@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 /// Menggantikan pola `Container` manual yang berulang (bg warna α10% +
 /// teks 11px w700). Punya dua mode: [filled=false] = tinted (bg warna α12%
 /// dengan teks warna solid), [filled=true] = solid (bg warna penuh, teks
-/// putih) untuk status yang harus menonjol (mis. "Tersedia", "Selesai").
+/// otomatis hitam/putih berdasarkan luminansi warna agar kontras AA tetap
+/// terjaga di mode terang & gelap).
 class StatusPill extends StatelessWidget {
   const StatusPill({
     super.key,
@@ -24,10 +25,19 @@ class StatusPill extends StatelessWidget {
   final double borderRadius;
   final TextStyle? labelStyle;
 
+  /// Pilih warna teks ikon/label kontras AA terhadap latar [background].
+  /// - tinted: selalu pakai [color] (dipastikan kontras oleh pemanggil).
+  /// - filled: hitam bila latar terang, putih bila latar gelap.
+  Color _foreground(bool filled) {
+    if (!filled) return color;
+    final luminance = color.computeLuminance();
+    return luminance > 0.45 ? const Color(0xFF0F172A) : Colors.white;
+  }
+
   @override
   Widget build(BuildContext context) {
     final backgroundColor = filled ? color : color.withValues(alpha: 0.12);
-    final foregroundColor = filled ? Colors.white : color;
+    final foregroundColor = _foreground(filled);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

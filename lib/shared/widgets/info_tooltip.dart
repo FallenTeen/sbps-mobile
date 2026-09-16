@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// Ikon info kecil di sebelah label field.
 /// Tap untuk munculkan penjelasan singkat (Tooltip) atau bottom sheet (untuk teks panjang).
 class InfoTooltip extends StatelessWidget {
@@ -18,20 +20,30 @@ class InfoTooltip extends StatelessWidget {
   Widget build(BuildContext context) {
     final useSheet = message.length > maxLength;
 
-    return GestureDetector(
-      onTap: () {
-        if (useSheet) {
-          _showBottomSheet(context);
-        } else {
-          _showTooltip(context);
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(
-          Icons.info_outline,
-          size: 16,
-          color: Theme.of(context).textTheme.labelMedium?.color ?? Colors.grey,
+    return Semantics(
+      button: true,
+      tooltip: message,
+      child: GestureDetector(
+        onTap: () {
+          if (useSheet) {
+            _showBottomSheet(context);
+          } else {
+            _showTooltip(context);
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Icon(
+              Icons.info_outline,
+              size: 18,
+              color: Theme.of(
+                context,
+              ).textTheme.labelMedium?.color ?? context.colors.textTertiary,
+            ),
+          ),
         ),
       ),
     );
@@ -51,6 +63,7 @@ class InfoTooltip extends StatelessWidget {
   }
 
   void _showBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -67,7 +80,8 @@ class InfoTooltip extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: theme.bottomSheetTheme.dragHandleColor ??
+                      theme.colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -76,16 +90,16 @@ class InfoTooltip extends StatelessWidget {
             if (title != null) ...[
               Text(
                 title!,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
             ],
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -129,6 +143,10 @@ class _TooltipOverlayState extends State<_TooltipOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surface = theme.colorScheme.inverseSurface;
+    final onSurface = theme.colorScheme.onInverseSurface;
+
     return Stack(
       children: [
         Positioned.fill(
@@ -153,12 +171,12 @@ class _TooltipOverlayState extends State<_TooltipOverlay>
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: surface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   widget.message,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(color: onSurface, fontSize: 12),
                 ),
               ),
             ),

@@ -17,11 +17,17 @@ class SkeletonLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultBase = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    // Warna skeleton mengikuti skema tema (M3 surface) — konsisten dengan
+    // SkeletonBlock, kontras terjaga di mode terang & gelap.
+    final defaultBase = isDark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainerHighest;
     final defaultHighlight = isDark
-        ? Colors.grey.shade700
-        : Colors.grey.shade100;
+        ? scheme.surfaceContainerHighest
+        : scheme.surfaceContainerLow;
 
     return Shimmer.fromColors(
       baseColor: baseColor ?? defaultBase,
