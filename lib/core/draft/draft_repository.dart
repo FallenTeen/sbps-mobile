@@ -10,6 +10,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 enum DraftFormType {
   servisAjuan,
   formulirLapangan,
+  dokumentasi,
   workshopSelesai,
   checklist,
   checklistMajor,
@@ -21,6 +22,7 @@ enum DraftFormType {
   String get label => switch (this) {
     servisAjuan => 'Ajuan Servis',
     formulirLapangan => 'Formulir Lapangan',
+    dokumentasi => 'Dokumentasi Produksi',
     workshopSelesai => 'Workshop — Selesaikan',
     checklist => 'Checklist',
     checklistMajor => 'Checklist Major',
