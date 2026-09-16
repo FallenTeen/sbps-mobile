@@ -308,29 +308,27 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
           key: state.pageKey,
           child: const SesiAktifScreen(),
         ),
-        routes: [
-          GoRoute(
-            path: 'mulai',
-            pageBuilder: (context, state) => buildAppTransitionPage(
-              key: state.pageKey,
-              child: const MulaiSesiScreen(),
-            ),
-          ),
-          GoRoute(
-            path: 'riwayat',
-            pageBuilder: (context, state) => buildAppTransitionPage(
-              key: state.pageKey,
-              child: const RiwayatProduksiScreen(),
-            ),
-          ),
-          GoRoute(
-            path: 'progress',
-            pageBuilder: (context, state) => buildAppTransitionPage(
-              key: state.pageKey,
-              child: const ProgressHariIniScreen(),
-            ),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: '/produksi/mulai',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const MulaiSesiScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/produksi/riwayat',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const RiwayatProduksiScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/produksi/progress',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ProgressHariIniScreen(),
+        ),
       ),
     ],
   ),

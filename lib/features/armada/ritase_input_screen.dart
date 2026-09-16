@@ -294,9 +294,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
             errorMessage: e.message,
           );
         }
-      } catch (_) {
+      } catch (e) {
         failed++;
-        firstFail ??= 'Kesalahan tak terduga';
+        final msg = e is Exception ? e.toString() : 'Terjadi kesalahan sistem.';
+        firstFail ??= msg;
+        final idx = _records.indexWhere((r) => r.id == record.id);
+        if (idx >= 0) {
+          _records[idx] = _records[idx].copyWith(
+            status: RitaseRecordStatus.failed,
+            errorMessage: msg,
+          );
+        }
       } finally {
         if (mounted) {
           setState(() => _syncingIds.remove(record.id));
@@ -379,9 +387,17 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               errorMessage: e.message,
             );
           }
-        } catch (_) {
+        } catch (e) {
           failed++;
-          firstFail ??= 'Kesalahan tak terduga';
+          final msg = e is Exception ? e.toString() : 'Terjadi kesalahan sistem.';
+          firstFail ??= msg;
+          final idx = _records.indexWhere((r) => r.id == record.id);
+          if (idx >= 0) {
+            _records[idx] = _records[idx].copyWith(
+              status: RitaseRecordStatus.failed,
+              errorMessage: msg,
+            );
+          }
         } finally {
           if (mounted) setState(() => _syncingIds.remove(record.id));
         }

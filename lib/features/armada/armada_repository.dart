@@ -106,6 +106,9 @@ class ArmadaRepository {
     );
 
     final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(result.errorMessage ?? 'Gagal menyimpan checklist.');
+    }
     return result.delivered;
   }
 
@@ -160,6 +163,9 @@ class ArmadaRepository {
     );
 
     final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(result.errorMessage ?? 'Gagal menyimpan ODO awal.');
+    }
     return result.delivered;
   }
 
@@ -182,6 +188,9 @@ class ArmadaRepository {
     );
 
     final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(result.errorMessage ?? 'Gagal mencatat presensi helper.');
+    }
     return result.delivered;
   }
 

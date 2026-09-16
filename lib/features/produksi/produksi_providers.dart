@@ -265,8 +265,10 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
       return const ProduksiSubmitResult(queued: true);
     } on ApiException catch (e) {
       return ProduksiSubmitResult(error: e.message);
-    } catch (_) {
-      return const ProduksiSubmitResult(error: 'Gagal memulai sesi.');
+    } catch (e) {
+      return ProduksiSubmitResult(
+        error: e is Exception ? e.toString() : 'Gagal memulai sesi.',
+      );
     } finally {
       state = const ProduksiSubmitState();
     }
@@ -324,8 +326,10 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
       return const ProduksiSubmitResult(queued: true);
     } on ApiException catch (e) {
       return ProduksiSubmitResult(error: e.message);
-    } catch (_) {
-      return const ProduksiSubmitResult(error: 'Gagal menutup sesi.');
+    } catch (e) {
+      return ProduksiSubmitResult(
+        error: e is Exception ? e.toString() : 'Gagal menutup sesi.',
+      );
     } finally {
       state = const ProduksiSubmitState();
     }
