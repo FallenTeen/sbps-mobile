@@ -8,10 +8,15 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
-import '../../shared/widgets/workflow_stepper.dart';
+import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
+import 'checklist_model.dart';
 import 'models/armada.dart';
 
+/// Driver Home — pusat pekerjaan harian driver (dr docs §PHASE 07).
+///
+/// Menjawab: unit saya apa, lokasi saya di mana, apa yang selesai, apa yang
+/// berikutnya, dan apa yang bermasalah hari ini.
 class UnitSayaHomeScreen extends ConsumerStatefulWidget {
   const UnitSayaHomeScreen({super.key});
 
@@ -25,6 +30,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
     final armadaAsync = ref.watch(armadaSayaProvider);
     final checklistAsync = ref.watch(checklistHariIniProvider);
     final ritaseAsync = ref.watch(ritaseRiwayatProvider);
+    final user = ref.watch(authControllerProvider).value;
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -44,7 +50,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
         },
         child: armadaAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => ListView(
+          error: (_, _) => ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
               Padding(
@@ -70,7 +76,10 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 48,
+                    ),
                     child: AppEmptyState(
                       icon: Icons.no_crash_outlined,
                       title: 'Belum ada unit yang ditugaskan',
@@ -91,14 +100,22 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 32),
               children: [
-                _UnitHeader(armada: armada),
+                _GreetingHeader(nama: user?.name),
                 const SizedBox(height: 4),
-                _WorkflowSection(
+                _UnitSayaSection(armada: armada),
+                const SizedBox(height: 4),
+                _PekerjaanHariIni(
                   armada: armada,
                   checklists: checklists,
                   ritItems: ritItems,
                   akhirDone: akhirDone,
                 ),
+                if (checklists.any(
+                  (c) => unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah,
+                )) ...[
+                  const SizedBox(height: 4),
+                  _MasalahSection(checklists: checklists),
+                ],
                 const SizedBox(height: 4),
                 _RingkasanKerja(armada: armada, ritItems: ritItems),
                 const SizedBox(height: 8),
@@ -112,82 +129,162 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
   }
 }
 
-// ── Unit Header ──────────────────────────────────────────────────────────────
+// ── Greeting ─────────────────────────────────────────────────────────────────
 
-class _UnitHeader extends StatelessWidget {
-  const _UnitHeader({required this.armada});
+class _GreetingHeader extends StatelessWidget {
+  const _GreetingHeader({this.nama});
+
+  final String? nama;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = (nama == null || nama!.trim().isEmpty)
+        ? 'Driver'
+        : nama!.trim().split(' ').first;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Halo, $label',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            fmtTanggalPanjang(DateTime.now()),
+            style: TextStyle(
+              fontSize: 13,
+              color: context.colors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Unit Saya ────────────────────────────────────────────────────────────────
+
+class _UnitSayaSection extends StatelessWidget {
+  const _UnitSayaSection({required this.armada});
 
   final ArmadaSaya armada;
 
   @override
   Widget build(BuildContext context) {
     final aktif = armada.status == 'aktif' || armada.status == 'beroperasi';
+    final odoLabel = armada.isAlatBerat ? 'HM terakhir' : 'ODO terakhir';
+    final odoValue = armada.isAlatBerat
+        ? (armada.jamOperasionalTerkini != null
+              ? fmtJam(armada.jamOperasionalTerkini)
+              : 'Belum tercatat')
+        : (armada.odoTerkini != null
+              ? fmtKm(armada.odoTerkini)
+              : 'Belum tercatat');
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.colors.primary,
-            context.colors.primary.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.primary.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              armada.isAlatBerat
-                  ? Icons.construction_rounded
-                  : Icons.local_shipping_rounded,
-              color: Colors.white,
-              size: 26,
+          Text(
+            'Unit Saya',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  context.colors.primary,
+                  context.colors.primary.withValues(alpha: 0.82),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: context.colors.primary.withValues(alpha: 0.22),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      armada.platNomor,
-                      style: const TextStyle(
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        armada.isAlatBerat
+                            ? Icons.construction_rounded
+                            : Icons.local_shipping_rounded,
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        size: 26,
                       ),
                     ),
-                    if (armada.kodeUnit != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        armada.kodeUnit!,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  armada.platNomor,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (armada.kodeUnit != null) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  armada.kodeUnit!,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            armada.jenis != null
+                                ? _labelJenis(armada.jenis!)
+                                : (armada.isAlatBerat ? 'Alat Berat' : 'Kendaraan'),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                    const SizedBox(width: 8),
+                    ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -208,47 +305,95 @@ class _UnitHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: aktif
-                            ? Color(0xFF4ADE80)
-                            : context.colors.warning,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      aktif ? 'Aktif' : (armada.status ?? 'Standby'),
-                      style: TextStyle(
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.place_outlined,
                         color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 12,
+                        size: 18,
                       ),
-                    ),
-                    if (armada.titikNama != null) ...[
-                      Text(
-                        '  ·  ',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 12,
-                        ),
-                      ),
-                      Flexible(
+                      const SizedBox(width: 8),
+                      Expanded(
                         child: Text(
-                          armada.titikNama!,
+                          armada.titikNama ?? 'Titik belum ditetapkan',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 13,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: aktif
+                              ? const Color(0xFF4ADE80)
+                              : context.colors.warning,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        aktif ? 'Aktif' : (armada.status ?? 'Standby'),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
-                  ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        armada.isAlatBerat
+                            ? Icons.timer_outlined
+                            : Icons.speed_outlined,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        odoLabel,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        odoValue,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -259,24 +404,28 @@ class _UnitHeader extends StatelessWidget {
   }
 }
 
-// ── Workflow Section ─────────────────────────────────────────────────────────
+// ── Pekerjaan Hari Ini ───────────────────────────────────────────────────────
 
 class _DayStep {
   const _DayStep({
+    required this.number,
     required this.label,
     required this.done,
     required this.route,
     required this.cta,
+    required this.subtitle,
   });
 
+  final int number;
   final String label;
   final bool done;
   final String route;
   final String cta;
+  final String subtitle;
 }
 
-class _WorkflowSection extends StatelessWidget {
-  const _WorkflowSection({
+class _PekerjaanHariIni extends StatelessWidget {
+  const _PekerjaanHariIni({
     required this.armada,
     required this.checklists,
     required this.ritItems,
@@ -290,12 +439,12 @@ class _WorkflowSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final myChecklist = checklists
+    final myChecklists = checklists
         .where((c) => c.armadaId == armada.id)
         .toList();
-    final hasChecklistPagi = myChecklist.any((c) => c.sudahIsi);
+    final hasChecklist = myChecklists.any((c) => c.sudahIsi);
     final hasOdoAwal =
-        myChecklist.any(
+        myChecklists.any(
           (c) => armada.isAlatBerat
               ? (c.jamOperasional != null && c.jamOperasional! > 0)
               : (c.odoKm != null && c.odoKm! > 0),
@@ -305,104 +454,101 @@ class _WorkflowSection extends StatelessWidget {
                   armada.jamOperasionalTerkini! > 0)
             : (armada.odoTerkini != null && armada.odoTerkini! > 0));
     final ritCount = ritItems.length;
-    final hasRitase = ritCount > 0;
 
-    final daySteps = [
+    final odoSubtitle = armada.isAlatBerat
+        ? (armada.jamOperasionalTerkini != null
+              ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
+              : 'Belum tercatat')
+        : (armada.odoTerkini != null
+              ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
+              : 'Belum tercatat');
+
+    final steps = [
       _DayStep(
-        label: 'Checklist harian',
-        done: hasChecklistPagi,
+        number: 1,
+        label: 'Checklist',
+        done: hasChecklist,
         route: '/armada/checklist',
         cta: 'Isi checklist',
+        subtitle: hasChecklist ? 'Sudah diperiksa' : 'Menunggu diperiksa',
       ),
       _DayStep(
-        label: armada.isAlatBerat ? 'Jam Awal' : 'KM Awal',
+        number: 2,
+        label: armada.isAlatBerat ? 'ODO/HM (Jam Awal)' : 'ODO/HM (KM Awal)',
         done: hasOdoAwal,
         route: '/armada/odo-awal',
         cta: armada.isAlatBerat ? 'Catat jam' : 'Catat KM',
+        subtitle: odoSubtitle,
       ),
       _DayStep(
-        label: 'Muatan (Ritase)',
-        done: hasRitase,
+        number: 3,
+        label: 'Muatan / Jam Kerja',
+        done: ritCount > 0,
         route: '/armada/ritase-input',
         cta: 'Catat muatan',
+        subtitle: ritCount > 0
+            ? (armada.isAlatBerat ? 'Aktif' : '$ritCount muatan tercatat')
+            : 'Belum ada muatan',
       ),
       _DayStep(
-        label: 'Checklist akhir',
+        number: 4,
+        label: 'Checklist Akhir',
         done: akhirDone,
         route: '/armada/checklist-akhir',
         cta: 'Isi checklist akhir',
+        subtitle: akhirDone ? 'Sudah diisi' : 'Belum diisi',
       ),
     ];
 
-    final doneCount = daySteps.where((s) => s.done).length;
+    final doneCount = steps.where((s) => s.done).length;
     _DayStep? next;
-    for (final s in daySteps) {
+    for (final s in steps) {
       if (!s.done) {
         next = s;
         break;
       }
     }
 
-    final steps = [
-      WorkflowStep(
-        label: 'Checklist harian',
-        subtitle: hasChecklistPagi ? 'Sudah diisi' : 'Belum diisi',
-        status: hasChecklistPagi
-            ? WorkflowStepStatus.selesai
-            : WorkflowStepStatus.sedang,
-        onTap: () => context.push('/armada/checklist'),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pekerjaan Hari Ini',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _ProgressCard(doneCount: doneCount, total: steps.length, next: next),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < steps.length; i++)
+                  _NumStepTile(
+                    step: steps[i],
+                    isLast: i == steps.length - 1,
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
-      WorkflowStep(
-        label: armada.isAlatBerat ? 'Jam Awal' : 'KM Awal',
-        subtitle: hasOdoAwal
-            ? 'Sudah diisi'
-            : (armada.isAlatBerat
-                  ? (armada.jamOperasionalTerkini != null
-                        ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
-                        : 'Belum diisi')
-                  : (armada.odoTerkini != null
-                        ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
-                        : 'Belum diisi')),
-        status: hasOdoAwal
-            ? WorkflowStepStatus.selesai
-            : WorkflowStepStatus.belum,
-        onTap: () => context.push('/armada/odo-awal'),
-      ),
-      WorkflowStep(
-        label: 'Muatan (Ritase)',
-        subtitle: hasRitase
-            ? (armada.isAlatBerat ? 'Aktif' : '$ritCount muatan tercatat')
-            : 'Belum ada muatan',
-        status: hasRitase
-            ? WorkflowStepStatus.selesai
-            : WorkflowStepStatus.belum,
-        onTap: () => context.push('/armada/ritase-input'),
-      ),
-      WorkflowStep(
-        label: 'Checklist akhir',
-        subtitle: akhirDone ? 'Sudah diisi' : 'Belum diisi',
-        status: akhirDone
-            ? WorkflowStepStatus.selesai
-            : WorkflowStepStatus.belum,
-        onTap: () => context.push('/armada/checklist-akhir'),
-      ),
-    ];
-
-    return Column(
-      children: [
-        _HariIniStatusCard(
-          doneCount: doneCount,
-          total: daySteps.length,
-          next: next,
-        ),
-        WorkflowStepper(steps: steps),
-      ],
     );
   }
 }
 
-class _HariIniStatusCard extends StatelessWidget {
-  const _HariIniStatusCard({
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({
     required this.doneCount,
     required this.total,
     required this.next,
@@ -415,33 +561,78 @@ class _HariIniStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allDone = next == null;
+    final ratio = total == 0 ? 0.0 : doneCount / total;
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: allDone
-              ? context.colors.success.withValues(alpha: 0.35)
+              ? context.colors.success.withValues(alpha: 0.4)
               : context.colors.primary.withValues(alpha: 0.25),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            allDone
-                ? '$doneCount dari $total selesai — kerja hari ini tuntas'
-                : '$doneCount dari $total selesai — sisa: ${next!.label}',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$doneCount',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: allDone
+                      ? context.colors.success
+                      : context.colors.primary,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'dari $total selesai',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (allDone)
+                Icon(
+                  Icons.verified_rounded,
+                  color: context.colors.success,
+                  size: 26,
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 8,
+              backgroundColor: context.colors.surfaceVariant,
+              color: allDone
+                  ? context.colors.success
+                  : context.colors.primary,
             ),
           ),
           if (!allDone) ...[
             const SizedBox(height: 12),
+            Text(
+              'Berikutnya: ${next!.number.toString().padLeft(2, '0')} ${next!.label}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -466,6 +657,176 @@ class _HariIniStatusCard extends StatelessWidget {
   }
 }
 
+class _NumStepTile extends StatelessWidget {
+  const _NumStepTile({required this.step, required this.isLast});
+
+  final _DayStep step;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.push(step.route);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: step.done
+                        ? context.colors.success.withValues(alpha: 0.12)
+                        : context.colors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: step.done
+                      ? Icon(
+                          Icons.check_rounded,
+                          color: context.colors.success,
+                          size: 20,
+                        )
+                      : Text(
+                          step.number.toString().padLeft(2, '0'),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: context.colors.primary,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        step.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        step.subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.colors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: context.colors.textMuted,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            indent: 62,
+            color: context.colors.border,
+          ),
+      ],
+    );
+  }
+}
+
+// ── Masalah ──────────────────────────────────────────────────────────────────
+
+class _MasalahSection extends StatelessWidget {
+  const _MasalahSection({required this.checklists});
+
+  final List<ArmadaChecklist> checklists;
+
+  @override
+  Widget build(BuildContext context) {
+    final bermasalah = checklists
+        .where(
+          (c) => unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah,
+        )
+        .toList();
+    if (bermasalah.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.colors.warning.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: context.colors.warning.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: context.colors.warning,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Perlu Perhatian',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            for (final c in bermasalah)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• ${c.platNomor}: ${c.itemBermasalah?.isNotEmpty == true ? c.itemBermasalah : 'ada kondisi tidak baik'}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: OutlinedButton(
+                onPressed: () => context.push('/armada/checklist'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.colors.warning,
+                  side: BorderSide(
+                    color: context.colors.warning.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: const Text('Periksa checklist'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Ringkasan Kerja ──────────────────────────────────────────────────────────
 
 class _RingkasanKerja extends StatelessWidget {
@@ -483,7 +844,7 @@ class _RingkasanKerja extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Card(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -616,7 +977,7 @@ class _ShortcutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -735,3 +1096,13 @@ class _ShortcutTile extends StatelessWidget {
     );
   }
 }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+String _labelJenis(String jenis) => switch (jenis) {
+  'dump_truck' => 'Dump Truck',
+  'mixer_beton' => 'Mixer Beton',
+  'excavator' => 'Excavator',
+  'mobil_pickup' => 'Mobil Pickup',
+  _ => jenis,
+};

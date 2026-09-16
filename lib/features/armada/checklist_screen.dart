@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
+import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
@@ -15,6 +16,7 @@ import '../../shared/widgets/rich_list_tile.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'checklist_draft_store.dart';
+import 'checklist_model.dart';
 import 'models/armada.dart';
 
 const _dailyItems = <String>[
@@ -28,7 +30,8 @@ const _dailyItems = <String>[
   'Dokumen & STNK',
 ];
 
-/// Checklist harian armada: daftar unit hari ini, isi per item dengan autosave.
+/// Checklist harian armada: work queue unit hari ini (summary + filter) dan
+/// form per item dengan autosave.
 class ChecklistScreen extends ConsumerStatefulWidget {
   const ChecklistScreen({super.key, this.isAkhir = false});
 
@@ -39,6 +42,8 @@ class ChecklistScreen extends ConsumerStatefulWidget {
 }
 
 class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
+  ChecklistFilterK _filter = ChecklistFilterK.semua;
+
   Future<void> _openForm(ArmadaChecklist item) async {
     final armadaList = ref.read(armadaSayaProvider).value;
     final armada = armadaList?.where((a) => a.id == item.armadaId).firstOrNull;
@@ -71,26 +76,22 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(checklistHariIniProvider),
         child: switch (checklist) {
-          AsyncData(value: final items) =>
-            items.isEmpty
-                ? AppEmptyState(
-                    icon: Icons.checklist_rtl,
-                    title: 'Belum ada armada untuk dicatat',
-                    subtitle:
-                        'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
-                    actionLabel: 'Muat Ulang',
-                    onAction: () => ref.invalidate(checklistHariIniProvider),
-                  )
-                : ListView.separated(
-                    padding: EdgeInsets.all(16),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) => _ChecklistCard(
-                      item: items[i],
-                      isAkhir: widget.isAkhir,
-                      onTap: () => _openForm(items[i]),
-                    ),
-                  ),
+          AsyncData(value: final items) => items.isEmpty
+              ? AppEmptyState(
+                  icon: Icons.checklist_rtl,
+                  title: 'Belum ada armada untuk dicatat',
+                  subtitle:
+                      'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
+                  actionLabel: 'Muat Ulang',
+                  onAction: () => ref.invalidate(checklistHariIniProvider),
+                )
+              : _ChecklistQueue(
+                  items: items,
+                  isAkhir: widget.isAkhir,
+                  filter: _filter,
+                  onFilterChanged: (f) => setState(() => _filter = f),
+                  onTap: _openForm,
+                ),
           AsyncError() => AppEmptyState(
             icon: Icons.cloud_off_outlined,
             title: 'Gagal memuat data checklist',
@@ -101,6 +102,223 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
           ),
           _ => const Center(child: CircularProgressIndicator()),
         },
+      ),
+    );
+  }
+}
+
+/// Work queue hari ini: header summary, filter tab, lalu daftar unit.
+class _ChecklistQueue extends StatelessWidget {
+  const _ChecklistQueue({
+    required this.items,
+    required this.isAkhir,
+    required this.filter,
+    required this.onFilterChanged,
+    required this.onTap,
+  });
+
+  final List<ArmadaChecklist> items;
+  final bool isAkhir;
+  final ChecklistFilterK filter;
+  final ValueChanged<ChecklistFilterK> onFilterChanged;
+  final void Function(ArmadaChecklist) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = checklistSummary(items);
+    final filtered = applyChecklistFilter(items, filter);
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        _SummaryHeader(summary: summary, isAkhir: isAkhir),
+        const SizedBox(height: 12),
+        _FilterChips(
+          current: filter,
+          summary: summary,
+          onChanged: onFilterChanged,
+        ),
+        const SizedBox(height: 12),
+        if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: AppEmptyState(
+              icon: Icons.filter_alt_off_outlined,
+              title: 'Tidak ada unit dengan status ini',
+              subtitle:
+                  'Ubah filter untuk melihat unit lain hari ini.',
+            ),
+          )
+        else
+          for (final c in filtered) ...[
+            _ChecklistCard(item: c, isAkhir: isAkhir, onTap: () => onTap(c)),
+            const SizedBox(height: 10),
+          ],
+      ],
+    );
+  }
+}
+
+class _SummaryHeader extends StatelessWidget {
+  const _SummaryHeader({required this.summary, required this.isAkhir});
+
+  final ChecklistSummary summary;
+  final bool isAkhir;
+
+  @override
+  Widget build(BuildContext context) {
+    final allDone = summary.menunggu == 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: allDone
+              ? context.colors.success.withValues(alpha: 0.35)
+              : context.colors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.checklist_rounded,
+                size: 20,
+                color: allDone
+                    ? context.colors.success
+                    : context.colors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isAkhir
+                    ? 'Checklist Akhir Kendaraan Hari Ini'
+                    : 'Checklist Kendaraan Hari Ini',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${summary.checked}',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: allDone
+                      ? context.colors.success
+                      : context.colors.primary,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  'dari ${summary.total} sudah diperiksa',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            summary.menunggu == 0
+                ? 'Semua unit sudah diperiksa hari ini.'
+                : '${summary.menunggu} masih menunggu.'
+                      '${summary.bermasalah > 0 ? ' ${summary.bermasalah} bermasalah.' : ''}',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: summary.bermasalah > 0
+                  ? context.colors.warning
+                  : context.colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: summary.progressRatio,
+              minHeight: 8,
+              backgroundColor: context.colors.surfaceVariant,
+              color: allDone
+                  ? context.colors.success
+                  : context.colors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChips extends StatelessWidget {
+  const _FilterChips({
+    required this.current,
+    required this.summary,
+    required this.onChanged,
+  });
+
+  final ChecklistFilterK current;
+  final ChecklistSummary summary;
+  final ValueChanged<ChecklistFilterK> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final zipped = [
+      (ChecklistFilterK.semua, summary.total),
+      (ChecklistFilterK.belumDicek, summary.menunggu),
+      (ChecklistFilterK.bermasalah, summary.bermasalah),
+      (ChecklistFilterK.selesai, summary.checked - summary.bermasalah),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final entry in zipped) ...[
+            ChoiceChip(
+              label: Text(
+                entry.$1 == ChecklistFilterK.semua
+                    ? entry.$1.label
+                    : '${entry.$1.label} (${entry.$2})',
+              ),
+              selected: current == entry.$1,
+              onSelected: (_) => onChanged(entry.$1),
+              showCheckmark: false,
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: current == entry.$1
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: current == entry.$1
+                    ? context.colors.primary
+                    : context.colors.textSecondary,
+              ),
+              selectedColor: context.colors.primary.withValues(alpha: 0.12),
+              backgroundColor: context.colors.surfaceVariant,
+              side: BorderSide(
+                color: current == entry.$1
+                    ? context.colors.primary
+                    : context.colors.border,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
       ),
     );
   }
@@ -119,40 +337,62 @@ class _ChecklistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkDate = _parseDate(item.tanggal);
-    final daysAgo = checkDate == null ? null : _daysSince(checkDate);
+    final status = unitChecklistStatus(item);
     final filled = item.sudahIsi;
-    final overdue = !filled && (daysAgo ?? 0) > 3;
 
-    final statusColor = filled
-        ? context.colors.success
-        : overdue
-        ? context.colors.warning
-        : context.colors.textMuted;
-
-    final subtitle = filled
-        ? (item.kondisiBaik == true
-              ? 'Kondisi baik${_masalahSuffix(item.itemBermasalah)}'
-              : 'Ada masalah${_masalahSuffix(item.itemBermasalah)}')
-        : switch (daysAgo) {
-            null => 'Belum dicatat hari ini · Belum pernah dicek',
-            0 => 'Belum dicatat hari ini',
-            1 => 'Belum dicatat hari ini · Terakhir: kemarin',
-            _ => 'Belum dicatat hari ini · Terakhir: $daysAgo hari lalu',
-          };
+    final (title, subtitle, color) = switch (status) {
+      ChecklistUnitStatus.selesai => (
+          'Sudah diperiksa — kondisi baik',
+          '${_tanggalInfo(item)}${_masalahSuffix(item.itemBermasalah)}',
+          context.colors.success,
+        ),
+      ChecklistUnitStatus.bermasalah => (
+          filled
+              ? 'Sudah diperiksa — ada masalah${_masalahSuffix(item.itemBermasalah)}'
+              : 'Ada masalah',
+          'Periksa kondisi dan lampirkan catatan kondisi unit',
+          context.colors.error,
+        ),
+      ChecklistUnitStatus.menunggu => (
+          'Menunggu diperiksa',
+          _belumDicekSubtitle(item),
+          context.colors.textMuted,
+        ),
+    };
 
     return RichListTile(
       title: item.platNomor,
       subtitle: subtitle,
-      meta: isAkhir ? 'Akhir' : 'Harian',
-      metaColor: overdue ? context.colors.warning : null,
-      leading: _ChecklistStatusLeading(
-        filled: filled,
-        overdue: overdue,
-        color: statusColor,
-      ),
+      meta: isAkhir
+          ? 'Akhir'
+          : status == ChecklistUnitStatus.bermasalah
+          ? 'Bermasalah'
+          : 'Harian',
+      metaColor: status == ChecklistUnitStatus.bermasalah
+          ? context.colors.error
+          : null,
+      leading: _ChecklistStatusLeading(color: color, status: status),
       onTap: onTap,
     );
+  }
+
+  String _belumDicekSubtitle(ArmadaChecklist item) {
+    final checkDate = _parseDate(item.tanggal);
+    final daysAgo = checkDate == null ? null : _daysSince(checkDate);
+    return switch (daysAgo) {
+      null => 'Belum dicatat hari ini · Belum pernah dicek',
+      0 => 'Belum dicatat hari ini',
+      1 => 'Belum dicatat hari ini · Terakhir: kemarin',
+      _ => 'Belum dicatat hari ini · Terakhir: $daysAgo hari lalu',
+    };
+  }
+
+  String _tanggalInfo(ArmadaChecklist item) {
+    final odo = item.odoKm;
+    final jam = item.jamOperasional;
+    if (odo != null && odo > 0) return 'ODO ${fmtKm(odo)}';
+    if (jam != null && jam > 0) return 'HM ${fmtJam(jam)}';
+    return 'Hari ini';
   }
 
   DateTime? _parseDate(String? tanggal) {
@@ -171,23 +411,19 @@ class _ChecklistCard extends StatelessWidget {
       (masalah == null || masalah.isEmpty) ? '' : ' — $masalah';
 }
 
-/// Leading status checklist: hijau filled + centang (sudah dicek hari ini),
-/// amber (belum dicek & terlambat > 3 hari), abu outline (belum dicatat).
+/// Leading status checklist: hijau berisi centang (selesai), merah tanda bahaya
+/// (bermasalah), abu outline (belum dicek).
 class _ChecklistStatusLeading extends StatelessWidget {
-  const _ChecklistStatusLeading({
-    required this.filled,
-    required this.overdue,
-    required this.color,
-  });
+  const _ChecklistStatusLeading({required this.color, required this.status});
 
-  final bool filled;
-  final bool overdue;
   final Color color;
+  final ChecklistUnitStatus status;
 
   @override
   Widget build(BuildContext context) {
     final tinted = color.withValues(alpha: 0.12);
-    final isHighlighted = filled || overdue;
+    final isHighlighted = status != ChecklistUnitStatus.menunggu;
+
     return Container(
       width: 44,
       height: 44,
@@ -197,11 +433,11 @@ class _ChecklistStatusLeading extends StatelessWidget {
         border: isHighlighted ? null : Border.all(color: color, width: 2),
       ),
       child: Icon(
-        filled
-            ? Icons.check_rounded
-            : overdue
-            ? Icons.error_outline_rounded
-            : Icons.radio_button_unchecked_rounded,
+        switch (status) {
+          ChecklistUnitStatus.selesai => Icons.check_rounded,
+          ChecklistUnitStatus.bermasalah => Icons.error_outline_rounded,
+          ChecklistUnitStatus.menunggu => Icons.radio_button_unchecked_rounded,
+        },
         color: color,
         size: 26,
       ),
@@ -209,13 +445,7 @@ class _ChecklistStatusLeading extends StatelessWidget {
   }
 }
 
-class _ItemState {
-  _ItemState({required this.label, this.baik = true, this.photoPath});
-
-  final String label;
-  bool baik;
-  String? photoPath;
-}
+// ── Form isi checklist ────────────────────────────────────────────────────────
 
 class _ChecklistFillScreen extends ConsumerStatefulWidget {
   const _ChecklistFillScreen({
@@ -238,10 +468,13 @@ class _ChecklistFillScreen extends ConsumerStatefulWidget {
 }
 
 class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
-  late List<_ItemState> _items;
+  late List<ChecklistItemDraft> _items;
+  late List<TextEditingController> _catatanCtrls;
   final _solarCtrl = TextEditingController();
   final _odoCtrl = TextEditingController();
   final _jamCtrl = TextEditingController();
+  double? _odoPrev;
+  double? _jamPrev;
   bool _busy = false;
   bool _draftLoaded = false;
   String? _draftHint;
@@ -249,7 +482,16 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
   @override
   void initState() {
     super.initState();
-    _items = [for (final label in _dailyItems) _ItemState(label: label)];
+    _items = [for (final label in _dailyItems) ChecklistItemDraft(label: label)];
+    _catatanCtrls = [
+      for (final _ in _dailyItems) TextEditingController(),
+    ];
+
+    _odoPrev = _positive(widget.item.odoKm) ? widget.item.odoKm : widget.odoTerkini;
+    _jamPrev = _positive(widget.item.jamOperasional)
+        ? widget.item.jamOperasional
+        : widget.jamOperasionalTerkini;
+
     if (widget.item.solarLiter != null) {
       _solarCtrl.text = widget.item.solarLiter.toString();
     }
@@ -263,10 +505,38 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     } else if (widget.jamOperasionalTerkini != null) {
       _jamCtrl.text = widget.jamOperasionalTerkini.toString();
     }
+
     _solarCtrl.addListener(_autosave);
     _odoCtrl.addListener(_autosave);
     _jamCtrl.addListener(_autosave);
+    for (final c in _catatanCtrls) {
+      c.addListener(_onCatatanChanged);
+    }
     _restoreDraft();
+  }
+
+  bool _positive(double? v) => v != null && v.isFinite && v > 0;
+
+  @override
+  void dispose() {
+    _solarCtrl.dispose();
+    _odoCtrl.dispose();
+    _jamCtrl.dispose();
+    for (final c in _catatanCtrls) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onCatatanChanged() {
+    if (!_draftLoaded) return;
+    for (var i = 0; i < _items.length; i++) {
+      final text = _catatanCtrls[i].text;
+      if (_items[i].catatan != text) {
+        _items[i] = _items[i].copyWith(catatan: text);
+      }
+    }
+    _autosave();
   }
 
   Future<void> _restoreDraft() async {
@@ -280,14 +550,24 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     }
     final savedItems = draft['items'];
     if (savedItems is List) {
-      for (final raw in savedItems) {
-        if (raw is! Map) continue;
-        final map = Map<String, dynamic>.from(raw);
-        final label = map['label']?.toString();
-        final match = _items.where((i) => i.label == label).firstOrNull;
+      for (var i = 0; i < _items.length; i++) {
+        final match = savedItems
+            .whereType<Map>()
+            .map((m) => Map<String, dynamic>.from(m))
+            .where((m) => m['label'] == _items[i].label)
+            .firstOrNull;
         if (match == null) continue;
-        match.baik = map['baik'] != false;
-        match.photoPath = map['photo_path']?.toString();
+        final levelRaw = match['level']?.toString();
+        final level = ChecklistItemLevel.values
+            .where((l) => l.wireValue == levelRaw)
+            .firstOrNull ??
+            ChecklistItemLevel.baik;
+        _items[i] = _items[i].copyWith(
+          level: level,
+          photoPath: match['photo_path']?.toString(),
+          catatan: match['catatan']?.toString() ?? '',
+        );
+        _catatanCtrls[i].text = match['catatan']?.toString() ?? '';
       }
     }
     _solarCtrl.text = draft['solar']?.toString() ?? _solarCtrl.text;
@@ -307,7 +587,12 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       data: {
         'items': [
           for (final i in _items)
-            {'label': i.label, 'baik': i.baik, 'photo_path': i.photoPath},
+            {
+              'label': i.label,
+              'level': i.level.wireValue,
+              'catatan': i.catatan,
+              'photo_path': i.photoPath,
+            },
         ],
         'solar': _solarCtrl.text,
         'odo': _odoCtrl.text,
@@ -319,39 +604,83 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _solarCtrl.dispose();
-    _odoCtrl.dispose();
-    _jamCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _setItemBaik(_ItemState item, bool baik) async {
+  Future<void> _setLevel(int index, ChecklistItemLevel level) async {
     HapticFeedback.selectionClick();
-    setState(() => item.baik = baik);
-    AnalyticsService.checklistItemToggle(item.label, baik);
-    if (!baik && (item.photoPath == null || item.photoPath!.isEmpty)) {
+    final item = _items[index];
+    setState(() {
+      _items[index] = item.copyWith(level: level);
+    });
+    AnalyticsService.checklistItemToggle(item.label, !level.isBermasalah);
+
+    // Rusak/Tidak Aman wajib ada foto bukti: langsung buka kamera.
+    if (level == ChecklistItemLevel.rusak &&
+        (item.photoPath == null || item.photoPath!.isEmpty)) {
       final photo = await takeWatermarkedPhoto(ref);
       if (photo != null && mounted) {
-        setState(() => item.photoPath = photo.path);
+        final updated = _items[index];
+        setState(() {
+          _items[index] = updated.copyWith(photoPath: photo.path);
+        });
       }
     }
     await _autosave();
   }
 
-  Future<void> _retakePhoto(_ItemState item) async {
+  Future<void> _takePhoto(int index) async {
     final photo = await takeWatermarkedPhoto(ref);
     if (photo != null && mounted) {
-      setState(() => item.photoPath = photo.path);
+      final updated = _items[index];
+      setState(() {
+        _items[index] = updated.copyWith(photoPath: photo.path);
+      });
       await _autosave();
     }
   }
 
-  List<_ItemState> get _bermasalah => _items.where((i) => !i.baik).toList();
+  List<ChecklistItemDraft> get _bermasalah =>
+      _items.where((i) => i.level.isBermasalah).toList();
 
   Future<void> _confirmAndSubmit() async {
     final issues = _bermasalah;
+
+    final rusakNoFoto = _items
+        .where(
+          (i) =>
+              i.level == ChecklistItemLevel.rusak &&
+              (i.photoPath == null || i.photoPath!.isEmpty),
+        )
+        .map((i) => i.label)
+        .toList();
+    if (rusakNoFoto.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Ambil foto kerusakan terlebih dahulu: ${rusakNoFoto.join(', ')}',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final rusakNoDesc = _items
+        .where(
+          (i) =>
+              i.level == ChecklistItemLevel.rusak &&
+              i.catatan.trim().isEmpty,
+        )
+        .map((i) => i.label)
+        .toList();
+    if (rusakNoDesc.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Jelaskan masalahnya terlebih dahulu: ${rusakNoDesc.join(', ')}',
+          ),
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -378,9 +707,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                issues.isEmpty
-                    ? 'Semua item: baik (${_items.length} dari ${_items.length})'
-                    : '${_items.length - issues.length} baik · ${issues.length} tidak baik',
+                _summaryLine(issues),
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               if (issues.isNotEmpty) ...[
@@ -389,7 +716,9 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      '• ${i.label}${i.photoPath != null ? ' · ada foto' : ''}',
+                      '• ${i.label} — ${i.level.label}'
+                      '${i.catatan.trim().isNotEmpty ? ' · ${i.catatan.trim()}' : ''}'
+                      '${i.photoPath != null ? ' · ada foto' : ''}',
                     ),
                   ),
               ],
@@ -417,6 +746,21 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     if (confirmed == true) await _submit();
   }
 
+  String _summaryLine(List<ChecklistItemDraft> issues) {
+    final baik = _items.length - issues.length;
+    final perhatian = issues
+        .where((i) => i.level == ChecklistItemLevel.perluPerhatian)
+        .length;
+    final rusak = issues.length - perhatian;
+    if (issues.isEmpty) {
+      return 'Semua item: baik (${_items.length} dari ${_items.length})';
+    }
+    final parts = <String>['$baik baik'];
+    if (perhatian > 0) parts.add('$perhatian perlu perhatian');
+    if (rusak > 0) parts.add('$rusak rusak / tidak aman');
+    return parts.join(' · ');
+  }
+
   Future<void> _submit() async {
     HapticFeedback.mediumImpact();
     setState(() => _busy = true);
@@ -431,14 +775,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
             solarLiter: double.tryParse(_solarCtrl.text),
             odoKm: double.tryParse(_odoCtrl.text),
             jamOperasional: double.tryParse(_jamCtrl.text),
-            itemDetails: [
-              for (final i in _items)
-                {
-                  'label': i.label,
-                  'baik': i.baik,
-                  if (i.photoPath != null) 'has_foto': true,
-                },
-            ],
+            itemDetails: [for (final i in _items) i.toPayload()],
           );
       if (widget.isAkhir) {
         await ChecklistDraftStore.markAkhirSubmitted(widget.item.armadaId);
@@ -452,9 +789,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            delivered ? 'Checklist tersimpan.' : kCopyQueued,
-          ),
+          content: Text(delivered ? 'Checklist tersimpan.' : kCopyQueued),
         ),
       );
       Navigator.of(context).pop();
@@ -500,62 +835,35 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
             ),
           Text(
             widget.isAkhir
-                ? 'Periksa kondisi unit di akhir hari. Ketuk Baik / Tidak baik pada tiap item.'
-                : 'Periksa kondisi unit. Ketuk Baik / Tidak baik pada tiap item.',
+                ? 'Periksa kondisi unit di akhir hari. Pilih Baik, Perlu Perhatian, atau Rusak / Tidak Aman untuk tiap item.'
+                : 'Periksa kondisi unit. Pilih Baik, Perlu Perhatian, atau Rusak / Tidak Aman untuk tiap item.',
             style: TextStyle(color: context.colors.textSecondary),
           ),
           SizedBox(height: 12),
-          for (final item in _items) ...[
+          for (var i = 0; i < _items.length; i++) ...[
             _ItemTile(
-              item: item,
-              onBaik: () => _setItemBaik(item, true),
-              onTidakBaik: () => _setItemBaik(item, false),
-              onFoto: () => _retakePhoto(item),
+              item: _items[i],
+              catatanCtrl: _catatanCtrls[i],
+              onLevelChanged: (level) => _setLevel(i, level),
+              onFoto: () => _takePhoto(i),
             ),
             const SizedBox(height: 10),
           ],
           const SizedBox(height: 8),
-          Text(
-            'Data operasional',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _solarCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Stok Solar (liter)',
-              border: OutlineInputBorder(),
-              helperText: 'Jumlah solar yang diisi hari ini',
+          _DataOperasionalSection(
+            isAlatBerat: widget.isAlatBerat,
+            solarCtrl: _solarCtrl,
+            odoCtrl: _odoCtrl,
+            jamCtrl: _jamCtrl,
+            odoReading: OdoReading(
+              previous: _odoPrev,
+              current: double.tryParse(_odoCtrl.text),
+            ),
+            jamReading: OdoReading(
+              previous: _jamPrev,
+              current: double.tryParse(_jamCtrl.text),
             ),
           ),
-          const SizedBox(height: 12),
-          if (widget.isAlatBerat)
-            TextField(
-              controller: _jamCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Jam Kerja Unit (HM)',
-                border: OutlineInputBorder(),
-                helperText: 'Total jam mesin menyala hari ini',
-              ),
-            )
-          else
-            TextField(
-              controller: _odoCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'KM Sekarang (Odometer)',
-                border: OutlineInputBorder(),
-                helperText: 'Angka pada odometer (penghitung km) kendaraan',
-              ),
-            ),
           const SizedBox(height: 20),
           SizedBox(
             height: 48,
@@ -574,21 +882,187 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
   }
 }
 
+/// Bagian data operasional: solar + ODO/HM dengan previous/current/delta dan
+/// warning ketika nilainya turun dari bacaan sebelumnya.
+class _DataOperasionalSection extends StatelessWidget {
+  const _DataOperasionalSection({
+    required this.isAlatBerat,
+    required this.solarCtrl,
+    required this.odoCtrl,
+    required this.jamCtrl,
+    required this.odoReading,
+    required this.jamReading,
+  });
+
+  final bool isAlatBerat;
+  final TextEditingController solarCtrl;
+  final TextEditingController odoCtrl;
+  final TextEditingController jamCtrl;
+  final OdoReading odoReading;
+  final OdoReading jamReading;
+
+  @override
+  Widget build(BuildContext context) {
+    final reading = isAlatBerat ? jamReading : odoReading;
+    final activeCtrl = isAlatBerat ? jamCtrl : odoCtrl;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Data operasional',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: solarCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Stok Solar (liter)',
+              border: OutlineInputBorder(),
+              helperText: 'Jumlah solar yang diisi hari ini',
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: activeCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: isAlatBerat
+                  ? 'Jam Kerja Unit (HM)'
+                  : 'KM Sekarang (Odometer)',
+              border: const OutlineInputBorder(),
+              helperText: isAlatBerat
+                  ? 'Total jam mesin menyala — Hour Meter'
+                  : 'Angka pada odometer (penghitung km) kendaraan',
+            ),
+          ),
+          const SizedBox(height: 10),
+          _OdoCompare(
+            isAlatBerat: isAlatBerat,
+            reading: reading,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OdoCompare extends StatelessWidget {
+  const _OdoCompare({required this.isAlatBerat, required this.reading});
+
+  final bool isAlatBerat;
+  final OdoReading reading;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!reading.hasBoth) {
+      if (reading.previous == null) return const SizedBox.shrink();
+    }
+
+    final sebelumnya = isAlatBerat
+        ? fmtJam(reading.previous)
+        : fmtKm(reading.previous);
+    final satuan = isAlatBerat ? 'jam' : 'km';
+
+    if (!reading.hasBoth) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: context.colors.surfaceVariant,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          'Sebelumnya: $sebelumnya',
+          style: TextStyle(
+            fontSize: 12,
+            color: context.colors.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    final deltaLbl = reading.pemakaianLabel(isAlatBerat);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: reading.decreased
+            ? context.colors.error.withValues(alpha: 0.06)
+            : context.colors.success.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: reading.decreased
+              ? context.colors.error.withValues(alpha: 0.35)
+              : context.colors.success.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sebelumnya: $sebelumnya · Sekarang: ${isAlatBerat ? fmtJam(reading.current) : fmtKm(reading.current)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: context.colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (reading.decreased)
+            Text(
+              'Perhatian: nilai $satuan ini lebih kecil dari bacaan sebelumnya '
+              '(selisih $deltaLbl). Pastikan angka odometer/jam yang dimasukkan benar.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: context.colors.error,
+              ),
+            )
+          else
+            Text(
+              'Pemakaian: $deltaLbl',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: context.colors.success,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ItemTile extends StatelessWidget {
   const _ItemTile({
     required this.item,
-    required this.onBaik,
-    required this.onTidakBaik,
+    required this.catatanCtrl,
+    required this.onLevelChanged,
     required this.onFoto,
   });
 
-  final _ItemState item;
-  final VoidCallback onBaik;
-  final VoidCallback onTidakBaik;
+  final ChecklistItemDraft item;
+  final TextEditingController catatanCtrl;
+  final ValueChanged<ChecklistItemLevel> onLevelChanged;
   final VoidCallback onFoto;
 
   @override
   Widget build(BuildContext context) {
+    final bermasalah = item.level.isBermasalah;
+
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -612,24 +1086,48 @@ class _ItemTile extends StatelessWidget {
             children: [
               Expanded(
                 child: _ToggleChip(
-                  label: 'Baik',
-                  selected: item.baik,
+                  label: ChecklistItemLevel.baik.label,
+                  selected: item.level == ChecklistItemLevel.baik,
                   selectedColor: context.colors.success,
-                  onTap: onBaik,
+                  onTap: () => onLevelChanged(ChecklistItemLevel.baik),
                 ),
               ),
               SizedBox(width: 8),
               Expanded(
                 child: _ToggleChip(
-                  label: 'Tidak baik',
-                  selected: !item.baik,
+                  label: ChecklistItemLevel.perluPerhatian.label,
+                  selected: item.level == ChecklistItemLevel.perluPerhatian,
+                  selectedColor: context.colors.warning,
+                  onTap: () =>
+                      onLevelChanged(ChecklistItemLevel.perluPerhatian),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: _ToggleChip(
+                  label: ChecklistItemLevel.rusak.label,
+                  selected: item.level == ChecklistItemLevel.rusak,
                   selectedColor: context.colors.error,
-                  onTap: onTidakBaik,
+                  onTap: () => onLevelChanged(ChecklistItemLevel.rusak),
                 ),
               ),
             ],
           ),
-          if (!item.baik) ...[
+          if (bermasalah) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: catatanCtrl,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: item.level == ChecklistItemLevel.rusak
+                    ? 'Jelaskan masalah (wajib)'
+                    : 'Jelaskan kondisi (opsional)',
+                border: const OutlineInputBorder(),
+                hintText: item.level == ChecklistItemLevel.rusak
+                    ? 'Contoh: rem tidak pakem saat mengerem'
+                    : 'Contoh: suara mesin kasar',
+              ),
+            ),
             const SizedBox(height: 10),
             if (item.photoPath != null && File(item.photoPath!).existsSync())
               Row(
@@ -644,9 +1142,20 @@ class _ItemTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      item.level == ChecklistItemLevel.rusak
+                          ? 'Foto bukti kerusakan sudah tersedia.'
+                          : 'Foto bukti tersedia.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                  ),
                   TextButton(
                     onPressed: onFoto,
-                    child: const Text('Ambil ulang foto'),
+                    child: const Text('Ambil ulang'),
                   ),
                 ],
               )
@@ -656,7 +1165,11 @@ class _ItemTile extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onFoto,
                   icon: const Icon(Icons.photo_camera_outlined),
-                  label: const Text('Ambil foto kerusakan'),
+                  label: Text(
+                    item.level == ChecklistItemLevel.rusak
+                        ? 'Ambil foto kerusakan (wajib)'
+                        : 'Ambil foto (opsional)',
+                  ),
                 ),
               ),
           ],
@@ -693,6 +1206,7 @@ class _ToggleChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
@@ -702,9 +1216,13 @@ class _ToggleChip extends StatelessWidget {
             ),
             child: Text(
               label,
+              textAlign: TextAlign.center,
               style: TextStyle(
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: selected ? selectedColor : context.colors.textSecondary,
+                color: selected
+                    ? selectedColor
+                    : context.colors.textSecondary,
               ),
             ),
           ),
