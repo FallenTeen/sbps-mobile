@@ -51,6 +51,8 @@ import '../features/tracking/trail_screen.dart';
 import '../features/upload/dokumentasi_screen.dart';
 import '../features/outbox/data_belum_terkirim_screen.dart';
 import '../features/notifikasi/notifikasi_screen.dart';
+import '../features/formulir/formulir_screen.dart';
+import '../features/presensi/riwayat_screen.dart';
 
 /// Router dengan auth guard: tanpa token → /login, sudah login → /home.
 /// Portal selection ditambahkan setelah login.
@@ -246,6 +248,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
           child: const DokumentasiScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/formulir',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const FormulirScreen(),
         ),
       ),
       // ── Shell tunggal: semua portal & role (StatefulShellRoute.indexedStack) ──
@@ -642,6 +651,15 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
           key: state.pageKey,
           child: const TitikKerjaScreen(),
         ),
+        routes: [
+          GoRoute(
+            path: 'riwayat',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const RiwayatScreen(),
+            ),
+          ),
+        ],
       ),
     ],
   ),

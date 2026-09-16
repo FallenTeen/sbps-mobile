@@ -50,18 +50,105 @@ final selectedTitikProvider = NotifierProvider<SelectedTitikNotifier, Titik?>(
   SelectedTitikNotifier.new,
 );
 
-/// Posisi GPS terakhir yang berhasil didapat di halaman titik kerja.
-class CurrentPositionNotifier extends Notifier<Position?> {
-  @override
-  Position? build() => null;
+/// Jenis kendala yang mencegah posisi GPS didapat.
+enum GpsProblem { serviceDisabled, permissionDenied, unavailable }
 
-  void update(Position? position) => state = position;
+/// Ambang posisi dianggap "basi" ketika melebihi durasi ini.
+const gpsStaleAfter = Duration(minutes: 10);
+
+/// Snapshot kondisi GPS — dipakai UI untuk gating check-in/out.
+class LocationSnapshot {
+  const LocationSnapshot({
+    this.loading = false,
+    this.position,
+    this.acquiredAt,
+    this.problem,
+  });
+
+  final bool loading;
+  final Position? position;
+  final DateTime? acquiredAt;
+  final GpsProblem? problem;
+
+  bool get hasPosition => position != null;
+
+  /// Posisi dianggap basi bila lebih dari [gpsStaleAfter] sejak diperoleh.
+  bool get isStale =>
+      position != null &&
+      acquiredAt != null &&
+      DateTime.now().difference(acquiredAt!) > gpsStaleAfter;
+
+  /// GPS "siap" = ada posisi, tidak basi, dan tidak sedang mengambil ulang.
+  bool get ready => position != null && !isStale && !loading;
+
+  /// Pesan ringkas kendala lokasi untuk ditampilkan ke user.
+  String? get problemLabel => switch (problem) {
+    GpsProblem.serviceDisabled =>
+      'Lokasi (GPS) sedang mati. Aktifkan untuk melihat jarak ke titik.',
+    GpsProblem.permissionDenied =>
+      'Izin lokasi belum diberikan. Presensi butuh lokasi Anda.',
+    GpsProblem.unavailable =>
+      'Posisi GPS belum didapat. Coba lagi dari area terbuka.',
+    null => null,
+  };
 }
 
-final currentPositionProvider =
-    NotifierProvider<CurrentPositionNotifier, Position?>(
-      CurrentPositionNotifier.new,
+/// Kontroller lokasi: satu-satunya sumber posisi di halaman titik kerja.
+class LocationController extends Notifier<LocationSnapshot> {
+  @override
+  LocationSnapshot build() => const LocationSnapshot();
+
+  /// Ambil posisi segar; selama loading posisi terakhir dipertahankan supaya
+  /// jarak & pilihan titik tidak hilang saat refresh.
+  Future<void> refresh() async {
+    final prev = state;
+    state = LocationSnapshot(
+      loading: true,
+      position: prev.position,
+      acquiredAt: prev.acquiredAt,
     );
+
+    final location = ref.read(locationServiceProvider);
+    if (!await location.isServiceEnabled()) {
+      state = const LocationSnapshot(problem: GpsProblem.serviceDisabled);
+      return;
+    }
+    if (!await location.ensurePermission()) {
+      state = const LocationSnapshot(problem: GpsProblem.permissionDenied);
+      return;
+    }
+
+    final position = await location.getCurrentPosition();
+    if (position == null) {
+      state = LocationSnapshot(
+        position: null,
+        problem: GpsProblem.unavailable,
+      );
+      return;
+    }
+    state = LocationSnapshot(position: position, acquiredAt: DateTime.now());
+  }
+}
+
+final locationProvider = NotifierProvider<LocationController, LocationSnapshot>(
+  LocationController.new,
+);
+
+/// Jarak (meter) dari posisi GPS sekarang ke titik yang dipilih.
+final selectedTitikDistanceProvider = Provider<double?>((ref) {
+  final loc = ref.watch(locationProvider);
+  final titik = ref.watch(selectedTitikProvider);
+  final pos = loc.position;
+  if (pos == null || titik == null) return null;
+  return ref
+      .read(locationServiceProvider)
+      .distanceMeters(
+        fromLat: pos.latitude,
+        fromLng: pos.longitude,
+        toLat: titik.latitude,
+        toLng: titik.longitude,
+      );
+});
 
 // ---------------------------------------------------------------------------
 // Fase A1.4 — Check-in/out via outbox
@@ -207,13 +294,16 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
   }) async {
     if (state.busy) return const CheckInResult(error: 'Sedang memproses.');
     final titik = ref.read(selectedTitikProvider);
-    final pos = ref.read(currentPositionProvider);
+    final loc = ref.read(locationProvider);
     if (titik == null) {
       return const CheckInResult(error: 'Pilih titik kerja terlebih dahulu.');
     }
-    if (pos == null) {
-      return const CheckInResult(
-        error: 'Posisi GPS belum tersedia. Tunggu lokasi siap.',
+    final pos = loc.position;
+    if (pos == null || loc.isStale) {
+      return CheckInResult(
+        error: pos == null
+            ? 'Posisi GPS belum tersedia. Tunggu lokasi siap.'
+            : 'Posisi GPS sudah lama. Segarkan lokasi Anda terlebih dahulu.',
       );
     }
 

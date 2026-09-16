@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
@@ -14,7 +15,6 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
-import '../formulir/formulir_screen.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
@@ -22,7 +22,6 @@ import '../titik/titik_selector.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
-import 'riwayat_screen.dart';
 
 /// Fase A1.3 — daftar titik kerja aktif dengan jarak GPS ke tiap titik,
 /// penanda titik terdekat, dan pemilihan titik untuk alur check-in (A1.4).
@@ -34,57 +33,14 @@ class TitikKerjaScreen extends ConsumerStatefulWidget {
 }
 
 class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
-  bool _loadingPosition = true;
-  String? _locationProblem;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _loadPosition();
+      ref.read(locationProvider.notifier).refresh();
       ref.read(unreadCountProvider.notifier).reload();
     });
-  }
-
-  Future<void> _loadPosition() async {
-    final location = ref.read(locationServiceProvider);
-    setState(() {
-      _loadingPosition = true;
-      _locationProblem = null;
-    });
-
-    final serviceOn = await location.isServiceEnabled();
-    if (!serviceOn) {
-      setState(() {
-        _loadingPosition = false;
-        _locationProblem =
-            'Lokasi (GPS) sedang mati. Aktifkan untuk melihat jarak ke titik.';
-      });
-      return;
-    }
-
-    final granted = await location.ensurePermission();
-    if (!granted) {
-      setState(() {
-        _loadingPosition = false;
-        _locationProblem =
-            'Izin lokasi belum diberikan. Presensi butuh lokasi Anda.';
-      });
-      return;
-    }
-
-    final position = await location.getCurrentPosition();
-    if (!mounted) return;
-    setState(() => _loadingPosition = false);
-    if (position != null) {
-      ref.read(currentPositionProvider.notifier).update(position);
-    } else {
-      setState(() {
-        _locationProblem =
-            'Posisi GPS belum didapat. Coba lagi dari area terbuka.';
-      });
-    }
   }
 
   String _formatDistance(double meters) {
@@ -95,7 +51,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
   Future<void> _refreshAll() async {
     ref.invalidate(titikAktifProvider);
     ref.invalidate(assignmentsProvider);
-    await _loadPosition();
+    await ref.read(locationProvider.notifier).refresh();
   }
 
   void _selectTitik(Titik titik) {
@@ -111,7 +67,8 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     final user = auth.value;
     final titikAsync = ref.watch(titikAktifProvider);
     final assignmentsAsync = ref.watch(assignmentsProvider);
-    final position = ref.watch(currentPositionProvider);
+    final location = ref.watch(locationProvider);
+    final position = location.position;
     final selectedTitik = ref.watch(selectedTitikProvider);
     final selectedId = selectedTitik?.id;
 
@@ -130,9 +87,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
           IconButton(
             tooltip: 'Riwayat presensi',
             icon: const Icon(Icons.history),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const RiwayatScreen()),
-            ),
+            onPressed: () => context.push('/presensi/riwayat'),
           ),
           const _PendingBadgeAction(),
           const _NotifikasiBadgeAction(),
@@ -187,11 +142,11 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
               const PresensiHariIniCard(),
               const _FormulirEntryPoint(),
               _LocationCard(
-                loading: _loadingPosition,
-                problem: _locationProblem,
+                location: location,
                 onOpenSettings: () =>
                     ref.read(locationServiceProvider).openSettings(),
-                onRetry: _loadPosition,
+                onRefresh: () =>
+                    ref.read(locationProvider.notifier).refresh(),
               ),
               SizedBox(height: 16),
 
@@ -270,6 +225,9 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                   return TitikSelector(
                     titikList: titikList,
                     selectedTitik: selectedTitik,
+                    userPosition: position == null
+                        ? null
+                        : LatLng(position.latitude, position.longitude),
                     mapHeight: 360,
                     onChanged: (t) {
                       if (t != null) _selectTitik(t);
@@ -293,6 +251,18 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                                             toLng: titikList[i].longitude,
                                           ),
                                     ),
+                              isLuarRadius:
+                                  position == null
+                                      ? null
+                                      : ref
+                                              .read(locationServiceProvider)
+                                              .distanceMeters(
+                                                fromLat: position.latitude,
+                                                fromLng: position.longitude,
+                                                toLat: titikList[i].latitude,
+                                                toLng: titikList[i].longitude,
+                                              ) >
+                                          titikList[i].radiusPresensiMeter,
                               isNearest: titikList[i].id == nearestId,
                               isSelected: titikList[i].id == selectedId,
                               onTap: () => _selectTitik(titikList[i]),
@@ -330,9 +300,7 @@ class _FormulirEntryPoint extends ConsumerWidget {
         title: const Text('Formulir Lapangan'),
         subtitle: const Text('Laporan aktivitas harian terkait presensi.'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute<void>(builder: (_) => const FormulirScreen())),
+        onTap: () => context.push('/formulir'),
       ),
     );
   }
@@ -372,22 +340,21 @@ class _PendingBadgeAction extends ConsumerWidget {
 
 class _LocationCard extends StatelessWidget {
   const _LocationCard({
-    required this.loading,
-    required this.problem,
+    required this.location,
     required this.onOpenSettings,
-    required this.onRetry,
+    required this.onRefresh,
   });
 
-  final bool loading;
-  final String? problem;
+  final LocationSnapshot location;
   final VoidCallback onOpenSettings;
-  final VoidCallback onRetry;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (loading) {
+    // Belum pernah dapat posisi + sedang mengambil.
+    if (location.loading && !location.hasPosition) {
       return Card(
         child: ListTile(
           leading: const SizedBox(
@@ -399,19 +366,19 @@ class _LocationCard extends StatelessWidget {
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
           trailing: IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: onRetry,
+            onPressed: onRefresh,
           ),
         ),
       );
     }
 
-    if (problem != null) {
+    if (location.problem != null) {
       return Card(
         color: theme.colorScheme.errorContainer.withValues(alpha: 0.4),
         child: ListTile(
           leading: const Icon(Icons.location_off_outlined),
           title: const Text('Lokasi tidak tersedia'),
-          subtitle: Text(problem!),
+          subtitle: Text(location.problemLabel ?? ''),
           isThreeLine: true,
           trailing: PopupMenuButton<String>(
             itemBuilder: (context) => [
@@ -422,20 +389,45 @@ class _LocationCard extends StatelessWidget {
               ),
             ],
             onSelected: (value) =>
-                value == 'retry' ? onRetry() : onOpenSettings(),
+                value == 'retry' ? onRefresh() : onOpenSettings(),
           ),
         ),
       );
     }
 
+    // Ada posisi tapi sudah basi → minta segarkan sebelum check-in.
+    if (location.hasPosition && location.isStale) {
+      return Card(
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: ListTile(
+          leading: Icon(Icons.schedule, color: theme.colorScheme.tertiary),
+          title: const Text('Posisi GPS sudah lama'),
+          subtitle: const Text(
+            'Lokasi terakhir diambil lebih dari 10 menit lalu. Segarkan untuk melacak posisi Anda. Check-in tidak aktif sampai posisi segar.',
+          ),
+          isThreeLine: true,
+          trailing: IconButton(
+            tooltip: 'Segarkan lokasi',
+            icon: const Icon(Icons.refresh),
+            onPressed: onRefresh,
+          ),
+        ),
+      );
+    }
+
+    // Siap (dengan/atau sedang mengambil ulang dengan posisi tersimpan).
     return Card(
       child: ListTile(
         leading: Icon(Icons.my_location, color: theme.colorScheme.primary),
         title: const Text('Lokasi siap'),
-        subtitle: const Text('Pilih titik kerja untuk check-in.'),
+        subtitle: Text(
+          location.loading
+              ? 'Memperbarui lokasi…'
+              : 'Pilih titik kerja untuk check-in.',
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.refresh),
-          onPressed: onRetry,
+          onPressed: onRefresh,
         ),
       ),
     );
@@ -446,6 +438,7 @@ class _TitikTile extends StatelessWidget {
   const _TitikTile({
     required this.titik,
     required this.distanceText,
+    required this.isLuarRadius,
     required this.isNearest,
     required this.isSelected,
     required this.onTap,
@@ -453,6 +446,9 @@ class _TitikTile extends StatelessWidget {
 
   final Titik titik;
   final String? distanceText;
+
+  /// null = posisi belum tersedia; false = dalam radius; true = luar radius.
+  final bool? isLuarRadius;
   final bool isNearest;
   final bool isSelected;
   final VoidCallback onTap;
@@ -547,7 +543,26 @@ class _TitikTile extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (isNearest)
+                    if (isSelected)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.colors.primary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Terpilih',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else if (isNearest)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -565,14 +580,8 @@ class _TitikTile extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      )
-                    else if (isSelected)
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: context.colors.primary,
-                        size: 22,
                       ),
-                    if (distanceText != null)
+                    if (distanceText != null) ...[
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
@@ -584,6 +593,32 @@ class _TitikTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (isLuarRadius != null) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isLuarRadius!
+                                ? context.colors.warning.withValues(alpha: 0.15)
+                                : context.colors.success.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            isLuarRadius! ? 'Luar radius' : 'Dalam radius',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: isLuarRadius!
+                                  ? context.colors.warning
+                                  : context.colors.success,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../presensi/models/titik.dart';
 import 'titik_map_view.dart';
@@ -22,6 +23,7 @@ class TitikSelector extends StatefulWidget {
     this.initialMode = TitikSelectorMode.daftar,
     this.mapHeight = 320,
     this.showToggle = true,
+    this.userPosition,
   });
 
   /// Daftar titik yang tersedia.
@@ -44,6 +46,9 @@ class TitikSelector extends StatefulWidget {
 
   /// Apakah menampilkan SegmentedButton toggle di atas.
   final bool showToggle;
+
+  /// Posisi user saat ini — ditampilkan sebagai penanda biru di peta bila ada.
+  final LatLng? userPosition;
 
   @override
   State<TitikSelector> createState() => _TitikSelectorState();
@@ -117,6 +122,7 @@ class _TitikSelectorState extends State<TitikSelector> {
           TitikMapView(
             titikList: widget.titikList,
             selectedTitikId: widget.selectedTitik?.id,
+            userPosition: widget.userPosition,
             height: widget.mapHeight,
             onSelect: (titik) {
               widget.onChanged(titik);

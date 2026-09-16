@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../presensi/models/titik.dart';
@@ -14,6 +15,7 @@ class TitikMapView extends StatefulWidget {
     super.key,
     required this.titikList,
     this.selectedTitikId,
+    this.userPosition,
     this.onSelect,
     this.onDetail,
     this.height,
@@ -26,6 +28,10 @@ class TitikMapView extends StatefulWidget {
 
   /// ID titik yang sedang dipilih (untuk visual highlight pada marker).
   final String? selectedTitikId;
+
+  /// Posisi user saat ini (opsional) — digambar sebagai penanda biru dan
+  /// dipakai untuk menghitung jarak ke titik di bottom sheet marker.
+  final LatLng? userPosition;
 
   /// Callback ketika user memilih titik dari bottom sheet marker.
   final ValueChanged<Titik>? onSelect;
@@ -78,6 +84,28 @@ class _TitikMapViewState extends State<TitikMapView> {
         ),
       );
     }
+  }
+
+  void _locateUser() {
+    final user = widget.userPosition;
+    if (user == null) return;
+    _mapController.move(user, 16.0);
+  }
+
+  double? _distanceFromUser(Titik titik) {
+    final user = widget.userPosition;
+    if (user == null) return null;
+    return Geolocator.distanceBetween(
+      user.latitude,
+      user.longitude,
+      titik.latitude,
+      titik.longitude,
+    );
+  }
+
+  String _formatDistance(double meters) {
+    if (meters < 1000) return '${meters.round()} m';
+    return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
   void _showTitikBottomSheet(Titik titik) {
@@ -176,12 +204,52 @@ class _TitikMapViewState extends State<TitikMapView> {
                     label: 'Radius Presensi',
                     value: '${titik.radiusPresensiMeter.round()} meter',
                   ),
-                _InfoRow(
-                  icon: Icons.my_location,
-                  label: 'Koordinat',
-                  value:
-                      '${titik.latitude.toStringAsFixed(6)}, ${titik.longitude.toStringAsFixed(6)}',
-                ),
+                if (widget.userPosition != null) ...[
+                  _InfoRow(
+                    icon: Icons.near_me,
+                    label: 'Jarak dari Anda',
+                    value: _formatDistance(_distanceFromUser(titik)!),
+                  ),
+                  if (titik.radiusPresensiMeter > 0) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (_distanceFromUser(titik) ?? 0) >
+                                titik.radiusPresensiMeter
+                            ? Colors.amber.shade50
+                            : Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color:
+                              (_distanceFromUser(titik) ?? 0) >
+                                  titik.radiusPresensiMeter
+                              ? Colors.amber.shade200
+                              : Colors.green.shade200,
+                        ),
+                      ),
+                      child: Text(
+                        (_distanceFromUser(titik) ?? 0) >
+                                titik.radiusPresensiMeter
+                            ? 'Anda berada di luar radius presensi titik ini. Mendekatlah dalam ${titik.radiusPresensiMeter.round()} m agar presensi tercatat normal.'
+                            : 'Anda berada dalam radius presensi titik ini.',
+                        style: Theme.of(sheetContext).textTheme.bodySmall
+                            ?.copyWith(
+                              color:
+                                  (_distanceFromUser(titik) ?? 0) >
+                                      titik.radiusPresensiMeter
+                                  ? Colors.amber.shade900
+                                  : Colors.green.shade800,
+                            ),
+                      ),
+                    ),
+                  ],
+                ],
 
                 const SizedBox(height: 20),
 
@@ -304,9 +372,38 @@ class _TitikMapViewState extends State<TitikMapView> {
               ],
             ),
 
+            // Posisi user (bila tersedia)
+            if (widget.userPosition != null)
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: widget.userPosition!,
+                    radius: 10,
+                    useRadiusInMeter: true,
+                    color: Colors.blue.withValues(alpha: 0.15),
+                    borderColor: Colors.blue.shade600,
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
+
             // Marker Layer
             MarkerLayer(
               markers: [
+                if (widget.userPosition != null)
+                  Marker(
+                    point: widget.userPosition!,
+                    width: 30,
+                    height: 30,
+                    child: Icon(
+                      Icons.my_location,
+                      size: 26,
+                      color: Colors.blue.shade700,
+                      shadows: const [
+                        Shadow(blurRadius: 6, color: Colors.white),
+                      ],
+                    ),
+                  ),
                 for (final titik in _validTitik)
                   Marker(
                     point: LatLng(titik.latitude, titik.longitude),
@@ -327,14 +424,33 @@ class _TitikMapViewState extends State<TitikMapView> {
         Positioned(
           top: 12,
           right: 12,
-          child: Card(
-            elevation: 3,
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: 'Pusatkan Semua Titik',
-              icon: const Icon(Icons.crop_free),
-              onPressed: _fitAllMarkers,
-            ),
+          child: Column(
+            children: [
+              Card(
+                elevation: 3,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  tooltip: 'Pusatkan Semua Titik',
+                  icon: const Icon(Icons.crop_free),
+                  onPressed: _fitAllMarkers,
+                ),
+              ),
+              if (widget.userPosition != null) ...[
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 3,
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    tooltip: 'Lokasi Anda',
+                    icon: Icon(
+                      Icons.my_location,
+                      color: Colors.blue.shade700,
+                    ),
+                    onPressed: _locateUser,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
 
