@@ -186,16 +186,21 @@ class ArmadaRepository {
   }
 
   /// POST /armada/ritase/input — satu catatan muatan via outbox.
+  ///
+  /// [clientUuid] & [idempotencyKey] opsional: bila diisi dipakai persis
+  /// (retry memakai nilai yang sama → server idempotent). Default: uuid baru.
   Future<OutboxSendResult> submitRitase({
     required String armadaId,
     required int jumlahRit,
     required String satuanVolume,
     String? catatan,
     double? odoPerTrip,
+    String? clientUuid,
+    String? idempotencyKey,
   }) async {
     final action = PendingAction(
       id: _uuid.v4(),
-      clientUuid: _uuid.v4(),
+      clientUuid: clientUuid ?? _uuid.v4(),
       endpoint: PendingEndpoint.armadaRitase,
       payloadJson: {},
       payloadData: {
@@ -207,7 +212,7 @@ class ArmadaRepository {
         if (odoPerTrip != null) 'odo_per_trip': odoPerTrip,
       },
       createdAt: DateTime.now(),
-      idempotencyKey: _uuid.v4(),
+      idempotencyKey: idempotencyKey ?? _uuid.v4(),
     );
 
     return _outbox.enqueue(action, _sync.send);
