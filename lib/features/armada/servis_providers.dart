@@ -171,3 +171,31 @@ final servisQueueSummaryProvider = FutureProvider.autoDispose<
     ditolak: results[4].total,
   );
 });
+
+// ---------------------------------------------------------------------------
+// Servis per unit armada (drill-down monitoring)
+// ---------------------------------------------------------------------------
+
+/// Riwayat servis milik satu unit armada.
+///
+/// Endpoint riwayat `/servis-armada` tidak menerima filter `armada_id`,
+/// jadi ambil beberapa halaman lalu filter client-side. Batasi maksimal
+/// [kMaxPages] halaman (±75 entri) — cukup untuk drill-down monitoring.
+const int servisArmadaMaxPages = 5;
+
+final servisArmadaUnitProvider = FutureProvider.autoDispose
+    .family<List<ServisArmada>, String>((ref, armadaId) async {
+      final repo = ref.watch(servisRepositoryProvider);
+      final result = <ServisArmada>[];
+
+      var page = await repo.getRiwayatServis(page: 1);
+      result.addAll(page.items.where((s) => s.armadaId == armadaId));
+
+      var current = page.currentPage;
+      while (page.hasMore && current < servisArmadaMaxPages) {
+        page = await repo.getRiwayatServis(page: current + 1);
+        result.addAll(page.items.where((s) => s.armadaId == armadaId));
+        current = page.currentPage;
+      }
+      return result;
+    });
