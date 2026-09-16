@@ -61,44 +61,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(selectedPortalProvider, (_, _) => refresher.ping());
   ref.onDispose(refresher.dispose);
 
-  // Landasan Portal Proyek: berada di dalam nav shell (branch Beranda).
-  const proyekLanding = '/proyek-home';
-  String currentHomeFor() =>
-      ref.read(selectedPortalProvider).value == AppPortal.proyek
-      ? proyekLanding
-      : '/home';
+  // Semua pengguna (semua portal & role) tinggal di satu shell tunggal;
+  // Beranda = branch 0 (isi role-aware lewat `_homeScreenFor`).
+  String currentHomeFor() => '/home';
 
-  StatefulShellRoute buildProyekShellRoutes() {
+  StatefulShellRoute buildShellRoute() {
     return StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        if (ref.read(selectedPortalProvider).value != AppPortal.proyek) {
-          // Fallback defensif — Presensi portal tidak memakai nav shell.
-          return navigationShell;
-        }
-
-        final destinations = buildNavDestinations(ref.read(activeRoleProvider));
+        final activeRole = ref.read(activeRoleProvider);
+        final destinations = buildNavDestinations(activeRole);
         if (destinations.isEmpty) return navigationShell;
 
         final currentBranch = navigationShell.currentIndex;
-        final currentDestIndex = destinations.indexWhere((d) {
-          final branch = d.key == 'home' ? 0 : _proyekBranchByModule[d.key];
-          return branch == currentBranch;
-        });
+        final currentDestIndex = destinations.indexWhere(
+          (d) =>
+              navBranchFor(d.key, activeRole, _proyekBranchByModule) ==
+              currentBranch,
+        );
 
         return AdaptiveNavShell(
           currentIndex: currentDestIndex < 0 ? 0 : currentDestIndex,
           onDestinationSelected: (destIndex) {
             final dest = destinations[destIndex];
-            final branchIndex = dest.key == 'home'
-                ? 0
-                : _proyekBranchByModule[dest.key]!;
-            navigationShell.goBranch(branchIndex, initialLocation: false);
+            navigationShell.goBranch(
+              navBranchFor(dest.key, activeRole, _proyekBranchByModule),
+              initialLocation: false,
+            );
           },
           destinations: destinations,
           child: navigationShell,
         );
       },
-      branches: _proyekShellBranches(),
+      branches: _proyekShellBranches(ref),
     );
   }
 
@@ -129,12 +123,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         }
 
         if (!needsSelection && location == '/portal') {
-          return currentHomeFor();
-        }
-
-        // User Portal Proyek yang belum berada di dalam shell → arahkan ke
-        // branch Beranda shell (module cards penuh tetap ada di sana).
-        if (location == '/home' && currentHomeFor() != '/home') {
           return currentHomeFor();
         }
 
@@ -240,16 +228,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/home',
-        pageBuilder: (context, state) {
-          final portal = ref.read(selectedPortalProvider).value;
-          final child = portal == AppPortal.proyek
-              ? const ProyekHomeScreen()
-              : const TitikKerjaScreen();
-          return buildAppTransitionPage(key: state.pageKey, child: child);
-        },
-      ),
-      GoRoute(
         path: '/profile',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
@@ -270,15 +248,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: const DokumentasiScreen(),
         ),
       ),
-      GoRoute(
-        path: '/notifikasi',
-        pageBuilder: (context, state) => buildAppTransitionPage(
-          key: state.pageKey,
-          child: const NotifikasiScreen(),
-        ),
-      ),
-      // ── Portal Proyek: nav shell (StatefulShellRoute.indexedStack) ──
-      buildProyekShellRoutes(),
+      // ── Shell tunggal: semua portal & role (StatefulShellRoute.indexedStack) ──
+      buildShellRoute(),
     ],
   );
 });
@@ -296,10 +267,20 @@ const _proyekBranchByModule = <String, int>{
   'inventory': 9,
 };
 
-List<StatefulShellBranch> _proyekShellBranches() => [
-  // 0 ─ Beranda (module cards penuh)
+List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
+  // 0 ─ Beranda (role-aware; `/proyek-home` dipertahankan sebagai historical alias)
   StatefulShellBranch(
     routes: [
+      GoRoute(
+        path: '/home',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: _homeScreenFor(
+            ref.read(activeRoleProvider),
+            ref.read(selectedPortalProvider).value,
+          ),
+        ),
+      ),
       GoRoute(
         path: '/proyek-home',
         pageBuilder: (context, state) => buildAppTransitionPage(
@@ -652,7 +633,51 @@ List<StatefulShellBranch> _proyekShellBranches() => [
       ),
     ],
   ),
+  // 10 ─ Presensi (universal)
+  StatefulShellBranch(
+    routes: [
+      GoRoute(
+        path: '/presensi',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const TitikKerjaScreen(),
+        ),
+      ),
+    ],
+  ),
+  // 11 ─ Notifikasi (universal)
+  StatefulShellBranch(
+    routes: [
+      GoRoute(
+        path: '/notifikasi',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const NotifikasiScreen(),
+        ),
+      ),
+    ],
+  ),
 ];
+
+/// Isi Beranda (branch 0) sesuai role + portal aktif.
+///
+/// Guru dari [AppHomeKind]: portal presensi / tanpa role App 2 → Titik Kerja
+/// ([TitikKerjaScreen]); field Worker → screen pekerjaan mereka
+/// ([UnitSayaHomeScreen]/[WorkshopQueueScreen]/[InventoryHomeScreen]); role
+/// manajemen App 2 → module cards penuh ([ProyekHomeScreen]).
+Widget _homeScreenFor(String? role, AppPortal? portal) {
+  final kind = appHomeKindFor(
+    role: role,
+    presensiPortal: portal == AppPortal.presensi,
+  );
+  return switch (kind) {
+    AppHomeKind.presensi => const TitikKerjaScreen(),
+    AppHomeKind.driver => const UnitSayaHomeScreen(),
+    AppHomeKind.workshop => const WorkshopQueueScreen(),
+    AppHomeKind.inventory => const InventoryHomeScreen(),
+    AppHomeKind.proyek => const ProyekHomeScreen(),
+  };
+}
 
 class _ChangeSignal extends ChangeNotifier {
   void ping() => notifyListeners();

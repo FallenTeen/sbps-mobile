@@ -352,8 +352,8 @@ class _NotifikasiBadgeAction extends ConsumerWidget {
         count: count,
         child: const Icon(Icons.notifications_outlined),
       ),
-      onPressed: () async {
-        await context.push('/notifikasi');
+      onPressed: () {
+        context.go('/notifikasi');
         ref.read(unreadCountProvider.notifier).reload();
       },
     );

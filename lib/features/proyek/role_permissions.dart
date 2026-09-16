@@ -94,33 +94,6 @@ class RolePermissions {
       role == 'Owner' || role == 'Admin Keuangan';
 }
 
-/// Path root tiap modul di dalam shell — dipakai router untuk memetakan
-/// destinasi nav ke branch `StatefulShellRoute`.
-const kModuleRouteRoots = <String, String>{
-  'produksi': '/produksi/sesi-aktif',
-  'qc': '/qc/riwayat',
-  'tracking': '/tracking/pengguna-aktif',
-  'dashboard': '/dashboard',
-  'keuangan': '/dashboard/keuangan',
-  'armada': '/armada',
-  'kontraktor': '/kontraktor/proyek',
-  'workshop': '/workshop',
-  'inventory': '/inventory',
-};
-
-/// Urutan prioritas modul per role untuk destinasi utama nav shell
-/// (dari referensi Bagian 3 dokumentasi — modul paling sering dipakai dulu).
-const _navModuleOrder = <String, List<String>>{
-  'Mandor Titik': ['produksi', 'qc', 'dashboard', 'tracking'],
-  'Owner': ['produksi', 'armada', 'dashboard', 'keuangan'],
-  'Admin Keuangan': ['dashboard', 'keuangan', 'armada', 'kontraktor'],
-  'Kepala Divisi Armada': ['armada', 'dashboard'],
-  'Kontraktor': ['kontraktor', 'dashboard'],
-  'Workshop': ['workshop'],
-  'Inventory': ['inventory'],
-  'Driver Armada': ['armada'],
-};
-
 AdaptiveNavDestination _homeDestination() => const AdaptiveNavDestination(
   key: 'home',
   label: 'Beranda',
@@ -128,33 +101,110 @@ AdaptiveNavDestination _homeDestination() => const AdaptiveNavDestination(
   selectedIcon: AppIcons.navHomeActive,
 );
 
-AdaptiveNavDestination _moduleDestination(String key) {
-  final module = kProyekModules.firstWhere((m) => m.key == key);
-  return AdaptiveNavDestination(
-    key: module.key,
-    label: module.label,
-    icon: module.icon,
-    selectedIcon: module.icon,
-  );
+/// Tab "Presensi" — universal untuk semua role (tiap karyawan wajib absen,
+/// termasuk Driver Armada, Workshop, Inventory, dan role manajemen).
+AdaptiveNavDestination _presensiDestination() => const AdaptiveNavDestination(
+  key: 'presensi',
+  label: 'Presensi',
+  icon: Icons.fingerprint,
+  selectedIcon: Icons.fingerprint_rounded,
+);
+
+AdaptiveNavDestination _notifikasiDestination() => const AdaptiveNavDestination(
+  key: 'notifikasi',
+  label: 'Notifikasi',
+  icon: Icons.notifications_outlined,
+  selectedIcon: Icons.notifications_rounded,
+);
+
+AdaptiveNavDestination _tugasDestination() => const AdaptiveNavDestination(
+  key: 'tugas',
+  label: 'Tugas / Operasional',
+  icon: Icons.assignment_outlined,
+  selectedIcon: Icons.assignment_rounded,
+);
+
+/// Branch indeks di dalam shell tunggal SBPS Mobile untuk tab Presensi dan
+/// Notifikasi (branch 10 & 11 — see [navBranchFor]).
+const kPresensiBranchIndex = 10;
+const kNotifikasiBranchIndex = 11;
+
+/// Modul yang menjadi isi tab "Tugas / Operasional" per role multi-modul.
+/// Field role (Driver/Workshop/Inventory) tidak ada di sini: Beranda mereka
+/// sudah langsung pekerjaan hari ini, jadi tab Tugas tidak perlu dirender.
+const _tugasModuleByRole = <String, String>{
+  'Mandor Titik': 'produksi',
+  'Owner': 'dashboard',
+  'Admin Keuangan': 'keuangan',
+  'Kepala Divisi Armada': 'armada',
+  'Kontraktor': 'kontraktor',
+};
+
+/// Modul utama untuk tab "Tugas / Operasional" (null = tidak ada).
+String? tugasModuleFor(String? role) => _tugasModuleByRole[role];
+
+/// Jenis isi Beranda (role-aware).
+enum AppHomeKind { presensi, driver, workshop, inventory, proyek }
+
+/// Mapping role + portal → isi Beranda.
+///
+/// - Portal Presensi (atau tanpa role App 2) → beranda presensi.
+/// - Driver Armada → "Pekerjaan Hari Ini" (Unit Saya / workflow).
+/// - Workshop → "Workshop Hari Ini" (antrian).
+/// - Inventory → "Perhatian Hari Ini" (stok rendah / request / opname).
+/// - Role lain (Mandor/Owner/Admin/Kontraktor/Kepala Divisi) → module cards
+///   penuh ([ProyekHomeScreen]) — attention + operational + modul.
+AppHomeKind appHomeKindFor({required String? role, required bool presensiPortal}) {
+  if (presensiPortal || role == null) return AppHomeKind.presensi;
+  return switch (role) {
+    'Driver Armada' => AppHomeKind.driver,
+    'Workshop' => AppHomeKind.workshop,
+    'Inventory' => AppHomeKind.inventory,
+    _ => AppHomeKind.proyek,
+  };
 }
 
-/// Destinasi nav shell untuk role tertentu: "Beranda" (module cards penuh)
-/// + maksimal 4 modul paling sering dipakai (total ≤5, batas Material
-/// `NavigationBar`). Role dengan ≤1 modul akses (mis. Driver Armada)
-/// mengembalikan list kosong → `AdaptiveNavShell` tidak dirender.
+/// Branch index StatefulShellRoute untuk sebuah key destinasi navigasi.
+///
+/// [moduleBranchByKey] = peta key modul → branch shell (definisi di router,
+/// `_proyekBranchByModule`). Tab universal (`home`/`presensi`/`notifikasi`)
+/// dan `tugas` (yang menunjuk modul utama role) diresolusi di sini sehingga
+/// mapping destinasi → branch bisa diuji tanpa perlu GoRouter.
+int navBranchFor(
+  String destinationKey,
+  String? role,
+  Map<String, int> moduleBranchByKey,
+) {
+  switch (destinationKey) {
+    case 'home':
+      return 0;
+    case 'presensi':
+      return kPresensiBranchIndex;
+    case 'notifikasi':
+      return kNotifikasiBranchIndex;
+    case 'tugas':
+      final module = tugasModuleFor(role);
+      return module == null ? 0 : (moduleBranchByKey[module] ?? 0);
+    default:
+      return moduleBranchByKey[destinationKey] ?? 0;
+  }
+}
+
+/// Destinasi nav shell role-aware (maksimal 4, sesuai rencana §5: Beranda,
+/// Tugas/Operasional, Presensi, Notifikasi). Field single-modul hanya
+/// Beranda + Presensi + Notifikasi (Beranda mereka sudah merupakan pekerjaan).
+/// Role tanpa akses modul (presensi-only) → Beranda + Notifikasi.
 List<AdaptiveNavDestination> buildNavDestinations(String? role) {
   final allowed = RolePermissions.modulesFor(role);
-  if (allowed.length <= 1) return const [];
+  final destination = <AdaptiveNavDestination>[_homeDestination()];
 
-  final pick = <String>[];
-  for (final key in _navModuleOrder[role] ?? const <String>[]) {
-    if (allowed.contains(key) && !pick.contains(key)) pick.add(key);
-    if (pick.length >= 4) break;
+  final tugasModule = tugasModuleFor(role);
+  if (tugasModule != null && allowed.contains(tugasModule)) {
+    destination.add(_tugasDestination());
   }
-  for (final key in allowed) {
-    if (!pick.contains(key)) pick.add(key);
-    if (pick.length >= 4) break;
+  if (allowed.isNotEmpty) {
+    destination.add(_presensiDestination());
   }
-
-  return [_homeDestination(), for (final key in pick) _moduleDestination(key)];
+  destination.add(_notifikasiDestination());
+  return destination;
 }

@@ -106,7 +106,11 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           ),
         ),
       );
-      context.go('/armada/unit-saya');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/armada/unit-saya');
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
