@@ -93,6 +93,7 @@ class _PendingActionTile extends StatelessWidget {
     PendingEndpoint.uploadMedia => 'Dokumentasi foto',
     PendingEndpoint.helperPresensi => 'Presensi helper',
     PendingEndpoint.armadaChecklist => 'Checklist armada',
+    PendingEndpoint.armadaChecklistMajor => 'Checklist major armada',
     PendingEndpoint.armadaOdoAwal => 'ODO awal proyek',
     PendingEndpoint.armadaRitase => 'Ritase armada',
     PendingEndpoint.workshopMulai => 'Mulai kerja workshop',

@@ -284,9 +284,10 @@ class _Tile extends ConsumerWidget {
 
     final route = notificationActionRoute(actionUrl);
     if (route != null) {
-      // Deep-link internal: pindah ke layar terkait di dalam app.
+      // Deep-link internal: push (bukan go) supaya back stack tetap utuh —
+      // user bisa kembali ke daftar notifikasi.
       try {
-        context.go(route);
+        context.push(route);
       } on StateError {
         messenger.showSnackBar(
           const SnackBar(content: Text('Layar terkait belum tersedia.')),

@@ -39,6 +39,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     final submitState = ref.watch(presensiSubmitProvider);
     final busyPhase = submitState.busy ? submitState.phase : null;
     final titik = ref.watch(selectedTitikProvider);
+    final pending = ref.watch(pendingPresensiProvider);
 
     return hariIniAsync.when(
       loading: () => SkeletonCard(height: 120),
@@ -51,12 +52,14 @@ class PresensiHariIniCard extends ConsumerWidget {
           presensi: presensi,
           busyPhase: busyPhase,
           siap: titik != null,
+          menungguSinkron: pending.checkInPending,
           onCheckIn: () =>
               _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckIn),
         ),
         PresensiStatus.menungguCheckOut => _WorkingCard(
           presensi: presensi,
           busyPhase: busyPhase,
+          menungguSinkron: pending.checkOutPending,
           onCheckOut: () =>
               _pickAndSubmit(context, ref, PendingEndpoint.presensiCheckOut),
         ),
@@ -71,6 +74,22 @@ class PresensiHariIniCard extends ConsumerWidget {
     PendingEndpoint endpoint,
   ) async {
     if (!context.mounted) return;
+
+    // Tolak aksi ganda: bila aksi yang sama sudah mengantre di outbox
+    // (pernah gagal terkirim / offline), jangan membuat duplikat.
+    final pending = ref.read(pendingPresensiProvider);
+    final duplikat = endpoint == PendingEndpoint.presensiCheckIn
+        ? pending.checkInPending
+        : pending.checkOutPending;
+    if (duplikat) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Presensi masih menunggu sinkron. coba lagi nanti.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !context.mounted) return;
@@ -122,17 +141,20 @@ class _CheckInCard extends StatelessWidget {
     required this.presensi,
     required this.busyPhase,
     required this.siap,
+    required this.menungguSinkron,
     required this.onCheckIn,
   });
 
   final PresensiHariIni presensi;
   final UploadPhase? busyPhase;
   final bool siap;
+  final bool menungguSinkron;
   final VoidCallback onCheckIn;
 
   @override
   Widget build(BuildContext context) {
     final busy = busyPhase != null;
+    final aktif = siap && !busy && !menungguSinkron;
 
     return Container(
       decoration: BoxDecoration(
@@ -188,9 +210,11 @@ class _CheckInCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        siap
-                            ? 'Siap untuk check-in'
-                            : 'Pilih titik kerja terlebih dahulu',
+                        menungguSinkron
+                            ? 'Check-in menunggu sinkron'
+                            : (siap
+                                  ? 'Siap untuk check-in'
+                                  : 'Pilih titik kerja terlebih dahulu'),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 12,
@@ -203,14 +227,14 @@ class _CheckInCard extends StatelessWidget {
             ),
             SizedBox(height: 16),
             BouncingButton(
-              onPressed: (!siap || busy) ? null : onCheckIn,
+              onPressed: aktif ? onCheckIn : null,
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: (!siap || busy) ? null : onCheckIn,
+                  onPressed: aktif ? onCheckIn : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: siap
+                    foregroundColor: (siap && !menungguSinkron)
                         ? context.colors.primary
                         : Colors.grey,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -228,7 +252,7 @@ class _CheckInCard extends StatelessWidget {
                   label: Text(switch (busyPhase) {
                     UploadPhase.compressing => 'Mengompres foto...',
                     UploadPhase.sending => 'Mengirim...',
-                    _ => 'Check-In Sekarang',
+                    _ => menungguSinkron ? 'Menunggu Sinkron...' : 'Check-In Sekarang',
                   }),
                 ),
               ),
@@ -246,16 +270,19 @@ class _WorkingCard extends StatelessWidget {
   const _WorkingCard({
     required this.presensi,
     required this.busyPhase,
+    required this.menungguSinkron,
     required this.onCheckOut,
   });
 
   final PresensiHariIni presensi;
   final UploadPhase? busyPhase;
+  final bool menungguSinkron;
   final VoidCallback onCheckOut;
 
   @override
   Widget build(BuildContext context) {
     final busy = busyPhase != null;
+    final aktif = !busy && !menungguSinkron;
 
     return Container(
       decoration: BoxDecoration(
@@ -347,7 +374,7 @@ class _WorkingCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: busy ? null : onCheckOut,
+                onPressed: aktif ? onCheckOut : null,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: BorderSide(color: context.colors.error),
@@ -369,7 +396,7 @@ class _WorkingCard extends StatelessWidget {
                 label: Text(switch (busyPhase) {
                   UploadPhase.compressing => 'Mengompres foto...',
                   UploadPhase.sending => 'Mengirim...',
-                  _ => 'Check-Out',
+                  _ => menungguSinkron ? 'Menunggu Sinkron...' : 'Check-Out',
                 }),
               ),
             ),

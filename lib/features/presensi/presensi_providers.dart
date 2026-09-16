@@ -69,7 +69,7 @@ final currentPositionProvider =
 
 final outboxRepositoryProvider = Provider<OutboxRepository>((ref) {
   final repo = OutboxRepository();
-  repo.onChanged = () => ref.read(pendingCountProvider.notifier).reload();
+  repo.onChanged = () => _onOutboxChanged(ref);
   ref.onDispose(() => repo.onChanged = null);
   return repo;
 });
@@ -83,10 +83,23 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
     unawaited(ref.read(pendingCountProvider.notifier).reload());
     // Presensi bisa saja baru terkirim di latar belakang.
     ref.invalidate(hariIniProvider);
+    // Antrean berubah setelah percobaan kirim — daftar aksi ikut ter-update.
+    ref.invalidate(pendingActionsProvider);
   };
   ref.onDispose(service.dispose);
   return service;
 });
+
+/// Dipanggil dari [OutboxRepository.onChanged] — antrean berubah.
+/// Dipecah ke fungsi biasa supaya tidak menimbulkan siklus inferensi tipe
+/// antara `outboxRepositoryProvider` dan `pendingActionsProvider`.
+void _onOutboxChanged(Ref ref) {
+  ref.read(pendingCountProvider.notifier).reload();
+  // Pending presensi berubah (check-in/out queued) — daftar aksi harus
+  // ikut ter-update supaya mis. kartu bisa menampilkan "menunggu sinkron"
+  // dan memblokir duplicate check-in.
+  ref.invalidate(pendingActionsProvider);
+}
 
 /// Badge jumlah aksi outbox yang belum tersinkron.
 class PendingCountNotifier extends Notifier<int> {
@@ -106,6 +119,40 @@ final pendingCountProvider = NotifierProvider<PendingCountNotifier, int>(
 final pendingActionsProvider = FutureProvider<List<PendingAction>>(
   (ref) => ref.watch(outboxRepositoryProvider).pendingActions(),
 );
+
+/// Status pending check-in/out ringan untuk UI kartu presensi.
+class PendingPresensiInfo {
+  const PendingPresensiInfo({
+    this.checkInPending = false,
+    this.checkOutPending = false,
+  });
+
+  final bool checkInPending;
+  final bool checkOutPending;
+
+  bool get adaPending => checkInPending || checkOutPending;
+}
+
+/// Menghindari duplicate check-in/check-out saat aksi yang sama masih
+/// mengantre di outbox (offline) — kartu menampilkan "menunggu sinkron".
+final pendingPresensiProvider = Provider<PendingPresensiInfo>((ref) {
+  final actions = ref.watch(pendingActionsProvider).value ?? const [];
+  PendingPresensiInfo info = const PendingPresensiInfo();
+  for (final action in actions) {
+    if (action.endpoint == PendingEndpoint.presensiCheckIn) {
+      info = PendingPresensiInfo(
+        checkInPending: true,
+        checkOutPending: info.checkOutPending,
+      );
+    } else if (action.endpoint == PendingEndpoint.presensiCheckOut) {
+      info = PendingPresensiInfo(
+        checkInPending: info.checkInPending,
+        checkOutPending: true,
+      );
+    }
+  }
+  return info;
+});
 
 /// Status presensi hari ini (belum_check_in / menunggu_check_out / selesai).
 final hariIniProvider = FutureProvider.autoDispose<PresensiHariIni>(

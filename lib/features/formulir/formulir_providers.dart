@@ -21,6 +21,15 @@ final formulirHariIniProvider = FutureProvider.autoDispose<FormulirLapangan?>(
   (ref) => ref.watch(formulirRepositoryProvider).getHariIni(),
 );
 
+/// true bila masih ada formulir yang mengantre dikirim di outbox —
+/// mencegah submit ganda / re-entry saat sinkron belum selesai.
+final pendingFormulirProvider = Provider<bool>((ref) {
+  final actions = ref.watch(pendingActionsProvider).value ?? const [];
+  return actions.any(
+    (action) => action.endpoint == PendingEndpoint.formulirSubmit,
+  );
+});
+
 class FormulirSubmitState {
   const FormulirSubmitState({this.busy = false, this.phase});
 

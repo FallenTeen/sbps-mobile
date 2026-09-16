@@ -59,7 +59,9 @@ class NotificationHandler {
     // di dalam NotifikasiScreen — lihat notification_routes.dart).
     final specificRoute = fcmNotificationRoute(data['route']?.toString(), id);
     if (specificRoute != null) {
-      router.go(specificRoute);
+      // push (bukan go) supaya back stack tetap utuh — user bisa kembali
+      // ke layar sebelumnya setelah melihat tujuan notifikasi.
+      router.push(specificRoute);
     } else if (data['screen'] != null) {
       // Fallback: map screen name ke route.
       final screen = data['screen'].toString();
@@ -68,13 +70,13 @@ class NotificationHandler {
         'servis': '/armada/servis',
         'checklist': '/armada/checklist',
         'dashboard': '/dashboard',
-        'notifikasi': '/home',
+        'notifikasi': '/notifikasi',
       };
       final target = routeMap[screen];
-      if (target != null) router.go(target);
+      if (target != null) router.push(target);
     } else {
-      // Default: buka notifikasi list.
-      router.go('/home');
+      // Default: buka daftar notifikasi.
+      router.push('/notifikasi');
     }
   }
 

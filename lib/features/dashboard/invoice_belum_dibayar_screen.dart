@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'status_chip.dart';
+import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Daftar invoice belum lunas (Owner/Admin Keuangan) — server dibatasi
@@ -66,11 +67,21 @@ class InvoiceBelumDibayarScreen extends ConsumerWidget {
             return ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              itemCount: data.items.length + (data.cappedAtLimit ? 1 : 0),
+              itemCount: data.items.length + (data.cappedAtLimit ? 1 : 0) + 1,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
-                if (i >= data.items.length) return const _CappedBanner();
-                final v = data.items[i];
+                if (i == 0) {
+                  return const InfoBanner(
+                    message:
+                        'Layar ini bersifat read-only — pembayaran invoice '
+                        'dikelola oleh tim finansial melalui sistem lain.',
+                  );
+                }
+                final itemIndex = i - 1;
+                if (itemIndex >= data.items.length) {
+                  return const _CappedBanner();
+                }
+                final v = data.items[itemIndex];
                 final sisa = (v['sisa'] as num?)?.toDouble() ?? 0;
                 return Card(
                   child: Padding(

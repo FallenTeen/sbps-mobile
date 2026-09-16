@@ -80,6 +80,9 @@ class FormulirScreen extends ConsumerWidget {
 class _FormulirBody extends ConsumerWidget {
   const _FormulirBody();
 
+  bool _apakahSedangMenungguSinkron(WidgetRef ref) =>
+      ref.watch(pendingFormulirProvider);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formulir = ref.watch(formulirHariIniProvider);
@@ -105,9 +108,29 @@ class _FormulirBody extends ConsumerWidget {
           ],
         ),
         data: (value) => value == null
-            ? const _FormulirInput()
+            ? (_apakahSedangMenungguSinkron(ref)
+                ? const _FormulirMenungguSinkron()
+                : const _FormulirInput())
             : _FormulirSudahTerisi(value),
       ),
+    );
+  }
+}
+
+class _FormulirMenungguSinkron extends StatelessWidget {
+  const _FormulirMenungguSinkron();
+
+  /// Formulir sudah dikirim (atau masih mengantre offline). Ketika belum
+  /// terkonfirmasi server, tampilkan status jujur: "menunggu sinkron" —
+  /// bukan memungkinkan submit ganda.
+  @override
+  Widget build(BuildContext context) {
+    return const AppEmptyState(
+      icon: Icons.cloud_sync_outlined,
+      title: 'Menunggu sinkron',
+      subtitle:
+          'Formulir Anda sudah tersimpan di perangkat dan sedang menunggu '
+          'dikirim ke server saat jaringan tersedia.',
     );
   }
 }
@@ -300,6 +323,9 @@ class _FormulirInputState extends ConsumerState<_FormulirInput> {
   }
 
   Future<void> _submit() async {
+    // Jaga setelah enqueue offline: jangan izinkan submit ganda meski
+    // tombol sempat tertekan lebih dari sekali.
+    if (ref.read(pendingFormulirProvider)) return;
     final result = await ref
         .read(formulirSubmitProvider.notifier)
         .submit(

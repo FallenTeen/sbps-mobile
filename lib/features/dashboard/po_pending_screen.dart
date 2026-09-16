@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'status_chip.dart';
+import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Daftar PO menunggu approval (Owner/Admin Keuangan) — server dibatasi
@@ -67,11 +68,21 @@ class PoPendingScreen extends ConsumerWidget {
             return ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              itemCount: data.items.length + (data.cappedAtLimit ? 1 : 0),
+              itemCount: data.items.length + (data.cappedAtLimit ? 1 : 0) + 1,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
-                if (i >= data.items.length) return const _CappedBanner();
-                final p = data.items[i];
+                if (i == 0) {
+                  return const InfoBanner(
+                    message:
+                        'Layar ini bersifat read-only — persetujuan PO '
+                        'dikelola oleh tim finansial melalui sistem lain.',
+                  );
+                }
+                final itemIndex = i - 1;
+                if (itemIndex >= data.items.length) {
+                  return const _CappedBanner();
+                }
+                final p = data.items[itemIndex];
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),

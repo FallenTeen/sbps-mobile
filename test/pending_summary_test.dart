@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
 import 'package:sbps_mobile/core/outbox/pending_action.dart';
 import 'package:sbps_mobile/features/proyek/pending_summary_provider.dart';
 
@@ -73,12 +74,19 @@ void main() {
 }
 
 class _FakeOutboxRepository extends OutboxRepository {
-  _FakeOutboxRepository(List<PendingAction> actions)
-      : _actions = actions,
-        super();
+  _FakeOutboxRepository(List<PendingAction> actions) : _actions = actions;
 
   final List<PendingAction> _actions;
 
   @override
   Future<List<PendingAction>> pendingActions() async => List.of(_actions);
 }
+
+PendingAction _action(PendingEndpoint endpoint) => PendingAction(
+      id: 'id-${endpoint.name}',
+      clientUuid: 'uuid-${endpoint.name}',
+      endpoint: endpoint,
+      payloadJson: const {},
+      createdAt: DateTime.now(),
+      idempotencyKey: 'idem-${endpoint.name}',
+    );
