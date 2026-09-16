@@ -7,15 +7,21 @@ import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/status_pill.dart';
 import 'inventory_detail_stok_screen.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
+import 'inventory_rules.dart' as rules;
 
 class InventoryStokScreen extends ConsumerStatefulWidget {
-  const InventoryStokScreen({super.key, this.initialSelectedId});
+  const InventoryStokScreen({
+    super.key,
+    this.initialSelectedId,
+    this.initialRendah = false,
+  });
 
-  /// Id awal dari query `?selected=` (deep-link, mode Expanded).
   final String? initialSelectedId;
+  final bool initialRendah;
 
   @override
   ConsumerState<InventoryStokScreen> createState() =>
@@ -26,6 +32,14 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
   final _searchController = TextEditingController();
   String _selectedKategori = 'Semua';
   String _searchQuery = '';
+  bool _hanyaRendah = false;
+  bool _rendahDulu = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _hanyaRendah = widget.initialRendah;
+  }
 
   @override
   void dispose() {
@@ -36,18 +50,6 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
   List<String> _kategoriList(List<InventoryItem> items) {
     final kategori = items.map((e) => e.kategori).toSet().toList();
     return ['Semua', ...kategori]..sort();
-  }
-
-  List<InventoryItem> _filteredItems(List<InventoryItem> items) {
-    return items.where((item) {
-      final matchSearch =
-          _searchQuery.isEmpty ||
-          item.nama.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          item.kategori.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchKategori =
-          _selectedKategori == 'Semua' || item.kategori == _selectedKategori;
-      return matchSearch && matchKategori;
-    }).toList();
   }
 
   @override
@@ -169,50 +171,134 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
     void Function(String id) onSelect,
   ) {
     final categories = _kategoriList(items);
-    final filtered = _filteredItems(items);
+    final filtered = rules.filterStok(
+      items,
+      query: _searchQuery,
+      kategori: _selectedKategori == 'Semua' ? null : _selectedKategori,
+      hanyaRendah: _hanyaRendah,
+      rendahDulu: _rendahDulu,
+    );
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: DropdownButtonFormField<String>(
-            initialValue: _selectedKategori,
-            items: categories
-                .map((k) => DropdownMenuItem(value: k, child: Text(k)))
-                .toList(),
-            onChanged: (v) {
-              if (v != null) setState(() => _selectedKategori = v);
-            },
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+          child: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedKategori,
+                  items: categories
+                      .map(
+                        (k) => DropdownMenuItem(value: k, child: Text(k)),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedKategori = v);
+                  },
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    isDense: true,
+                  ),
+                ),
               ),
-              isDense: true,
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: 'Rendah',
+                selected: _hanyaRendah,
+                color: context.colors.error,
+                onTap: () => setState(() => _hanyaRendah = !_hanyaRendah),
+              ),
+              const SizedBox(width: 6),
+              _FilterChip(
+                label: '↑ Rendah',
+                selected: _rendahDulu,
+                color: context.colors.warning,
+                onTap: () => setState(() => _rendahDulu = !_rendahDulu),
+              ),
+            ],
+          ),
+        ),
+        if (filtered.isEmpty)
+          Expanded(
+            child: AppEmptyState(
+              icon: _hanyaRendah
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.search_off_rounded,
+              title: _hanyaRendah
+                  ? 'Semua Stok Aman'
+                  : 'Tidak ada barang ditemukan',
+              subtitle: _hanyaRendah
+                  ? 'Tidak ada item di bawah stok minimum.'
+                  : 'Coba ubah filter atau kata kunci pencarian',
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final item = filtered[index];
+                return _StokItemCard(
+                  item: item,
+                  selected: item.id == selectedId,
+                  onTap: () => onSelect(item.id),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.withValues(alpha: 0.12)
+                : context.colors.card,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected
+                  ? color.withValues(alpha: 0.4)
+                  : context.colors.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? color : context.colors.textTertiary,
             ),
           ),
         ),
-        Expanded(
-          child: filtered.isEmpty
-              ? AppEmptyState(
-                  icon: Icons.search_off_rounded,
-                  title: 'Tidak ada barang ditemukan',
-                  subtitle: 'Coba ubah filter atau kata kunci pencarian',
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final item = filtered[index];
-                    return _StokItemCard(
-                      item: item,
-                      selected: item.id == selectedId,
-                      onTap: () => onSelect(item.id),
-                    );
-                  },
-                ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -233,14 +319,17 @@ class _StokItemCard extends StatelessWidget {
     final rendah = item.isStokRendah;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: rendah
-              ? context.colors.error.withValues(alpha: 0.3)
-              : context.colors.border,
+          color: selected
+              ? context.colors.primary
+              : rendah
+                  ? context.colors.error.withValues(alpha: 0.3)
+                  : context.colors.border,
+          width: selected ? 2 : 1,
         ),
       ),
       child: Material(
@@ -250,7 +339,7 @@ class _StokItemCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.all(14),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
@@ -286,16 +375,58 @@ class _StokItemCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        item.kategori,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.colors.textTertiary,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            item.kategori,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.colors.textTertiary,
+                            ),
+                          ),
+                          if (item.lokasiGudang != null &&
+                              item.lokasiGudang!.isNotEmpty) ...[
+                            Text(
+                              ' \u2022 ',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textTertiary,
+                              ),
+                            ),
+                            Icon(
+                              Icons.place_outlined,
+                              size: 11,
+                              color: context.colors.textTertiary,
+                            ),
+                            const SizedBox(width: 2),
+                            Flexible(
+                              child: Text(
+                                item.lokasiGudang!,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.colors.textTertiary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      StatusPill(
+                        label: rendah ? 'Stok Rendah' : 'Stok Aman',
+                        color: rendah
+                            ? context.colors.error
+                            : context.colors.success,
+                        icon: rendah
+                            ? Icons.warning_amber_rounded
+                            : Icons.check_circle_outline_rounded,
+                        filled: rendah,
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

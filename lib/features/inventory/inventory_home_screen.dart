@@ -48,7 +48,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            _buildRingkasanSection(summaryAsync),
+            _buildPerhatianHariIni(summaryAsync, requestsAsync),
             const SizedBox(height: 20),
             _buildRequestSection(requestsAsync),
             const Divider(height: 32),
@@ -59,103 +59,8 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
     );
   }
 
-  Widget _buildRingkasanSection(AsyncValue<InventorySummary> summaryAsync) {
-    return summaryAsync.when(
-      loading: () =>
-          SkeletonLoader(child: SkeletonBlock(height: 92, borderRadius: 20)),
-      error: (error, _) => _ErrorCard(
-        message: 'Gagal memuat ringkasan inventory.',
-        onRetry: () => ref.invalidate(inventorySummaryProvider),
-      ),
-      data: (summary) {
-        return Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: context.colors.primary.withValues(alpha: 0.25),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.inventory_2_outlined,
-                color: Colors.white,
-                size: 28,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Inventory',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '${summary.totalItem} jenis barang',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                        ),
-                        if (summary.stokRendahCount > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.colors.error,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${summary.stokRendahCount} di bawah minimum',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (summary.nilaiStok > 0) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Nilai stok: ${_rupiah.format(summary.nilaiStok)}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRequestSection(
+  Widget _buildPerhatianHariIni(
+    AsyncValue<InventorySummary> summaryAsync,
     AsyncValue<List<InventoryRequest>> requestsAsync,
   ) {
     return Column(
@@ -163,10 +68,14 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.input_rounded, size: 20, color: context.colors.primary),
+            Icon(
+              Icons.priority_high_rounded,
+              size: 20,
+              color: context.colors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
-              'Request Masuk dari Workshop',
+              'Perhatian Hari Ini',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -175,90 +84,183 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Text(
-          'Request Pending',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: context.colors.textSecondary,
-          ),
-        ),
-        SizedBox(height: 8),
-        requestsAsync.when(
+        const SizedBox(height: 12),
+        summaryAsync.when(
           loading: () => const SkeletonLoader(
             child: Column(
               children: [
-                SkeletonBlock(height: 76, borderRadius: 14),
+                SkeletonBlock(height: 80, borderRadius: 14),
                 SizedBox(height: 8),
-                SkeletonBlock(height: 76, borderRadius: 14),
+                SkeletonBlock(height: 80, borderRadius: 14),
               ],
             ),
           ),
           error: (error, _) => _ErrorCard(
-            message: 'Gagal memuat request sparepart.',
-            onRetry: () => ref.invalidate(inventoryRequestsProvider),
+            message: 'Gagal memuat ringkasan.',
+            onRetry: () => ref.invalidate(inventorySummaryProvider),
           ),
-          data: (requests) {
-            final pending = requests
+          data: (summary) {
+            final pendingCount = summary.requestPendingCount;
+            final pendingRequests = requestsAsync.value ?? [];
+            final firstPendingId = pendingRequests
                 .where((r) => r.status == InventoryRequestStatus.pending)
-                .toList();
-            if (pending.isEmpty) {
-              return Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: context.colors.card,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.colors.border),
-                ),
-                child: Column(
+                .firstOrNull
+                ?.id;
+
+            return Column(
+              children: [
+                Row(
                   children: [
-                    Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 32,
-                      color: context.colors.success,
+                    Expanded(
+                      child: _AttentionTile(
+                        icon: Icons.warning_amber_rounded,
+                        count: summary.stokRendahCount,
+                        label: 'Stok Rendah',
+                        color: context.colors.error,
+                        onTap: () => context.push('/inventory/stok?rendah=1'),
+                      ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tidak ada request pending',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.colors.textTertiary,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AttentionTile(
+                        icon: Icons.input_rounded,
+                        count: pendingCount,
+                        label: 'Request',
+                        color: context.colors.warning,
+                        onTap: firstPendingId != null
+                            ? () => context.push(
+                                '/inventory/request/$firstPendingId',
+                              )
+                            : null,
                       ),
                     ),
                   ],
                 ),
-              );
-            }
-            return Column(
-              children: [
-                for (final request in pending)
-                  QueueCard(
-                    leading: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: context.colors.warning.withValues(
-                        alpha: 0.12,
-                      ),
-                      child: Icon(
-                        Icons.build_rounded,
-                        size: 20,
-                        color: context.colors.warning,
-                      ),
+                const SizedBox(height: 10),
+                _AttentionTile(
+                  icon: Icons.fact_check_outlined,
+                  label: 'Stok Opname',
+                  subtitle: 'Hitung fisik stok',
+                  color: context.colors.info,
+                  onTap: () => context.push('/inventory/opname'),
+                ),
+                if (summary.nilaiStok > 0) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
-                    title:
-                        '${request.platNomor} \u2022 ${request.kategoriServis}',
-                    subtitle: '${request.totalItems} item diminta',
-                    statusLabel: request.status.label,
-                    statusColor: context.colors.warning,
-                    onTap: () =>
-                        context.push('/inventory/request/${request.id}'),
+                    decoration: BoxDecoration(
+                      color: context.colors.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.colors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 16,
+                          color: context.colors.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Nilai stok: ${_rupiah.format(summary.nilaiStok)}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ],
               ],
             );
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildRequestSection(
+    AsyncValue<List<InventoryRequest>> requestsAsync,
+  ) {
+    return requestsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (requests) {
+        final pending = requests
+            .where((r) => r.status == InventoryRequestStatus.pending)
+            .toList();
+        if (pending.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.input_rounded,
+                  size: 20,
+                  color: context.colors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Request dari Workshop',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.colors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${pending.length}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            for (final request in pending)
+              QueueCard(
+                leading: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: context.colors.warning.withValues(
+                    alpha: 0.12,
+                  ),
+                  child: Icon(
+                    Icons.build_rounded,
+                    size: 20,
+                    color: context.colors.warning,
+                  ),
+                ),
+                title:
+                    '${request.platNomor} \u2022 ${request.kategoriServis}',
+                subtitle: '${request.totalItems} item diminta',
+                statusLabel: request.status.label,
+                statusColor: context.colors.warning,
+                onTap: () =>
+                    context.push('/inventory/request/${request.id}'),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -293,7 +295,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
           children: [
             _ShortcutTile(
               icon: Icons.warehouse_outlined,
-              title: 'Cek Stok',
+              title: 'Daftar Stok',
               onTap: () => context.push('/inventory/stok'),
             ),
             _ShortcutTile(
@@ -303,12 +305,110 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             ),
             _ShortcutTile(
               icon: Icons.history_rounded,
-              title: 'Riwayat',
+              title: 'Riwayat Mutasi',
               onTap: () => context.push('/inventory/riwayat'),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _AttentionTile extends StatelessWidget {
+  const _AttentionTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.count,
+    this.subtitle,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final int? count;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCount = count != null;
+    final isZero = hasCount && count == 0;
+    final accentColor = isZero ? context.colors.success : color;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: onTap != null
+                  ? accentColor.withValues(alpha: 0.2)
+                  : context.colors.border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: accentColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.colors.textTertiary,
+                        ),
+                      )
+                    else if (hasCount)
+                      Text(
+                        isZero ? 'Aman' : '$count',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (onTap != null)
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: accentColor.withValues(alpha: 0.6),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -323,7 +423,7 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
@@ -331,7 +431,11 @@ class _ErrorCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_off_rounded, color: context.colors.error, size: 22),
+          Icon(
+            Icons.cloud_off_rounded,
+            color: context.colors.error,
+            size: 22,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -375,7 +479,7 @@ class _ShortcutTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 14),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 14),
             child: Column(
               children: [
                 Container(
@@ -385,7 +489,11 @@ class _ShortcutTile extends StatelessWidget {
                     color: context.colors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: context.colors.primary, size: 22),
+                  child: Icon(
+                    icon,
+                    color: context.colors.primary,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(

@@ -108,12 +108,20 @@ class WorkshopTodoItem {
   final String? photoPath;
 
   factory WorkshopTodoItem.fromJson(Map<String, dynamic> json) {
+    // API memakai snake_case (`job_id`, `is_done`, `photo_path`); terima juga
+    // camelCase sebagai fallback untuk kompatibilitas respon lain.
     return WorkshopTodoItem(
-      id: json['id'] as String,
-      jobId: json['jobId'] as String,
-      label: json['label'] as String? ?? '-',
-      isDone: json['isDone'] as bool? ?? false,
-      photoPath: json['photoPath'] as String?,
+      id: json['id']?.toString() ?? '',
+      jobId: (json['job_id'] ?? json['jobId'])?.toString() ?? '',
+      label:
+          (json['label'] ?? json['nama_barang'] ?? json['nama'] ?? '-')
+              .toString(),
+      isDone:
+          json['is_done'] as bool? ??
+          json['isDone'] as bool? ??
+          false,
+      photoPath:
+          json['photo_path']?.toString() ?? json['photoPath']?.toString(),
     );
   }
 
@@ -130,10 +138,18 @@ class WorkshopTodoItem {
 
 /// Detail workshop job dengan todo items.
 class WorkshopJobDetail {
-  const WorkshopJobDetail({required this.job, required this.todos});
+  const WorkshopJobDetail({
+    required this.job,
+    required this.todos,
+    required this.servis,
+  });
 
   final WorkshopJob job;
   final List<WorkshopTodoItem> todos;
+
+  /// Sumber data asli dari `/servis-armada/{id}` — menyimpan pengaju,
+  /// odometer, catatan workshop, sparepart, tanggal, dll.
+  final ServisArmada servis;
 
   factory WorkshopJobDetail.fromJson(Map<String, dynamic> json) {
     final servis = ServisArmada.fromJson(json);
@@ -144,6 +160,7 @@ class WorkshopJobDetail {
 
     return WorkshopJobDetail(
       job: WorkshopJob.fromServisArmada(servis),
+      servis: servis,
       todos: [
         for (final t in todosRaw)
           if (t is Map) WorkshopTodoItem.fromJson(Map<String, dynamic>.from(t)),

@@ -601,6 +601,7 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
               key: state.pageKey,
               child: InventoryStokScreen(
                 initialSelectedId: state.uri.queryParameters['selected'],
+                initialRendah: state.uri.queryParameters['rendah'] == '1',
               ),
             ),
             routes: [

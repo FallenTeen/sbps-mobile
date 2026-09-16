@@ -56,6 +56,9 @@ class AdaptiveMasterDetail extends StatefulWidget {
 class AdaptiveMasterDetailState extends State<AdaptiveMasterDetail> {
   String? _selectedId;
 
+  /// Id item yang sedang terpilih (null = belum ada / placeholder).
+  String? get selectedId => _selectedId;
+
   @override
   void initState() {
     super.initState();

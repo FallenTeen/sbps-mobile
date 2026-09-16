@@ -9,9 +9,11 @@ import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../armada/servis_status.dart';
 import 'workshop_job_detail_screen.dart';
 import 'workshop_models.dart';
 import 'workshop_providers.dart';
+import 'workshop_rules.dart';
 
 enum _QueueFilter { menunggu, dikerjakan, selesaiHariIni }
 
@@ -32,31 +34,14 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
 
   List<WorkshopJob> get _filteredJobs {
     final state = ref.watch(workshopQueueProvider);
+    final now = DateTime.now();
     return switch (_filter) {
       _QueueFilter.menunggu =>
-        state.items
-            .where((j) => j.status == WorkshopJobStatus.menunggu)
-            .toList(),
+        state.items.where((j) => j.status == WorkshopJobStatus.menunggu).toList(),
       _QueueFilter.dikerjakan =>
-        state.items
-            .where((j) => j.status == WorkshopJobStatus.dikerjakan)
-            .toList(),
-      _QueueFilter.selesaiHariIni => state.items
-          .where(
-            (j) =>
-                j.status == WorkshopJobStatus.selesai &&
-                _isToday(j.completedAt),
-          )
-          .toList(),
+        state.items.where((j) => j.status == WorkshopJobStatus.dikerjakan).toList(),
+      _QueueFilter.selesaiHariIni => selesaiHariIni(state.items, now),
     };
-  }
-
-  bool _isToday(DateTime? dt) {
-    if (dt == null) return false;
-    final now = DateTime.now();
-    return dt.year == now.year &&
-        dt.month == now.month &&
-        dt.day == now.day;
   }
 
   Color _statusColor(WorkshopJobStatus status) {
@@ -85,12 +70,9 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final queueState = ref.watch(workshopQueueProvider);
-    final filtered = _filteredJobs;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Antrian Workshop'),
+        title: const Text('Workshop Hari Ini'),
         bottom: const BrandStrip(),
         actions: [PortalSwitchButton()],
       ),
@@ -105,29 +87,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
         ),
         masterBuilder: (context, selectedId, onSelect) => Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: context.colors.primary.withValues(alpha: 0.05),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${queueState.menungguCount} menunggu \u00B7 ${queueState.dikerjakanCount} sedang dikerjakan',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: context.colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  InfoTooltip(
-                    message:
-                        'Urutan pengerjaan mekanik. Tap kartu untuk membuka checklist.',
-                  ),
-                ],
-              ),
-            ),
+            _buildSummary(context, selectedId, onSelect),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
@@ -140,13 +100,127 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                 ],
               ),
             ),
-            Expanded(child: _buildBody(queueState, filtered, onSelect)),
+            Expanded(
+              child: _buildBody(
+                ref.watch(workshopQueueProvider),
+                _filteredJobs,
+                onSelect,
+              ),
+            ),
           ],
         ),
         detailBuilder: (context, selectedId) => WorkshopJobDetailContent(
           jobId: selectedId,
           onJobCompleted: () => _masterDetailKey.currentState?.clearSelection(),
         ),
+      ),
+    );
+  }
+
+  /// Ringkasan "Workshop Hari Ini" — angka dari status nyata server.
+  Widget _buildSummary(
+    BuildContext context,
+    String? selectedId,
+    void Function(String id) onSelect,
+  ) {
+    final state = ref.watch(workshopQueueProvider);
+
+    Widget stat(String label, String value, {Color? color}) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          '$value $label',
+          style: TextStyle(
+            color: color ?? Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    // Bila status sparepart tidak diketahui, jangan mengaku "0 menunggu".
+    final sparepartText = state.sparepartError != null ? '?' : '${state.menungguSparepartCount}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.primary.withValues(alpha: 0.22),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.construction_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Workshop Hari Ini',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '${state.activeCount} pekerjaan',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InfoTooltip(
+                message: state.sparepartError != null
+                    ? 'Status sparepart sedang tidak bisa dimuat. Coba lagi nanti.\n'
+                          'Menunggu Sparepart dihitung dari request inventori yang '
+                          'masih pending/diproses untuk job ini.'
+                    : 'Jumlah dihitung dari status nyata server.\n'
+                          '"Menunggu Sparepart" = job yang punya request inventori '
+                          'yang masih pending/diproses.',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              stat('Menunggu', '${state.menungguCount}'),
+              stat('Dikerjakan', '${state.dikerjakanCount}'),
+              stat('Menunggu Sparepart', sparepartText),
+              if (state.selesaiHariIniCount > 0)
+                stat(
+                  'Selesai Hari Ini',
+                  '${state.selesaiHariIniCount}',
+                  color: const Color(0xFFB9F6CA),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -163,11 +237,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       return _buildError(state.error!);
     }
     if (filtered.isEmpty) {
-      return AppEmptyState(
-        icon: Icons.build_circle_outlined,
-        title: 'Tidak ada antrian servis',
-        subtitle: 'Semua pekerjaan sudah selesai atau belum ada',
-      );
+      return _buildEmpty();
     }
     return RefreshIndicator(
       onRefresh: () => ref.read(workshopQueueProvider.notifier).refresh(),
@@ -177,7 +247,10 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final job = filtered[index];
+          final waitingSparepart = job.status != WorkshopJobStatus.selesai &&
+              state.waitingSparepartJobIds.contains(job.id);
           return QueueCard(
+            highlighted: job.id == selectedJobId,
             leading: CircleAvatar(
               radius: 20,
               backgroundColor: _statusColor(job.status).withValues(alpha: 0.12),
@@ -187,14 +260,43 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                 color: _statusColor(job.status),
               ),
             ),
-            title: '${job.platNomor} \u2022 ${job.kategoriServis}',
+            title:
+                '${job.platNomor} \u2022 ${formatKategoriServis(job.kategoriServis)}',
             subtitle: job.keluhan,
             statusLabel: _statusLabel(job.status),
             statusColor: _statusColor(job.status),
+            badgeLabel:
+                waitingSparepart ? 'Menunggu Sparepart' : null,
+            badgeColor: context.colors.warning,
             onTap: () => onSelect(job.id),
           );
         },
       ),
+    );
+  }
+
+  String? get selectedJobId =>
+      _masterDetailKey.currentState?.selectedId;
+
+  Widget _buildEmpty() {
+    final (title, subtitle) = switch (_filter) {
+      _QueueFilter.menunggu => (
+          'Tidak ada pekerjaan menunggu',
+          'Semua job sudah diambil atau belum ada antrian baru',
+        ),
+      _QueueFilter.dikerjakan => (
+          'Belum ada pekerjaan dikerjakan',
+          'Mulai pengerjaan dari tab Menunggu supaya masuk sini',
+        ),
+      _QueueFilter.selesaiHariIni => (
+          'Belum ada yang selesai hari ini',
+          'Job yang ditandai selesai tanggal hari ini tampil di sini',
+        ),
+    };
+    return AppEmptyState(
+      icon: Icons.build_circle_outlined,
+      title: title,
+      subtitle: subtitle,
     );
   }
 

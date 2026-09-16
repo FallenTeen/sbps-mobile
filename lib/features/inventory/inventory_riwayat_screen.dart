@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
@@ -312,7 +313,12 @@ class _InventoryRiwayatScreenState
           final mutasi = (row as _MutasiRow).mutasi;
           return StaggeredEntrance(
             index: i,
-            child: _MutasiTile(mutasi: mutasi),
+            child: _MutasiTile(
+              mutasi: mutasi,
+              onTap: mutasi.bahanBakuId.isEmpty
+                  ? null
+                  : () => context.push('/inventory/stok/${mutasi.bahanBakuId}'),
+            ),
           );
         },
       ),
@@ -367,9 +373,10 @@ class _MutasiRow {
 }
 
 class _MutasiTile extends StatelessWidget {
-  const _MutasiTile({required this.mutasi});
+  const _MutasiTile({required this.mutasi, this.onTap});
 
   final StokMutasi mutasi;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -399,6 +406,7 @@ class _MutasiTile extends StatelessWidget {
           color: color,
         ),
       ),
+      onTap: onTap,
       trailing: Text(
         fmtTanggalWaktu(mutasi.createdAt),
         style: TextStyle(fontSize: 11, color: context.colors.textTertiary),

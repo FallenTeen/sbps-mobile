@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../features/presensi/models/titik.dart';
 import '../presensi/presensi_providers.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
+import 'inventory_rules.dart' as rules;
 
 class InventoryOpnameScreen extends ConsumerStatefulWidget {
   const InventoryOpnameScreen({super.key});
@@ -22,12 +24,17 @@ class InventoryOpnameScreen extends ConsumerStatefulWidget {
 
 class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
   final Map<String, TextEditingController> _controllers = {};
+  final Map<String, TextEditingController> _catatanControllers = {};
   final Map<String, int?> _fisikValues = {};
+  final Map<String, String?> _catatanValues = {};
   String? _selectedTitikId;
 
   @override
   void dispose() {
     for (final c in _controllers.values) {
+      c.dispose();
+    }
+    for (final c in _catatanControllers.values) {
       c.dispose();
     }
     super.dispose();
@@ -36,6 +43,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
   void _initControllers(List<OpnameItem> items) {
     for (final item in items) {
       _controllers.putIfAbsent(item.id, TextEditingController.new);
+      _catatanControllers.putIfAbsent(item.id, TextEditingController.new);
     }
   }
 
@@ -44,10 +52,16 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     setState(() => _fisikValues[itemId] = parsed);
   }
 
+  void _onCatatanChanged(String itemId, String value) {
+    setState(() => _catatanValues[itemId] = value);
+  }
+
   void _clearFisik(List<OpnameItem> items) {
     for (final item in items) {
       _controllers[item.id]?.clear();
+      _catatanControllers[item.id]?.clear();
       _fisikValues[item.id] = null;
+      _catatanValues[item.id] = null;
     }
     setState(() {});
   }
@@ -61,19 +75,56 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
       )
       .length;
 
+  /// Review sheet — ringkas hasil hitung, lalu konfirmasi sebelum submit.
+  Future<bool> _reviewAndConfirm({
+    required List<OpnameItem> items,
+    required List<Titik> titiks,
+    required String titikId,
+  }) async {
+    final review = rules.opnameReview(items, _fisikValues, _catatanValues);
+    final tanggal = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final proceed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ReviewSheet(
+        review: review,
+        tanggal: tanggal,
+        titikLabel: _titikLabelFor(titiks, titikId),
+      ),
+    );
+    if (proceed != true || !mounted) return false;
+
+    final nSelisih = review.selisihItems.length;
+    final confirmed = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.destructive,
+      title: 'Simpan Opname?',
+      message: nSelisih == 0
+          ? 'Jumlah fisik sesuai sistem untuk semua item yang dihitung. '
+                'Opname tetap akan dicatat pada tanggal semula.'
+          : '$nSelisih item memiliki selisih. Stok sistem akan diperbarui '
+                'sesuai hitung fisik dan tidak dapat dibatalkan.',
+      confirmLabel: 'Ya, Simpan Opname',
+      icon: Icons.fact_check_outlined,
+    );
+    return confirmed?.confirmed == true;
+  }
+
   Future<void> _submit({
     required String titikId,
     required List<OpnameItem> items,
   }) async {
     final tanggal = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final submitItems = [
-      for (final item in items)
-        if (_fisikValues[item.id] != null)
-          OpnameSubmitItem(
-            bahanBakuId: item.id,
-            saldoFisik: _fisikValues[item.id]!,
-          ),
-    ];
+    final submitItems = rules.opnameSubmitItems(
+      items,
+      _fisikValues,
+      _catatanValues,
+    );
     if (submitItems.isEmpty) return;
 
     final result = await ref
@@ -110,6 +161,16 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
     _clearFisik(items);
   }
 
+  Future<void> _onBottomAction({
+    required List<OpnameItem> items,
+    required List<Titik> titiks,
+    required String titikId,
+  }) async {
+    final go = await _reviewAndConfirm(titiks: titiks, items: items, titikId: titikId);
+    if (!go || !mounted) return;
+    await _submit(titikId: titikId, items: items);
+  }
+
   @override
   Widget build(BuildContext context) {
     final titikAsync = ref.watch(titikAktifProvider);
@@ -126,7 +187,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: context.colors.info.withValues(alpha: 0.08),
             child: Row(
               children: [
@@ -135,14 +196,13 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                   size: 18,
                   color: context.colors.info,
                 ),
-                SizedBox(width: 8),
-                Expanded(
+                const SizedBox(width: 8),
+                const Expanded(
                   child: Text(
                     'Bandingkan jumlah fisik dengan catatan sistem',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: context.colors.info,
                     ),
                   ),
                 ),
@@ -237,8 +297,10 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                     return _OpnameItemCard(
                       item: item,
                       controller: _controllers[item.id]!,
+                      catatanController: _catatanControllers[item.id]!,
                       fisikValue: _fisikValues[item.id],
                       onChanged: (v) => _onFisikChanged(item.id, v),
+                      onCatatanChanged: (v) => _onCatatanChanged(item.id, v),
                     );
                   },
                 );
@@ -257,7 +319,12 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                       : () {
                           final titikId = _selectedTitikId!;
                           final items = materialsAsync.value ?? [];
-                          _submit(titikId: titikId, items: items);
+                          final titiks = titikAsync.value ?? [];
+                          _onBottomAction(
+                            titiks: titiks,
+                            items: items,
+                            titikId: titikId,
+                          );
                         },
                   child: opnameState.busy
                       ? SizedBox(
@@ -266,13 +333,22 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(
-                          'Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
+                          'Review & Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
                         ),
                 ),
               ),
             )
           : null,
     );
+  }
+
+  String _titikLabelFor(List<Titik> titiks, String titikId) {
+    final titik = titiks.where((t) => t.id == titikId).firstOrNull;
+    if (titik == null) return titikId;
+    final proyek = titik.displayProyek;
+    return proyek != null && proyek.isNotEmpty
+        ? '${titik.nama} ($proyek)'
+        : titik.nama;
   }
 
   Widget _buildTitikDropdown(List<Titik> titiks) {
@@ -310,18 +386,235 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
   }
 }
 
+class _ReviewSheet extends StatelessWidget {
+  const _ReviewSheet({
+    required this.review,
+    required this.tanggal,
+    required this.titikLabel,
+  });
+
+  final rules.OpnameReview review;
+  final String tanggal;
+  final String titikLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final nSelisih = review.selisihItems.length;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.fact_check_outlined,
+                    color: context.colors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Review Opname',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$titikLabel \u2022 $tanggal',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.colors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: (nSelisih > 0 ? context.colors.error : context.colors.success)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${review.totalDihitung} dihitung',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: nSelisih > 0
+                          ? context.colors.error
+                          : context.colors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (nSelisih == 0)
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.colors.success.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.colors.success.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: context.colors.success,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Jumlah fisik sesuai sistem untuk semua item yang dihitung.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                constraints: const BoxConstraints(maxHeight: 280),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: review.selisihItems.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final s = review.selisihItems[index];
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.colors.card,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.colors.error.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  s.namaBarang,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${s.selisih > 0 ? '+' : ''}${s.selisih}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: context.colors.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Sistem ${s.sistem} \u2192 Fisik ${s.fisik}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textTertiary,
+                            ),
+                          ),
+                          if (s.catatan != null && s.catatan!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Catatan: ${s.catatan}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.colors.textSecondary,
+                      side: BorderSide(color: context.colors.border),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Tutup'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text('Lanjutkan'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _OpnameItemCard extends StatelessWidget {
   const _OpnameItemCard({
     required this.item,
     required this.controller,
+    required this.catatanController,
     required this.fisikValue,
     required this.onChanged,
+    required this.onCatatanChanged,
   });
 
   final OpnameItem item;
   final TextEditingController controller;
+  final TextEditingController catatanController;
   final int? fisikValue;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String> onCatatanChanged;
 
   bool get _hasSelisih => fisikValue != null && fisikValue != item.jumlahSistem;
 
@@ -332,7 +625,7 @@ class _OpnameItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
@@ -415,7 +708,10 @@ class _OpnameItemCard extends StatelessWidget {
               if (_hasSelisih) ...[
                 const SizedBox(width: 10),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: context.colors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
@@ -430,8 +726,48 @@ class _OpnameItemCard extends StatelessWidget {
                   ),
                 ),
               ],
+              if (fisikValue != null) ...[
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.colors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Catatan',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
+          if (fisikValue != null) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: catatanController,
+              onChanged: onCatatanChanged,
+              decoration: const InputDecoration(
+                hintText: 'Catatan (opsional)',
+                prefixIcon: Icon(
+                  Icons.note_alt_outlined,
+                  size: 18,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+              ),
+            ),
+          ],
         ],
       ),
     );

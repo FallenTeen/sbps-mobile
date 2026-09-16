@@ -29,16 +29,18 @@ class _InventoryRequestDetailScreenState
   Future<void> _proses(InventoryRequest request) async {
     final outstanding = request.items
         .where((i) => i.status != InventoryRequestItemStatus.tersedia)
-        .map((i) => i.id)
         .toList();
     if (outstanding.isEmpty) return;
+
+    final selected = await _pickItems(outstanding);
+    if (selected == null || selected.isEmpty || !mounted) return;
 
     final confirmed = await ConfirmationDialog.show(
       context,
       severity: ConfirmSeverity.warning,
       title: 'Proses Request?',
       message:
-          'Tandai ${outstanding.length} item sebagai tersedia? Nominal & '
+          'Tandai ${selected.length} item sebagai tersedia? Nominal & '
           'catatan pengadaan lama tetap dipertahankan.',
       confirmLabel: 'Proses',
       icon: Icons.inventory_2_outlined,
@@ -47,7 +49,10 @@ class _InventoryRequestDetailScreenState
 
     final result = await ref
         .read(inventoryProsesProvider.notifier)
-        .proses(widget.requestId, outstanding);
+        .proses(
+          widget.requestId,
+          selected.map((i) => i.id).toList(),
+        );
 
     if (!mounted) return;
 
@@ -58,9 +63,148 @@ class _InventoryRequestDetailScreenState
       return;
     }
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Request sparepart diproses')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${selected.length} item request diproses · tersisa ${outstanding.length - selected.length} belum tersedia',
+        ),
+      ),
+    );
+  }
+
+  /// Pilih item yang akan ditandai tersedia — default semua belum tersedia.
+  Future<List<InventoryRequestItem>?> _pickItems(
+    List<InventoryRequestItem> outstanding,
+  ) {
+    final checked = outstanding.map((i) => i.id).toSet();
+    return showModalBottomSheet<List<InventoryRequestItem>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final allChecked = checked.length == outstanding.length;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: context.colors.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          color: context.colors.warning,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Proses Item',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Pilih item yang tersedia untuk ditandai',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    dense: true,
+                    value: allChecked,
+                    onChanged: (v) => setSheetState(() {
+                      if (v == true) {
+                        checked
+                          ..clear()
+                          ..addAll(outstanding.map((i) => i.id));
+                      } else {
+                        checked.clear();
+                      }
+                    }),
+                    title: const Text('Semua item'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const Divider(height: 1),
+Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: outstanding.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final item = outstanding[index];
+                        return CheckboxListTile(
+                          dense: true,
+                          value: checked.contains(item.id),
+                          onChanged: (v) => setSheetState(() {
+                            if (v == true) {
+                              checked.add(item.id);
+                            } else {
+                              checked.remove(item.id);
+                            }
+                          }),
+                          title: Text(
+                            item.namaBarang,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          subtitle: Text('${item.jumlahDiminta} ${item.satuan}'),
+                          controlAffinity: ListTileControlAffinity.leading,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: checked.isEmpty
+                          ? null
+                          : () {
+                              Navigator.of(context).pop(
+                                outstanding
+                                    .where((i) => checked.contains(i.id))
+                                    .toList(),
+                              );
+                            },
+                      child: Text(
+                        checked.isEmpty
+                            ? 'Tidak ada item dipilih'
+                            : 'Proses ${checked.length} item',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override

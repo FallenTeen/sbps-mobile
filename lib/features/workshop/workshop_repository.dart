@@ -17,27 +17,31 @@ class WorkshopRepository {
     final res = await _api.get<List<WorkshopJob>>(
       '/servis-armada',
       query: {'status': ?status},
-      parse: (raw) {
-        final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
-        final items =
-            map['data'] ?? map['items'] ?? (raw is List ? raw : const []);
-        return <WorkshopJob>[
-          if (items is List)
-            for (final e in items)
-              if (e is Map)
-                // Hanya pekerjaan yang benar-benar masuk antrian:
-                // disetujui (menunggu), dikerjakan, atau selesai.
-                // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop.
-                if (isWorkForWorkshop(
-                  ServisArmada.fromJson(Map<String, dynamic>.from(e)),
-                ))
-                  WorkshopJob.fromServisArmada(
-                    ServisArmada.fromJson(Map<String, dynamic>.from(e)),
-                  ),
-        ];
-      },
+      parse: antrianFromRaw,
     );
     return res.data ?? const [];
+  }
+
+  /// Parse response `/servis-armada` menjadi daftar pekerjaan workshop.
+  ///
+  /// HANYA pekerjaan yang benar-benar masuk antrian: `disetujui` (menunggu),
+  /// `dikerjakan`, atau `selesai`. `diajukan` & `ditolak` BUKAN pekerjaan
+  /// workshop — ditolak TIDAK boleh tampil sebagai pending.
+  static List<WorkshopJob> antrianFromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    final items =
+        map['data'] ?? map['items'] ?? (raw is List ? raw : const []);
+    return <WorkshopJob>[
+      if (items is List)
+        for (final e in items)
+          if (e is Map)
+            if (isWorkForWorkshop(
+              ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+            ))
+              WorkshopJob.fromServisArmada(
+                ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+              ),
+    ];
   }
 
   /// GET /servis-armada/{id} — Detail job servis beserta todo items.

@@ -4,9 +4,11 @@ import 'package:uuid/uuid.dart';
 import '../../core/api_client.dart';
 import '../../core/outbox/pending_action.dart';
 import '../auth/auth_providers.dart';
+import '../inventory/inventory_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'workshop_models.dart';
 import 'workshop_repository.dart';
+import 'workshop_rules.dart';
 
 final workshopRepositoryProvider = Provider<WorkshopRepository>(
   (ref) => WorkshopRepository(api: ref.watch(apiClientProvider)),
@@ -21,15 +23,23 @@ class WorkshopQueueState {
     this.items = const [],
     this.loading = false,
     this.error,
-    this.filter = 'menunggu',
     this.refreshing = false,
+    this.waitingSparepartJobIds = const {},
+    this.sparepartError,
   });
 
   final List<WorkshopJob> items;
   final bool loading;
   final String? error;
-  final String filter;
   final bool refreshing;
+
+  /// Id job yang sedang menunggu sparepart — dari request inventori yang
+  /// masih `pending`/`diproses` (data nyata, bukan asumsi).
+  final Set<String> waitingSparepartJobIds;
+
+  /// Pesan bila status sparepart tidak bisa dimuat (jangan tampilkan angka
+  /// yang menyesatkan ketika data tidak diketahui).
+  final String? sparepartError;
 
   int get menungguCount =>
       items.where((j) => j.status == WorkshopJobStatus.menunggu).length;
@@ -37,30 +47,35 @@ class WorkshopQueueState {
   int get dikerjakanCount =>
       items.where((j) => j.status == WorkshopJobStatus.dikerjakan).length;
 
+  /// Jumlah pekerjaan aktif (belum selesai) — "N pekerjaan" di ringkasan.
+  int get activeCount =>
+      items.where((j) => j.status != WorkshopJobStatus.selesai).length;
+
+  /// Pekerjaan yang selesai HARI INI (berdasarkan tanggal, bukan asumsi).
+  List<WorkshopJob> get selesaiHariIniJobs =>
+      selesaiHariIni(items, DateTime.now());
+
+  int get selesaiHariIniCount => selesaiHariIniJobs.length;
+
+  int get menungguSparepartCount =>
+      countMenungguSparepart(items, waitingSparepartJobIds);
+
   WorkshopQueueState copyWith({
     List<WorkshopJob>? items,
     bool? loading,
     String? error,
-    String? filter,
     bool? refreshing,
+    Set<String>? waitingSparepartJobIds,
+    String? sparepartError,
   }) {
     return WorkshopQueueState(
       items: items ?? this.items,
       loading: loading ?? this.loading,
       error: error,
-      filter: filter ?? this.filter,
       refreshing: refreshing ?? this.refreshing,
+      waitingSparepartJobIds: waitingSparepartJobIds ?? this.waitingSparepartJobIds,
+      sparepartError: sparepartError ?? this.sparepartError,
     );
-  }
-
-  List<WorkshopJob> get filteredItems {
-    return switch (filter) {
-      'menunggu' =>
-        items.where((j) => j.status == WorkshopJobStatus.menunggu).toList(),
-      'dikerjakan' =>
-        items.where((j) => j.status == WorkshopJobStatus.dikerjakan).toList(),
-      _ => items.where((j) => j.status == WorkshopJobStatus.selesai).toList(),
-    };
   }
 }
 
@@ -72,12 +87,36 @@ class WorkshopQueueController extends Notifier<WorkshopQueueState> {
   }
 
   Future<void> _load() async {
-    // Ambil sekaligus menunggu + dikerjakan + selesai tanpa filter.
+    // Ambil sekaligus menunggu + dikerjakan + selesai tanpa filter status,
+    // lalu status sparepart dari request inventori yang belum beres.
     try {
       final jobs = await ref
           .read(workshopRepositoryProvider)
           .getAntrianServis();
-      state = state.copyWith(items: jobs, loading: false);
+      late Set<String> waiting;
+      String? sparepartError;
+      try {
+        final results = await Future.wait([
+          ref.read(inventoryRepositoryProvider).getRequests(status: 'pending'),
+          ref.read(inventoryRepositoryProvider).getRequests(status: 'diproses'),
+        ]);
+        waiting = sparepartWaitingJobIds(
+          jobs,
+          results.expand((r) => r).toList(),
+        );
+      } on ApiException catch (e) {
+        sparepartError = e.message;
+        waiting = const {};
+      } catch (_) {
+        sparepartError = 'Status sparepart tidak bisa dimuat.';
+        waiting = const {};
+      }
+      state = state.copyWith(
+        items: jobs,
+        loading: false,
+        waitingSparepartJobIds: waiting,
+        sparepartError: sparepartError,
+      );
     } on ApiException catch (e) {
       state = state.copyWith(loading: false, error: e.message);
     } catch (_) {
@@ -90,8 +129,6 @@ class WorkshopQueueController extends Notifier<WorkshopQueueState> {
     await _load();
     state = state.copyWith(refreshing: false);
   }
-
-  void setFilter(String filter) => state = state.copyWith(filter: filter);
 }
 
 final workshopQueueProvider =

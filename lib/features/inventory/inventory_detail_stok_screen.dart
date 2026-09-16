@@ -210,6 +210,28 @@ class _ItemHeader extends StatelessWidget {
               ),
             ],
           ),
+          if (item.lokasiGudang != null && item.lokasiGudang!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.place_outlined,
+                  size: 15,
+                  color: context.colors.textMuted,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    item.lokasiGudang!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

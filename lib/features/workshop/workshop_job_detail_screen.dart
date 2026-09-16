@@ -17,8 +17,13 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/status_pill.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
+import '../armada/servis_status.dart';
+import '../armada/models/servis_armada.dart';
+import '../inventory/inventory_models.dart';
+import '../inventory/inventory_providers.dart';
 import 'workshop_models.dart';
 import 'workshop_providers.dart';
+import 'workshop_rules.dart';
 
 /// Screen detail job workshop (full-page) — membungkus
 /// [WorkshopJobDetailContent] dengan Scaffold + AppBar.
@@ -69,11 +74,6 @@ class WorkshopJobDetailContent extends ConsumerStatefulWidget {
 class _WorkshopJobDetailContentState
     extends ConsumerState<WorkshopJobDetailContent> {
   bool _isSubmitting = false;
-
-  int get _completedCount {
-    final detail = ref.read(workshopJobDetailProvider(widget.jobId)).value;
-    return detail?.todos.where((t) => t.isDone).length ?? 0;
-  }
 
   Color _statusColor(WorkshopJobStatus status) {
     return switch (status) {
@@ -171,6 +171,8 @@ class _WorkshopJobDetailContentState
             items: created.items,
             catatan: created.catatan,
           );
+      ref.invalidate(workshopQueueProvider);
+      ref.invalidate(inventoryRequestsProvider);
       if (mounted) {
         HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -218,9 +220,7 @@ class _WorkshopJobDetailContentState
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(kCopyQueued),
-          ),
+          const SnackBar(content: Text(kCopyQueued)),
         );
       }
     } finally {
@@ -228,18 +228,18 @@ class _WorkshopJobDetailContentState
     }
   }
 
-  Future<void> _markComplete(int totalItems) async {
-    if (jobStatusNow != WorkshopJobStatus.dikerjakan) {
+  Future<void> _markComplete(List<WorkshopTodoItem> todos) async {
+    final status = ref
+        .read(workshopJobDetailProvider(widget.jobId))
+        .value
+        ?.job
+        .status;
+    if (status == null) return;
+
+    final check = workshopCanComplete(status: status, todos: todos);
+    if (!check.allowed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mulai pengerjaan dulu sebelum menandai selesai'),
-        ),
-      );
-      return;
-    }
-    if (_completedCount < totalItems) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selesaikan semua item terlebih dahulu')),
+        SnackBar(content: Text(check.reason ?? 'Belum bisa menandai selesai')),
       );
       return;
     }
@@ -250,7 +250,8 @@ class _WorkshopJobDetailContentState
       title: 'Tandai Job Selesai?',
       message:
           'Job servis ini akan ditutup sebagai selesai dan tidak bisa '
-          'diubah lagi. Pastikan semua item & foto bukti sudah lengkap.',
+          'diubah lagi. Pastikan semua item pekerjaan sudah selesai dan '
+          'foto bukti sudah lengkap.',
       confirmLabel: 'Ya, Tandai Selesai',
       icon: Icons.check_circle_outline_rounded,
     );
@@ -278,9 +279,7 @@ class _WorkshopJobDetailContentState
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(kCopyQueued),
-          ),
+          const SnackBar(content: Text(kCopyQueued)),
         );
       }
       if (widget.onJobCompleted != null) {
@@ -300,197 +299,279 @@ class _WorkshopJobDetailContentState
     }
   }
 
-  WorkshopJobStatus? get jobStatusNow =>
-      ref.read(workshopJobDetailProvider(widget.jobId)).value?.job.status;
-
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(workshopJobDetailProvider(widget.jobId));
+    final requestsAsync = ref.watch(inventoryRequestsProvider);
 
     return detailAsync.when(
       loading: () => SkeletonDetailView(),
       error: (e, _) => _buildError(e),
       data: (detail) {
         final job = detail.job;
+        final servis = detail.servis;
         final items = detail.todos;
-        final completed = items.where((t) => t.isDone).length;
+        final completed = workshopCompletedCount(items);
         final progress = items.isEmpty ? 0.0 : completed / items.length;
+        final waitingRequests = _waitingRequests(requestsAsync, widget.jobId);
+        final waitingSparepart = waitingRequests.isNotEmpty;
 
         return Column(
           children: [
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildInfoCard(job),
-                  const SizedBox(height: 16),
-                  _buildProgressCard(progress, completed, items.length),
-                  const SizedBox(height: 16),
-                  if (items.isEmpty)
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text(
-                          'Belum ada item checklist untuk job ini',
-                          style: TextStyle(color: context.colors.textTertiary),
-                        ),
-                      ),
-                    )
-                  else
-                    ...List.generate(items.length, (index) {
-                      final item = items[index];
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: Checkbox(
-                            value: item.isDone,
-                            onChanged: _isSubmitting
-                                ? null
-                                : (_) => _toggleItem(item),
-                            activeColor: context.colors.primary,
-                          ),
-                          title: Text(
-                            item.label,
-                            style: TextStyle(
-                              decoration: item.isDone
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: item.isDone
-                                  ? context.colors.textTertiary
-                                  : context.colors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          subtitle: item.photoPath != null
-                              ? Padding(
-                                  padding: EdgeInsets.only(top: 8),
-                                  child: InkWell(
-                                    onTap: () => PhotoViewerDialog.show(
-                                      context: context,
-                                      heroTag: 'todo-photo-${item.id}',
-                                      imageUrl: item.photoPath,
-                                      title: item.label,
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: _networkOrFilePhoto(
-                                        item.photoPath!,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : null,
-                          trailing: item.isDone
-                              ? Icon(
-                                  Icons.check_circle_outline,
-                                  color: context.colors.success,
-                                )
-                              : IconButton(
-                                  icon: Icon(Icons.camera_alt_outlined),
-                                  onPressed: _isSubmitting
-                                      ? null
-                                      : () => _takeEvidencePhoto(item),
-                                  tooltip: 'Ambil foto bukti',
-                                ),
-                        ),
-                      );
-                    }),
-                ],
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(workshopJobDetailProvider(widget.jobId));
+                  ref.invalidate(inventoryRequestsProvider);
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildInfoCard(job, servis, waitingSparepart: waitingSparepart),
+                    const SizedBox(height: 16),
+                    _buildProgressCard(progress, completed, items.length),
+                    const SizedBox(height: 16),
+                    _buildTodoSection(items),
+                    const SizedBox(height: 16),
+                    _buildSparepartSection(servis, waitingRequests),
+                  ],
+                ),
               ),
             ),
-            SafeArea(
-              child: job.status == WorkshopJobStatus.selesai
-                  ? Container(
-                      width: double.infinity,
-                      color: context.colors.success.withValues(alpha: 0.08),
-                      padding: EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 20,
-                            color: context.colors.success,
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Job servis telah selesai dikerjakan',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: context.colors.success,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : job.status == WorkshopJobStatus.menunggu
-                      ? Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: FilledButton.icon(
-                              onPressed: _isSubmitting
-                                  ? null
-                                  : () => _startWork(),
-                              icon: _isSubmitting
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.play_arrow, size: 20),
-                              label: Text('Mulai Pengerjaan'),
-                            ),
+            SafeArea(child: _buildBottomBar(job, items, waitingSparepart)),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Request sparepart yang belum selesai untuk job ini.
+  List<InventoryRequest> _waitingRequests(
+    AsyncValue<List<InventoryRequest>> requestsAsync,
+    String jobId,
+  ) {
+    final requests = requestsAsync.value;
+    if (requests == null) return const [];
+    return requests
+        .where(
+          (r) =>
+              r.workshopJobId == jobId &&
+              (r.status == InventoryRequestStatus.pending ||
+                  r.status == InventoryRequestStatus.diproses),
+        )
+        .toList();
+  }
+
+  Widget _buildBottomBar(
+    WorkshopJob job,
+    List<WorkshopTodoItem> items,
+    bool waitingSparepart,
+  ) {
+    if (job.status == WorkshopJobStatus.selesai) {
+      return Container(
+        width: double.infinity,
+        color: context.colors.success.withValues(alpha: 0.08),
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline_rounded,
+              size: 20,
+              color: context.colors.success,
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Job servis telah selesai dikerjakan',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.success,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (job.status == WorkshopJobStatus.menunggu) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: FilledButton.icon(
+            onPressed: _isSubmitting ? null : _startWork,
+            icon: _isSubmitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.play_arrow, size: 20),
+            label: Text('Mulai Pengerjaan'),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (waitingSparepart)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Masih menunggu sparepart dari inventori — '
+                'pastikan request sudah beres sebelum Tandai Selesai.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.warning,
+                ),
+              ),
+            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : _requestSparepart,
+                  icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                  label: const Text('Request Sparepart'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => _markComplete(items),
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
                         )
-                      : Padding(
-                          padding: const EdgeInsets.all(16),
+                      : const Icon(Icons.check, size: 18),
+                  label: Text('Tandai Selesai'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodoSection(List<WorkshopTodoItem> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Todo Pekerjaan',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: context.colors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (items.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Text(
+              'Belum ada item pekerjaan untuk job ini — job tidak bisa '
+              'ditandai selesai tanpa item. Hubungi admin servis.',
+              style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
+            ),
+          )
+        else
+          ...List.generate(items.length, (index) {
+            final item = items[index];
+            return Card(
+              margin: EdgeInsets.only(bottom: 8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 8,
+                ),
+                child: ListTile(
+                  leading: Checkbox(
+                    value: item.isDone,
+                    onChanged: _isSubmitting ? null : (_) => _toggleItem(item),
+                    activeColor: context.colors.primary,
+                  ),
+                  title: Text(
+                    item.label,
+                    style: TextStyle(
+                      decoration: item.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: item.isDone
+                          ? context.colors.textTertiary
+                          : context.colors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: item.photoPath != null
+                      ? Padding(
+                          padding: EdgeInsets.only(top: 8),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: _isSubmitting
-                                      ? null
-                                      : () => _requestSparepart(),
-                                  icon: const Icon(
-                                    Icons.inventory_2_outlined,
-                                    size: 18,
-                                  ),
-                                  label: const Text('Request Sparepart'),
+                              InkWell(
+                                onTap: () => PhotoViewerDialog.show(
+                                  context: context,
+                                  heroTag: 'todo-photo-${item.id}',
+                                  imageUrl: item.photoPath,
+                                  title: item.label,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: _networkOrFilePhoto(item.photoPath!),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: _isSubmitting
-                                      ? null
-                                      : () => _markComplete(items.length),
-                                  icon: _isSubmitting
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Icon(Icons.check, size: 18),
-                                  label: Text('Tandai Selesai'),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Foto bukti',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.colors.textTertiary,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-            ),
-          ],
-        );
-      },
+                        )
+                      : null,
+                  trailing: IconButton(
+                    icon: Icon(Icons.camera_alt_outlined),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => _takeEvidencePhoto(item),
+                    tooltip: 'Ambil ${item.isDone ? 'ulang' : ''} foto bukti',
+                    color: item.photoPath != null
+                        ? context.colors.success
+                        : null,
+                  ),
+                ),
+              ),
+            );
+          }),
+      ],
     );
   }
 
@@ -498,40 +579,39 @@ class _WorkshopJobDetailContentState
     if (path.startsWith('http') || path.startsWith('https')) {
       return Image.network(
         path,
-        height: 60,
-        width: 60,
+        height: 52,
+        width: 52,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(
-          height: 60,
-          width: 60,
-          color: context.colors.surfaceVariant,
-          child: Icon(
-            Icons.broken_image_outlined,
-            size: 24,
-            color: context.colors.textTertiary,
-          ),
-        ),
+        errorBuilder: (_, _, _) => _brokenPhotoBox(),
       );
     }
     return Image.file(
       File(path),
-      height: 60,
-      width: 60,
+      height: 52,
+      width: 52,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Container(
-        height: 60,
-        width: 60,
-        color: context.colors.surfaceVariant,
-        child: Icon(
-          Icons.broken_image_outlined,
-          size: 24,
-          color: context.colors.textTertiary,
-        ),
+      errorBuilder: (_, _, _) => _brokenPhotoBox(),
+    );
+  }
+
+  Widget _brokenPhotoBox() {
+    return Container(
+      height: 52,
+      width: 52,
+      color: context.colors.surfaceVariant,
+      child: Icon(
+        Icons.broken_image_outlined,
+        size: 24,
+        color: context.colors.textTertiary,
       ),
     );
   }
 
-  Widget _buildInfoCard(WorkshopJob job) {
+  Widget _buildInfoCard(
+    WorkshopJob job,
+    ServisArmada servis, {
+    required bool waitingSparepart,
+  }) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -541,13 +621,27 @@ class _WorkshopJobDetailContentState
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    job.kategoriServis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        job.platNomor,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        formatKategoriServis(job.kategoriServis),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 StatusPill(
@@ -558,7 +652,37 @@ class _WorkshopJobDetailContentState
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  waitingSparepart
+                      ? Icons.inventory_2_outlined
+                      : Icons.next_plan_outlined,
+                  size: 15,
+                  color: waitingSparepart
+                      ? context.colors.warning
+                      : context.colors.textTertiary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    workshopNextAction(
+                      job,
+                      waitingSparepart: waitingSparepart,
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: waitingSparepart
+                          ? context.colors.warning
+                          : context.colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Text(
               'Keluhan dari driver:',
               style: TextStyle(
@@ -576,7 +700,7 @@ class _WorkshopJobDetailContentState
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                job.keluhan,
+                job.keluhan.isEmpty ? '-' : job.keluhan,
                 style: TextStyle(
                   fontSize: 14,
                   color: context.colors.textSecondary,
@@ -584,25 +708,78 @@ class _WorkshopJobDetailContentState
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: context.colors.textTertiary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Dibuat ${fmtTanggalWaktu(job.createdAt)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.colors.textTertiary,
-                  ),
-                ),
-              ],
+            _infoRow(
+              Icons.person_outline_rounded,
+              'Pengaju',
+              servis.diajukanOleh ?? '-',
             ),
+            _infoRow(
+              Icons.calendar_today_outlined,
+              'Dibuat',
+              fmtTanggalWaktu(job.createdAt),
+            ),
+            if (servis.tanggalSelesai != null)
+              _infoRow(
+                Icons.event_available_outlined,
+                'Selesai',
+                fmtTanggalWaktu(job.completedAt),
+              ),
+            if (servis.odometerSaatAjuan != null)
+              _infoRow(
+                Icons.speed_rounded,
+                'ODO saat ajuan',
+                fmtKm(servis.odometerSaatAjuan),
+              ),
+            if (servis.jamOperasionalSaatAjuan != null)
+              _infoRow(
+                Icons.schedule_rounded,
+                'Jam operasional',
+                fmtJam(servis.jamOperasionalSaatAjuan),
+              ),
+            if (servis.kodeUnit != null && servis.kodeUnit!.isNotEmpty)
+              _infoRow(Icons.tag_rounded, 'Kode unit', servis.kodeUnit!),
+            if (servis.catatanWorkshop != null &&
+                servis.catatanWorkshop!.isNotEmpty)
+              _infoRow(
+                Icons.sticky_note_2_outlined,
+                'Catatan workshop',
+                servis.catatanWorkshop!,
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: context.colors.textTertiary),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.colors.textTertiary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -611,64 +788,154 @@ class _WorkshopJobDetailContentState
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$completed dari $total item selesai',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 6,
-                      backgroundColor: context.colors.border,
-                      color: progress >= 1.0
-                          ? context.colors.success
-                          : context.colors.primary,
-                    ),
-                  ),
-                ],
+            Text(
+              '$completed dari $total item selesai',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
               ),
             ),
-            SizedBox(width: 16),
-            SizedBox(
-              width: 44,
-              height: 44,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 4,
-                    backgroundColor: context.colors.border,
-                    color: progress >= 1.0
-                        ? context.colors.success
-                        : context.colors.primary,
-                  ),
-                  Text(
-                    '${(progress * 100).round()}%',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: context.colors.border,
+                color: progress >= 1.0
+                    ? context.colors.success
+                    : context.colors.primary,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSparepartSection(
+    ServisArmada servis,
+    List<InventoryRequest> waitingRequests,
+  ) {
+    final used = servis.spareparts;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 18, color: context.colors.primary),
+            const SizedBox(width: 8),
+            Text(
+              'Sparepart',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (waitingRequests.isNotEmpty)
+              StatusPill(
+                label: 'Menunggu Sparepart',
+                color: context.colors.warning,
+                borderRadius: 12,
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (waitingRequests.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.colors.warning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: context.colors.warning.withValues(alpha: 0.4),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final r in waitingRequests)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${r.totalItems} item diminta — status ${r.status.label} '
+                      '(request #${r.id})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                Text(
+                  'Belum disediakan inventori. Job bisa tetap dikerjakan, '
+                  'tapi pastikan sparepart beres sebelum selesai.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.colors.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (used.isEmpty && waitingRequests.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.colors.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Belum ada request sparepart untuk job ini.',
+              style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
+            ),
+          ),
+        if (used.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.colors.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sparepart digunakan:',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textTertiary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                for (final p in used)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '• ${p.namaBarang} × ${fmtNum(p.jumlah)}'
+                      '${p.satuan != null ? ' ${p.satuan}' : ''}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
