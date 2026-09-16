@@ -10,18 +10,38 @@ import '../../shared/widgets/searchable_list_header.dart';
 import '../../core/formatters.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
+import 'produksi_rules.dart';
 
-/// Riwayat sesi produksi milik user dengan filter tanggal & mesin,
-/// pagination tombol "Muat lagi" (Fase A2.3) - Updated with uniform history (Fase 2).
-class RiwayatProduksiScreen extends ConsumerStatefulWidget {
+/// Riwayat sesi produksi milik user dengan filter tanggal, status, & mesin,
+/// pagination tombol "Muat lagi" (Fase A2.3) - dibangun ulang Phase 13:
+/// konten diekstrak ke [RiwayatProduksiContent] supaya bisa dipakai sebagai
+/// isi tab "Riwayat" di Sesi Aktif (no redirect-only tab).
+class RiwayatProduksiScreen extends StatelessWidget {
   const RiwayatProduksiScreen({super.key});
 
   @override
-  ConsumerState<RiwayatProduksiScreen> createState() =>
-      _RiwayatProduksiScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Riwayat Produksi'),
+        actions: const [PortalSwitchButton()],
+      ),
+      body: const RiwayatProduksiContent(),
+    );
+  }
 }
 
-class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
+/// Konten riwayat (filter + daftar) — dipakai halaman penuh dan tab.
+class RiwayatProduksiContent extends ConsumerStatefulWidget {
+  const RiwayatProduksiContent({super.key});
+
+  @override
+  ConsumerState<RiwayatProduksiContent> createState() =>
+      _RiwayatProduksiContentState();
+}
+
+class _RiwayatProduksiContentState
+    extends ConsumerState<RiwayatProduksiContent> {
   String? _selectedPeriod;
   String? _selectedStatus;
   String _searchQuery = '';
@@ -42,7 +62,7 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     final mesinAsync = ref.watch(mesinProvider);
 
     final q = _searchQuery.toLowerCase();
-    final items = q.isEmpty
+    final searched = q.isEmpty
         ? state.items
         : state.items
               .where(
@@ -52,70 +72,63 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
                     (s.titikNama ?? '').toLowerCase().contains(q),
               )
               .toList();
+    // Filter status benar-benar bekerja secara client-side (Phase 13).
+    final items = filterRiwayatByStatus(searched, _selectedStatus);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Produksi'),
-        actions: const [PortalSwitchButton()],
-      ),
-      body: Column(
-        children: [
-          // Search + Period Filter Chips (Fase 2)
-          SearchableListHeader(
-            hintText: 'Cari produk atau mesin...',
-            collapsible: false,
-            onChanged: (v) => setState(() => _searchQuery = v),
-            child: _PeriodFilterSection(
-              options: _periodOptions,
-              selected: _selectedPeriod,
-              onChanged: (value) {
-                setState(() => _selectedPeriod = value);
-                _handlePeriodChange(value, ref);
-              },
-            ),
-          ),
-
-          // Status Filter Chips (Fase 2)
-          _StatusFilterSection(
-            options: _statusOptions,
-            selected: _selectedStatus,
+    return Column(
+      children: [
+        // Search + Period Filter Chips (Fase 2)
+        SearchableListHeader(
+          hintText: 'Cari produk atau mesin...',
+          collapsible: false,
+          onChanged: (v) => setState(() => _searchQuery = v),
+          child: _PeriodFilterSection(
+            options: _periodOptions,
+            selected: _selectedPeriod,
             onChanged: (value) {
-              setState(() => _selectedStatus = value);
-              _handleStatusChange(value, ref);
+              setState(() => _selectedPeriod = value);
+              _handlePeriodChange(value, ref);
             },
           ),
+        ),
 
-          // Machine Filter (existing)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: DropdownButtonFormField<String>(
-              initialValue: filter.mesinId,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Filter Mesin',
-                border: OutlineInputBorder(),
-              ),
-              hint: const Text('Semua mesin'),
-              items: [
-                for (final m in mesinAsync.value ?? const [])
-                  DropdownMenuItem(value: m.id, child: Text(m.nama)),
-              ],
-              onChanged: (v) => ref
-                  .read(riwayatFilterProvider.notifier)
-                  .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
-            ),
-          ),
+        // Status Filter Chips — aksi nyata (client-side filter).
+        _StatusFilterSection(
+          options: _statusOptions,
+          selected: _selectedStatus,
+          onChanged: (value) => setState(() => _selectedStatus = value),
+        ),
 
-          // Content
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(riwayatProduksiProvider.notifier).refresh(),
-              child: _buildList(context, ref, state, items),
+        // Machine Filter (existing)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: DropdownButtonFormField<String>(
+            initialValue: filter.mesinId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Filter Mesin',
+              border: OutlineInputBorder(),
             ),
+            hint: const Text('Semua mesin'),
+            items: [
+              for (final m in mesinAsync.value ?? const [])
+                DropdownMenuItem(value: m.id, child: Text(m.nama)),
+            ],
+            onChanged: (v) => ref
+                .read(riwayatFilterProvider.notifier)
+                .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
           ),
-        ],
-      ),
+        ),
+
+        // Content
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () =>
+                ref.read(riwayatProduksiProvider.notifier).refresh(),
+            child: _buildList(context, ref, state, items),
+          ),
+        ),
+      ],
     );
   }
 
@@ -144,12 +157,6 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
     ref
         .read(riwayatFilterProvider.notifier)
         .set(RiwayatFilter(tanggal: tanggal, mesinId: currentFilter.mesinId));
-  }
-
-  void _handleStatusChange(String? status, WidgetRef ref) {
-    // Status filtering would need backend support
-    // For now, this is a UI placeholder
-    // When backend T1 is ready, implement actual filtering
   }
 
   Widget _buildList(
@@ -181,8 +188,8 @@ class _RiwayatProduksiScreenState extends ConsumerState<RiwayatProduksiScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           AppEmptyState(
-            icon: _searchQuery.isNotEmpty
-                ? Icons.search_off_outlined
+            icon: _searchQuery.isNotEmpty || _selectedStatus != null
+                ? Icons.filter_alt_off_outlined
                 : Icons.inbox_outlined,
             title: _searchQuery.isNotEmpty
                 ? 'Tidak Ada Hasil Pencarian'
@@ -367,14 +374,25 @@ class _RiwayatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = sessionStatusLabel(session.status);
+    final statusColor = session.berjalan
+        ? context.colors.warning
+        : context.colors.success;
+
     return Card(
       child: ListTile(
         title: Text(
           '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
         ),
-        subtitle: Text(
-          '${fmtTanggalWaktu(session.mulai?.toLocal())} → ${fmtTanggalWaktu(session.selesai?.toLocal())}\n'
-          'Titik: ${session.titikNama ?? '-'}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${fmtTanggalWaktu(session.mulai?.toLocal())} → '
+              '${fmtTanggalWaktu(session.selesai?.toLocal())}',
+            ),
+            Text('Titik: ${session.titikNama ?? '-'}'),
+          ],
         ),
         isThreeLine: true,
         trailing: Column(
@@ -388,11 +406,20 @@ class _RiwayatCard extends StatelessWidget {
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
-            Chip(
-              visualDensity: VisualDensity.compact,
-              label: Text(
-                session.berjalan ? 'Berjalan' : 'Selesai',
-                style: const TextStyle(fontSize: 10),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                ),
               ),
             ),
           ],

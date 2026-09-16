@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,18 +9,24 @@ import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
 import '../qc/models/qc_sample.dart';
 import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
-import '../../shared/widgets/app_empty_state.dart';
-import '../../shared/widgets/portal_switch_button.dart';
+import 'produksi_rules.dart';
 import 'produksi_ringkasan_screen.dart';
+import 'progress_hari_ini_screen.dart';
+import 'riwayat_produksi_screen.dart';
 
 /// Daftar sesi berstatus `berjalan` milik user + pintu ke Mulai/Riwayat/
-/// Progress (Fase A2.3) - Refactored with TabBar (Fase 2).
+/// Progress. Phase 13: setiap tab memiliki konten nyata (tidak ada tab yang
+/// hanya mengantar ke halaman lain), home menampilkan ringkasan
+/// "Produksi Hari Ini", dan kartu sesi menampilkan next action.
 class SesiAktifScreen extends ConsumerStatefulWidget {
   const SesiAktifScreen({super.key});
 
@@ -29,15 +37,21 @@ class SesiAktifScreen extends ConsumerStatefulWidget {
 class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  Timer? _durationTicker;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Durasi sesi berjalan diperbarui tiap menit.
+    _durationTicker = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && _tabController.index == 0) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _durationTicker?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -47,13 +61,14 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
     final sesi = ref.watch(sesiAktifProvider);
     // Peta sessionId → sample menunggu_hasil: penentu tombol QC per kartu.
     final waitingQc = ref.watch(waitingSamplesBySessionProvider);
+    // Progress per titik hari ini — dasar ringkasan "Produksi Hari Ini".
+    final progress = ref.watch(titikProgressProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sesi Produksi'),
         actions: [
           const PortalSwitchButton(),
-          // Context menu for additional actions (Fase 2)
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
@@ -124,12 +139,16 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Tab 1: Sesi Aktif
-          _ActiveSessionsTab(sesi: sesi, waitingQc: waitingQc),
-          // Tab 2: Progress (redirect to progress screen)
-          const _ProgressTab(),
-          // Tab 3: Riwayat (redirect to history screen)
-          const _HistoryTab(),
+          // Tab 1: Sesi Aktif + ringkasan Produksi Hari Ini.
+          _ActiveSessionsTab(
+            sesi: sesi,
+            progress: progress,
+            waitingQc: waitingQc,
+          ),
+          // Tab 2: Progress — konten nyata per titik hari ini.
+          const ProgressHariIniContent(),
+          // Tab 3: Riwayat — konten nyata dengan filter yang berfungsi.
+          const RiwayatProduksiContent(),
         ],
       ),
     );
@@ -137,192 +156,233 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
 }
 
 class _ActiveSessionsTab extends ConsumerWidget {
-  const _ActiveSessionsTab({required this.sesi, required this.waitingQc});
+  const _ActiveSessionsTab({
+    required this.sesi,
+    required this.progress,
+    required this.waitingQc,
+  });
 
   final AsyncValue<List<ProductionSession>> sesi;
+  final AsyncValue<TitikProgressData> progress;
   final AsyncValue<Map<String, QcSample>> waitingQc;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(sesiAktifProvider),
+      onRefresh: () => _refreshAll(ref),
       child: sesi.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(
           message: e is ApiException ? e.message : 'Gagal memuat sesi aktif.',
-          onRetry: () => ref.invalidate(sesiAktifProvider),
+          onRetry: () => _refreshAll(ref),
         ),
-        data: (items) => CustomScrollView(
-          slivers: [
-            // Summary header (Fase 2)
-            if (items.isNotEmpty)
+        data: (items) {
+          final summary = produksiHomeSummary(
+            sesiAktif: items,
+            progress: progress.value?.items ?? const [],
+            waitingQcCount: waitingQc.value?.length ?? 0,
+          );
+
+          return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
               SliverToBoxAdapter(
-                child: _SessionSummaryHeader(
-                  activeCount: items.length,
-                  waitingQcCount: waitingQc.value?.length ?? 0,
-                ),
+                child: _ProduksiHariIniHeader(summary: summary),
               ),
-            // Session list
-            items.isEmpty
-                ? SliverFillRemaining(
-                    child: const AppEmptyState(
-                      icon: Icons.factory_outlined,
-                      title: 'Belum ada sesi aktif',
-                      subtitle:
-                          'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
-                    ),
-                  )
-                : SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                    sliver: SliverList.separated(
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) =>
-                          SliverToBoxAdapter(child: SizedBox(height: 12)),
-                      itemBuilder: (context, i) => _SessionCard(
-                        session: items[i],
-                        hasWaitingQc:
-                            waitingQc.value?.containsKey(items[i].id) ?? false,
-                      ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                  child: Text(
+                    items.isEmpty ? 'Tidak ada sesi berjalan' : 'Sesi Aktif',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-          ],
-        ),
+                ),
+              ),
+              items.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppEmptyState(
+                        icon: Icons.factory_outlined,
+                        title: 'Belum ada sesi aktif',
+                        subtitle:
+                            'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
+                        actionLabel: 'Mulai Sesi',
+                        onAction: () => context.push('/produksi/mulai'),
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                      sliver: SliverList.separated(
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) =>
+                            SliverToBoxAdapter(child: SizedBox(height: 12)),
+                        itemBuilder: (context, i) => _SessionCard(
+                          session: items[i],
+                          hasWaitingQc:
+                              waitingQc.value?.containsKey(items[i].id) ??
+                              false,
+                        ),
+                      ),
+                    ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _SessionSummaryHeader extends StatelessWidget {
-  const _SessionSummaryHeader({
-    required this.activeCount,
-    required this.waitingQcCount,
-  });
+/// Invalidasi semua sumber data tab sesi aktif lalu tunggu refresh selesai.
+Future<void> _refreshAll(WidgetRef ref) async {
+  ref.invalidate(sesiAktifProvider);
+  ref.invalidate(titikProgressProvider);
+  ref.invalidate(waitingSamplesBySessionProvider);
+}
 
-  final int activeCount;
-  final int waitingQcCount;
+/// Ringkasan "Produksi Hari Ini" — menjawab: berapa sesi, total output,
+/// sesi berjalan, sesi menunggu QC, dan yang butuh perhatian.
+class _ProduksiHariIniHeader extends StatelessWidget {
+  const _ProduksiHariIniHeader({required this.summary});
+
+  final ProduksiHomeSummary summary;
 
   @override
   Widget build(BuildContext context) {
+    final today = fmtTanggal(DateTime.now());
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.shadowLv2,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Ringkasan Sesi',
-                  style: TextStyle(
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Produksi Hari Ini — $today',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$activeCount sesi aktif',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              Icon(Icons.factory_outlined, size: 20, color: Colors.white70),
+            ],
           ),
-          if (waitingQcCount > 0)
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _HeaderMetric(
+                  label: 'Total Sesi',
+                  value: '${summary.totalSesi}',
+                  unit: 'sesi',
+                ),
+              ),
+              Expanded(
+                child: _HeaderMetric(
+                  label: 'Total Output',
+                  value: fmtNum(summary.totalOutput),
+                  unit: '',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _HeaderMetric(
+                  label: 'Sesi Berjalan',
+                  value: '${summary.sesiBerjalan}',
+                  unit: 'sesi',
+                ),
+              ),
+              Expanded(
+                child: _HeaderMetric(
+                  label: 'Menunggu QC',
+                  value: '${summary.sesiMenungguQc}',
+                  unit: 'sample',
+                ),
+              ),
+            ],
+          ),
+          if (summary.butuhPerhatian > 0) ...[
+            const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.science, color: Colors.white, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$waitingQcCount QC tertunda',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  const Icon(Icons.notification_important_outlined,
+                      color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      '${summary.butuhPerhatian} sesi menunggu hasil uji tekan',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _ProgressTab extends StatelessWidget {
-  const _ProgressTab();
+class _HeaderMetric extends StatelessWidget {
+  const _HeaderMetric({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
+
+  final String label;
+  final String value;
+  final String unit;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.bar_chart, size: 64, color: context.colors.textMuted),
-          const SizedBox(height: 16),
-          const Text(
-            'Progress Hari Ini',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Lihat progress produksi hari ini',
-            style: TextStyle(color: context.colors.textTertiary),
+        ),
+        Text(
+          unit.isEmpty ? label : '$label • $unit',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => context.push('/produksi/progress'),
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Buka Halaman Progress'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HistoryTab extends StatelessWidget {
-  const _HistoryTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history, size: 64, color: context.colors.textMuted),
-          const SizedBox(height: 16),
-          const Text(
-            'Riwayat Produksi',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Lihat riwayat sesi produksi',
-            style: TextStyle(color: context.colors.textTertiary),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => context.push('/produksi/riwayat'),
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Buka Halaman Riwayat'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -351,30 +411,79 @@ class _SessionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
+                    '${session.produkNama ?? 'Produk'} — '
+                    '${session.mesinNama ?? 'Mesin'}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                Chip(
-                  label: const Text('Berjalan'),
-                  backgroundColor: theme.colorScheme.primaryContainer
-                      .withValues(alpha: .5),
-                  labelStyle: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
+                StatusPill(
+                  label: sessionStatusLabel(session.status),
+                  color: hasWaitingQc
+                      ? context.colors.warning
+                      : context.colors.success,
+                  icon: hasWaitingQc
+                      ? Icons.pending_outlined
+                      : Icons.play_circle_outline,
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text('Titik: ${session.titikNama ?? '-'}'),
-            if (mulai != null)
-              Text(
-                'Mulai ${fmtTanggalWaktu(mulai)}'
-                '${durasi != null ? ' • ${durasi.inHours}j ${durasi.inMinutes % 60}m' : ''}',
+            const SizedBox(height: 8),
+            _DetailRow(
+              icon: Icons.location_on_outlined,
+              text: 'Titik: ${session.titikNama ?? '-'}',
+            ),
+            if (session.titikId != null && session.titikNama == null)
+              _DetailRow(
+                icon: Icons.location_on_outlined,
+                text: 'Titik ID: ${session.titikId}',
               ),
+            if (mulai != null)
+              _DetailRow(
+                icon: Icons.schedule,
+                text: 'Mulai ${fmtTanggalWaktu(mulai)}',
+              ),
+            if (durasi != null)
+              _DetailRow(
+                icon: Icons.timelapse_outlined,
+                text: 'Durasi ${formatDurasiSesi(durasi)}',
+                highlight: theme.colorScheme.primary,
+              ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: (hasWaitingQc
+                        ? context.colors.warning
+                        : context.colors.success)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    hasWaitingQc
+                        ? Icons.speed
+                        : Icons.science_outlined,
+                    size: 15,
+                    color: hasWaitingQc
+                        ? context.colors.warning
+                        : context.colors.success,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Tindakan: ${nextActionForSession(hasWaitingQc: hasWaitingQc)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -433,6 +542,42 @@ class _SessionCard extends StatelessWidget {
   }
 }
 
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.text,
+    this.highlight,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color? highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: context.colors.textMuted),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: highlight ?? context.colors.textSecondary,
+                fontWeight: highlight != null
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});
 
@@ -442,6 +587,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       children: [
         const SizedBox(height: 140),
         Icon(
@@ -517,8 +663,10 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
     if (result.delivered) {
+      final hasil = double.parse(_hasilCtrl.text.replaceAll(',', '.'));
+      final output = '${fmtNum(hasil)} $_satuan'.trim();
       messenger.showSnackBar(
-        const SnackBar(content: Text('Sesi produksi selesai.')),
+        SnackBar(content: Text('Sesi selesai — $output tercatat.')),
       );
     } else if (result.queued) {
       messenger.showSnackBar(
@@ -556,7 +704,8 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${widget.session.produkNama ?? ''} • ${widget.session.mesinNama ?? ''}',
+                '${widget.session.produkNama ?? ''} • '
+                '${widget.session.mesinNama ?? ''}',
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -572,12 +721,7 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
                   suffixText: _satuan.isEmpty ? null : _satuan,
                   border: const OutlineInputBorder(),
                 ),
-                validator: (v) {
-                  final n = double.tryParse((v ?? '').replaceAll(',', '.'));
-                  if (n == null) return 'Masukkan angka yang valid.';
-                  if (n < 0) return 'Tidak boleh negatif.';
-                  return null;
-                },
+                validator: (v) => validateHasilOutput(v ?? ''),
               ),
               const SizedBox(height: 12),
               TextFormField(
