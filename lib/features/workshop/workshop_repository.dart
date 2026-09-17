@@ -1,5 +1,10 @@
+import 'package:uuid/uuid.dart';
+
 import '../../core/api_client.dart';
 import '../../core/api_response.dart';
+import '../../core/outbox/outbox_repository.dart';
+import '../../core/outbox/outbox_sync_service.dart';
+import '../../core/outbox/pending_action.dart';
 import '../armada/models/servis_armada.dart';
 import 'workshop_models.dart';
 
@@ -7,9 +12,18 @@ import 'workshop_models.dart';
 /// Mengelola antrian servis, detail job, checklist, foto bukti, dan
 /// request sparepart.
 class WorkshopRepository {
-  WorkshopRepository({required ApiClient api}) : _api = api;
+  WorkshopRepository({
+    required ApiClient api,
+    required OutboxRepository outbox,
+    required OutboxSyncService sync,
+  }) : _api = api,
+       _outbox = outbox,
+       _sync = sync;
 
   final ApiClient _api;
+  final OutboxRepository _outbox;
+  final OutboxSyncService _sync;
+  static const _uuid = Uuid();
 
   /// GET /servis-armada — Antrian workshop (servis yang disetujui/dikerjakan).
   /// Filter status: 'disetujui' (menunggu), 'dikerjakan', 'selesai'.
@@ -78,37 +92,50 @@ class WorkshopRepository {
   }
 
   /// POST /workshop/job/{id}/todo/{todoId}/photo — Upload foto bukti todo.
-  Future<WorkshopTodoItem> uploadTodoPhoto({
+  /// Lewat outbox (attachment satu file `photo`): offline → foto tetap
+  /// tersimpan di perangkat dan dikirim otomatis. Retry memakai
+  /// Idempotency-Key yang SAMA persis.
+  Future<OutboxSendResult> uploadTodoPhoto({
     required String jobId,
     required String todoId,
     required String photoPath,
   }) async {
-    final res = await _api.postMultipart<WorkshopTodoItem>(
-      '/workshop/job/$jobId/todo/$todoId/photo',
-      fields: {},
-      files: [MultipartFileSpec('photo', photoPath)],
-      parse: (raw) =>
-          WorkshopTodoItem.fromJson(Map<String, dynamic>.from(raw as Map)),
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.workshopTodoPhoto,
+      payloadJson: {'job_id': jobId, 'todo_id': todoId},
+      photoLocalPath: photoPath,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
     );
-    _ensureSuccess(res);
-    return res.data!;
+
+    return _outbox.enqueue(action, _sync.send);
   }
 
   /// POST /workshop/job/{id}/request-sparepart — Request sparepart dari
-  /// inventory untuk job ini.
-  Future<void> requestSparepart({
+  /// inventory untuk job ini. Lewat outbox + route ber-middleware
+  /// idempotency: retry tidak menggandakan order sparepart.
+  Future<OutboxSendResult> requestSparepart({
     required String jobId,
     required List<SparepartRequestItem> items,
     String? catatan,
   }) async {
-    final res = await _api.post<Object?>(
-      '/workshop/job/$jobId/request-sparepart',
-      body: {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.workshopRequestSparepart,
+      payloadJson: const {},
+      payloadData: {
+        'job_id': jobId,
         'items': items.map((i) => i.toJson()).toList(),
         'catatan': ?catatan,
       },
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
     );
-    _ensureSuccess(res);
+
+    return _outbox.enqueue(action, _sync.send);
   }
 
   /// POST /servis-armada/{id}/selesai — Tandai servis selesai.

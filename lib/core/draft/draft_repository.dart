@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -182,15 +183,30 @@ class DraftRepository {
     await box.delete(draftKey);
   }
 
+  /// Hapus file foto yang direferensikan draft yang dibuang (expired /
+  /// korup) — hanya bila file memang masih ada. Draft yang masih hidup
+  /// TIDAK dihapus di sini (pengguna bisa lanjut mengisi).
+  void _deletePhotoFiles(FormDraft draft) {
+    for (final path in draft.photoLocalPaths) {
+      try {
+        final file = File(path);
+        if (file.existsSync()) file.deleteSync();
+      } catch (_) {
+        // Path rusak / file sudah dipindah — abaikan.
+      }
+    }
+  }
+
   /// Bersihkan semua draft yang kedaluwarsa (housekeeping — dipanggil saat
-  /// app start). Menghindari penumpukan draft lama + file foto yang
-  /// direferensikan draft.
+  /// app start) beserta file foto yang direferensikannya.
   Future<int> cleanupExpired() async {
     final box = await _ensureOpen();
     var removed = 0;
     for (final key in box.keys.toList()) {
-      final draft = FormDraft.fromJson(box.get(key) ?? '');
+      final raw = box.get(key) ?? '';
+      final draft = FormDraft.fromJson(raw);
       if (draft == null || draft.isExpired) {
+        if (draft != null) _deletePhotoFiles(draft);
         await box.delete(key);
         removed++;
       }

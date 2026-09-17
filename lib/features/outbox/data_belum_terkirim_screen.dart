@@ -111,6 +111,9 @@ class _PendingActionTile extends StatelessWidget {
     PendingEndpoint.workshopMulai => 'Mulai kerja workshop',
     PendingEndpoint.workshopSelesai => 'Selesai servis workshop',
     PendingEndpoint.inventoryOpname => 'Stok opname inventory',
+    PendingEndpoint.servisAjuan => 'Ajuan servis armada',
+    PendingEndpoint.workshopTodoPhoto => 'Foto bukti todo workshop',
+    PendingEndpoint.workshopRequestSparepart => 'Request sparepart workshop',
   };
 
   String get _status => switch (action.status) {
@@ -163,7 +166,11 @@ class _PendingActionTile extends StatelessWidget {
               Text(
                 action.errorMessage!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
+                  // pending = retryable (menunggu jaringan) — jangan tampil
+                  // merah seperti error permanen (failed) yang butuh tindakan.
+                  color: action.status == PendingStatus.failed
+                      ? Theme.of(context).colorScheme.error
+                      : Colors.orange.shade800,
                 ),
               ),
             ],

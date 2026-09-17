@@ -42,10 +42,14 @@ class OutboxRepository {
     final result = await send(action);
     if (result.delivered) {
       await remove(action.id);
-    } else {
-      // Queued maupun permanentlyFailed sama-sama dicatat failed +
-      // retryCount++ — permanen berhenti otomatis setelah batas percobaan.
+    } else if (result.permanentlyFailed) {
+      // Error permanen (validasi/konflik 4xx) — ditandai "Gagal dikirim".
       await markFailed(action.id, result.errorMessage);
+    } else {
+      // Offline / 5xx — retryable. Status tetap `pending` ("Menunggu
+      // jaringan") dengan backoff diperbarui, BUKAN "Gagal dikirim":
+      // Queued != Synced, dan user bisa membedakan menunggu vs gagal.
+      await markRetryable(action.id, result.errorMessage);
     }
     return result;
   }
@@ -95,6 +99,18 @@ class OutboxRepository {
 
   Future<void> markSyncing(String id) async =>
       _update(id, (a) => a..status = PendingStatus.syncing);
+
+  /// Gagal retryable (jaringan / 5xx): status DIPERTAHANKAN `pending`
+  /// (menunggu jaringan) tapi backoff diperbarui. Hanya error permanen
+  /// (4xx, via [markFailed]) yang tampil merah "Gagal dikirim".
+  Future<void> markRetryable(String id, String? message) async => _update(
+    id,
+    (a) => a
+      ..status = PendingStatus.pending
+      ..lastAttemptAt = DateTime.now()
+      ..retryCount = a.retryCount + 1
+      ..errorMessage = message,
+  );
 
   Future<void> markFailed(String id, String? message) async => _update(
     id,

@@ -7,6 +7,7 @@ import '../../core/api_client.dart';
 import '../../core/draft/autosave_controller.dart';
 import '../../core/draft/draft_repository.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import 'armada_providers.dart';
@@ -206,7 +207,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
+      final result = await ref
           .read(servisRepositoryProvider)
           .submitAjuanServis(
             armadaId: _selectedArmada!.id,
@@ -217,11 +218,19 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
           );
 
       AnalyticsService.servisAjuanSubmit();
+      // Data kini tersimpan aman (di server ATAU di outbox) — draft tidak
+      // lagi dibutuhkan. Queued != Synced: snackbar membedakan keduanya.
       await _autosave.clear();
       if (!mounted) return;
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pengajuan servis berhasil dikirim')),
+        SnackBar(
+          content: Text(
+            result.delivered
+                ? 'Pengajuan servis berhasil dikirim'
+                : kCopyQueued,
+          ),
+        ),
       );
 
       ref.read(servisRiwayatProvider.notifier).refresh();

@@ -123,11 +123,25 @@ class _WorkshopJobDetailContentState
 
   Future<void> _takeEvidencePhoto(WorkshopTodoItem item) async {
     if (_isSubmitting) return;
+    final key = '${widget.jobId}|${item.id}';
+    if (ref.read(pendingWorkshopTodoPhotoProvider(key))) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Foto bukti masih menunggu sinkron — lihat Data Belum '
+              'Terkirim sampai foto sebelumnya terkirim.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       final photo = await takeWatermarkedPhoto(ref);
       if (photo == null) return;
-      await ref
+      final result = await ref
           .read(workshopRepositoryProvider)
           .uploadTodoPhoto(
             jobId: widget.jobId,
@@ -136,9 +150,11 @@ class _WorkshopJobDetailContentState
           );
       ref.invalidate(workshopJobDetailProvider(widget.jobId));
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Foto bukti terunggah')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.delivered ? 'Foto bukti terunggah' : kCopyQueued),
+          ),
+        );
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -164,19 +180,25 @@ class _WorkshopJobDetailContentState
 
     setState(() => _isSubmitting = true);
     try {
-      await ref
+      final result = await ref
           .read(workshopRepositoryProvider)
           .requestSparepart(
             jobId: widget.jobId,
             items: created.items,
             catatan: created.catatan,
           );
-      ref.invalidate(workshopQueueProvider);
-      ref.invalidate(inventoryRequestsProvider);
-      if (mounted) {
-        HapticFeedback.lightImpact();
+      if (result.delivered) {
+        ref.invalidate(workshopQueueProvider);
+        ref.invalidate(inventoryRequestsProvider);
+        if (mounted) {
+          HapticFeedback.lightImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Request sparepart terkirim')),
+          );
+        }
+      } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request sparepart terkirim')),
+          const SnackBar(content: Text(kCopyQueued)),
         );
       }
     } on ApiException catch (e) {
@@ -503,6 +525,9 @@ class _WorkshopJobDetailContentState
         else
           ...List.generate(items.length, (index) {
             final item = items[index];
+            final pendingPhoto = ref.watch(
+              pendingWorkshopTodoPhotoProvider('${widget.jobId}|${item.id}'),
+            );
             return Card(
               margin: EdgeInsets.only(bottom: 8),
               child: Padding(
@@ -559,11 +584,15 @@ class _WorkshopJobDetailContentState
                       : null,
                   trailing: IconButton(
                     icon: Icon(Icons.camera_alt_outlined),
-                    onPressed: _isSubmitting
+                    onPressed: _isSubmitting || pendingPhoto
                         ? null
                         : () => _takeEvidencePhoto(item),
-                    tooltip: 'Ambil ${item.isDone ? 'ulang' : ''} foto bukti',
-                    color: item.photoPath != null
+                    tooltip: pendingPhoto
+                        ? 'Foto bukti menunggu sinkron'
+                        : 'Ambil ${item.isDone ? 'ulang' : ''} foto bukti',
+                    color: pendingPhoto
+                        ? context.colors.warning
+                        : item.photoPath != null
                         ? context.colors.success
                         : null,
                   ),

@@ -44,14 +44,16 @@ class PendingSummary {
 
     final actions = _cachedActions!;
 
-    // --- Armada: checklist harian, ODO awal, helper presensi, ritase, checklist major ---
+    // --- Armada: checklist harian, ODO awal, helper presensi, ritase,
+    // checklist major, dan ajuan servis (driver mengajukan via form). ---
     final armadaCount = actions.where(
       (a) =>
           a.endpoint == PendingEndpoint.armadaChecklist ||
           a.endpoint == PendingEndpoint.armadaOdoAwal ||
           a.endpoint == PendingEndpoint.helperPresensi ||
           a.endpoint == PendingEndpoint.armadaRitase ||
-          a.endpoint == PendingEndpoint.armadaChecklistMajor,
+          a.endpoint == PendingEndpoint.armadaChecklistMajor ||
+          a.endpoint == PendingEndpoint.servisAjuan,
     ).length;
 
     // --- Produksi: mulai & selesai sesi ---
@@ -68,11 +70,13 @@ class PendingSummary {
           a.endpoint == PendingEndpoint.qcUjiTekan,
     ).length;
 
-    // --- Workshop: mulai & selesai servis (BUKAN armadaChecklist). ---
+    // --- Workshop: mulai, selesai, foto bukti todo, request sparepart. ---
     final workshopCount = actions.where(
       (a) =>
           a.endpoint == PendingEndpoint.workshopMulai ||
-          a.endpoint == PendingEndpoint.workshopSelesai,
+          a.endpoint == PendingEndpoint.workshopSelesai ||
+          a.endpoint == PendingEndpoint.workshopTodoPhoto ||
+          a.endpoint == PendingEndpoint.workshopRequestSparepart,
     ).length;
 
     // --- Inventory: opname ---

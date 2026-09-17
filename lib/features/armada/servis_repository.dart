@@ -1,13 +1,27 @@
+import 'package:uuid/uuid.dart';
+
 import '../../core/api_client.dart';
 import '../../core/api_response.dart';
+import '../../core/outbox/outbox_repository.dart';
+import '../../core/outbox/outbox_sync_service.dart';
+import '../../core/outbox/pending_action.dart';
 import 'models/servis_armada.dart';
 
 /// Repository modul Servis Armada (Section 21).
 /// Mengelola pengajuan servis, riwayat, detail, persetujuan/penolakan, dan master armada.
 class ServisRepository {
-  ServisRepository({required ApiClient api}) : _api = api;
+  ServisRepository({
+    required ApiClient api,
+    required OutboxRepository outbox,
+    required OutboxSyncService sync,
+  }) : _api = api,
+       _outbox = outbox,
+       _sync = sync;
 
   final ApiClient _api;
+  final OutboxRepository _outbox;
+  final OutboxSyncService _sync;
+  static const _uuid = Uuid();
 
   /// GET /master/armada — daftar semua armada untuk dropdown ajuan servis.
   Future<List<MasterArmada>> getMasterArmada() async {
@@ -27,27 +41,37 @@ class ServisRepository {
   }
 
   /// POST /servis-armada — Ajukan permohonan servis armada (Bagian 1).
-  Future<ServisArmada> submitAjuanServis({
+  /// Lewat outbox: offline → antrean, retry memakai Idempotency-Key yang
+  /// SAMA (route punya middleware idempotency) sehingga double-submit
+  /// dibalas respons asli, bukan membuat ajuan kedua.
+  Future<OutboxSendResult> submitAjuanServis({
     required String armadaId,
     required String keluhan,
     String? kategori,
     double? odometerSaatAjuan,
     double? jamOperasionalSaatAjuan,
   }) async {
-    final res = await _api.post<ServisArmada>(
-      '/servis-armada',
-      body: {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.servisAjuan,
+      payloadJson: const {},
+      payloadData: {
         'armada_id': armadaId,
         'keluhan': keluhan,
         'kategori': ?kategori,
         'odometer_saat_ajuan': ?odometerSaatAjuan,
         'jam_operasional_saat_ajuan': ?jamOperasionalSaatAjuan,
       },
-      parse: (raw) =>
-          ServisArmada.fromJson(Map<String, dynamic>.from(raw as Map)),
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
     );
-    _ensureSuccess(res);
-    return res.data!;
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(result.errorMessage ?? 'Gagal mengajukan servis.');
+    }
+    return result;
   }
 
   /// GET /servis-armada — Riwayat ajuan servis (paginasi).

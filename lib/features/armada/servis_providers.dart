@@ -2,11 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
+import '../presensi/presensi_providers.dart';
 import 'models/servis_armada.dart';
 import 'servis_repository.dart';
 
 final servisRepositoryProvider = Provider<ServisRepository>(
-  (ref) => ServisRepository(api: ref.watch(apiClientProvider)),
+  (ref) => ServisRepository(
+    api: ref.watch(apiClientProvider),
+    outbox: ref.watch(outboxRepositoryProvider),
+    sync: ref.watch(outboxSyncServiceProvider),
+  ),
 );
 
 // ---------------------------------------------------------------------------

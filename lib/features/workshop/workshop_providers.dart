@@ -11,7 +11,11 @@ import 'workshop_repository.dart';
 import 'workshop_rules.dart';
 
 final workshopRepositoryProvider = Provider<WorkshopRepository>(
-  (ref) => WorkshopRepository(api: ref.watch(apiClientProvider)),
+  (ref) => WorkshopRepository(
+    api: ref.watch(apiClientProvider),
+    outbox: ref.watch(outboxRepositoryProvider),
+    sync: ref.watch(outboxSyncServiceProvider),
+  ),
 );
 
 // ---------------------------------------------------------------------------
@@ -143,6 +147,20 @@ final workshopQueueProvider =
 final workshopJobDetailProvider = FutureProvider.autoDispose
     .family<WorkshopJobDetail, String>((ref, id) {
       return ref.watch(workshopRepositoryProvider).getDetailJob(id);
+    });
+
+/// Anti-duplikat foto bukti: true selama masih ada aksi outbox
+/// `workshopTodoPhoto` menunggu untuk kombinasi `(jobId, todoId)`
+/// (key = `"$jobId|$todoId"`). Blokir pengambilan ulang foto sampai
+/// aksi lama terkirim/dihapus.
+final pendingWorkshopTodoPhotoProvider = Provider.autoDispose
+    .family<bool, String>((ref, key) {
+      final actions = ref.watch(pendingActionsProvider).value ?? const [];
+      return actions.any(
+        (a) =>
+            a.endpoint == PendingEndpoint.workshopTodoPhoto &&
+            '${a.payloadJson['job_id']}|${a.payloadJson['todo_id']}' == key,
+      );
     });
 
 /// Hasil alur submit di detail job.

@@ -17,7 +17,10 @@ enum PendingEndpoint {
   workshopMulai('/servis-armada/{id}/mulai'),
   workshopSelesai('/servis-armada/{id}/selesai'),
   inventoryOpname('/inventory/opname'),
-  armadaChecklistMajor('/armada/checklist-major');
+  armadaChecklistMajor('/armada/checklist-major'),
+  servisAjuan('/servis-armada'),
+  workshopTodoPhoto('/workshop/job/{id}/todo/{todoId}/photo'),
+  workshopRequestSparepart('/workshop/job/{id}/request-sparepart');
 
   const PendingEndpoint(this.path);
 
@@ -34,7 +37,9 @@ enum PendingEndpoint {
       this == armadaRitase ||
       this == workshopMulai ||
       this == workshopSelesai ||
-      this == inventoryOpname;
+      this == inventoryOpname ||
+      this == servisAjuan ||
+      this == workshopRequestSparepart;
 
   /// Endpoint multipart generik `POST /upload` dengan field `files[]`
   /// (1-10 file, docs/api-mobile.md §11.1). `client_uuid` dikirim sebagai

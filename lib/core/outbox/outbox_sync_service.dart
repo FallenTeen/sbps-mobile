@@ -53,9 +53,10 @@ class OutboxSyncService {
           }
           path = '$path/$sessionId';
         }
-        // Workshop: path dinamis dengan id job di payload.
+        // Workshop & request sparepart: path dinamis dengan id job di payload.
         if (action.endpoint == PendingEndpoint.workshopMulai ||
-            action.endpoint == PendingEndpoint.workshopSelesai) {
+            action.endpoint == PendingEndpoint.workshopSelesai ||
+            action.endpoint == PendingEndpoint.workshopRequestSparepart) {
           final jobId = body.remove('job_id');
           if (jobId == null || jobId.toString().isEmpty) {
             return const OutboxSendResult(
@@ -77,6 +78,7 @@ class OutboxSyncService {
       }
 
       // Helper presensi: path dinamis /armada/helper/{helperId}/presensi.
+      // Foto bukti todo workshop: path /workshop/job/{jobId}/todo/{todoId}/photo.
       var multipartPath = action.endpoint.path;
       if (action.endpoint == PendingEndpoint.helperPresensi) {
         final helperId = action.payloadJson['helper_id'];
@@ -88,6 +90,17 @@ class OutboxSyncService {
           );
         }
         multipartPath = '/armada/helper/$helperId/presensi';
+      } else if (action.endpoint == PendingEndpoint.workshopTodoPhoto) {
+        final jobId = action.payloadJson['job_id'];
+        final todoId = action.payloadJson['todo_id'];
+        if (jobId == null || jobId.isEmpty || todoId == null || todoId.isEmpty) {
+          return const OutboxSendResult(
+            delivered: false,
+            permanentlyFailed: true,
+            errorMessage: 'ID job/todo foto hilang dari antrean.',
+          );
+        }
+        multipartPath = '/workshop/job/$jobId/todo/$todoId/photo';
       }
 
       final specs = switch (action.endpoint) {
@@ -156,6 +169,8 @@ class OutboxSyncService {
   }
 
   /// Proses semua aksi tertunda yang jatuh tempo (bukan sedang backoff).
+  /// [ignoreBackoff] = paksa kirim (tombol sync / retry manual):
+  /// melewati backoff DAN batas percobaan otomatis.
   Future<void> syncNow({bool ignoreBackoff = false}) async {
     if (_syncing) return;
     _syncing = true;
@@ -163,14 +178,18 @@ class OutboxSyncService {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
         if (!ignoreBackoff && _inBackoff(action)) continue;
-        if (action.retryCount >= _maxAttempts) continue;
+        if (!ignoreBackoff && action.retryCount >= _maxAttempts) continue;
 
         final result = await send(action);
         if (result.delivered) {
           await _repo.remove(action.id);
           AnalyticsService.outboxItemSynced();
-        } else {
+        } else if (result.permanentlyFailed) {
           await _repo.markFailed(action.id, result.errorMessage);
+          AnalyticsService.outboxItemFail();
+        } else {
+          // Offline / 5xx — retryable: tetap pending + backoff dilanjutkan.
+          await _repo.markRetryable(action.id, result.errorMessage);
           AnalyticsService.outboxItemFail();
         }
       }
@@ -190,13 +209,17 @@ class OutboxSyncService {
     return DateTime.now().isBefore(last.add(_backoffFor(action.retryCount)));
   }
 
-  /// Mulai listener konektivitas + timer periodik. Aman dipanggil ulang.
+  /// Mulai listener konektivitas + timer periodik + sync awal saat app dibuka.
+  /// Aman dipanggil ulang. [syncNow] awal tidak menunggu perubahan
+  /// konektivitas/timer 1 menit — data yang diantre sebelum app ditutup
+  /// langsung dicoba kirim saat app kembali dibuka (test: app open kembali).
   void start() {
     _connectivitySub ??= Connectivity().onConnectivityChanged.listen((results) {
       final online = results.any((r) => r != ConnectivityResult.none);
       if (online) syncNow();
     });
     _timer ??= Timer.periodic(const Duration(minutes: 1), (_) => syncNow());
+    unawaited(syncNow());
   }
 
   void dispose() {
