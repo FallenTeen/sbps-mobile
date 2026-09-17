@@ -7,17 +7,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/app_router.dart';
+import '../../core/push_token_service.dart';
+import '../../features/auth/auth_providers.dart';
+import '../../features/notifikasi/models/notification.dart';
+import '../../features/notifikasi/notifikasi_providers.dart';
 import 'notification_routes.dart';
 
-/// Handler untuk notification taps — navigate ke layar terkait.
+/// Handler for notification taps — navigate ke layar terkait.
 ///
 /// Mendukung 2 skenario:
 /// 1. App sudah terbuka (background) → onMessageOpenedApp
 /// 2. App dalam killed state → getInitialMessage
 ///
-/// Deep link berdasarkan `data` payload dari FCM:
-/// - `route`: path go_router (mis. `/armada/servis/123`)
-/// - `title`, `body`: info notifikasi
+/// Deep link diresolusi lewat `notification_routes.dart` dengan payload FCM:
+/// - `action_url` / `route` + `route_id`: path go_router tujuan
+/// - `notification_id`: id notifikasi untuk markRead best-effort (hanya
+///   dipakai bila ada; `id` di payload lama bisa berarti id record route)
 class NotificationHandler {
   NotificationHandler._();
 
@@ -25,10 +30,12 @@ class NotificationHandler {
 
   StreamSubscription<RemoteMessage>? _sub;
   bool _initialized = false;
+  WidgetRef? _ref;
 
   void initialize(WidgetRef ref) {
     if (_initialized) return;
     _initialized = true;
+    _ref = ref;
 
     final router = ref.read(appRouterProvider);
 
@@ -52,31 +59,63 @@ class NotificationHandler {
   }
 
   void _handleTap(GoRouter router, RemoteMessage message) {
-    final data = message.data;
-    final id = data['id']?.toString();
+    final messenger = rootScaffoldMessengerKey.currentState;
+    try {
+      final data = Map<String, dynamic>.from(message.data);
+      final resolved = resolveNotificationDestination(
+        notification: AppNotification(
+          id: data['notification_id']?.toString() ?? '',
+          isRead: false,
+          actionUrl: data['action_url']?.toString(),
+          route: data['route']?.toString(),
+          routeId:
+              data['route_id']?.toString() ?? data['id']?.toString(),
+        ),
+        role: _ref?.read(activeRoleProvider),
+      );
 
-    // Deep-link precision: route + id (pola sama dengan resolusi actionUrl
-    // di dalam NotifikasiScreen — lihat notification_routes.dart).
-    final specificRoute = fcmNotificationRoute(data['route']?.toString(), id);
-    if (specificRoute != null) {
-      // push (bukan go) supaya back stack tetap utuh — user bisa kembali
-      // ke layar sebelumnya setelah melihat tujuan notifikasi.
-      router.push(specificRoute);
-    } else if (data['screen'] != null) {
-      // Fallback: map screen name ke route.
-      final screen = data['screen'].toString();
-      final routeMap = <String, String>{
-        'armada': '/armada',
-        'servis': '/armada/servis',
-        'checklist': '/armada/checklist',
-        'dashboard': '/dashboard',
-        'notifikasi': '/notifikasi',
-      };
-      final target = routeMap[screen];
-      if (target != null) router.push(target);
-    } else {
-      // Default: buka daftar notifikasi.
-      router.push('/notifikasi');
+      switch (resolved.status) {
+        case NotificationTargetStatus.open:
+          // push (bukan go) supaya back stack tetap utuh — user bisa kembali
+          // ke layar sebelumnya setelah melihat tujuan notifikasi.
+          router.push(resolved.route!);
+          _markReadBestEffort(data);
+        case NotificationTargetStatus.openExternal:
+        case NotificationTargetStatus.unavailable:
+          router.push('/notifikasi');
+        case NotificationTargetStatus.deniedRole:
+          router.push('/notifikasi');
+          final messageText = notificationDestinationMessage(resolved);
+          if (messageText != null && messenger != null) {
+            messenger.showSnackBar(SnackBar(content: Text(messageText)));
+          }
+      }
+    } catch (error) {
+      debugPrint('[FCM] Navigation failed: $error');
+      try {
+        router.push('/notifikasi');
+      } catch (_) {
+        // Router belum siap — biarkan user tetap di layar sekarang.
+      }
+    }
+  }
+
+  /// Tandai dibaca best-effort. HANYA saat payload membawa `notification_id`
+  /// eksplisit — payload lama memakai `id` sebagai id record route, sehingga
+  /// menandai sembarangan bisa menandai record yang salah.
+  Future<void> _markReadBestEffort(Map<String, dynamic> data) async {
+    final notificationId = data['notification_id']?.toString();
+    if (notificationId == null || notificationId.isEmpty) return;
+    final ref = _ref;
+    if (ref == null) return;
+    try {
+      await ref
+          .read(notifikasiRepositoryProvider)
+          .markRead(notificationId);
+      ref.read(unreadCountProvider.notifier).reload();
+    } catch (error) {
+      // Best-effort saja — jaringan/read gagal tidak boleh mengganggu navigasi.
+      debugPrint('[FCM] markRead best-effort failed: $error');
     }
   }
 

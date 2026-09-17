@@ -40,7 +40,7 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
         state = AsyncData(
           NotificationsPage(
             items: current.items
-                .map((n) => n.id == notification.id ? _asRead(n) : n)
+                .map((n) => n.id == notification.id ? n.copyWith(isRead: true) : n)
                 .toList(),
             unreadCount: current.unreadCount > 0 ? current.unreadCount - 1 : 0,
           ),
@@ -53,15 +53,6 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
     }
   }
 
-  AppNotification _asRead(AppNotification n) => AppNotification(
-    id: n.id,
-    title: n.title,
-    body: n.body,
-    actionUrl: n.actionUrl,
-    isRead: true,
-    time: n.time,
-  );
-
   /// Tandai semua belum dibaca sebagai sudah dibaca: update lokal optimis,
   /// lalu sinkron berurutan ke server. Gagal jaringan tidak menggagalkan
   /// tampilan — state lokal tetap "dibaca", server tersinkron saat refresh.
@@ -73,7 +64,7 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
 
     state = AsyncData(
       NotificationsPage(
-        items: [for (final n in current.items) _asRead(n)],
+        items: [for (final n in current.items) n.copyWith(isRead: true)],
         unreadCount: 0,
       ),
     );

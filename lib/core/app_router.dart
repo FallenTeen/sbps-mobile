@@ -57,6 +57,76 @@ import '../features/presensi/riwayat_screen.dart';
 
 /// Router dengan auth guard: tanpa token → /login, sudah login → /home.
 /// Portal selection ditambahkan setelah login.
+
+/// Daftar lengkap path route app (pola go_router tanpa query).
+///
+/// Anchor audit deep-link notifikasi (`notification_routes.dart`): hanya path
+/// yang dikenali di sini yang bisa menjadi target `open`; path di luar itu
+/// berstatus `unavailable`. Param dinamis ditulis `:namaParam`.
+const kAppRoutePaths = <String>[
+  // Top-level.
+  '/login',
+  '/register',
+  '/portal',
+  '/profile',
+  '/data-belum-terkirim',
+  '/dokumentasi',
+  '/formulir',
+  // Branch 0 — Beranda.
+  '/home',
+  '/proyek-home',
+  // Branch 1 — Produksi.
+  '/produksi/sesi-aktif',
+  '/produksi/mulai',
+  '/produksi/riwayat',
+  '/produksi/progress',
+  // Branch 2 — QC.
+  '/qc',
+  '/qc/riwayat',
+  '/qc/riwayat/detail/:sampleId',
+  // Branch 3 — Tracking.
+  '/tracking/pengguna-aktif',
+  '/tracking/pengguna-aktif/hari-ini/:userId',
+  // Branch 4 — Dashboard Operasional.
+  '/dashboard',
+  '/dashboard/titik/:titikId',
+  // Branch 5 — Dashboard Finansial.
+  '/dashboard/keuangan',
+  '/dashboard/keuangan/po-pending',
+  '/dashboard/keuangan/invoice',
+  // Branch 6 — Armada.
+  '/armada',
+  '/armada/ritase',
+  '/armada/checklist',
+  '/armada/checklist-akhir',
+  '/armada/odo-awal',
+  '/armada/helper-presensi',
+  '/armada/overview',
+  '/armada/ritase-input',
+  '/armada/checklist-major',
+  '/armada/unit-saya',
+  '/armada/servis',
+  '/armada/servis/ajuan',
+  '/armada/servis/:id',
+  // Branch 7 — Kontraktor.
+  '/kontraktor/proyek',
+  '/kontraktor/proyek/:id',
+  // Branch 8 — Workshop.
+  '/workshop',
+  '/workshop/job/:id',
+  // Branch 9 — Inventory.
+  '/inventory',
+  '/inventory/stok',
+  '/inventory/stok/:id',
+  '/inventory/riwayat',
+  '/inventory/opname',
+  '/inventory/request/:id',
+  // Branch 10 — Presensi (universal).
+  '/presensi',
+  '/presensi/riwayat',
+  // Branch 11 — Notifikasi (universal).
+  '/notifikasi',
+];
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresher = _ChangeSignal();
   ref.listen(authControllerProvider, (_, _) => refresher.ping());

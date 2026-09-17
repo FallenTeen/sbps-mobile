@@ -15,6 +15,7 @@ import 'core/app_router.dart';
 import 'core/draft/draft_repository.dart';
 import 'core/push_token_service.dart';
 import 'features/presensi/presensi_providers.dart';
+import 'features/notifikasi/notifikasi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
 import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
@@ -77,7 +78,10 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
 
       // Setup foreground FCM handler.
       try {
-        FirebaseMessaging.onMessage.listen(firebaseMessagingForegroundHandler);
+        FirebaseMessaging.onMessage.listen((message) {
+          firebaseMessagingForegroundHandler(message);
+          ref.read(unreadCountProvider.notifier).reload();
+        });
       } catch (_) {
         // Firebase tidak terinisialisasi — skip.
       }

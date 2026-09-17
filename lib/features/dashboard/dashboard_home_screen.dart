@@ -808,11 +808,21 @@ class _ActivityTile extends ConsumerWidget {
   Future<void> _open(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
     await ref.read(notificationsProvider.notifier).markRead(notification);
+    if (!context.mounted) return;
 
-    final route = notificationActionRoute(notification.actionUrl);
-    if (route == null || !context.mounted) return;
+    final resolved = resolveNotificationDestination(
+      notification: notification,
+      role: ref.read(activeRoleProvider),
+    );
+    if (!resolved.actionable) {
+      final message = notificationDestinationMessage(resolved);
+      if (message != null) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+      return;
+    }
     try {
-      context.push(route);
+      context.push(resolved.route!);
     } on StateError {
       messenger.showSnackBar(
         const SnackBar(content: Text('Layar terkait belum tersedia.')),

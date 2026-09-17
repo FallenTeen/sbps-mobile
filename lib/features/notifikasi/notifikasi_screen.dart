@@ -14,13 +14,15 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/rich_list_tile.dart';
 import '../../shared/widgets/searchable_list_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
-import '../../core/formatters.dart';
+import '../auth/auth_providers.dart';
 import 'models/notification.dart';
 import 'notifikasi_providers.dart';
 
-/// Daftar notifikasi: status baca, tap → tandai dibaca lalu navigasi ke layar
-/// terkait (deep-link internal, bukan browser eksternal). Tersedia filter
-/// Semua/Belum Dibaca, "Tandai Semua Dibaca", dan pengelompokan tanggal.
+/// Pusat notifikasi (Phase 16 action center): filter kategori
+/// (Approval/Servis/Stok/Produksi/Presensi/Formulir/Sistem), status baca,
+/// dan tap → markRead lalu navigasi deep-link ke layar terkait. Destination
+/// yang tidak dikenali / tanpa hak akses tetap dibuka secara jelas (pesan
+/// snackbar) — bukan diam.
 class NotifikasiScreen extends ConsumerStatefulWidget {
   const NotifikasiScreen({super.key});
 
@@ -31,6 +33,7 @@ class NotifikasiScreen extends ConsumerStatefulWidget {
 class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
   bool _unreadOnly = false;
   String _searchQuery = '';
+  NotificationCategory? _category;
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +79,10 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
               )
               .toList();
 
+    final filtered = searched.where((n) => _category == null || n.category == _category);
     final visible = _unreadOnly
-        ? searched.where((n) => !n.isRead).toList()
-        : searched;
+        ? filtered.where((n) => !n.isRead).toList()
+        : filtered.toList();
 
     if (page.items.isEmpty) {
       return const AppEmptyState(
@@ -92,6 +96,17 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
         icon: Icons.search_off_outlined,
         title: 'Tidak Ada Hasil Pencarian',
         subtitle: 'Tidak ditemukan notifikasi yang cocok dengan pencarian.',
+      );
+    }
+    if (filtered.isEmpty) {
+      return AppEmptyState(
+        icon: Icons.filter_alt_off_outlined,
+        title: _category == null
+            ? 'Semua Sudah Dibaca'
+            : 'Belum Ada Notifikasi ${_category!.label}',
+        subtitle: _category == null
+            ? 'Tidak ada notifikasi baru yang belum dibuka.'
+            : 'Silakan cek kategori lain atau segarkan daftar.',
       );
     }
     if (visible.isEmpty) {
@@ -111,9 +126,12 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
           hintText: 'Cari notifikasi...',
           onChanged: (v) => setState(() => _searchQuery = v),
           child: _FilterBar(
+            category: _category,
             unreadOnly: _unreadOnly,
             unreadCount: unreadCount,
-            onChanged: (value) => setState(() => _unreadOnly = value),
+            items: page.items,
+            onCategory: (c) => setState(() => _category = c),
+            onUnreadOnly: (value) => setState(() => _unreadOnly = value),
             onMarkAll: unreadCount == 0
                 ? null
                 : () => ref.read(notificationsProvider.notifier).markAllRead(),
@@ -173,44 +191,117 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
 
 class _FilterBar extends StatelessWidget {
   const _FilterBar({
+    required this.category,
     required this.unreadOnly,
     required this.unreadCount,
-    required this.onChanged,
+    required this.items,
+    required this.onCategory,
+    required this.onUnreadOnly,
     required this.onMarkAll,
   });
 
+  final NotificationCategory? category;
   final bool unreadOnly;
   final int unreadCount;
-  final ValueChanged<bool> onChanged;
+  final List<AppNotification> items;
+  final ValueChanged<NotificationCategory?> onCategory;
+  final ValueChanged<bool> onUnreadOnly;
   final VoidCallback? onMarkAll;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          ChoiceChip(
-            label: const Text('Semua'),
-            selected: !unreadOnly,
-            onSelected: (_) => onChanged(false),
+    final counts = <NotificationCategory, int>{};
+    for (final n in items) {
+      counts.update(n.category, (v) => v + 1, ifAbsent: () => 1);
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ChoiceChip(
+                label: Text('Semua (${items.length})'),
+                selected: category == null,
+                onSelected: (_) => onCategory(null),
+              ),
+              for (final c in NotificationCategory.values) ...[
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  avatar: Icon(
+                    categoryVisual(c).icon,
+                    size: 16,
+                    color: categoryVisual(c).color,
+                  ),
+                  label: Text('${c.label} (${counts[c] ?? 0})'),
+                  selected: category == c,
+                  onSelected: (_) => onCategory(c),
+                ),
+              ],
+            ],
           ),
-          ChoiceChip(
-            label: Text('Belum Dibaca ($unreadCount)'),
-            selected: unreadOnly,
-            onSelected: (_) => onChanged(true),
-          ),
-          TextButton.icon(
-            onPressed: onMarkAll,
-            icon: const Icon(Icons.done_all, size: 18),
-            label: const Text('Tandai semua'),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            ChoiceChip(
+              label: Text('Belum Dibaca ($unreadCount)'),
+              selected: unreadOnly,
+              onSelected: (v) => onUnreadOnly(v),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: onMarkAll,
+              icon: const Icon(Icons.done_all, size: 18),
+              label: const Text('Tandai semua'),
+            ),
+          ],
+        ),
+      ],
     );
+  }
+}
+
+/// Visual kategori: ikon + warna. Dipisah di layar (bukan di model) supaya
+/// enum model tetap bebas Flutter dan mudah diuji.
+class CategoryVisual {
+  const CategoryVisual(this.icon, this.color);
+  final IconData icon;
+  final Color color;
+}
+
+CategoryVisual categoryVisual(NotificationCategory c) {
+  // Dipanggil dalam build — warna mengikuti tema via context.
+  switch (c) {
+    case NotificationCategory.approval:
+      return CategoryVisual(
+        Icons.approval_outlined,
+        Color(0xFFF59E0B),
+      );
+    case NotificationCategory.servis:
+      return CategoryVisual(Icons.build_outlined, Color(0xFF6366F1));
+    case NotificationCategory.stok:
+      return CategoryVisual(
+        Icons.inventory_2_outlined,
+        Color(0xFF3B82F6),
+      );
+    case NotificationCategory.produksi:
+      return CategoryVisual(
+        Icons.precision_manufacturing_outlined,
+        Color(0xFFDC2626),
+      );
+    case NotificationCategory.presensi:
+      return CategoryVisual(Icons.fingerprint, Color(0xFF10B981));
+    case NotificationCategory.formulir:
+      return CategoryVisual(
+        Icons.description_outlined,
+        Color(0xFF059669),
+      );
+    case NotificationCategory.sistem:
+      return CategoryVisual(Icons.campaign_outlined, Color(0xFF64748B));
   }
 }
 
@@ -233,25 +324,26 @@ class _Tile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final unread = !notification.isRead;
+    final visual = categoryVisual(notification.category);
 
     return RichListTile(
       title: notification.title ?? '(Tanpa judul)',
       subtitle: (notification.body ?? '').isNotEmpty ? notification.body : null,
-      meta: notification.time != null ? fmtRelatif(notification.time!) : null,
-      metaColor: colors.textTertiary,
+      meta: notification.category.label,
+      metaColor: visual.color,
       leading: Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: (unread ? colors.primary : colors.textMuted).withValues(
+          color: (unread ? visual.color : colors.textMuted).withValues(
             alpha: 0.12,
           ),
           shape: BoxShape.circle,
         ),
         child: Icon(
-          unread ? Icons.notifications_active : Icons.notifications_outlined,
+          visual.icon,
           size: 20,
-          color: unread ? colors.primary : colors.textMuted,
+          color: unread ? visual.color : colors.textMuted,
         ),
       ),
       trailing: unread
@@ -278,33 +370,42 @@ class _Tile extends ConsumerWidget {
       messenger.showSnackBar(SnackBar(content: Text(error)));
       return;
     }
-    ref.read(unreadCountProvider.notifier).reload();
+    if (!context.mounted) return;
 
-    final actionUrl = notification.actionUrl;
-    if (actionUrl == null || actionUrl.isEmpty || !context.mounted) return;
+    final resolved = resolveNotificationDestination(
+      notification: notification,
+      role: ref.read(activeRoleProvider),
+    );
 
-    final route = notificationActionRoute(actionUrl);
-    if (route != null) {
-      // Deep-link internal: push (bukan go) supaya back stack tetap utuh —
-      // user bisa kembali ke daftar notifikasi.
-      try {
-        context.push(route);
-      } on StateError {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Layar terkait belum tersedia.')),
+    switch (resolved.status) {
+      case NotificationTargetStatus.open:
+        // Deep-link internal: push (bukan go) supaya back stack tetap utuh —
+        // user bisa kembali ke daftar notifikasi.
+        try {
+          context.push(resolved.route!);
+        } on StateError {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Layar terkait belum tersedia.')),
+          );
+        }
+      case NotificationTargetStatus.openExternal:
+        final uri = Uri.tryParse(resolved.externalUrl ?? '');
+        if (uri == null) return;
+        final opened = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
         );
-      }
-      return;
-    }
-
-    // Bukan tautan internal — buka eksternal sebagai fallback.
-    final uri = Uri.tryParse(actionUrl);
-    if (uri == null) return;
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka tautan.')),
-      );
+        if (!opened) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Tidak dapat membuka tautan.')),
+          );
+        }
+      case NotificationTargetStatus.deniedRole:
+      case NotificationTargetStatus.unavailable:
+        final message = notificationDestinationMessage(resolved);
+        if (message != null) {
+          messenger.showSnackBar(SnackBar(content: Text(message)));
+        }
     }
   }
 }
