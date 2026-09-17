@@ -8,20 +8,30 @@ import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/models/titik.dart';
 import '../titik/titik_map_view.dart';
+import '../inventory/inventory_models.dart';
+import '../inventory/inventory_providers.dart';
+import '../notifikasi/models/notification.dart';
+import '../notifikasi/notifikasi_providers.dart';
+import '../proyek/role_permissions.dart';
 import 'dashboard_providers.dart';
+import 'dashboard_rules.dart';
 import 'detail_titik_screen.dart';
 import 'fmt.dart';
 import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
+import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
-/// Dashboard operasional per role (Fase A2.6):
-/// - Owner/Admin Keuangan: overview + armada + kehadiran divisi +
-///   chart produksi + shortcut finansial.
-/// - Mandor Titik: overview + armada status (non-finansial).
-/// - Kontraktor: overview non-finansial saja.
+/// Dashboard operasional per role (Phase 15 — attention-first):
+///
+/// 1. Perlu Perhatian   — item actionable (servis, PO, invoice, stok kritis,
+///                        produksi menunggu QC). Angka hanya tampil bila ADA
+///                        drill-down; item = 0 tidak dimunculkan.
+/// 2. Operasional Hari Ini — overview titik, armada, kehadiran, chart.
+/// 3. Ringkasan Finansial   — chart keuangan, PO pending, invoice.
+/// 4. Aktivitas Terbaru     — notifikasi terbaru (real, tap → layar terkait).
 class DashboardHomeScreen extends ConsumerWidget {
   const DashboardHomeScreen({super.key});
 
@@ -43,6 +53,15 @@ class DashboardHomeScreen extends ConsumerWidget {
           if (sections.showChartProduksi) {
             ref.invalidate(produksiChartProvider);
           }
+          if (RolePermissions.isAdminLike(role)) {
+            ref.invalidate(poPendingProvider);
+            ref.invalidate(invoiceBelumDibayarProvider);
+            if (role == 'Owner') ref.invalidate(inventorySummaryProvider);
+          }
+          if (role == 'Mandor Titik') {
+            ref.invalidate(produksiMenungguQcProvider);
+          }
+          ref.read(notificationsProvider.notifier).refresh();
           await Future<void>.delayed(const Duration(milliseconds: 300));
         },
         child: ResponsiveCenter(
@@ -51,6 +70,9 @@ class DashboardHomeScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
+              const _SectionAttention(),
+              const SizedBox(height: 20),
+              const _SectionLabel(text: 'Operasional Hari Ini'),
               if (sections.showOverview) ...[
                 const _SectionOverview(),
                 const SizedBox(height: 20),
@@ -65,7 +87,10 @@ class DashboardHomeScreen extends ConsumerWidget {
               ],
               if (sections.showChartProduksi) ...[
                 const _SectionChartProduksi(),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
+              ],
+              if (sections.showFinancial) ...[
+                const _SectionLabel(text: 'Ringkasan Finansial'),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.payments_outlined),
@@ -78,15 +103,171 @@ class DashboardHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-              ],
-              if (sections.showFinancial) ...[
                 const _PoPendingCard(),
                 const SizedBox(height: 8),
                 const _InvoiceCard(),
+                const SizedBox(height: 20),
               ],
+              const _SectionLabel(text: 'Aktivitas Terbaru'),
+              const _SectionRecentActivity(),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Judul section
+// ---------------------------------------------------------------------------
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: context.colors.textPrimary,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section 1: Perlu Perhatian (attention-first, actionable)
+// ---------------------------------------------------------------------------
+
+class _SectionAttention extends ConsumerWidget {
+  const _SectionAttention();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(activeRoleProvider);
+    final admin = RolePermissions.isAdminLike(role);
+
+    final AsyncValue<ArmadaStatusData>? armada =
+        admin ? ref.watch(armadaStatusProvider) : null;
+    final AsyncValue<PoPendingPage>? po =
+        admin ? ref.watch(poPendingProvider) : null;
+    final AsyncValue<InvoicePendingPage>? invoice =
+        admin ? ref.watch(invoiceBelumDibayarProvider) : null;
+    final AsyncValue<InventorySummary>? stok =
+        role == 'Owner' ? ref.watch(inventorySummaryProvider) : null;
+    final AsyncValue<int>? qc =
+        role == 'Mandor Titik' ? ref.watch(produksiMenungguQcProvider) : null;
+
+    final asyncs = <AsyncValue>[
+      ?armada,
+      ?po,
+      ?invoice,
+      ?stok,
+      ?qc,
+    ];
+
+    final counts = AttentionCounts(
+      servis: _servisCount(armada?.value),
+      poPending: po?.value?.items.length ?? 0,
+      invoice: invoice?.value?.items.length ?? 0,
+      stokKritis: stok?.value?.stokRendahCount ?? 0,
+      produksiMenungguQc: qc?.value ?? 0,
+    );
+
+    return SectionCard(
+      title: 'Perlu Perhatian',
+      child: asyncs.isEmpty
+          ? const EmptyHint(text: 'Tidak ada yang butuh perhatian saat ini.')
+          : asyncs.any((a) => a.isLoading)
+          ? const CenteredProgress()
+          : asyncs.any((a) => a.hasError)
+          ? ErrorRetry(
+              message: _firstError(asyncs),
+              onRetry: () {
+                ref.invalidate(armadaStatusProvider);
+                ref.invalidate(poPendingProvider);
+                ref.invalidate(invoiceBelumDibayarProvider);
+                ref.invalidate(inventorySummaryProvider);
+                ref.invalidate(produksiMenungguQcProvider);
+              },
+            )
+          : _AttentionList(items: attentionItemsFor(role, counts)),
+    );
+  }
+
+  static int _servisCount(ArmadaStatusData? d) {
+    if (d == null) return 0;
+    for (final item in d.items) {
+      if (item.status == 'servis') return item.jumlah;
+    }
+    return 0;
+  }
+
+  static String _firstError(List<AsyncValue> asyncs) {
+    for (final a in asyncs) {
+      if (!a.hasError) continue;
+      final e = a.error;
+      if (e is ApiException) return e.message;
+    }
+    return 'Gagal memuat data dashboard.';
+  }
+}
+
+class _AttentionList extends StatelessWidget {
+  const _AttentionList({required this.items});
+
+  final List<AttentionItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const EmptyHint(text: 'Tidak ada yang butuh perhatian saat ini.');
+    }
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _AttentionCard(item: items[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _AttentionCard extends StatelessWidget {
+  const _AttentionCard({required this.item});
+
+  final AttentionItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (item.tone) {
+      AttentionTone.critical => Theme.of(context).colorScheme.error,
+      AttentionTone.warning => Colors.orange.shade800,
+      AttentionTone.info => Theme.of(context).colorScheme.primary,
+    };
+    return Card(
+      child: ListTile(
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(item.icon, color: color, size: 21),
+        ),
+        title: Text(
+          item.label,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(item.subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(item.route),
       ),
     );
   }
@@ -272,7 +453,7 @@ class _MiniChip extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Section: Status armada
+// Section: Status armada (tap → overview armada, bukan dead-end)
 // ---------------------------------------------------------------------------
 
 class _SectionArmada extends ConsumerWidget {
@@ -284,6 +465,11 @@ class _SectionArmada extends ConsumerWidget {
 
     return SectionCard(
       title: 'Status Armada',
+      trailing: TextButton.icon(
+        onPressed: () => context.push('/armada/overview'),
+        icon: const Icon(Icons.open_in_new, size: 16),
+        label: const Text('Overview'),
+      ),
       child: status.when(
         loading: () => const CenteredProgress(),
         error: (e, _) => ErrorRetry(
@@ -324,6 +510,15 @@ class _SectionArmada extends ConsumerWidget {
                     ],
                   ),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Ketuk "Overview" untuk daftar unit & status per titik.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.colors.textTertiary,
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -524,5 +719,104 @@ class _InvoiceCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section: Aktivitas Terbaru (notifikasi terbaru, real + drill-down)
+// ---------------------------------------------------------------------------
+
+class _SectionRecentActivity extends ConsumerWidget {
+  const _SectionRecentActivity();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(notificationsProvider);
+
+    return SectionCard(
+      title: 'Aktivitas Terbaru',
+      trailing: TextButton(
+        onPressed: () => context.push('/notifikasi'),
+        child: const Text('Lihat semua'),
+      ),
+      child: async.when(
+        loading: () => const CenteredProgress(),
+        error: (e, _) => ErrorRetry(
+          message: e is ApiException ? e.message : 'Gagal memuat aktivitas.',
+          onRetry: () => ref.read(notificationsProvider.notifier).refresh(),
+        ),
+        data: (page) {
+          if (page.items.isEmpty) {
+            return const EmptyHint(text: 'Belum ada aktivitas tercatat.');
+          }
+          return Column(
+            children: [
+              for (final n in page.items.take(5)) _ActivityTile(notification: n),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ActivityTile extends ConsumerWidget {
+  const _ActivityTile({required this.notification});
+
+  final AppNotification notification;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = !notification.isRead;
+    final body = notification.body;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor:
+            unread
+                ? context.colors.primary.withValues(alpha: 0.14)
+                : Colors.grey.shade200,
+        child: Icon(
+          Icons.circle_notifications_outlined,
+          size: 20,
+          color: unread ? context.colors.primary : Colors.grey.shade600,
+        ),
+      ),
+      title: Text(
+        notification.title ?? '(Tanpa judul)',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: unread ? FontWeight.w700 : FontWeight.normal,
+        ),
+      ),
+      subtitle: body == null || body.isEmpty
+          ? null
+          : Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
+      trailing: notification.time == null
+          ? null
+          : Text(
+              fmtRelatif(notification.time),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+      onTap: () => _open(context, ref),
+    );
+  }
+
+  Future<void> _open(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(notificationsProvider.notifier).markRead(notification);
+
+    final route = notificationActionRoute(notification.actionUrl);
+    if (route == null || !context.mounted) return;
+    try {
+      context.push(route);
+    } on StateError {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Layar terkait belum tersedia.')),
+      );
+    }
   }
 }

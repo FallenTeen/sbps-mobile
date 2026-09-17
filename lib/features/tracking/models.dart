@@ -36,12 +36,17 @@ class TrackPoint {
   };
 }
 
-/// Item GET /tracking/active-users — user dengan GPS dalam 1 jam terakhir.
+/// Item GET /tracking/active-users — karyawan yang masih ber-presensi aktif
+/// hari ini beserta status GPS aktual dari server:
+/// [titik], [aktifSejak] (waktu check-in), [lastSeen] (GPS terakhir hari ini,
+/// null bila belum ada), [pointCount] (titik GPS hari ini).
 class ActiveUser {
   const ActiveUser({
     required this.userId,
     required this.nama,
     this.karyawanId,
+    this.titik,
+    this.aktifSejak,
     this.lastSeen,
     this.pointCount = 0,
   });
@@ -49,15 +54,28 @@ class ActiveUser {
   final String userId;
   final String nama;
   final String? karyawanId;
+
+  /// Titik kerja dari presensi aktif (nama), bila tersedia dari server.
+  final String? titik;
+
+  /// Waktu check-in yang masih aktif — dasar teks "aktif sejak".
+  final DateTime? aktifSejak;
+
+  /// Timestamp lokasi GPS TERAKHIR hari ini. Null = belum ada GPS tercatat.
   final DateTime? lastSeen;
   final int pointCount;
 
   factory ActiveUser.fromJson(Map<String, dynamic> json) {
     final lastSeenRaw = json['last_seen']?.toString();
+    final aktifSejakRaw = json['aktif_sejak']?.toString();
     return ActiveUser(
       userId: json['user_id']?.toString() ?? '',
       nama: json['nama']?.toString() ?? '',
       karyawanId: json['karyawan_id']?.toString(),
+      titik: json['titik']?.toString(),
+      aktifSejak: aktifSejakRaw == null || aktifSejakRaw.isEmpty
+          ? null
+          : DateTime.tryParse(aktifSejakRaw),
       lastSeen: lastSeenRaw == null || lastSeenRaw.isEmpty
           ? null
           : DateTime.tryParse(lastSeenRaw),

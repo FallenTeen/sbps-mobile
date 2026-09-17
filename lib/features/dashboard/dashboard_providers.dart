@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_providers.dart';
+import '../qc/qc_providers.dart';
 import 'dashboard_repository.dart';
 import 'models.dart';
 
@@ -51,6 +52,16 @@ final invoiceBelumDibayarProvider =
       (ref) => ref.watch(dashboardRepositoryProvider).getInvoiceBelumDibayar(),
     );
 
+/// Sesi produksi selesai yang belum punya sampel QC (menunggu_hasil) — total
+/// EXACT dari pagination server (1 halaman, tanpa muat seluruh antrian).
+/// Dipakai kartu "Produksi Menunggu QC" di dashboard Mandor Titik.
+final produksiMenungguQcProvider = FutureProvider.autoDispose<int>((ref) async {
+  final page = await ref
+      .watch(qcRepositoryProvider)
+      .getRiwayat(status: 'menunggu_hasil', perPage: 50, page: 1);
+  return page.total;
+});
+
 final titikDetailProvider = FutureProvider.autoDispose
     .family<TitikDetail, String>(
       (ref, titikId) =>
@@ -86,10 +97,15 @@ class RoleAccess {
       role == 'Owner' || role == 'Admin Keuangan';
 
   static bool canSeeOverview(String? role) =>
-      isAdminLike(role) || role == 'Mandor Titik' || role == 'Kontraktor';
+      isAdminLike(role) ||
+      role == 'Mandor Titik' ||
+      role == 'Kontraktor' ||
+      role == 'Kepala Divisi Armada';
 
+  /// Armada hanya untuk role yang punya modul armada (tap → /armada/overview).
+  /// Mandor Titik TIDAK ditampilkan: kartu tanpa drill-down = dead-end.
   static bool canSeeArmadaStatus(String? role) =>
-      isAdminLike(role) || role == 'Mandor Titik';
+      isAdminLike(role) || role == 'Kepala Divisi Armada';
 }
 
 class DashboardSections {
