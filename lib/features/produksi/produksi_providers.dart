@@ -229,8 +229,9 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     String? titikId,
     String? catatan,
   }) async {
-    if (state.busy)
+    if (state.busy) {
       return const ProduksiSubmitResult(error: 'Sedang memproses.');
+    }
 
     final action = PendingAction(
       id: _uuid.v4(),
@@ -283,8 +284,9 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     String? catatan,
     List<({String bahanBakuId, double jumlahTerpakai})> items = const [],
   }) async {
-    if (state.busy)
+    if (state.busy) {
       return const ProduksiSubmitResult(error: 'Sedang memproses.');
+    }
 
     final action = PendingAction(
       id: _uuid.v4(),
