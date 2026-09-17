@@ -118,30 +118,31 @@ class PendingSummary {
   bool _canAccessArmada(String role) => [
         'Driver Armada',
         'Kepala Divisi Armada',
+        'Ketua Divisi Armada',
+        'Ketua Armada',
         'Owner',
         'Admin Keuangan',
       ].contains(role);
 
   bool _canAccessProduksi(String role) =>
-      ['Mandor Titik', 'Owner'].contains(role);
+      ['Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
 
   bool _canAccessWorkshop(String role) =>
       ['Workshop', 'Owner'].contains(role);
 
   bool _canAccessQC(String role) =>
-      ['Mandor Titik', 'Owner'].contains(role);
+      ['Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
 
   bool _canAccessInventory(String role) =>
       ['Inventory', 'Owner', 'Mandor Titik'].contains(role);
 
   bool _canAccessFormulir(String role) =>
-      ['Driver Armada', 'Mandor Titik', 'Owner'].contains(role);
+      ['Driver Armada', 'Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
 
   bool _canAccessUpload(String role) =>
       ['Owner', 'Admin Keuangan'].contains(role);
 
-  bool _canAccessPresensi(String role) =>
-      ['Driver Armada', 'Mandor Titik', 'Owner'].contains(role);
+  bool _canAccessPresensi(String role) => true;
 }
 
 /// Jumlah item pending yang perlu dikerjakan, per modul.

@@ -824,6 +824,44 @@ class _QuickActions extends StatelessWidget {
             route: '/qc',
           ),
         ];
+      case 'Operator Mesin':
+        return [
+          _QuickAction(
+            icon: Icons.play_circle,
+            label: 'Mulai Sesi',
+            route: '/produksi/mulai',
+          ),
+          _QuickAction(
+            icon: Icons.timelapse,
+            label: 'Sesi Aktif',
+            route: '/produksi/sesi-aktif',
+          ),
+          _QuickAction(
+            icon: Icons.science,
+            label: 'QC Test',
+            route: '/qc',
+          ),
+        ];
+      case 'Kepala Divisi Armada':
+      case 'Ketua Divisi Armada':
+      case 'Ketua Armada':
+        return [
+          _QuickAction(
+            icon: Icons.analytics,
+            label: 'Overview',
+            route: '/armada/overview',
+          ),
+          _QuickAction(
+            icon: Icons.build,
+            label: 'Approval Servis',
+            route: '/armada/servis',
+          ),
+          _QuickAction(
+            icon: Icons.route,
+            label: 'Riwayat Muatan',
+            route: '/armada/ritase',
+          ),
+        ];
       case 'Workshop':
         return [
           _QuickAction(

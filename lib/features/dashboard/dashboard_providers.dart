@@ -96,16 +96,21 @@ class RoleAccess {
   static bool isAdminLike(String? role) =>
       role == 'Owner' || role == 'Admin Keuangan';
 
+  static bool isKetuaArmada(String? role) =>
+      role == 'Kepala Divisi Armada' ||
+      role == 'Ketua Divisi Armada' ||
+      role == 'Ketua Armada';
+
   static bool canSeeOverview(String? role) =>
       isAdminLike(role) ||
       role == 'Mandor Titik' ||
       role == 'Kontraktor' ||
-      role == 'Kepala Divisi Armada';
+      isKetuaArmada(role);
 
   /// Armada hanya untuk role yang punya modul armada (tap → /armada/overview).
   /// Mandor Titik TIDAK ditampilkan: kartu tanpa drill-down = dead-end.
   static bool canSeeArmadaStatus(String? role) =>
-      isAdminLike(role) || role == 'Kepala Divisi Armada';
+      isAdminLike(role) || isKetuaArmada(role);
 }
 
 class DashboardSections {

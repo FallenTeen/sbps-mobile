@@ -258,6 +258,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           armadaId: record.armadaId,
           jumlahRit: record.jumlah,
           satuanVolume: record.satuanVolume,
+          titikId: record.titikId,
+          proyekId: record.proyekId,
           catatan: record.catatan,
           odoPerTrip: record.odoPerTrip,
           clientUuid: record.clientUuid,
@@ -319,7 +321,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     await _saveRecords();
     if (mounted) {
       if (targets.length == 1) {
-        _showSubmitSummary(targets.first.index, delivered, queued, failed);
+        _showSubmitSummary(targets.first.index, delivered, queued, failed, firstFail);
       }
       // Riwayat tab mengambil dari server — segarkan setelah ada yang terkirim.
       if (delivered > 0) ref.invalidate(ritaseRiwayatProvider);
@@ -354,6 +356,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                 armadaId: record.armadaId,
                 jumlahRit: record.jumlah,
                 satuanVolume: record.satuanVolume,
+                titikId: record.titikId,
+                proyekId: record.proyekId,
                 catatan: record.catatan,
                 odoPerTrip: record.odoPerTrip,
                 clientUuid: record.clientUuid,
@@ -394,9 +398,9 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         } catch (e) {
           failed++;
           final msg = friendlyErrorMessage(
-          e,
-          fallback: 'Terjadi kesalahan sistem. Coba lagi.',
-        );
+            e,
+            fallback: 'Terjadi kesalahan sistem. Coba lagi.',
+          );
           firstFail ??= msg;
           final idx = _records.indexWhere((r) => r.id == record.id);
           if (idx >= 0) {
@@ -419,15 +423,15 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       HapticFeedback.lightImpact();
       if (failed == 0 && queued == 0) {
         _snack('$delivered muatan berhasil dikirim ke server.');
-      } else if (failed == 0) {
+      } else if (failed == 0 && delivered > 0) {
         _snack(
-          '$delivered muatan terkirim, $queued menunggu sinkron '
-          '(akan dikirim saat online).',
+          '$delivered muatan terkirim, $queued disimpan di antrean offline.',
         );
+      } else if (failed == 0) {
+        _snack('$queued muatan tersimpan di antrean (akan disinkronkan saat online).');
       } else {
         _snack(
-          '$delivered terkirim, $queued menunggu sinkron, $failed gagal — '
-          'cek badge per muatan. $firstFail',
+          'Gagal mengirim: $firstFail',
         );
       }
     }
@@ -438,13 +442,14 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     int delivered,
     int queued,
     int failed,
+    String? errorMsg,
   ) {
     if (failed > 0) {
-      _snack('Muatan #$index gagal dikirim. Ketuk "Coba Lagi".');
+      _snack('Muatan #$index gagal: ${errorMsg ?? "Periksa koneksi lalu coba lagi"}');
     } else if (queued > 0) {
-      _snack('Muatan #$index tersimpan, menunggu sinkron saat online.');
+      _snack('Muatan #$index tersimpan di perangkat (antrean sinkronisasi).');
     } else {
-      _snack('Muatan #$index terkirim ke server.');
+      _snack('Muatan #$index berhasil dikirim ke server.');
     }
   }
 
@@ -1196,6 +1201,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
       armadaPlat: armada.platNomor,
       armadaJenis: armada.jenis,
       isAlatBerat: armada.isAlatBerat,
+      titikId: armada.titikId,
       jumlah: jumlah,
       satuan: _satuan,
       catatan: _catatanCtrl.text.trim().isEmpty
@@ -1368,7 +1374,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
 }
 
 // ---------------------------------------------------------------------------
-// Review sheet (payload preview)
+// Review sheet (detail muatan terstruktur)
 // ---------------------------------------------------------------------------
 
 class _ReviewSheet extends StatelessWidget {
@@ -1378,7 +1384,13 @@ class _ReviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final payload = record.toPayload();
+    final statusColor = switch (record.status) {
+      RitaseRecordStatus.synced => context.colors.success,
+      RitaseRecordStatus.queued => context.colors.warning,
+      RitaseRecordStatus.failed => context.colors.error,
+      RitaseRecordStatus.draft => Colors.blueGrey,
+    };
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: SingleChildScrollView(
@@ -1390,7 +1402,7 @@ class _ReviewSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Review Muatan #${record.index}',
+                    'Detail Muatan #${record.index}',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -1398,6 +1410,23 @@ class _ReviewSheet extends StatelessWidget {
                     ),
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    record.status.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -1406,52 +1435,79 @@ class _ReviewSheet extends StatelessWidget {
             ),
             const Divider(height: 1),
             const SizedBox(height: 16),
-            _ReviewRow(
-              label: 'Kendaraan',
-              value: '${record.armadaPlat ?? '-'}${record.armadaJenis != null ? ' • ${_labelJenis(record.armadaJenis)}' : ''}',
-            ),
-            _ReviewRow(
-              label: 'Jumlah',
-              value: '${record.jumlah} ${record.satuan}',
-            ),
-            _ReviewRow(
-              label: 'Satuan server',
-              value: record.satuanVolume,
-            ),
-            if (record.catatan != null && record.catatan!.isNotEmpty)
-              _ReviewRow(label: 'Catatan', value: record.catatan!),
-            _ReviewRow(
-              label: 'ODO per trip',
-              value: record.odoPerTrip == null
-                  ? 'Tidak dikirim (kosong)'
-                  : fmtOdo(record.odoPerTrip!),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Payload yang dikirim • ${record.status.label}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: context.colors.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 8),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: context.colors.surfaceVariant.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10),
+                color: context.colors.surfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.colors.border),
               ),
-              child: Text(
-                _prettyJson(payload),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.colors.textSecondary,
-                  fontFamily: 'monospace',
+              child: Column(
+                children: [
+                  _ReviewRow(
+                    label: 'Kendaraan',
+                    value: '${record.armadaPlat ?? '-'}${record.armadaJenis != null ? ' • ${_labelJenis(record.armadaJenis)}' : ''}',
+                  ),
+                  const Divider(height: 12),
+                  _ReviewRow(
+                    label: 'Jumlah Muatan',
+                    value: '${record.jumlah} ${record.satuan}',
+                  ),
+                  const Divider(height: 12),
+                  _ReviewRow(
+                    label: 'Satuan Sistem',
+                    value: record.satuanVolume,
+                  ),
+                  if (record.odoPerTrip != null) ...[
+                    const Divider(height: 12),
+                    _ReviewRow(
+                      label: 'ODO Per Trip',
+                      value: '${fmtOdo(record.odoPerTrip!)} km',
+                    ),
+                  ],
+                  if (record.catatan != null && record.catatan!.trim().isNotEmpty) ...[
+                    const Divider(height: 12),
+                    _ReviewRow(
+                      label: 'Catatan',
+                      value: record.catatan!.trim(),
+                    ),
+                  ],
+                  const Divider(height: 12),
+                  _ReviewRow(
+                    label: 'Waktu Input',
+                    value: '${fmtTanggal(record.createdAt.toIso8601String())} ${record.createdAt.hour.toString().padLeft(2, '0')}:${record.createdAt.minute.toString().padLeft(2, '0')}',
+                  ),
+                ],
+              ),
+            ),
+            if (record.errorMessage != null && record.errorMessage!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.colors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: context.colors.error.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.error_outline, color: context.colors.error, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        record.errorMessage!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.colors.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -1468,12 +1524,12 @@ class _ReviewRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 110,
+            width: 120,
             child: Text(
               label,
               style: TextStyle(
@@ -1485,24 +1541,15 @@ class _ReviewRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textPrimary,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-String _prettyJson(Map<String, dynamic> map) {
-  final buf = StringBuffer('{\n');
-  final entries = map.entries.toList();
-  for (var i = 0; i < entries.length; i++) {
-    final e = entries[i];
-    buf.write('  "${e.key}": ${e.value is String ? '"${e.value}"' : e.value}');
-    if (i < entries.length - 1) buf.write(',');
-    buf.write('\n');
-  }
-  buf.write('}');
-  return buf.toString();
 }

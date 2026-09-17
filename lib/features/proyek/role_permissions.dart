@@ -79,8 +79,11 @@ class RolePermissions {
     },
     'Driver Armada': {'armada'},
     'Kepala Divisi Armada': {'armada', 'dashboard'},
+    'Ketua Divisi Armada': {'armada', 'dashboard'},
+    'Ketua Armada': {'armada', 'dashboard'},
     'Workshop': {'workshop'},
     'Inventory': {'inventory'},
+    'Operator Mesin': {'produksi', 'qc'},
   };
 
   static Set<String> modulesFor(String? role) =>
@@ -137,7 +140,13 @@ const _tugasModuleByRole = <String, String>{
   'Owner': 'dashboard',
   'Admin Keuangan': 'keuangan',
   'Kepala Divisi Armada': 'armada',
+  'Ketua Divisi Armada': 'armada',
+  'Ketua Armada': 'armada',
   'Kontraktor': 'kontraktor',
+  'Driver Armada': 'armada',
+  'Workshop': 'workshop',
+  'Inventory': 'inventory',
+  'Operator Mesin': 'produksi',
 };
 
 /// Modul utama untuk tab "Tugas / Operasional" (null = tidak ada).

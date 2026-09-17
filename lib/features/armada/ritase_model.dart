@@ -44,6 +44,8 @@ class RitaseRecord {
     this.armadaPlat,
     this.armadaJenis,
     this.isAlatBerat = false,
+    this.titikId,
+    this.proyekId,
     this.catatan,
     this.odoPerTrip,
     this.status = RitaseRecordStatus.draft,
@@ -62,6 +64,8 @@ class RitaseRecord {
   final String? armadaPlat;
   final String? armadaJenis;
   final bool isAlatBerat;
+  final String? titikId;
+  final String? proyekId;
   final int jumlah;
 
   /// Satuan tampilan (rit, trip, ton, m³, kg, ...).
@@ -99,10 +103,14 @@ class RitaseRecord {
   Map<String, dynamic> toPayload() {
     final cat = catatan;
     final odo = odoPerTrip;
+    final titik = titikId;
+    final proyek = proyekId;
     return {
       'armada_id': armadaId,
       'jumlah_rit': jumlah,
       'satuan_volume': satuanVolume,
+      if (titik != null && titik.trim().isNotEmpty) 'titik_id': titik.trim(),
+      if (proyek != null && proyek.trim().isNotEmpty) 'proyek_id': proyek.trim(),
       if (cat != null && cat.trim().isNotEmpty) 'catatan': cat.trim(),
       'odo_per_trip': ?odo,
     };
@@ -119,6 +127,8 @@ class RitaseRecord {
     armadaPlat: armadaPlat,
     armadaJenis: armadaJenis,
     isAlatBerat: isAlatBerat,
+    titikId: titikId,
+    proyekId: proyekId,
     jumlah: jumlah,
     satuan: satuan,
     catatan: catatan,
@@ -137,6 +147,8 @@ class RitaseRecord {
     'armada_plat': armadaPlat,
     'armada_jenis': armadaJenis,
     'is_alat_berat': isAlatBerat,
+    'titik_id': titikId,
+    'proyek_id': proyekId,
     'jumlah': jumlah,
     'satuan': satuan,
     'catatan': catatan,
@@ -155,6 +167,8 @@ class RitaseRecord {
     armadaPlat: json['armada_plat']?.toString(),
     armadaJenis: json['armada_jenis']?.toString(),
     isAlatBerat: json['is_alat_berat'] == true,
+    titikId: json['titik_id']?.toString(),
+    proyekId: json['proyek_id']?.toString(),
     jumlah: (json['jumlah'] as num?)?.toInt() ?? 0,
     satuan: json['satuan']?.toString() ?? 'rit',
     catatan: json['catatan']?.toString(),

@@ -68,8 +68,11 @@ const kPresensiRoles = <String>[
   'Admin Keuangan',
   'Driver Armada',
   'Kepala Divisi Armada',
+  'Ketua Divisi Armada',
+  'Ketua Armada',
   'Workshop',
   'Inventory',
+  'Operator Mesin',
 ];
 
 /// Role yang relevan untuk portal proyek (setara `kApp2Roles`).
@@ -80,8 +83,11 @@ const kProyekRoles = <String>[
   'Admin Keuangan',
   'Driver Armada',
   'Kepala Divisi Armada',
+  'Ketua Divisi Armada',
+  'Ketua Armada',
   'Workshop',
   'Inventory',
+  'Operator Mesin',
 ];
 
 /// Presensi tersedia untuk SEMUA user (semua role) — tiap karyawan wajib

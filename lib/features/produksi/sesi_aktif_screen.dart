@@ -486,23 +486,28 @@ class _SessionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Expanded(
-                  child: hasWaitingQc
-                      ? OutlinedButton.icon(
-                          icon: const Icon(Icons.speed, size: 18),
-                          label: const Text('Catat Uji Tekan'),
-                          onPressed: () => _openUjiTekan(context),
-                        )
-                      : TextButton.icon(
-                          icon: const Icon(Icons.science_outlined, size: 18),
-                          label: const Text('Catat Slump Test'),
-                          onPressed: () => _openSlumpTest(context),
-                        ),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.science_outlined, size: 16),
+                  label: const Text('Slump Test'),
+                  onPressed: () => _openSlumpTest(context),
                 ),
+                if (hasWaitingQc)
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.speed, size: 16),
+                    label: const Text('Uji Tekan'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.colors.warning,
+                    ),
+                    onPressed: () => _openUjiTekan(context),
+                  ),
                 FilledButton.icon(
-                  icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                  icon: const Icon(Icons.stop_circle_outlined, size: 16),
                   label: const Text('Selesaikan'),
                   onPressed: () => _openSelesaikan(context, session),
                 ),
@@ -676,14 +681,15 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
 
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
     if (result.delivered) {
+      Navigator.of(context).pop();
       final hasil = double.parse(_hasilCtrl.text.replaceAll(',', '.'));
       final output = '${fmtNum(hasil)} $_satuan'.trim();
       messenger.showSnackBar(
         SnackBar(content: Text('Sesi selesai — $output tercatat.')),
       );
     } else if (result.queued) {
+      Navigator.of(context).pop();
       messenger.showSnackBar(
         const SnackBar(content: Text(kCopyQueued)),
       );

@@ -143,13 +143,37 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final delivered = await ref
-          .read(armadaRepositoryProvider)
-          .submitOdoAwalProyek(
-            armadaId: armada.id,
-            titikId: armada.titikId ?? '',
-            odoAwal: odoValue,
-          );
+      bool delivered = false;
+      final titikId = (armada.titikId != null && armada.titikId!.trim().isNotEmpty)
+          ? armada.titikId!.trim()
+          : null;
+
+      // 1. Simpan ODO/HM ke checklist harian agar langsung tercermin di unit saya
+      try {
+        delivered = await ref.read(armadaRepositoryProvider).submitChecklist(
+          armadaId: armada.id,
+          kondisiBaik: true,
+          odoKm: armada.isAlatBerat ? null : odoValue,
+          jamOperasional: armada.isAlatBerat ? odoValue : null,
+        );
+      } catch (_) {}
+
+      // 2. Simpan ODO awal proyek bila belum pernah tercatat
+      try {
+        final odoAwalDelivered = await ref
+            .read(armadaRepositoryProvider)
+            .submitOdoAwalProyek(
+              armadaId: armada.id,
+              titikId: titikId,
+              odoAwal: odoValue,
+            );
+        delivered = delivered || odoAwalDelivered;
+      } catch (_) {
+        // Abaikan jika sudah pernah tercatat sebelumnya (422)
+      }
+
+      ref.invalidate(armadaSayaProvider);
+      ref.invalidate(checklistHariIniProvider);
 
       if (!mounted) return;
       HapticFeedback.lightImpact();

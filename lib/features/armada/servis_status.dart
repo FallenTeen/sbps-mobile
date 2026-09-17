@@ -60,11 +60,13 @@ Color servisStatusColor(String status) {
   };
 }
 
-/// Role yang bisa melakukan approval servis (Kepala Divisi Armada + admin).
+/// Role yang bisa melakukan approval servis (Kepala/Ketua Divisi Armada + admin).
 bool canApproveServis(String? role) {
   return role == 'Owner' ||
       role == 'Admin Keuangan' ||
       role == 'Kepala Divisi Armada' ||
+      role == 'Ketua Divisi Armada' ||
+      role == 'Ketua Armada' ||
       role == 'Admin';
 }
 

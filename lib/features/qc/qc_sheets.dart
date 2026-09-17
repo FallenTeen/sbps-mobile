@@ -220,8 +220,8 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
     AnalyticsService.qcSlumpSubmit();
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
     if (result.delivered || result.queued) {
+      Navigator.of(context).pop();
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -446,8 +446,8 @@ class _UjiTekanSheetState extends ConsumerState<UjiTekanSheet> {
     AnalyticsService.qcUjitekanSubmit();
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
     if (result.delivered || result.queued) {
+      Navigator.of(context).pop();
       messenger.showSnackBar(
         SnackBar(
           content: Text(

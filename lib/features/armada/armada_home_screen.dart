@@ -32,6 +32,11 @@ class ArmadaHomeScreen extends ConsumerWidget {
 
     final sections = _buildSections(activeRole);
 
+    final isManager = _isManager(activeRole);
+    final armadaAsync = ref.watch(armadaSayaProvider);
+    final hasArmada = armadaAsync.value?.isNotEmpty == true;
+    final showKendaraanSaya = !isManager || hasArmada;
+
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
@@ -108,28 +113,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ),
             SizedBox(height: 20),
 
-            // Kendaraan Saya section
-            Row(
-              children: [
-                Icon(
-                  Icons.directions_bus_rounded,
-                  size: 20,
-                  color: context.colors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Kendaraan Saya',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: context.colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ..._armadaSection(ref),
-            SizedBox(height: 24),
+            // Untuk driver: Kendaraan Saya tampil di atas
+            if (!isManager && showKendaraanSaya) ...[
+              _buildKendaraanSayaHeader(context),
+              const SizedBox(height: 10),
+              ..._armadaSection(ref),
+              SizedBox(height: 24),
+            ],
 
             // Role-aware menu sections
             for (final section in sections) ...[
@@ -166,11 +156,47 @@ class ArmadaHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
             ],
+
+            // Untuk manager: Kendaraan Saya hanya tampil jika memang ada unit yang dipegang
+            if (isManager && showKendaraanSaya) ...[
+              _buildKendaraanSayaHeader(context),
+              const SizedBox(height: 10),
+              ..._armadaSection(ref),
+              SizedBox(height: 24),
+            ],
           ],
         ),
       ),
     );
   }
+
+  Widget _buildKendaraanSayaHeader(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.directions_bus_rounded,
+          size: 20,
+          color: context.colors.primary,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'Kendaraan Saya',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: context.colors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static bool _isManager(String? role) =>
+      role == 'Kepala Divisi Armada' ||
+      role == 'Ketua Divisi Armada' ||
+      role == 'Ketua Armada' ||
+      role == 'Owner' ||
+      role == 'Admin Keuangan';
 
   List<Widget> _armadaSection(WidgetRef ref) {
     final armada = ref.watch(armadaSayaProvider);
@@ -205,7 +231,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
   String _subtitleForRole(String? role) {
     return switch (role) {
       'Driver Armada' => 'Tugas Harian & Operasional',
-      'Kepala Divisi Armada' => 'Monitoring & Approval',
+      'Kepala Divisi Armada' ||
+      'Ketua Divisi Armada' ||
+      'Ketua Armada' =>
+        'Monitoring & Approval',
       'Owner' => 'Monitoring & Approval',
       'Admin Keuangan' => 'Monitoring & Approval',
       _ => 'Kendaraan & operasional harian',
@@ -215,7 +244,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
   IconData _iconForRole(String? role) {
     return switch (role) {
       'Driver Armada' => Icons.local_shipping_rounded,
-      'Kepala Divisi Armada' => Icons.supervisor_account_rounded,
+      'Kepala Divisi Armada' ||
+      'Ketua Divisi Armada' ||
+      'Ketua Armada' =>
+        Icons.supervisor_account_rounded,
       'Owner' => Icons.admin_panel_settings_rounded,
       'Admin Keuangan' => Icons.account_balance_wallet_rounded,
       _ => Icons.local_shipping_rounded,
@@ -225,7 +257,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
   List<_MenuSection> _buildSections(String? role) {
     return switch (role) {
       'Driver Armada' => _driverSections(),
-      'Kepala Divisi Armada' => _kepalaDivisiSections(),
+      'Kepala Divisi Armada' ||
+      'Ketua Divisi Armada' ||
+      'Ketua Armada' =>
+        _kepalaDivisiSections(),
       'Owner' => _ownerSections(),
       'Admin Keuangan' => _adminKeuanganSections(),
       _ => _driverSections(), // default
@@ -303,6 +338,12 @@ class ArmadaHomeScreen extends ConsumerWidget {
           title: 'Overview Armada',
           subtitle: 'Status seluruh armada & dashboard',
           onTap: (ctx) => ctx.push('/armada/overview'),
+        ),
+        _MenuItem(
+          icon: Icons.route_outlined,
+          title: 'Riwayat Muatan Armada',
+          subtitle: 'Monitoring pengiriman & ritase seluruh armada',
+          onTap: (ctx) => ctx.push('/armada/ritase'),
         ),
       ],
     ),

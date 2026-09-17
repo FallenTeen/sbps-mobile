@@ -23,6 +23,7 @@ class OutboxSyncService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   Timer? _timer;
   bool _syncing = false;
+  final Set<String> _inFlightActionIds = {};
 
   /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) - dipakai
   /// provider untuk me-refresh state presensi.
@@ -31,11 +32,14 @@ class OutboxSyncService {
   /// Kirim satu aksi sekarang juga (dipakai untuk percobaan pertama
   /// dari [OutboxRepository.enqueue]).
   Future<OutboxSendResult> send(PendingAction action) async {
+    if (_inFlightActionIds.contains(action.id)) {
+      return OutboxSendResult.queued;
+    }
+    _inFlightActionIds.add(action.id);
     try {
-      await _repo.markSyncing(action.id);
-    } catch (_) {}
-
-    try {
+      try {
+        await _repo.markSyncing(action.id);
+      } catch (_) {}
       // Endpoint JSON (produksi): tanpa lampiran file, body dari
       // payloadData; client_uuid disuntik dari action.clientUuid —
       // SAMA di setiap retry agar backend idempotent.
@@ -165,6 +169,8 @@ class OutboxSyncService {
         );
       }
       return OutboxSendResult(delivered: false, errorMessage: e.message);
+    } finally {
+      _inFlightActionIds.remove(action.id);
     }
   }
 
@@ -178,6 +184,7 @@ class OutboxSyncService {
     try {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
+        if (_inFlightActionIds.contains(action.id)) continue;
         if (!ignoreBackoff && _inBackoff(action)) continue;
         if (!ignoreBackoff && action.retryCount >= _maxAttempts) continue;
         attempted = true;

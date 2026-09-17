@@ -601,11 +601,15 @@ class _RoleOption extends StatelessWidget {
       case 'Driver Armada':
         return Icons.local_shipping;
       case 'Kepala Divisi Armada':
+      case 'Ketua Divisi Armada':
+      case 'Ketua Armada':
         return Icons.supervisor_account;
       case 'Workshop':
         return Icons.build;
       case 'Inventory':
         return Icons.inventory_2;
+      case 'Operator Mesin':
+        return Icons.precision_manufacturing;
       default:
         return Icons.badge;
     }
@@ -624,11 +628,15 @@ class _RoleOption extends StatelessWidget {
       case 'Driver Armada':
         return 'Unit saya, checklist, ritase, dan servis';
       case 'Kepala Divisi Armada':
+      case 'Ketua Divisi Armada':
+      case 'Ketua Armada':
         return 'Overview armada dan approval';
       case 'Workshop':
         return 'Antrian servis dan todo per job';
       case 'Inventory':
         return 'Stok barang dan request sparepart';
+      case 'Operator Mesin':
+        return 'Sesi produksi, mesin, dan uji QC';
       default:
         return '';
     }

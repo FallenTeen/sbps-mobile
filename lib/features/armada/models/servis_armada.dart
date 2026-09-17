@@ -2,7 +2,7 @@
 /// (docs manual-book Section 21 & api-mobile)
 library;
 
-/// Model Master Armada untuk dropdown pilihan unit saat pengajuan servis.
+/// Model Master Armada untuk dropdown pilihan unit saat pengajuan servis dan overview armada.
 class MasterArmada {
   const MasterArmada({
     required this.id,
@@ -10,6 +10,11 @@ class MasterArmada {
     this.kodeUnit,
     this.jenis,
     this.status,
+    this.tipeUnit,
+    this.titikId,
+    this.titikNama,
+    this.odoTerkini,
+    this.jamOperasionalTerkini,
   });
 
   final String id;
@@ -17,14 +22,30 @@ class MasterArmada {
   final String? kodeUnit;
   final String? jenis;
   final String? status;
+  final String? tipeUnit;
+  final String? titikId;
+  final String? titikNama;
+  final double? odoTerkini;
+  final double? jamOperasionalTerkini;
+
+  bool get isAlatBerat => tipeUnit == 'alat_berat_stasioner';
+  bool get isKendaraan => !isAlatBerat;
 
   factory MasterArmada.fromJson(Map<String, dynamic> json) {
+    final titik = json['titik'] is Map
+        ? Map<String, dynamic>.from(json['titik'] as Map)
+        : null;
     return MasterArmada(
       id: json['id']?.toString() ?? '',
       platNomor: json['plat_nomor']?.toString() ?? '',
       kodeUnit: json['kode_unit']?.toString(),
       jenis: json['jenis']?.toString(),
       status: json['status']?.toString(),
+      tipeUnit: json['tipe_unit']?.toString(),
+      titikId: titik?['id']?.toString() ?? json['titik_id']?.toString(),
+      titikNama: titik?['nama']?.toString() ?? json['titik_nama']?.toString(),
+      odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
+      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)?.toDouble(),
     );
   }
 }

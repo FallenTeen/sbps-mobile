@@ -19,6 +19,7 @@ class ArmadaSaya {
     this.unitBisnis,
     this.titikId,
     this.titikNama,
+    this.proyekId,
     this.odoTerkini,
     this.jamOperasionalTerkini,
   });
@@ -39,6 +40,7 @@ class ArmadaSaya {
   final String? unitBisnis;
   final String? titikId;
   final String? titikNama;
+  final String? proyekId;
   final double? odoTerkini;
   final double? jamOperasionalTerkini;
 
@@ -65,6 +67,7 @@ class ArmadaSaya {
       unitBisnis: json['unit_bisnis']?.toString(),
       titikId: titik?['id']?.toString(),
       titikNama: titik?['nama']?.toString(),
+      proyekId: (titik?['proyek_id'] ?? json['proyek_id'])?.toString(),
       odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
       jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)
           ?.toDouble(),

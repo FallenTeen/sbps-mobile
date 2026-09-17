@@ -73,13 +73,13 @@ class ArmadaRepository {
   // POST endpoints (write — lewat outbox untuk offline support)
   // ---------------------------------------------------------------------------
 
-  /// POST /armada/checklist — catat (create/update) checklist harian.
-  /// Diperluas dengan solar, ODO, jam operasional (Section 21).
-  /// Menggunakan outbox: kalau offline, data masuk antrean dan dikirim
-  /// otomatis saat kembali online.
+  /// POST /armada/checklist — catat (create/update) checklist harian (2-stage).
+  /// Pagi: status=berjalan, odo_pagi, hm_odo, solar_liter.
+  /// Sore (isAkhir=true): status=selesai, odo_sore, hm_odo.
   Future<bool> submitChecklist({
     required String armadaId,
     required bool kondisiBaik,
+    bool isAkhir = false,
     String? itemBermasalah,
     double? solarLiter,
     double? odoKm,
@@ -94,11 +94,13 @@ class ArmadaRepository {
       payloadData: {
         'armada_id': armadaId,
         'kondisi_baik': kondisiBaik,
+        'status': isAkhir ? 'selesai' : 'berjalan',
         if (itemBermasalah != null && itemBermasalah.trim().isNotEmpty)
           'item_bermasalah': itemBermasalah.trim(),
         if (solarLiter != null) 'solar_liter': solarLiter,
-        if (odoKm != null) 'odo_km': odoKm,
-        if (jamOperasional != null) 'jam_operasional': jamOperasional,
+        if (odoKm != null)
+          isAkhir ? 'odo_sore' : 'odo_pagi': odoKm,
+        if (jamOperasional != null) 'hm_odo': jamOperasional,
         if (itemDetails != null) 'items': itemDetails,
       },
       createdAt: DateTime.now(),
@@ -145,7 +147,8 @@ class ArmadaRepository {
   /// Menggunakan outbox untuk offline support.
   Future<bool> submitOdoAwalProyek({
     required String armadaId,
-    required String titikId,
+    String? titikId,
+    String? proyekId,
     required double odoAwal,
   }) async {
     final action = PendingAction(
@@ -155,7 +158,10 @@ class ArmadaRepository {
       payloadJson: {},
       payloadData: {
         'armada_id': armadaId,
-        'titik_id': titikId,
+        if (titikId != null && titikId.trim().isNotEmpty)
+          'titik_id': titikId.trim(),
+        if (proyekId != null && proyekId.trim().isNotEmpty)
+          'proyek_id': proyekId.trim(),
         'odo_awal': odoAwal,
       },
       createdAt: DateTime.now(),
@@ -202,6 +208,8 @@ class ArmadaRepository {
     required String armadaId,
     required int jumlahRit,
     required String satuanVolume,
+    String? titikId,
+    String? proyekId,
     String? catatan,
     double? odoPerTrip,
     String? clientUuid,
@@ -216,6 +224,10 @@ class ArmadaRepository {
         'armada_id': armadaId,
         'jumlah_rit': jumlahRit,
         'satuan_volume': satuanVolume,
+        if (titikId != null && titikId.trim().isNotEmpty)
+          'titik_id': titikId.trim(),
+        if (proyekId != null && proyekId.trim().isNotEmpty)
+          'proyek_id': proyekId.trim(),
         if (catatan != null && catatan.trim().isNotEmpty)
           'catatan': catatan.trim(),
         if (odoPerTrip != null) 'odo_per_trip': odoPerTrip,

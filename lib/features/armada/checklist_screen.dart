@@ -771,6 +771,7 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
           .submitChecklist(
             armadaId: widget.item.armadaId,
             kondisiBaik: issues.isEmpty,
+            isAkhir: widget.isAkhir,
             itemBermasalah: issues.map((i) => i.label).join(', '),
             solarLiter: double.tryParse(_solarCtrl.text),
             odoKm: double.tryParse(_odoCtrl.text),
@@ -789,7 +790,13 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(delivered ? 'Checklist tersimpan.' : kCopyQueued),
+          content: Text(
+            delivered
+                ? (widget.isAkhir
+                      ? 'Checklist akhir berhasil disimpan.'
+                      : 'Checklist harian berhasil disimpan.')
+                : kCopyQueued,
+          ),
         ),
       );
       Navigator.of(context).pop();
@@ -799,12 +806,15 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(e.message)));
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Gagal menyimpan checklist.\nPeriksa koneksi lalu coba lagi.',
+              friendlyErrorMessage(
+                e,
+                fallback: 'Gagal menyimpan checklist. Periksa koneksi lalu coba lagi.',
+              ),
             ),
           ),
         );

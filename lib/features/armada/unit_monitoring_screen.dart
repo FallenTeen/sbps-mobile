@@ -38,12 +38,12 @@ class UnitMonitoringScreen extends ConsumerWidget {
         ?.where((c) => c.armadaId == unit.id)
         .firstOrNull;
 
-    final isAlatBerat = saya?.isAlatBerat ?? false;
-    final odoKm = isAlatBerat ? null : (saya?.odoTerkini ?? checklist?.odoKm);
+    final isAlatBerat = saya?.isAlatBerat ?? unit.isAlatBerat;
+    final odoKm = isAlatBerat ? null : (saya?.odoTerkini ?? unit.odoTerkini ?? checklist?.odoKm);
     final jamOperasional = isAlatBerat
-        ? (saya?.jamOperasionalTerkini ?? checklist?.jamOperasional)
+        ? (saya?.jamOperasionalTerkini ?? unit.jamOperasionalTerkini ?? checklist?.jamOperasional)
         : null;
-    final titikNama = saya?.titikNama;
+    final titikNama = saya?.titikNama ?? unit.titikNama;
 
     final servis = servisAsync.value ?? const <ServisArmada>[];
     final warnings = unitWarnings(
