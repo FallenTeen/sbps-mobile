@@ -64,8 +64,10 @@ class AppEmptyState extends StatelessWidget {
                   Text(
                     subtitle!,
                     textAlign: TextAlign.center,
+                    // onSurfaceVariant (bukan outline) karena ini TEKS —
+                    // outline terlalu tipis untuk teks (1.5:1 di light).
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.outline,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],

@@ -190,9 +190,8 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                                     '${fmtWaktu(firstTime)} → ${fmtWaktu(lastTime)}',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
+                                      color: Theme.of(context).colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -218,7 +217,9 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                   itemCount: data.items.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, i) {
-                    final item = data.items.reversed.toList()[i];
+                    // Hindari alloc + O(n²) `reversed.toList()` per baris —
+                    // tautan indeks terbalik langsung tanpa salinan.
+                    final item = data.items[data.items.length - 1 - i];
                     final isLatest = i == 0;
                     return ListTile(
                       leading: Icon(

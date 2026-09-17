@@ -93,6 +93,23 @@ class ServisRepository {
         );
   }
 
+  /// GET /servis-armada/saya — Riwayat ajuan servis milik user aktif / armada yang di-PIC-kan.
+  Future<List<ServisArmada>> getServisSaya() async {
+    final res = await _api.get<List<ServisArmada>>(
+      '/servis-armada/saya',
+      parse: (raw) {
+        final items = raw is List ? raw : (raw is Map ? (raw['items'] ?? raw['data']) : null);
+        return [
+          if (items is List)
+            for (final e in items)
+              if (e is Map)
+                ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+        ];
+      },
+    );
+    return res.data ?? const [];
+  }
+
   /// GET /servis-armada/{id} — Detail ajuan servis beserta sparepart dan workshop log.
   Future<ServisArmada> getDetailServis(String id) async {
     final res = await _api.get<ServisArmada>(

@@ -909,7 +909,7 @@ class _DataOperasionalSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),

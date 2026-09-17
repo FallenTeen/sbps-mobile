@@ -174,11 +174,13 @@ class OutboxSyncService {
   Future<void> syncNow({bool ignoreBackoff = false}) async {
     if (_syncing) return;
     _syncing = true;
+    var attempted = false;
     try {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
         if (!ignoreBackoff && _inBackoff(action)) continue;
         if (!ignoreBackoff && action.retryCount >= _maxAttempts) continue;
+        attempted = true;
 
         final result = await send(action);
         if (result.delivered) {
@@ -195,7 +197,12 @@ class OutboxSyncService {
       }
     } finally {
       _syncing = false;
-      onSyncCycleDone?.call();
+      // Panggil callback HANYA bila ada aksi yang benar-benar dicoba kirim.
+      // Siklus kosong (antrean habis / semua masih backoff) tidak mengubah
+      // state apa pun — memanggil onSyncCycleDone tiap menit memicu reload
+      // provider + fetch jaringan (`presensi/hari-ini`) secara percuma
+      // meski tab presensi sedang tidak dibuka (indexedStack tetap hidup).
+      if (attempted) onSyncCycleDone?.call();
     }
   }
 

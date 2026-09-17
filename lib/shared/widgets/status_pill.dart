@@ -28,10 +28,15 @@ class StatusPill extends StatelessWidget {
   /// Pilih warna teks ikon/label kontras AA terhadap latar [background].
   /// - tinted: selalu pakai [color] (dipastikan kontras oleh pemanggil).
   /// - filled: hitam bila latar terang, putih bila latar gelap.
+  ///
+  /// Ambang dipilih di 0.42 (bukan 0.179 teoretis) supaya warna gelap dan
+  /// "tepian" (merah tua, oranye) tetap memakai teks putih, sedangkan amber
+  /// terang (luminansi ≈0.44) beralih ke teks gelap — kontras putih-on-amber
+  /// hanya ~2.1:1 (gagal AA), gelap-on-amber ~7.8:1.
   Color _foreground(bool filled) {
     if (!filled) return color;
     final luminance = color.computeLuminance();
-    return luminance > 0.45 ? const Color(0xFF0F172A) : Colors.white;
+    return luminance > 0.42 ? const Color(0xFF0F172A) : Colors.white;
   }
 
   @override
@@ -55,6 +60,7 @@ class StatusPill extends StatelessWidget {
           Text(
             label,
             maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style:
                 labelStyle ??
                 TextStyle(

@@ -85,25 +85,34 @@ class KeyValueRow extends StatelessWidget {
                 ),
                 if (canCopy) ...[
                   const SizedBox(width: 4),
-                  InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: copyValue!)).then(
-                        (_) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('$label berhasil disalin'),
-                              duration: const Duration(seconds: 2),
-                            ),
+                  Tooltip(
+                    message: 'Salin $label',
+                    child: Semantics(
+                      button: true,
+                      label: 'Salin $label',
+                      child: InkWell(
+                        // Hit area ~36x36 (padding 10 + ikon 16) + tooltip —
+                        // cukup bagi target sakelar baris yang padat.
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () {
+                          Clipboard.setData(
+                            ClipboardData(text: copyValue!),
+                          ).then(
+                            (_) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('$label berhasil disalin'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.copy_rounded,
-                        size: 16,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.copy_rounded, size: 16),
+                        ),
                       ),
                     ),
                   ),

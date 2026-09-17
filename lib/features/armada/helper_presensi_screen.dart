@@ -25,7 +25,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
   String? _submittingHelperId;
 
   Future<void> _submitPresensi(Helper helper, String tipe) async {
-    final photo = await takeWatermarkedPhoto(ref, imageQuality: 100);
+    final photo = await takeWatermarkedPhoto(ref);
     if (photo == null) return;
 
     setState(() {

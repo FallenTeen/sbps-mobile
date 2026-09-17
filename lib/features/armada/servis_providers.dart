@@ -204,3 +204,12 @@ final servisArmadaUnitProvider = FutureProvider.autoDispose
       }
       return result;
     });
+
+// ---------------------------------------------------------------------------
+// Servis Saya (Milik User Aktif / PIC)
+// ---------------------------------------------------------------------------
+
+final servisSayaProvider = FutureProvider.autoDispose<List<ServisArmada>>((ref) {
+  return ref.watch(servisRepositoryProvider).getServisSaya();
+});
+

@@ -35,7 +35,7 @@ class SyncActionButton extends ConsumerWidget {
     final count = ref.watch(pendingCountProvider);
     final badgeBg = context.colors.warning;
     final badgeFg =
-        badgeBg.computeLuminance() > 0.45
+        badgeBg.computeLuminance() > 0.42
             ? const Color(0xFF0F172A)
             : Colors.white;
 

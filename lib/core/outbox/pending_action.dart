@@ -4,7 +4,7 @@ import 'dart:convert';
 enum PendingEndpoint {
   presensiCheckIn('/presensi/check-in'),
   presensiCheckOut('/presensi/check-out'),
-  formulirSubmit('/formulir/submit'),
+  formulirSubmit('/formulir/store'),
   produksiMulai('/produksi/mulai'),
   produksiSelesai('/produksi/selesai'),
   qcSlumpTest('/qc/slump-test'),

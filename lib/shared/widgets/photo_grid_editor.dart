@@ -129,6 +129,9 @@ class PhotoGridEditor extends ConsumerWidget {
                         child: Image.file(
                           File(paths[index]),
                           fit: BoxFit.cover,
+                          // Decode cukup untuk grid ~1/3 lebar layar (≈110dp
+                          // × dpr 3 ≈ 330px), bukan resolusi kamera penuh.
+                          cacheWidth: 400,
                           errorBuilder: (_, _, _) => Container(
                             color: theme.colorScheme.surfaceContainerHighest,
                             child: const Icon(
@@ -182,7 +185,7 @@ class _GridOverlayButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(8),
         decoration: const BoxDecoration(
           color: Colors.black54,
           shape: BoxShape.circle,

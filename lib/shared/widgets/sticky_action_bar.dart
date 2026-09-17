@@ -42,22 +42,17 @@ class StickyActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasSecondary =
         secondaryLabel != null && secondaryLabel!.isNotEmpty;
-    final primaryBtn = SizedBox(
-      width: hasSecondary ? null : double.infinity,
-      height: 50,
-      child: FilledButton.icon(
-        onPressed: showPrimaryLoading ? null : onPrimary,
-        icon: showPrimaryLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : (primaryIcon != null
-                  ? Icon(primaryIcon, size: 18)
-                  : const SizedBox.shrink()),
-        label: Text(primaryLabel),
-      ),
+    final primaryBtn = FilledButton.icon(
+      // minimumSize (bukan SizedBox fixed-height): label tetap bisa tumbuh
+      // saat text scaling 130% tanpa terpotong, hit area tetap ≥48dp.
+      style: FilledButton.styleFrom(minimumSize: const Size(64, 48)),
+      onPressed: showPrimaryLoading ? null : onPrimary,
+      icon: showPrimaryLoading
+          ? const _BarSpinner()
+          : (primaryIcon != null
+                ? Icon(primaryIcon, size: 18)
+                : const SizedBox.shrink()),
+      label: Text(primaryLabel),
     );
 
     return Container(
@@ -84,7 +79,9 @@ class StickyActionBar extends StatelessWidget {
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [primaryBtn],
+                  children: [
+                    SizedBox(width: double.infinity, child: primaryBtn),
+                  ],
                 ),
         ),
       ),
@@ -92,12 +89,32 @@ class StickyActionBar extends StatelessWidget {
   }
 
   Widget secondaryBtn(BuildContext context) {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(minimumSize: const Size(64, 48)),
+      onPressed: secondaryDisabled ? null : onSecondary,
+      icon: const Icon(Icons.chevron_left_rounded, size: 18),
+      label: Text(secondaryLabel ?? 'Kembali'),
+    );
+  }
+}
+
+/// Spinner kecil pada tombol utama saat submit in-flight.
+///
+/// Ditaruh di atas tombol yang disabled (fill abu) — warnanya mengikuti
+/// disabled foreground supaya tetap terbaca di mode terang & gelap.
+class _BarSpinner extends StatelessWidget {
+  const _BarSpinner();
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
-      height: 50,
-      child: OutlinedButton.icon(
-        onPressed: secondaryDisabled ? null : onSecondary,
-        icon: const Icon(Icons.chevron_left_rounded, size: 18),
-        label: Text(secondaryLabel ?? 'Kembali'),
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        color: Theme.of(
+          context,
+        ).colorScheme.onSurface.withValues(alpha: 0.38),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 
@@ -23,10 +25,21 @@ class WatermarkResult {
   final double? longitude;
 }
 
+/// Payload untuk isolat watermark — hanya tipe sendable (bytes + string).
+class _WatermarkJob {
+  const _WatermarkJob({required this.bytes, required this.lines});
+
+  final Uint8List bytes;
+  final List<String> lines;
+}
+
 /// Service untuk membakar watermark (koordinat + timestamp + nama karyawan)
 /// ke pixel foto sebelum kompresi.
 ///
 /// Menggunakan package `image` untuk manipulasi pixel, bukan EXIF metadata.
+/// Proses decode → gambar → encode dijalankan di **isolate terpisah**
+/// (`compute`) supaya UI tidak tersendat saat memproses JPEG kamera resolusi
+/// tinggi.
 class WatermarkService {
   WatermarkService({LocationService? locationService})
     : _locationService = locationService ?? LocationService();
@@ -58,20 +71,8 @@ class WatermarkService {
       // GPS gagal — lanjut tanpa koordinat.
     }
 
-    // 2. Baca gambar.
+    // 2. Baca gambar (I/O cepat; decode berat dialihkan ke isolat).
     final bytes = await File(sourcePath).readAsBytes();
-    final image = img.decodeImage(bytes);
-    if (image == null) {
-      // Gagal decode — kembalikan path asli.
-      return WatermarkResult(
-        path: sourcePath,
-        gpsStatus: gpsStatus,
-        latitude: lat,
-        longitude: lng,
-      );
-    }
-
-    // 3. Siapkan teks watermark.
     final now = DateTime.now();
     final timestamp = DateFormat('dd/MM/yyyy HH:mm:ss').format(now);
 
@@ -86,11 +87,27 @@ class WatermarkService {
       lines.add(employeeName);
     }
 
-    // 4. Gambar watermark ke image.
-    _drawWatermark(image, lines);
+    // 3. Decode + watermark + encode di isolate; null = gagal decode.
+    Uint8List? outBytes;
+    try {
+      outBytes = await compute(
+        _applyWatermarkTopLevel,
+        _WatermarkJob(bytes: bytes, lines: lines),
+      );
+    } catch (_) {
+      outBytes = null;
+    }
+    if (outBytes == null) {
+      // Gagal decode/isolate — kembalikan path asli.
+      return WatermarkResult(
+        path: sourcePath,
+        gpsStatus: gpsStatus,
+        latitude: lat,
+        longitude: lng,
+      );
+    }
 
-    // 5. Simpan hasil.
-    final outBytes = img.encodeJpg(image, quality: 95);
+    // 4. Simpan hasil.
     final outPath = sourcePath.replaceAll('.jpg', '_wm.jpg');
     await File(outPath).writeAsBytes(outBytes);
 
@@ -101,46 +118,58 @@ class WatermarkService {
       longitude: lng,
     );
   }
+}
 
-  /// Gambar watermark di pojok bawah gambar dengan background semi-transparan.
-  void _drawWatermark(img.Image image, List<String> lines) {
-    const fontSize = 24;
-    const padding = 12;
-    const lineHeight = 30;
+/// Top-level (wajib untuk `compute`): decode bytes, gambar watermark,
+/// encode JPEG. Mengembalikan null bila bytes bukan gambar valid.
+Uint8List? _applyWatermarkTopLevel(_WatermarkJob job) {
+  final image = img.decodeImage(job.bytes);
+  if (image == null) return null;
+  _drawWatermarkTopLevel(image, job.lines);
+  // Kualitas 85 cukup — hasilnya langsung di-re-encode oleh
+  // PhotoCompressionService (target ≤500KB) tanpa kehilangan kualitas
+  // final yang bermakna, tapi hemat decode/encode dobel di isolat.
+  return img.encodeJpg(image, quality: 85);
+}
 
-    // Hitung ukuran bounding box.
-    final maxLineWidth = lines.fold<int>(0, (max, line) {
-      final w = line.length * (fontSize * 6) ~/ 10;
-      return w > max ? w : max;
-    });
-    final boxWidth = maxLineWidth + padding * 2;
-    final boxHeight = lines.length * lineHeight + padding * 2;
+/// Gambar watermark di pojok bawah gambar dengan background semi-transparan.
+void _drawWatermarkTopLevel(img.Image image, List<String> lines) {
+  const fontSize = 24;
+  const padding = 12;
+  const lineHeight = 30;
 
-    // Posisi pojok bawah.
-    final boxX = image.width - boxWidth - 16;
-    final boxY = image.height - boxHeight - 16;
+  // Hitung ukuran bounding box.
+  final maxLineWidth = lines.fold<int>(0, (max, line) {
+    final w = line.length * (fontSize * 6) ~/ 10;
+    return w > max ? w : max;
+  });
+  final boxWidth = maxLineWidth + padding * 2;
+  final boxHeight = lines.length * lineHeight + padding * 2;
 
-    // Gambar background semi-transparan (gelap).
-    img.fillRect(
+  // Posisi pojok bawah.
+  final boxX = image.width - boxWidth - 16;
+  final boxY = image.height - boxHeight - 16;
+
+  // Gambar background semi-transparan (gelap).
+  img.fillRect(
+    image,
+    x1: boxX,
+    y1: boxY,
+    x2: boxX + boxWidth,
+    y2: boxY + boxHeight,
+    color: img.ColorRgba8(0, 0, 0, 160),
+  );
+
+  // Gambar teks per baris.
+  final font = img.arial24;
+  for (var i = 0; i < lines.length; i++) {
+    img.drawString(
       image,
-      x1: boxX,
-      y1: boxY,
-      x2: boxX + boxWidth,
-      y2: boxY + boxHeight,
-      color: img.ColorRgba8(0, 0, 0, 160),
+      lines[i],
+      x: boxX + padding,
+      y: boxY + padding + i * lineHeight,
+      font: font,
+      color: img.ColorRgb8(255, 255, 255),
     );
-
-    // Gambar teks per baris.
-    final font = img.arial24;
-    for (var i = 0; i < lines.length; i++) {
-      img.drawString(
-        image,
-        lines[i],
-        x: boxX + padding,
-        y: boxY + padding + i * lineHeight,
-        font: font,
-        color: img.ColorRgb8(255, 255, 255),
-      );
-    }
   }
 }
