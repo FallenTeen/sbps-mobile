@@ -8,6 +8,7 @@ import '../produksi/produksi_providers.dart';
 import '../auth/auth_providers.dart';
 import 'models/qc_sample.dart';
 import 'qc_repository.dart';
+import 'qc_rules.dart';
 
 final qcRepositoryProvider = Provider<QcRepository>(
   (ref) => QcRepository(api: ref.watch(apiClientProvider)),
@@ -152,6 +153,61 @@ final waitingSamplesBySessionProvider =
     });
 
 // ---------------------------------------------------------------------------
+// Home QC — queue-first
+// ---------------------------------------------------------------------------
+
+/// Ringkasan home QC (queue):
+/// - [waitingQueue] = antrian sampel `menunggu_hasil` (dedupe per sesi,
+///   karena tulis uji-tekan per `production_session_id`);
+/// - [waitingTotal] = total `menunggu_hasil` (exact, dari pagination server);
+/// - [selesaiHariIni] = sampel terminal yang waktu hasilnya BENAR-BENAR
+///   jatuh hari ini (filter tanggal murni).
+class QcHomeData {
+  const QcHomeData({
+    required this.waitingTotal,
+    required this.waitingQueue,
+    required this.selesaiHariIni,
+  });
+
+  final int waitingTotal;
+  final List<QcSample> waitingQueue;
+  final List<QcSample> selesaiHariIni;
+}
+
+final qcHomeProvider = FutureProvider.autoDispose<QcHomeData>((ref) async {
+  final repo = ref.watch(qcRepositoryProvider);
+  final results = await Future.wait([
+    repo.getRiwayat(status: 'menunggu_hasil', perPage: 50),
+    repo.getRiwayat(status: 'lolos', perPage: 50),
+    repo.getRiwayat(status: 'tidak_lolos', perPage: 50),
+  ]).timeout(
+    const Duration(seconds: 20),
+    onTimeout: () => throw ApiException(
+      'Server tidak merespons saat memuat data QC.\nPeriksa koneksi internet Anda\nCoba lagi atau hubungi admin.',
+    ),
+  );
+
+  final waiting = results[0];
+  final seen = <String>{};
+  final queue = <QcSample>[];
+  for (final s in waiting.items) {
+    final sid = s.sessionId;
+    if (sid == null || sid.isEmpty) {
+      queue.add(s);
+      continue;
+    }
+    if (seen.add(sid)) queue.add(s);
+  }
+
+  final terminal = <QcSample>[...results[1].items, ...results[2].items];
+  return QcHomeData(
+    waitingTotal: waiting.total,
+    waitingQueue: queue,
+    selesaiHariIni: qcSelesaiHariIni(terminal, DateTime.now()),
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Tulis: slump test / uji tekan via outbox (client_uuid idempotent)
 // ---------------------------------------------------------------------------
 
@@ -181,6 +237,7 @@ class QcSubmitController extends Notifier<QcSubmitState> {
 
   void _invalidateQueries() {
     ref.invalidate(waitingSamplesBySessionProvider);
+    ref.invalidate(qcHomeProvider);
   }
 
   /// POST /qc/slump-test — client_uuid dibuat SEKALI saat aksi dibuat.

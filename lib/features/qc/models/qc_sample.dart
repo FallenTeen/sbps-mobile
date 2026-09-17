@@ -14,6 +14,7 @@ class QcSample {
     this.tanggalUjiTekanRencana,
     this.catatan,
     this.createdAt,
+    this.updatedAt,
     this.sessionId,
     this.produkNama,
     this.mesinNama,
@@ -33,6 +34,10 @@ class QcSample {
   final String? tanggalUjiTekanRencana;
   final String? catatan;
   final DateTime? createdAt;
+
+  /// Waktu perubahan status terakhir (hasil uji tekan direkam).
+  /// Opsional — digunakan sebagai tanggal "selesai" sampel bila ada.
+  final DateTime? updatedAt;
 
   final String? sessionId;
   final String? produkNama;
@@ -75,6 +80,7 @@ class QcSample {
       tanggalUjiTekanRencana: json['tanggal_uji_tekan_rencana']?.toString(),
       catatan: json['catatan']?.toString(),
       createdAt: parseDt(json['created_at']),
+      updatedAt: parseDt(json['updated_at']),
       sessionId: (sid == null || sid.isEmpty) ? null : sid,
       produkNama: namaOf(produksi?['produk']) ?? namaOf(session?['produk']),
       mesinNama: namaOf(produksi?['mesin']) ?? namaOf(session?['mesin']),

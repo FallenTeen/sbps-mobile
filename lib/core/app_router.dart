@@ -45,6 +45,7 @@ import '../features/produksi/sesi_aktif_screen.dart';
 import '../features/proyek/proyek_home_screen.dart';
 import '../features/proyek/role_permissions.dart';
 import '../features/qc/detail_qc_screen.dart';
+import '../features/qc/qc_home_screen.dart';
 import '../features/qc/riwayat_qc_screen.dart';
 import '../features/tracking/active_users_screen.dart';
 import '../features/tracking/trail_screen.dart';

@@ -11,6 +11,7 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/searchable_list_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'detail_qc_screen.dart';
+import 'models/qc_sample.dart';
 import 'qc_providers.dart';
 import 'status_badge.dart';
 
@@ -66,17 +67,47 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
               SearchableListHeader(
                 hintText: 'Cari sampel...',
                 onChanged: (v) => setState(() => _searchQuery = v),
-                child: DropdownButtonFormField<String>(
-                  initialValue: filter.status,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Semua status'),
-                  items: [
-                    for (final s in kQcStatuses)
-                      DropdownMenuItem(value: s, child: Text(_statusLabel(s))),
-                  ],
-                  onChanged: (v) => ref
-                      .read(qcRiwayatFilterProvider.notifier)
-                      .set(QcRiwayatFilter(status: v)),
+                child: SizedBox(
+                  height: 36,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (final (label, value) in [
+                        ('Semua status', null),
+                        for (final s in kQcStatuses) (qcStatusLabel(s), s),
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(label),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                            ),
+                            selected: filter.status == value,
+                            selectedColor: context.colors.primary.withValues(
+                              alpha: 0.15,
+                            ),
+                            checkmarkColor: context.colors.primary,
+                            labelStyle: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: filter.status == value
+                                  ? context.colors.primary
+                                  : context.colors.textSecondary,
+                            ),
+                            onSelected: (_) => ref
+                                .read(qcRiwayatFilterProvider.notifier)
+                                .set(QcRiwayatFilter(status: value)),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               Expanded(
@@ -106,7 +137,7 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
     BuildContext context,
     WidgetRef ref,
     QcRiwayatState state,
-    List<dynamic> items,
+    List<QcSample> items,
     String? selectedId,
     void Function(String id) onSelect,
   ) {
@@ -192,13 +223,6 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
     );
   }
 }
-
-String _statusLabel(String status) => switch (status) {
-  'menunggu_hasil' => 'Menunggu hasil',
-  'lolos' => 'Lolos',
-  'tidak_lolos' => 'Tidak lolos',
-  _ => status,
-};
 
 String _fmt(double? n) => n == null
     ? '-'

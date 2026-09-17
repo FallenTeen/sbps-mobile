@@ -522,22 +522,36 @@ class _SessionCard extends StatelessWidget {
   }
 
   void _openSlumpTest(BuildContext context) {
-    final judul =
-        '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}';
     showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => SlumpTestSheet(sessionId: session.id, judul: judul),
+      builder: (_) => SlumpTestSheet(
+        sessionId: session.id,
+        context: QcInspectionContext(
+          produkNama: session.produkNama,
+          mesinNama: session.mesinNama,
+          titikNama: session.titikNama,
+          mulai: session.mulai,
+          jenisUji: 'slump_test',
+        ),
+      ),
     );
   }
 
   void _openUjiTekan(BuildContext context) {
-    final judul =
-        '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}';
     showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => UjiTekanSheet(sessionId: session.id, judul: judul),
+      builder: (_) => UjiTekanSheet(
+        sessionId: session.id,
+        context: QcInspectionContext(
+          produkNama: session.produkNama,
+          mesinNama: session.mesinNama,
+          titikNama: session.titikNama,
+          mulai: session.mulai,
+          jenisUji: 'uji_tekan',
+        ),
+      ),
     );
   }
 }
