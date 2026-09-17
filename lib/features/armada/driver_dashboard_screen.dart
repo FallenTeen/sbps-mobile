@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import 'armada_providers.dart';
@@ -66,7 +67,7 @@ class _VehicleSection extends StatelessWidget {
           ),
         ),
         child: Text(
-          'Gagal memuat kendaraan: $e',
+          friendlyErrorMessage(e, fallback: 'Gagal memuat data armada.'),
           style: TextStyle(color: context.colors.error),
         ),
       ),

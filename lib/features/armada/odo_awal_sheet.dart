@@ -115,7 +115,7 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is Exception ? e.toString() : 'Gagal menyimpan. Coba lagi.',
+            friendlyErrorMessage(e, fallback: 'Gagal menyimpan. Coba lagi.'),
           ),
         ),
       );

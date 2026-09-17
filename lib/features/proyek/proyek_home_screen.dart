@@ -17,6 +17,29 @@ import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
 import 'pending_summary_provider.dart';
 
+/// Ganti role hanya setelah konfirmasi — user wajib sadar konteks/context
+/// aktif sebelum beroperasi (perbaikan audit role switch Phase 18).
+Future<void> _confirmRoleSwitch(
+  BuildContext context,
+  WidgetRef ref,
+  String target,
+  String? current,
+) async {
+  if (target == current) return;
+  final result = await ConfirmationDialog.show(
+    context,
+    severity: ConfirmSeverity.warning,
+    title: 'Bekerja sebagai $target?',
+    message:
+        'Role menentukan menu dan data yang tampil. Anda akan bekerja '
+        'sebagai "$target" setelah pergantian ini.',
+    confirmLabel: 'Ya, Gunakan $target',
+    icon: Icons.swap_horiz_rounded,
+  );
+  if (result?.confirmed != true || !context.mounted) return;
+  await ref.read(activeRoleProvider.notifier).switchRole(target);
+}
+
 class ProyekHomeScreen extends ConsumerWidget {
   const ProyekHomeScreen({super.key});
 
@@ -48,8 +71,7 @@ class ProyekHomeScreen extends ConsumerWidget {
             PopupMenuButton<String>(
               tooltip: 'Ganti peran',
               icon: const Icon(Icons.swap_horiz),
-              onSelected: (r) =>
-                  ref.read(activeRoleProvider.notifier).switchRole(r),
+              onSelected: (r) => _confirmRoleSwitch(context, ref, r, role),
               itemBuilder: (context) => [
                 for (final r in roles)
                   CheckedPopupMenuItem<String>(

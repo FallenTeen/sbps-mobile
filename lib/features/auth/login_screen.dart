@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import 'auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -177,7 +178,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              auth.error.toString(),
+                              friendlyErrorMessage(
+                                auth.error!,
+                                fallback:
+                                    'Gagal masuk. Periksa kembali email dan '
+                                    'password Anda.',
+                              ),
                               style: TextStyle(
                                 color: context.colors.error,
                                 fontSize: 13,

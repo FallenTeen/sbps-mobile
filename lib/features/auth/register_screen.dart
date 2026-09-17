@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/utils/feedback_copy.dart';
 import 'auth_providers.dart';
 
 /// Role yang boleh dipilih saat registrasi (sesuai config/mobile.php).
@@ -23,6 +24,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
 
   String? _selectedRole;
 
@@ -32,6 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -44,6 +47,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           name: _nameController.text,
           email: _emailController.text,
           password: _passwordController.text,
+          passwordConfirmation: _confirmController.text,
           phone: _phoneController.text.trim(),
           role: _selectedRole,
         );
@@ -145,10 +149,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ? 'Password minimal 8 karakter'
                         : null,
                   ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _confirmController,
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => submitting ? null : _submit(),
+                    decoration: const InputDecoration(
+                      labelText: 'Konfirmasi Password',
+                      prefixIcon: Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'Konfirmasi password wajib diisi'
+                        : (value != _passwordController.text)
+                        ? 'Konfirmasi password tidak cocok'
+                        : null,
+                  ),
                   if (auth.hasError) ...[
                     const SizedBox(height: 16),
                     Text(
-                      auth.error.toString(),
+                      friendlyErrorMessage(
+                        auth.error!,
+                        fallback:
+                            'Pendaftaran gagal. Periksa kembali data yang Anda '
+                            'masukkan.',
+                      ),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),

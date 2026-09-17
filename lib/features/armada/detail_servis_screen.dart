@@ -100,7 +100,16 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+      ).showSnackBar(
+          SnackBar(
+            content: Text(
+              friendlyErrorMessage(
+                e,
+                fallback: 'Gagal menyimpan data servis. Coba lagi.',
+              ),
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -142,7 +151,16 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+      ).showSnackBar(
+          SnackBar(
+            content: Text(
+              friendlyErrorMessage(
+                e,
+                fallback: 'Gagal menyimpan data servis. Coba lagi.',
+              ),
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

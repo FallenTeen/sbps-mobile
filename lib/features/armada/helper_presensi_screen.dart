@@ -98,7 +98,12 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Gagal memuat daftar helper: $error'),
+                Text(
+                  friendlyErrorMessage(
+                    error,
+                    fallback: 'Gagal memuat daftar helper.',
+                  ),
+                ),
                 const SizedBox(height: 16),
                 FilledButton.tonal(
                   onPressed: () => ref.invalidate(helpersProvider),

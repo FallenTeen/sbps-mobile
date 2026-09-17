@@ -162,6 +162,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             );
           },
           destinations: destinations,
+          activeRole: activeRole,
           child: navigationShell,
         );
       },

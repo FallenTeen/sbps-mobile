@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
 import '../../core/outbox/pending_action.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'models/master.dart';
@@ -267,7 +268,7 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
       return ProduksiSubmitResult(error: e.message);
     } catch (e) {
       return ProduksiSubmitResult(
-        error: e is Exception ? e.toString() : 'Gagal memulai sesi.',
+        error: friendlyErrorMessage(e, fallback: 'Gagal memulai sesi.'),
       );
     } finally {
       state = const ProduksiSubmitState();
@@ -328,7 +329,7 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
       return ProduksiSubmitResult(error: e.message);
     } catch (e) {
       return ProduksiSubmitResult(
-        error: e is Exception ? e.toString() : 'Gagal menutup sesi.',
+        error: friendlyErrorMessage(e, fallback: 'Gagal menutup sesi.'),
       );
     } finally {
       state = const ProduksiSubmitState();

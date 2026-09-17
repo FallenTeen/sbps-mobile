@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
@@ -75,7 +77,12 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Gagal memuat proyek: $err'),
+                    Text(
+                      friendlyErrorMessage(
+                        err,
+                        fallback: 'Gagal memuat proyek. Silakan coba lagi.',
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     FilledButton(
                       onPressed: () =>
@@ -144,7 +151,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      item.status.toUpperCase(),
+                                      kontraktorStatusLabel(item.status),
                                       style: TextStyle(
                                         color: color,
                                         fontWeight: FontWeight.bold,
@@ -210,7 +217,12 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Gagal memuat invoice: $err'),
+                    Text(
+                      friendlyErrorMessage(
+                        err,
+                        fallback: 'Gagal memuat invoice. Silakan coba lagi.',
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     FilledButton(
                       onPressed: () =>
@@ -275,7 +287,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    inv.status.toUpperCase(),
+                                    kontraktorStatusLabel(inv.status),
                                     style: TextStyle(
                                       color: color,
                                       fontWeight: FontWeight.bold,

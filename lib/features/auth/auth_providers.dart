@@ -234,6 +234,7 @@ class AuthController extends AsyncNotifier<User?> {
     required String name,
     required String email,
     required String password,
+    String? passwordConfirmation,
     String? phone,
     String? role,
   }) async {
@@ -247,6 +248,7 @@ class AuthController extends AsyncNotifier<User?> {
             name: name.trim(),
             email: email.trim(),
             password: password,
+            passwordConfirmation: passwordConfirmation,
             phone: phone,
             role: role,
             deviceName: device.name,

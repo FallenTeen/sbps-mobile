@@ -11,6 +11,7 @@ import '../../core/draft/draft_repository.dart';
 import '../../core/formatters.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -296,7 +297,10 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         }
       } catch (e) {
         failed++;
-        final msg = e is Exception ? e.toString() : 'Terjadi kesalahan sistem.';
+        final msg = friendlyErrorMessage(
+          e,
+          fallback: 'Terjadi kesalahan sistem. Coba lagi.',
+        );
         firstFail ??= msg;
         final idx = _records.indexWhere((r) => r.id == record.id);
         if (idx >= 0) {
@@ -389,7 +393,10 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           }
         } catch (e) {
           failed++;
-          final msg = e is Exception ? e.toString() : 'Terjadi kesalahan sistem.';
+          final msg = friendlyErrorMessage(
+          e,
+          fallback: 'Terjadi kesalahan sistem. Coba lagi.',
+        );
           firstFail ??= msg;
           final idx = _records.indexWhere((r) => r.id == record.id);
           if (idx >= 0) {

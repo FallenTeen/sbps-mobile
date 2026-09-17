@@ -207,7 +207,8 @@ class _ActiveSessionsTab extends ConsumerWidget {
                         icon: Icons.factory_outlined,
                         title: 'Belum ada sesi aktif',
                         subtitle:
-                            'Mulai sesi produksi baru dengan menekan tombol + di bawah.',
+                            'Mulai sesi produksi baru dengan menekan tombol '
+                            'Mulai Sesi di bawah.',
                         actionLabel: 'Mulai Sesi',
                         onAction: () => context.push('/produksi/mulai'),
                       ),

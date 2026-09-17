@@ -41,6 +41,7 @@ class AdaptiveNavShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.destinations,
+    this.activeRole,
   });
 
   /// Pane konten aktif, biasanya `StatefulNavigationShell` dari GoRouter.
@@ -54,11 +55,18 @@ class AdaptiveNavShell extends StatelessWidget {
 
   final List<AdaptiveNavDestination> destinations;
 
+  /// Role aktif — bila diisi, strip "Bekerja sebagai: …" ditampilkan
+  /// persisten di atas konten (perbaikan Phase 18). Nilai null (mis. layar
+  /// presensi-only) tidak menampilkan strip.
+  final String? activeRole;
+
   @override
   Widget build(BuildContext context) {
     if (destinations.isEmpty) return child;
 
     final screenClass = context.screenClass;
+    final activeRole = this.activeRole;
+    final roleBar = activeRole == null ? null : _ActiveRoleBar(role: activeRole);
     final railDestinations = [
       for (final d in destinations)
         NavigationRailDestination(
@@ -71,37 +79,56 @@ class AdaptiveNavShell extends StatelessWidget {
     switch (screenClass) {
       case ScreenClass.expanded:
         return Scaffold(
-          body: Row(
+          body: Column(
             children: [
-              NavigationRail(
-                extended: true,
-                selectedIndex: currentIndex,
-                onDestinationSelected: onDestinationSelected,
-                destinations: railDestinations,
+              ?roleBar,
+              Expanded(
+                child: Row(
+                  children: [
+                    NavigationRail(
+                      extended: true,
+                      selectedIndex: currentIndex,
+                      onDestinationSelected: onDestinationSelected,
+                      destinations: railDestinations,
+                    ),
+                    VerticalDivider(width: 1, color: context.colors.border),
+                    Expanded(child: child),
+                  ],
+                ),
               ),
-              VerticalDivider(width: 1, color: context.colors.border),
-              Expanded(child: child),
             ],
           ),
         );
       case ScreenClass.medium:
         return Scaffold(
-          body: Row(
+          body: Column(
             children: [
-              NavigationRail(
-                labelType: NavigationRailLabelType.selected,
-                selectedIndex: currentIndex,
-                onDestinationSelected: onDestinationSelected,
-                destinations: railDestinations,
+              ?roleBar,
+              Expanded(
+                child: Row(
+                  children: [
+                    NavigationRail(
+                      labelType: NavigationRailLabelType.selected,
+                      selectedIndex: currentIndex,
+                      onDestinationSelected: onDestinationSelected,
+                      destinations: railDestinations,
+                    ),
+                    VerticalDivider(width: 1, color: context.colors.border),
+                    Expanded(child: child),
+                  ],
+                ),
               ),
-              VerticalDivider(width: 1, color: context.colors.border),
-              Expanded(child: child),
             ],
           ),
         );
       case ScreenClass.compact:
         return Scaffold(
-          body: child,
+          body: Column(
+            children: [
+              ?roleBar,
+              Expanded(child: child),
+            ],
+          ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: currentIndex,
             onDestinationSelected: onDestinationSelected,
@@ -116,5 +143,45 @@ class AdaptiveNavShell extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+/// Strip tipis yang menampilkan role aktif ("Bekerja sebagai: …") secara
+/// persisten di atas konten — perbaikan Phase 18.
+class _ActiveRoleBar extends StatelessWidget {
+  const _ActiveRoleBar({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.badge_outlined, size: 14, color: scheme.primary),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  'Bekerja sebagai: $role',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -49,7 +51,13 @@ class _DetailProyekKontrakScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Gagal mengirim pesan: $e')));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal mengirim pesan. Coba lagi.'),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -73,7 +81,12 @@ class _DetailProyekKontrakScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Gagal memuat detail proyek: $err'),
+              Text(
+                friendlyErrorMessage(
+                  err,
+                  fallback: 'Gagal memuat detail proyek. Silakan coba lagi.',
+                ),
+              ),
               const SizedBox(height: 8),
               FilledButton(
                 onPressed: () =>
@@ -277,7 +290,9 @@ class _DetailProyekKontrakScreenState
                                       ),
                                     ),
                                     Text(
-                                      msg.pengirimRole.toUpperCase(),
+                                      kontraktorParticipantLabel(
+                                        msg.pengirimRole,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: Theme.of(

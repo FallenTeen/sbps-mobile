@@ -45,10 +45,14 @@ class AuthRepository {
   }
 
   /// Registrasi akun baru. Role default backend: `SDM Lapangan Kondisional`.
+  /// [passwordConfirmation] wajib diisi user; bila null dipakai [password]
+  /// sebagai kompatibilitas panggilan internal (Phase 18: UI selalu mengirim
+  /// konfirmasi eksplisit).
   Future<User> register({
     required String name,
     required String email,
     required String password,
+    String? passwordConfirmation,
     String? phone,
     String? role,
     String? deviceName,
@@ -60,7 +64,7 @@ class AuthRepository {
         'name': name,
         'email': email,
         'password': password,
-        'password_confirmation': password,
+        'password_confirmation': passwordConfirmation ?? password,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (role != null && role.isNotEmpty) 'role': role,
         'device_name': ?deviceName,

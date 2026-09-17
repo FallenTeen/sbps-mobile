@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import 'models/production_session.dart';
@@ -137,7 +138,7 @@ class _ActiveSessionsSection extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Gagal memuat sesi: $e',
+                friendlyErrorMessage(e, fallback: 'Gagal memuat sesi.'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -159,7 +160,8 @@ class _ActiveSessionsSection extends StatelessWidget {
                         const Text('Belum ada sesi aktif'),
                         const SizedBox(height: 4),
                         Text(
-                          'Mulai sesi produksi baru dari menu Sesi Produksi.',
+                          'Mulai sesi produksi baru untuk mencatat jam kerja '
+                          'dan progres lapangan.',
                           style: theme.textTheme.bodySmall,
                           textAlign: TextAlign.center,
                         ),
@@ -263,7 +265,7 @@ class _ProgressSection extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Gagal memuat progress: $e',
+                friendlyErrorMessage(e, fallback: 'Gagal memuat progress.'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
