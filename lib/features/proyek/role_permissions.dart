@@ -143,9 +143,6 @@ const _tugasModuleByRole = <String, String>{
   'Ketua Divisi Armada': 'armada',
   'Ketua Armada': 'armada',
   'Kontraktor': 'kontraktor',
-  'Driver Armada': 'armada',
-  'Workshop': 'workshop',
-  'Inventory': 'inventory',
   'Operator Mesin': 'produksi',
 };
 

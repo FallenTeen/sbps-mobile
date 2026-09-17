@@ -1069,14 +1069,14 @@ class _ItemTile extends StatelessWidget {
   final ValueChanged<ChecklistItemLevel> onLevelChanged;
   final VoidCallback onFoto;
 
-  @override
+@override
   Widget build(BuildContext context) {
     final bermasalah = item.level.isBermasalah;
 
-    return Container(
+return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),

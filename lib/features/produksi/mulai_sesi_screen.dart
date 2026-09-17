@@ -196,13 +196,21 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
                   ],
                 ),
               ),
-              data: (mesinList) => ListView(
-                padding: const EdgeInsets.all(16),
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  _buildStepContent(mesinList, produkList, titikAsync),
-                ],
-              ),
+              data: (mesinList) {
+                // Auto-select mesin jika hanya ada 1 dan belum dipilih.
+                if (mesinList.length == 1 && _mesin == null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _onMesinChanged(mesinList.single, produkList);
+                  });
+                }
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _buildStepContent(mesinList, produkList, titikAsync),
+                  ],
+                );
+              },
             ),
           ),
           // Navigation buttons.
