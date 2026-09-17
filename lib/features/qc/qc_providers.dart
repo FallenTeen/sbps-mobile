@@ -176,10 +176,10 @@ class QcHomeData {
 
 final qcHomeProvider = FutureProvider.autoDispose<QcHomeData>((ref) async {
   final repo = ref.watch(qcRepositoryProvider);
-  final results = await Future.wait([
+  final results = await Future.wait<Object>([
     repo.getRiwayat(status: 'menunggu_hasil', perPage: 50),
-    repo.getRiwayat(status: 'lolos', perPage: 50),
-    repo.getRiwayat(status: 'tidak_lolos', perPage: 50),
+    _allQcSamples(repo, 'lolos'),
+    _allQcSamples(repo, 'tidak_lolos'),
   ]).timeout(
     const Duration(seconds: 20),
     onTimeout: () => throw ApiException(
@@ -187,7 +187,7 @@ final qcHomeProvider = FutureProvider.autoDispose<QcHomeData>((ref) async {
     ),
   );
 
-  final waiting = results[0];
+  final waiting = results[0] as QcRiwayatPage;
   final seen = <String>{};
   final queue = <QcSample>[];
   for (final s in waiting.items) {
@@ -199,13 +199,29 @@ final qcHomeProvider = FutureProvider.autoDispose<QcHomeData>((ref) async {
     if (seen.add(sid)) queue.add(s);
   }
 
-  final terminal = <QcSample>[...results[1].items, ...results[2].items];
+  final terminal = <QcSample>[
+    ...(results[1] as List<QcSample>),
+    ...(results[2] as List<QcSample>),
+  ];
   return QcHomeData(
     waitingTotal: waiting.total,
     waitingQueue: queue,
     selesaiHariIni: qcSelesaiHariIni(terminal, DateTime.now()),
   );
 });
+
+/// Ambil SEMUA halaman riwayat status terminal (max per_page 50 di backend).
+/// Tanpa ini "Selesai Hari Ini" bisa terpotong >50 sampel per status.
+Future<List<QcSample>> _allQcSamples(QcRepository repo, String status) async {
+  final items = <QcSample>[];
+  var page = 1;
+  while (true) {
+    final res = await repo.getRiwayat(status: status, perPage: 50, page: page);
+    items.addAll(res.items);
+    if (!res.hasMore) return items;
+    page++;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Tulis: slump test / uji tekan via outbox (client_uuid idempotent)

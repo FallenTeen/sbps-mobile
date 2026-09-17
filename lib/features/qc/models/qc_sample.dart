@@ -86,8 +86,8 @@ class QcSample {
       mesinNama: namaOf(produksi?['mesin']) ?? namaOf(session?['mesin']),
       titikNama: namaOf(produksi?['titik']) ?? namaOf(session?['titik']),
       operatorNama: produksi?['operator']?.toString(),
-      sesiMulai: parseDt(produksi?['mulai']),
-      sesiSelesai: parseDt(produksi?['selesai']),
+      sesiMulai: parseDt(produksi?['mulai']) ?? parseDt(session?['mulai']),
+      sesiSelesai: parseDt(produksi?['selesai']) ?? parseDt(session?['selesai']),
     );
   }
 }

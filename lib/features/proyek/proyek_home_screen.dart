@@ -307,7 +307,7 @@ class _ModuleCard extends ConsumerWidget {
       case 'produksi':
         context.push('/produksi/sesi-aktif');
       case 'qc':
-        context.push('/qc/riwayat');
+        context.push('/qc');
       case 'tracking':
         context.push('/tracking/pengguna-aktif');
       case 'dashboard':
@@ -331,7 +331,7 @@ class _ModuleCard extends ConsumerWidget {
 
   String _subtitleFor(String key) => switch (key) {
     'produksi' => 'Sesi aktif, mulai, riwayat, progress, QC',
-    'qc' => 'Slump test & uji tekan, riwayat QC',
+    'qc' => 'Antrian pemeriksaan, catat slump & uji tekan',
     'tracking' => 'User aktif & jejak lokasi',
     'dashboard' => 'Ringkasan titik & operasional',
     'keuangan' => 'Chart keuangan, PO, invoice',
@@ -799,7 +799,7 @@ class _QuickActions extends StatelessWidget {
           _QuickAction(
             icon: Icons.science,
             label: 'QC Test',
-            route: '/qc/riwayat',
+            route: '/qc',
           ),
         ];
       case 'Workshop':

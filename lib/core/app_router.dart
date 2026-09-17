@@ -337,6 +337,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
   StatefulShellBranch(
     routes: [
       GoRoute(
+        path: '/qc',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const QcHomeScreen(),
+        ),
+      ),
+      GoRoute(
         path: '/qc/riwayat',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,

@@ -11,6 +11,7 @@ import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import 'models/qc_sample.dart';
 import 'qc_providers.dart';
 import 'qc_rules.dart';
 import 'qc_sheets.dart';
