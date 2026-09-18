@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -13,16 +14,38 @@ import 'pending_action.dart';
 /// - backoff eksponensial per aksi, maksimum 5 percobaan otomatis;
 /// - satu aksi dikirim pada satu waktu (urut createdAt).
 class OutboxSyncService {
-  OutboxSyncService(this._repo, this._api);
+  OutboxSyncService(
+    this._repo,
+    this._api, {
+    Stream<List<ConnectivityResult>> Function()? connectivityStream,
+    Duration reconnectDebounce = const Duration(seconds: 2),
+  }) : _connectivityStream = connectivityStream ??
+           (() => Connectivity().onConnectivityChanged),
+       _reconnectDebounce = reconnectDebounce;
 
   static const _maxAttempts = 5;
 
   final OutboxRepository _repo;
   final ApiClient _api;
 
+  /// Sumber event konektivitas. Dapat di-inject pada test; default memakai
+  /// plugin `connectivity_plus`.
+  final Stream<List<ConnectivityResult>> Function() _connectivityStream;
+
+  /// Jendela coalescing untuk lonjakan event konektivitas
+  /// (OFF→ON→OFF→ON) agar tidak meluncurkan banyak siklus sync.
+  final Duration _reconnectDebounce;
+
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   Timer? _timer;
+  Timer? _reconnectTimer;
   bool _syncing = false;
+
+  /// true bila ada permintaan force-sync yang datang saat siklus lain
+  /// berjalan — dijalankan sekali lagi setelah siklus tersebut selesai,
+  /// sehingga trigger manual/resume tidak hilang begitu saja.
+  bool _forceSyncQueued = false;
+
   final Set<String> _inFlightActionIds = {};
 
   /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) - dipakai
@@ -169,6 +192,25 @@ class OutboxSyncService {
         );
       }
       return OutboxSendResult(delivered: false, errorMessage: e.message);
+    } catch (e) {
+      // Exception tak terduga (mis. file lampiran hilang / error parsing).
+      // `send()` TIDAK BOLEH melempar: `enqueue()` memanggilnya SETELAH item
+      // tersimpan, sehingga lemparan di sini menampilkan "gagal" di UI padahal
+      // data sudah aman di outbox (persis pola "save failure → queue muncul"),
+      // sekaligus menghentikan sisa antrean pada satu siklus `syncNow`.
+      if (e is FileSystemException) {
+        return const OutboxSendResult(
+          delivered: false,
+          permanentlyFailed: true,
+          errorMessage:
+              'File lampiran tidak ditemukan di perangkat. Ambil ulang foto lalu kirim lagi.',
+        );
+      }
+      return OutboxSendResult(
+        delivered: false,
+        errorMessage:
+            'Kendala teknis saat mengirim. Data tersimpan dan akan dicoba lagi.',
+      );
     } finally {
       _inFlightActionIds.remove(action.id);
     }
@@ -178,7 +220,12 @@ class OutboxSyncService {
   /// [ignoreBackoff] = paksa kirim (tombol sync / retry manual):
   /// melewati backoff DAN batas percobaan otomatis.
   Future<void> syncNow({bool ignoreBackoff = false}) async {
-    if (_syncing) return;
+    if (_syncing) {
+      // Sudah ada worker aktif. Alih-alih membuang trigger force (manual /
+      // reconnect / resume), catat agar dijalankan sekali lagi setelah selesai.
+      if (ignoreBackoff) _forceSyncQueued = true;
+      return;
+    }
     _syncing = true;
     var attempted = false;
     try {
@@ -211,6 +258,10 @@ class OutboxSyncService {
       // meski tab presensi sedang tidak dibuka (indexedStack tetap hidup).
       if (attempted) onSyncCycleDone?.call();
     }
+    if (_forceSyncQueued) {
+      _forceSyncQueued = false;
+      await syncNow(ignoreBackoff: true);
+    }
   }
 
   /// Backoff eksponensial: 15s, 30s, 60s, 120s, 240s.
@@ -228,12 +279,34 @@ class OutboxSyncService {
   /// konektivitas/timer 1 menit — data yang diantre sebelum app ditutup
   /// langsung dicoba kirim saat app kembali dibuka (test: app open kembali).
   void start() {
-    _connectivitySub ??= Connectivity().onConnectivityChanged.listen((results) {
-      final online = results.any((r) => r != ConnectivityResult.none);
-      if (online) syncNow();
-    });
+    _connectivitySub ??= _connectivityStream().listen(
+      handleConnectivityChange,
+    );
     _timer ??= Timer.periodic(const Duration(minutes: 1), (_) => syncNow());
-    unawaited(syncNow());
+    // App launch / relaunch: antrean dari sesi sebelumnya langsung di-flush
+    // tanpa menunggu backoff (Acceptance #52). Tanpa ini, item yang sempat
+    // kehabisan jatah retry otomatis akan "tersandera" sampai user menekan
+    // Sync manual meski perangkat sudah online.
+    unawaited(syncNow(ignoreBackoff: true));
+  }
+
+  /// Dipanggil listener `start()` untuk setiap perubahan konektivitas.
+  /// Publik agar dapat diuji secara deterministik tanpa plugin.
+  ///
+  /// Event konektivitas hanyalah pemicu (WiFi connected != internet reachable,
+  /// §11). Transisi ke online di-debounce untuk menggabungkan lonjakan
+  /// (OFF→ON→OFF→ON, §15.4), lalu memaksa flush — jaringan yang baru kembali
+  /// adalah konteks segar, termasuk untuk item yang sudah kehabisan jatah
+  /// retry otomatis. Kegagalan tetap diklasifikasi ulang dari respons request.
+  void handleConnectivityChange(List<ConnectivityResult> results) {
+    final online = results.any((r) => r != ConnectivityResult.none);
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    if (!online) return;
+    _reconnectTimer = Timer(_reconnectDebounce, () {
+      _reconnectTimer = null;
+      syncNow(ignoreBackoff: true);
+    });
   }
 
   void dispose() {
@@ -241,5 +314,7 @@ class OutboxSyncService {
     _connectivitySub = null;
     _timer?.cancel();
     _timer = null;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
   }
 }

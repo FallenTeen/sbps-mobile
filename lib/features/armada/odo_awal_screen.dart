@@ -145,6 +145,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
     try {
       bool delivered = false;
+      String? permanentError;
       final titikId = (armada.titikId != null && armada.titikId!.trim().isNotEmpty)
           ? armada.titikId!.trim()
           : null;
@@ -157,6 +158,9 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           odoKm: armada.isAlatBerat ? null : odoValue,
           jamOperasional: armada.isAlatBerat ? odoValue : null,
         );
+      } on ApiException catch (e) {
+        // 4xx permanen: jangan telan — permukaan ke user (queued ≠ gagal).
+        permanentError = e.message;
       } catch (_) {}
 
       // 2. Simpan ODO awal proyek bila belum pernah tercatat
@@ -169,9 +173,11 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
               odoAwal: odoValue,
             );
         delivered = delivered || odoAwalDelivered;
-      } catch (_) {
-        // Abaikan jika sudah pernah tercatat sebelumnya (422)
-      }
+      } on ApiException catch (e) {
+        // 422 = sudah pernah tercatat (efektif sukses) — abaikan. Error lain
+        // (403/404/400) tetap permukaan bila tidak ada yang berhasil.
+        if (e.statusCode != 422) permanentError ??= e.message;
+      } catch (_) {}
 
       ref.invalidate(armadaSayaProvider);
       ref.invalidate(checklistHariIniProvider);
@@ -186,7 +192,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                 ? (armada.isAlatBerat
                       ? 'Jam Kerja Unit berhasil diperbarui'
                       : 'KM terkini berhasil diperbarui')
-                : kCopyQueued,
+                : (permanentError ?? kCopyQueued),
           ),
         ),
       );

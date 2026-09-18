@@ -63,10 +63,11 @@ class SbpsApp extends ConsumerStatefulWidget {
   ConsumerState<SbpsApp> createState() => _SbpsAppState();
 }
 
-class _SbpsAppState extends ConsumerState<SbpsApp> {
+class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(outboxSyncServiceProvider).start();
@@ -89,6 +90,24 @@ class _SbpsAppState extends ConsumerState<SbpsApp> {
       // Setup notification tap handler (deep link).
       NotificationHandler.instance.initialize(ref);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Auto-sync saat app kembali ke foreground. Network bisa pulih selama app
+  /// di background tanpa memicu event connectivity (mis. perpindahan jaringan
+  /// seluler), sehingga antrean tidak boleh menunggu user menekan Sync manual.
+  /// Force-flush (melewati backoff & batas retry) karena ini sinyal konteks
+  /// jaringan segar; kegagalan tetap diklasifikasi ulang oleh respons request.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(outboxSyncServiceProvider).syncNow(ignoreBackoff: true);
+    }
   }
 
   @override

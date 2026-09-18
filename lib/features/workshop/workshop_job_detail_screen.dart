@@ -151,11 +151,14 @@ class _WorkshopJobDetailContentState
           );
       ref.invalidate(workshopJobDetailProvider(widget.jobId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.delivered ? 'Foto bukti terunggah' : kCopyQueued),
-          ),
-        );
+        final message = result.delivered
+            ? 'Foto bukti terunggah'
+            : result.permanentlyFailed
+            ? (result.errorMessage ?? 'Gagal mengunggah foto bukti')
+            : kCopyQueued;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -195,6 +198,18 @@ class _WorkshopJobDetailContentState
           HapticFeedback.lightImpact();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Request sparepart terkirim')),
+          );
+        }
+      } else if (result.permanentlyFailed) {
+        // 4xx: aksi ditandai "Gagal dikirim" di outbox — jangan tampilkan
+        // sebagai "tersimpan/menunggu" (queued ≠ server success, §16/§31).
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result.errorMessage ?? 'Gagal mengirim request sparepart',
+              ),
+            ),
           );
         }
       } else if (mounted) {
