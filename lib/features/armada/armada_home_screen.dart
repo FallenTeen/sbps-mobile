@@ -51,7 +51,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
               _subtitleForRole(activeRole),
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: context.colors.textTertiary,
               ),
             ),
           ],

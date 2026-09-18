@@ -275,7 +275,7 @@ class _QueueSummary extends StatelessWidget {
             Icon(
               Icons.cloud_off_outlined,
               size: 16,
-              color: Theme.of(context).colorScheme.outline,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             const Expanded(
@@ -286,7 +286,7 @@ class _QueueSummary extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Muat ulang ringkasan',
-              visualDensity: VisualDensity.compact,
+              // Default tap target ≥48dp (tanpa compact density).
               icon: const Icon(Icons.refresh, size: 18),
               onPressed: onRefresh,
             ),
@@ -400,7 +400,8 @@ class _FilterChipLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilterChip(
       label: Text(label),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      // shrinkWrap sengaja dihapus: default MaterialTapTargetSize.padded
+      // menjamin hit area ≥48dp; visual chip tetap kompak via visualDensity.
       visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       selected: selected,
@@ -517,14 +518,14 @@ class _ServisQueueCard extends StatelessWidget {
                   Icon(
                     Icons.calendar_today_outlined,
                     size: 14,
-                    color: Theme.of(context).colorScheme.outline,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     fmtTanggal(item.tanggalAjuan),
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.outline,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   if (item.diajukanOleh != null) ...[
@@ -532,7 +533,7 @@ class _ServisQueueCard extends StatelessWidget {
                     Icon(
                       Icons.person_outline,
                       size: 14,
-                      color: Theme.of(context).colorScheme.outline,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -540,7 +541,9 @@ class _ServisQueueCard extends StatelessWidget {
                         item.diajukanOleh!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.outline,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),

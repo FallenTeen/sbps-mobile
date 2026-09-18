@@ -1149,6 +1149,7 @@ return Container(
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
+                      cacheWidth: 200,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1204,8 +1205,10 @@ class _ToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
+    return ConstrainedBox(
+      // minHeight 48 (bukan fixed): baris tetap ≥48dp, namun bisa tumbuh
+      // bila label wrap di text scale 130%.
+      constraints: const BoxConstraints(minHeight: 48),
       child: Material(
         color: selected
             ? selectedColor.withValues(alpha: 0.12)
@@ -1216,7 +1219,7 @@ class _ToggleChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(

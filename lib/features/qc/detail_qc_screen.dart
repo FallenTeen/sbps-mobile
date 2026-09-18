@@ -141,14 +141,15 @@ class DetailQcContent extends ConsumerWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 130,
+        Flexible(
+          flex: 2,
           child: Text(
             label,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
-        Expanded(child: Text(value)),
+        const SizedBox(width: 8),
+        Expanded(flex: 3, child: Text(value)),
       ],
     ),
   );

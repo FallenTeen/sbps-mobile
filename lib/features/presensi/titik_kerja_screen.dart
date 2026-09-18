@@ -366,6 +366,7 @@ class _LocationCard extends StatelessWidget {
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
           trailing: IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Perbarui lokasi',
             onPressed: onRefresh,
           ),
         ),
@@ -427,6 +428,7 @@ class _LocationCard extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.refresh),
+          tooltip: 'Perbarui lokasi',
           onPressed: onRefresh,
         ),
       ),
@@ -463,7 +465,7 @@ class _TitikTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: isSelected
             ? context.colors.primary.withValues(alpha: 0.05)
-            : Colors.white,
+            : context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected

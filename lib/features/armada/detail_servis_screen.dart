@@ -235,7 +235,9 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                           'Unit: ${item.kodeUnit!} • Jenis: '
                           '${item.jenisArmada ?? '-'}',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.outline,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -398,7 +400,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.outline,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -415,9 +417,9 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               ),
                               Text(
                                 fmtRp(item.totalBiaya!),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.green,
+                                  color: context.colors.success,
                                 ),
                               ),
                             ],
@@ -492,14 +494,19 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 130,
+          // Flexible (bukan fixed 130px): label bisa memuat saat text scale
+          // 130% tanpa menyempitkan nilai secara paksa.
+          Flexible(
+            flex: 2,
             child: Text(
               label,
-              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(
+            flex: 3,
             child: Text(
               value,
               style: const TextStyle(fontWeight: FontWeight.w500),
@@ -616,7 +623,7 @@ class _TimelineNode extends StatelessWidget {
                         ? FontWeight.w700
                         : FontWeight.w600,
                     color: step.state == ServisTimelineState.pending
-                        ? Theme.of(context).colorScheme.outline
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
                         : color,
                   ),
                 ),

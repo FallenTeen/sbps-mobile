@@ -14,6 +14,7 @@ import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
 import 'checklist_major_model.dart';
 import 'checklist_major_store.dart';
@@ -267,6 +268,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Kembali',
           onPressed: _goBack,
         ),
         title: Text('Checklist Serah Terima — ${_unit?.platNomor ?? ''}'),
@@ -896,14 +898,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                   ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        ),
+                        SubmitSpinner(size: 18),
                         SizedBox(width: 8),
                         Text('Mengirim...'),
                       ],
@@ -965,6 +960,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
+          tooltip: 'Tutup',
           onPressed: () => _goBack(),
         ),
         title: const Text('Checklist Serah Terima'),
@@ -1351,21 +1347,26 @@ class _MajorEvidenceBox extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: onPreview,
-          child: Hero(
-            tag: heroTag,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(path),
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => ColoredBox(
-                  color: colors.surfaceVariant,
-                  child: const SizedBox(
-                    width: 64,
-                    height: 64,
-                    child: Icon(Icons.image, color: Colors.grey),
+          child: Semantics(
+            button: true,
+            label: 'Lihat foto',
+            child: Hero(
+              tag: heroTag,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(path),
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
+                  cacheWidth: 200,
+                  errorBuilder: (context, error, stack) => ColoredBox(
+                    color: colors.surfaceVariant,
+                    child: SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: Icon(Icons.image, color: colors.textMuted),
+                    ),
                   ),
                 ),
               ),
@@ -1533,19 +1534,24 @@ class _ReviewItemRow extends StatelessWidget {
               if (item.photoPath != null)
                 GestureDetector(
                   onTap: onPreview,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.file(
-                      File(item.photoPath!),
-                      width: 28,
-                      height: 28,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) => ColoredBox(
-                        color: colors.surfaceVariant,
-                        child: const SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: Icon(Icons.image, size: 14),
+                  child: Semantics(
+                    button: true,
+                    label: 'Lihat foto item',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.file(
+                        File(item.photoPath!),
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.cover,
+                        cacheWidth: 96,
+                        errorBuilder: (context, error, stack) => ColoredBox(
+                          color: colors.surfaceVariant,
+                          child: const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Icon(Icons.image, size: 14),
+                          ),
                         ),
                       ),
                     ),

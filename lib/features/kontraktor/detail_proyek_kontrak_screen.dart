@@ -8,6 +8,7 @@ import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import 'kontraktor_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/submit_spinner.dart';
 
 /// Detail Proyek Kontrak Klien: Ringkasan Produksi, Realisasi RAB, Invoices, dan Chat Komunikasi.
 class DetailProyekKontrakScreen extends ConsumerStatefulWidget {
@@ -120,7 +121,7 @@ class _DetailProyekKontrakScreenState
                       Text(
                         'Kode: ${p.kodeProyek}${p.client != null ? ' • Klien: ${p.client}' : ''}',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.outline,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       if (p.lokasi != null) ...[
@@ -128,7 +129,7 @@ class _DetailProyekKontrakScreenState
                         Text(
                           'Lokasi: ${p.lokasi!}',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.outline,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -229,7 +230,7 @@ class _DetailProyekKontrakScreenState
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.outline,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -297,7 +298,7 @@ class _DetailProyekKontrakScreenState
                                         fontSize: 10,
                                         color: Theme.of(
                                           context,
-                                        ).colorScheme.outline,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -326,14 +327,7 @@ class _DetailProyekKontrakScreenState
                           IconButton.filled(
                             onPressed: _isSending ? null : _sendMessage,
                             icon: _isSending
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
+                                ? const SubmitSpinner(size: 18)
                                 : const Icon(Icons.send),
                           ),
                         ],

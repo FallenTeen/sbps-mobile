@@ -84,6 +84,7 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.close_rounded, size: 18),
+                            tooltip: 'Hapus pencarian',
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');

@@ -270,7 +270,6 @@ class _PeriodFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: const VisualDensity(
                       horizontal: -2,
                       vertical: -2,
@@ -283,7 +282,7 @@ class _PeriodFilterSection extends StatelessWidget {
                     selectedColor: Colors.teal.withValues(alpha: 0.1),
                     checkmarkColor: Colors.teal,
                     labelStyle: TextStyle(
-                      color: selected == option ? Colors.teal : Colors.black87,
+                      color: selected == option ? Colors.teal : context.colors.textPrimary,
                       fontWeight: selected == option
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -338,7 +337,6 @@ class _StatusFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: const VisualDensity(
                       horizontal: -2,
                       vertical: -2,
@@ -351,7 +349,7 @@ class _StatusFilterSection extends StatelessWidget {
                     selectedColor: Colors.teal.withValues(alpha: 0.1),
                     checkmarkColor: Colors.teal,
                     labelStyle: TextStyle(
-                      color: selected == option ? Colors.teal : Colors.black87,
+                      color: selected == option ? Colors.teal : context.colors.textPrimary,
                       fontWeight: selected == option
                           ? FontWeight.w600
                           : FontWeight.normal,

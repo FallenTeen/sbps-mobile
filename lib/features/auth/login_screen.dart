@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -148,6 +149,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: context.colors.textMuted,
                         size: 20,
                       ),
+                      tooltip: _obscurePassword
+                          ? 'Tampilkan sandi'
+                          : 'Sembunyikan sandi',
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
@@ -323,14 +327,7 @@ class _LoginButton extends StatelessWidget {
           shadowColor: context.colors.primary.withValues(alpha: 0.3),
         ),
         child: isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
-              )
+            ? const SubmitSpinner(size: 22, strokeWidth: 2.5)
             : const Text(
                 'Masuk',
                 style: TextStyle(

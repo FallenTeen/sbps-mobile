@@ -86,6 +86,7 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
           const PortalSwitchButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Muat ulang daftar helper',
             onPressed: () => ref.invalidate(helpersProvider),
           ),
         ],

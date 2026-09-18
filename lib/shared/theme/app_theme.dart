@@ -469,3 +469,13 @@ class AppTheme {
   static const Color borderColor = Color(0xFFE2E8F0);
   static const Color cardColor = Colors.white;
 }
+
+/// Warna spinner/label saat tombol sengaja di-disable selama submit
+/// (fill abu M3: onSurface 12%).
+///
+/// Memakai `onSurface` α38% — warna yang SAMA dengan disabled foreground
+/// bawaan Material — sehingga spinner tak lagi "putih tak terbaca" di atas
+/// fill abu, baik di mode terang maupun gelap.
+Color disabledForeground(BuildContext context) {
+  return Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
+}

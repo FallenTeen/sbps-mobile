@@ -86,8 +86,8 @@ class _ContextCard extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 96,
+        Flexible(
+          flex: 2,
           child: Text(
             label,
             style: TextStyle(
@@ -97,7 +97,9 @@ class _ContextCard extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(width: 8),
         Expanded(
+          flex: 3,
           child: Text(
             value,
             style: TextStyle(
@@ -162,14 +164,18 @@ class _ReviewRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
+          Flexible(
+            flex: 2,
             child: Text(
               label,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(child: Text(value, textAlign: TextAlign.end)),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(value, textAlign: TextAlign.end),
+          ),
         ],
       ),
     );

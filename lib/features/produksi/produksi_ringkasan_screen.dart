@@ -154,7 +154,7 @@ class _ActiveSessionsSection extends StatelessWidget {
                         Icon(
                           Icons.hourglass_empty,
                           size: 36,
-                          color: theme.colorScheme.outline,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 8),
                         const Text('Belum ada sesi aktif'),
@@ -281,7 +281,7 @@ class _ProgressSection extends StatelessWidget {
                         Icon(
                           Icons.bar_chart,
                           size: 36,
-                          color: theme.colorScheme.outline,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 8),
                         const Text('Belum ada produksi hari ini'),
@@ -304,7 +304,7 @@ class _ProgressSection extends StatelessWidget {
                         child: Text(
                           'Tanggal: ${data.tanggal}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -336,7 +336,7 @@ class _ProgressTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

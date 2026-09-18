@@ -374,7 +374,7 @@ class TitikOverviewTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: context.colors.border),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -434,7 +434,7 @@ class _MiniChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: context.colors.surfaceVariant,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -444,7 +444,10 @@ class _MiniChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade800),
+            style: TextStyle(
+              fontSize: 11,
+              color: context.colors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -772,16 +775,24 @@ class _ActivityTile extends ConsumerWidget {
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        radius: 18,
-        backgroundColor:
-            unread
-                ? context.colors.primary.withValues(alpha: 0.14)
-                : Colors.grey.shade200,
-        child: Icon(
-          Icons.circle_notifications_outlined,
-          size: 20,
-          color: unread ? context.colors.primary : Colors.grey.shade600,
+      leading: Semantics(
+        // Status belum dibaca tidak hanya diwarnai — dibacakan ke TalkBack.
+        label: unread
+            ? 'Notifikasi belum dibaca'
+            : 'Notifikasi sudah dibaca',
+        child: CircleAvatar(
+          radius: 18,
+          backgroundColor:
+              unread
+                  ? context.colors.primary.withValues(alpha: 0.14)
+                  : context.colors.surfaceVariant,
+          child: Icon(
+            Icons.circle_notifications_outlined,
+            size: 20,
+            color: unread
+                ? context.colors.primary
+                : context.colors.textMuted,
+          ),
         ),
       ),
       title: Text(

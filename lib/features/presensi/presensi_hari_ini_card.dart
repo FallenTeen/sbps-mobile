@@ -271,7 +271,7 @@ class PresensiHariIniCard extends ConsumerWidget {
                       size: 16,
                       color: adaLokasi
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.outline,
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -287,14 +287,18 @@ class PresensiHariIniCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Row(
+                // OverflowBar: deretan tombol turun ke baris baru saat
+                // sempit / text scale 130%, bukan memicu overflow.
+                OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: 8,
+                  overflowSpacing: 8,
                   children: [
                     TextButton(
                       onPressed: () =>
                           Navigator.of(sheetContext).pop(_PreviewChoice.batal),
                       child: const Text('Batal'),
                     ),
-                    const Spacer(),
                     OutlinedButton.icon(
                       onPressed: () => Navigator.of(
                         sheetContext,
@@ -302,7 +306,6 @@ class PresensiHariIniCard extends ConsumerWidget {
                       icon: const Icon(Icons.camera_alt_outlined),
                       label: const Text('Ambil Ulang'),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton.icon(
                       onPressed: () =>
                           Navigator.of(sheetContext).pop(_PreviewChoice.kirim),

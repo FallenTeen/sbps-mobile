@@ -10,6 +10,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import 'models/servis_armada.dart';
@@ -474,14 +475,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                             ? const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                  SubmitSpinner(size: 18),
                                   SizedBox(width: 8),
                                   Text('Mengirim...'),
                                 ],

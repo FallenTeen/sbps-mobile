@@ -165,7 +165,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                               Text(
                                 'Kode: ${item.kodeProyek}${item.client != null ? ' • Klien: ${item.client}' : ''}',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.outline,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                               ),
@@ -178,7 +178,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                       size: 14,
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.outline,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
@@ -188,7 +188,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                           fontSize: 12,
                                           color: Theme.of(
                                             context,
-                                          ).colorScheme.outline,
+                                          ).colorScheme.onSurfaceVariant,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -302,7 +302,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                               Text(
                                 'Proyek: ${inv.proyek}',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.outline,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                               ),

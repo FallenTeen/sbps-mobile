@@ -124,7 +124,6 @@ class _PeriodFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: const VisualDensity(
                       horizontal: -2,
                       vertical: -2,
@@ -196,7 +195,6 @@ class _StatusFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: Text(option),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: const VisualDensity(
                       horizontal: -2,
                       vertical: -2,

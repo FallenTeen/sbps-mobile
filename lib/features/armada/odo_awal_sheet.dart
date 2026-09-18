@@ -10,6 +10,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/submit_spinner.dart';
 
 /// KM Harian Sheet (Fase 2) - Converted from full screen to sheet
 /// Form sederhana: pilih kendaraan, lihat KM terakhir, update KM sekarang.
@@ -170,6 +171,7 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
+                      tooltip: 'Tutup',
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -366,14 +368,7 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                               child: FilledButton.icon(
                                 onPressed: _isLoading ? null : _submit,
                                 icon: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
+                                    ? const SubmitSpinner()
                                     : const Icon(Icons.save),
                                 label: Text(
                                   _isLoading

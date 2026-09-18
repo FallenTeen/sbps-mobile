@@ -15,6 +15,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../presensi/presensi_providers.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
@@ -879,14 +880,7 @@ class _RecordCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
                     icon: submitting
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                        ? const SubmitSpinner(size: 14)
                         : const Icon(Icons.send, size: 15),
                     label: Text(
                       record.status == RitaseRecordStatus.failed
@@ -1062,14 +1056,7 @@ class _SubmitBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: toSend == 0 || submittingAll ? null : onSendAll,
                 icon: submittingAll
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
+                    ? const SubmitSpinner(size: 18)
                     : const Icon(Icons.send, size: 18),
                 label: Text(
                   submittingAll
@@ -1251,6 +1238,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
+                  tooltip: 'Tutup',
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -1429,6 +1417,7 @@ class _ReviewSheet extends StatelessWidget {
                 const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.close),
+                  tooltip: 'Tutup',
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

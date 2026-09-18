@@ -201,7 +201,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Text(
               user?.email ?? '',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.outline,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -246,7 +246,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Icon(
                     Icons.swap_horiz_rounded,
                     size: 20,
-                    color: theme.colorScheme.outline,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
               ],
             ),
@@ -373,7 +373,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'Mode gelap nyaman untuk shift malam dan hemat baterai di layar '
             'AMOLED. "Sistem" mengikuti pengaturan HP Anda.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.outline,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
 
@@ -430,6 +430,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                       ),
+                      tooltip: _obscurePassword
+                          ? 'Tampilkan sandi'
+                          : 'Sembunyikan sandi',
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
@@ -455,6 +458,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                       ),
+                      tooltip: _obscureConfirm
+                          ? 'Tampilkan sandi'
+                          : 'Sembunyikan sandi',
                       onPressed: () =>
                           setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
@@ -556,7 +562,7 @@ class _SectionHeader extends StatelessWidget {
                 Text(
                   helper!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.outline,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

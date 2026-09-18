@@ -347,12 +347,15 @@ class _Tile extends ConsumerWidget {
         ),
       ),
       trailing: unread
-          ? Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: colors.primary,
-                shape: BoxShape.circle,
+          ? Semantics(
+              label: 'Belum dibaca',
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
             )
           : null,

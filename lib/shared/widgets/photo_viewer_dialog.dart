@@ -63,6 +63,7 @@ class PhotoViewerDialog extends StatelessWidget {
             : null,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
+          tooltip: 'Tutup',
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

@@ -179,7 +179,7 @@ class _SummaryBanner extends StatelessWidget {
             size: 18,
             color: stale > 0
                 ? Colors.orange.shade800
-                : Theme.of(context).colorScheme.outline,
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Expanded(

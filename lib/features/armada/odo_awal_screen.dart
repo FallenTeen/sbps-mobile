@@ -11,6 +11,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
@@ -349,14 +350,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                   child: FilledButton.icon(
                     onPressed: _isLoading ? null : _onSubmitPressed,
                     icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                        ? const SubmitSpinner()
                         : const Icon(Icons.save),
                     label: Text(
                       _isLoading

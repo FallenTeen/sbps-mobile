@@ -302,7 +302,7 @@ class _ListCard<T> extends StatelessWidget {
                     Icon(
                       Icons.inbox_outlined,
                       size: 18,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 8),
                     Expanded(child: Text(emptyText)),

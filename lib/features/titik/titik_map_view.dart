@@ -132,7 +132,7 @@ class _TitikMapViewState extends State<TitikMapView> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -168,7 +168,7 @@ class _TitikMapViewState extends State<TitikMapView> {
                             Text(
                               titik.displayProyek!,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.outline,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -311,7 +311,7 @@ class _TitikMapViewState extends State<TitikMapView> {
             context,
           ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -319,13 +319,13 @@ class _TitikMapViewState extends State<TitikMapView> {
             Icon(
               Icons.map_outlined,
               size: 48,
-              color: Theme.of(context).colorScheme.outline,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
             Text(
               widget.emptyMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -569,13 +569,13 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.outline),
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Text(
             '$label: ',
             style: TextStyle(
               fontSize: 13,
-              color: Theme.of(context).colorScheme.outline,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           Expanded(

@@ -16,6 +16,7 @@ import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/status_pill.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../armada/servis_status.dart';
 import '../armada/models/servis_armada.dart';
@@ -426,14 +427,7 @@ class _WorkshopJobDetailContentState
           child: FilledButton.icon(
             onPressed: _isSubmitting ? null : _startWork,
             icon: _isSubmitting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+                ? const SubmitSpinner(size: 18)
                 : const Icon(Icons.play_arrow, size: 20),
             label: Text('Mulai Pengerjaan'),
           ),
@@ -475,14 +469,7 @@ class _WorkshopJobDetailContentState
                       ? null
                       : () => _markComplete(items),
                   icon: _isSubmitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
+                      ? const SubmitSpinner(size: 18)
                       : const Icon(Icons.check, size: 18),
                   label: Text('Tandai Selesai'),
                 ),
@@ -788,8 +775,8 @@ class _WorkshopJobDetailContentState
         children: [
           Icon(icon, size: 16, color: context.colors.textTertiary),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 110,
+          Flexible(
+            flex: 2,
             child: Text(
               label,
               style: TextStyle(
@@ -798,7 +785,9 @@ class _WorkshopJobDetailContentState
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
+            flex: 3,
             child: Text(
               value,
               style: TextStyle(
@@ -1024,7 +1013,7 @@ Future<SparepartSheetResult?> showRequestSparepartSheet(
   return showModalBottomSheet<SparepartSheetResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: context.colors.card,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),

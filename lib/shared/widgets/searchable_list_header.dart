@@ -86,6 +86,7 @@ class _SearchableListHeaderState extends State<SearchableListHeader> {
               suffixIcon: hasText
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded, size: 18),
+                      tooltip: 'Hapus pencarian',
                       onPressed: () {
                         _controller.clear();
                         setState(() {});

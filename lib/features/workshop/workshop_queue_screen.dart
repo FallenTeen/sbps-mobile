@@ -90,14 +90,19 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             _buildSummary(context, selectedId, onSelect),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Row(
-                children: [
-                  _buildChip('Menunggu', _QueueFilter.menunggu),
-                  const SizedBox(width: 8),
-                  _buildChip('Sedang Dikerjakan', _QueueFilter.dikerjakan),
-                  const SizedBox(width: 8),
-                  _buildChip('Selesai Hari Ini', _QueueFilter.selesaiHariIni),
-                ],
+              // Horizontal scroll: 3 label chip tidak muat di layar sempit
+              // (~320dp) / text scale 130% — dulu memicu overflow.
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildChip('Menunggu', _QueueFilter.menunggu),
+                    const SizedBox(width: 8),
+                    _buildChip('Sedang Dikerjakan', _QueueFilter.dikerjakan),
+                    const SizedBox(width: 8),
+                    _buildChip('Selesai Hari Ini', _QueueFilter.selesaiHariIni),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -338,7 +343,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     final selected = _filter == value;
     return FilterChip(
       label: Text(label),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      // Default padded tap target (≥48dp); visual tetap kompak.
       visualDensity: VisualDensity(horizontal: -2, vertical: -2),
       labelPadding: EdgeInsets.symmetric(horizontal: 4),
       selected: selected,

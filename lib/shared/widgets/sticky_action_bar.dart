@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'submit_spinner.dart';
 
 /// Bilah aksi menempel di bawah layar — pola "Sticky Action Bar".
 ///
@@ -48,7 +49,7 @@ class StickyActionBar extends StatelessWidget {
       style: FilledButton.styleFrom(minimumSize: const Size(64, 48)),
       onPressed: showPrimaryLoading ? null : onPrimary,
       icon: showPrimaryLoading
-          ? const _BarSpinner()
+          ? const SubmitSpinner()
           : (primaryIcon != null
                 ? Icon(primaryIcon, size: 18)
                 : const SizedBox.shrink()),
@@ -94,28 +95,6 @@ class StickyActionBar extends StatelessWidget {
       onPressed: secondaryDisabled ? null : onSecondary,
       icon: const Icon(Icons.chevron_left_rounded, size: 18),
       label: Text(secondaryLabel ?? 'Kembali'),
-    );
-  }
-}
-
-/// Spinner kecil pada tombol utama saat submit in-flight.
-///
-/// Ditaruh di atas tombol yang disabled (fill abu) — warnanya mengikuti
-/// disabled foreground supaya tetap terbaca di mode terang & gelap.
-class _BarSpinner extends StatelessWidget {
-  const _BarSpinner();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        color: Theme.of(
-          context,
-        ).colorScheme.onSurface.withValues(alpha: 0.38),
-      ),
     );
   }
 }
