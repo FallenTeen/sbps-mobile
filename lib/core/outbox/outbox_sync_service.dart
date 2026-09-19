@@ -46,7 +46,14 @@ class OutboxSyncService {
   /// sehingga trigger manual/resume tidak hilang begitu saja.
   bool _forceSyncQueued = false;
 
-  final Set<String> _inFlightActionIds = {};
+  /// Aksi yang sedang dikirim sekarang, dipetakan ke future hasilnya.
+  /// Caller kedua untuk aksi yang sama (mis. `enqueue` dan worker `syncNow`
+  /// yang memuat snapshot sama) JOIN future yang sama — SATU request nyata,
+  /// semua caller menerima hasil asli. Tanpa ini, caller kedua menerima
+  /// `queued` (delivered:false) padahal request berhasil dikirim, sehingga
+  /// `enqueue` menandai retryable dan UI menampilkan "Gagal menyimpan"
+  /// padahal data aman dan terkirim beberapa detik kemudian.
+  final Map<String, Future<OutboxSendResult>> _inFlightActions = {};
 
   /// Dipanggil setelah siklus sync selesai (sukses maupun gagal) - dipakai
   /// provider untuk me-refresh state presensi.
@@ -55,10 +62,25 @@ class OutboxSyncService {
   /// Kirim satu aksi sekarang juga (dipakai untuk percobaan pertama
   /// dari [OutboxRepository.enqueue]).
   Future<OutboxSendResult> send(PendingAction action) async {
-    if (_inFlightActionIds.contains(action.id)) {
-      return OutboxSendResult.queued;
+    final existing = _inFlightActions[action.id];
+    if (existing != null) {
+      // Aksi sama tengah dikirim worker lain (enqueue vs syncNow / timer /
+      // reconnect). Join future yang sama: satu request, hasil asli.
+      return await existing;
     }
-    _inFlightActionIds.add(action.id);
+    final future = _dispatch(action);
+    _inFlightActions[action.id] = future;
+    try {
+      return await future;
+    } finally {
+      _inFlightActions.remove(action.id);
+    }
+  }
+
+  /// Eksekusi pengiriman yang sebenarnya, diisolasi agar [send] bisa
+  /// meng-join future aksi yang sama. Tidak pernah melempar: tiap kegagalan
+  /// dikembalikan sebagai [OutboxSendResult] (kontrak `enqueue`).
+  Future<OutboxSendResult> _dispatch(PendingAction action) async {
     try {
       try {
         await _repo.markSyncing(action.id);
@@ -212,7 +234,8 @@ class OutboxSyncService {
             'Kendala teknis saat mengirim. Data tersimpan dan akan dicoba lagi.',
       );
     } finally {
-      _inFlightActionIds.remove(action.id);
+      // Pembersihan map dikelola di `send()` agar caller kedua yang join
+      // tetap mendapat hasil aksi yang sama (bukan `queued`).
     }
   }
 
@@ -231,7 +254,7 @@ class OutboxSyncService {
     try {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
-        if (_inFlightActionIds.contains(action.id)) continue;
+        if (_inFlightActions.containsKey(action.id)) continue;
         if (!ignoreBackoff && _inBackoff(action)) continue;
         if (!ignoreBackoff && action.retryCount >= _maxAttempts) continue;
         attempted = true;

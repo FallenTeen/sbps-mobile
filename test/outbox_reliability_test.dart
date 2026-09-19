@@ -95,6 +95,60 @@ void main() {
       );
     });
 
+    test('send() saat aksi sama in-flight → join future (satu request, hasil asli)', () async {
+      // Race `enqueue` vs worker sync: tanpa join, caller kedua menerima
+      // `OutboxSendResult.queued` (delivered:false) padahal request berhasil
+      // dikirim worker lain → UI lapor "gagal", item ke-churn retryable.
+      final gated = _ThrowingApiClient()..gate = Completer<void>();
+      final service2 = OutboxSyncService(repo, gated);
+      final action = _action('race-a', PendingEndpoint.servisAjuan, payloadData: const {});
+
+      final first = service2.send(action);
+      final second = service2.send(action);
+      gated.gate!.complete();
+
+      final r1 = await first;
+      final r2 = await second;
+
+      expect(gated.jsonCalls, hasLength(1), reason: 'dua caller → SATU request nyata');
+      expect(r1.delivered, isTrue);
+      expect(r2.delivered, isTrue, reason: 'caller kedua dapat hasil asli, bukan queued');
+    });
+
+    test('submit saat worker syncNow mengirim aksi yang sama → enqueue delivered', () async {
+      // Skema persis pola bug: item sudah dibaca worker (snapshot) ketika user
+      // menekan submit. Worker & enqueue memanggil send() untuk aksi yang sama.
+      final gated = _ThrowingApiClient()..gate = Completer<void>();
+      final repo2 = OutboxRepository(boxName: 'rel_race');
+      final service2 = OutboxSyncService(repo2, gated);
+      final action = _action('race-b', PendingEndpoint.servisAjuan, payloadData: const {});
+
+      await (await Hive.openBox<String>('rel_race')).clear();
+      await (await Hive.openBox<String>('rel_race')).put(action.id, action.encode());
+
+      final worker = service2.syncNow();
+      await _waitFor(() => gated.jsonCalls.length == 1);
+      final submitted = repo2.enqueue(action, service2.send);
+      // Beri kesempatan enqueue mencapai send() DAN JOIN map worker. Gate
+      // BELUM dibuka → worker masih in-flight, jadi enqueue tidak boleh
+      // menambah request kedua.
+      await _settle();
+      expect(gated.jsonCalls, hasLength(1), reason: 'enqueue join worker, bukan dispatch baru');
+
+      gated.gate!.complete();
+      await worker;
+      final enqueueResult = await submitted;
+
+      expect(gated.jsonCalls, hasLength(1), reason: 'satu request nyata untuk aksi yang sama');
+      expect(
+        enqueueResult.delivered,
+        isTrue,
+        reason: 'enqueue join future worker → delivered, bukan queued',
+      );
+      final pending = await repo2.pendingActions();
+      expect(pending, isEmpty, reason: 'aksi terhapus, tidak ada churn ke retryable');
+    });
+
     test('satu item error tak terduga tidak menghentikan item berikutnya', () async {
       // Item pertama gagal tak terduga, item kedua harus tetap dicoba.
       final api2 = _ThrowingApiClient(failuresBeforeSuccess: 1);
@@ -231,6 +285,16 @@ Future<void> _settle() async {
   }
 }
 
+/// Menunggu [condition] benar (dengan batas waktu) — untuk mensinkronkan test
+/// race agar request worker sudah terdaftar sebelum caller kedua masuk.
+Future<void> _waitFor(bool Function() condition) async {
+  for (var i = 0; i < 200; i++) {
+    if (condition()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+  }
+  fail('timeout menunggu kondisi');
+}
+
 Future<void> _seed(String boxName, String key, PendingAction action) async {
   final box = await Hive.openBox<String>(boxName);
   await box.put(key, action.encode());
@@ -242,7 +306,17 @@ class _ThrowingApiClient extends ApiClient {
   Object? error;
   int failuresBeforeSuccess;
 
+  /// Saat disetel, panggilan berikutnya (pertama) menunggu gate dibuka —
+  /// untuk mensimulasikan request yang masih berjalan ketika caller kedua
+  /// memanggil `send()` untuk aksi yang sama.
+  Completer<void>? gate;
+
   final List<({String path, Map<String, dynamic>? body})> jsonCalls = [];
+
+  Future<void> _awaitGate() async {
+    if (gate == null) return;
+    await gate!.future;
+  }
 
   bool _maybeThrow() {
     if (error != null) {
@@ -266,6 +340,7 @@ class _ThrowingApiClient extends ApiClient {
     T Function(Object? raw)? parse,
   }) async {
     jsonCalls.add((path: path, body: body as Map<String, dynamic>?));
+    await _awaitGate();
     _maybeThrow();
     return const ApiResponse(status: 'success', message: 'ok');
   }
@@ -278,6 +353,7 @@ class _ThrowingApiClient extends ApiClient {
     Map<String, dynamic>? headers,
     T Function(Object? raw)? parse,
   }) async {
+    await _awaitGate();
     _maybeThrow();
     return const ApiResponse(status: 'success', message: 'ok');
   }
