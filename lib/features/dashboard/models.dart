@@ -344,6 +344,241 @@ class ArmadaStatusData {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Monitoring Armada (Bagian 21.11) — GET /dashboard/armada-monitoring
+// ---------------------------------------------------------------------------
+
+class ArmadaMonitoringData {
+  const ArmadaMonitoringData({
+    required this.tanggalDari,
+    required this.tanggalSampai,
+    required this.ringkasan,
+    required this.rekapPerTanggal,
+    required this.perUnit,
+  });
+
+  final String tanggalDari;
+  final String tanggalSampai;
+  final ArmadaMonitoringRingkasan ringkasan;
+  final List<ArmadaMonitoringRekap> rekapPerTanggal;
+  final List<ArmadaMonitoringUnit> perUnit;
+
+  factory ArmadaMonitoringData.fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    final rekap = map['rekap_per_tanggal'];
+    final perUnit = map['per_unit'];
+    return ArmadaMonitoringData(
+      tanggalDari: map['tanggal_dari']?.toString() ?? '',
+      tanggalSampai: map['tanggal_sampai']?.toString() ?? '',
+      ringkasan: ArmadaMonitoringRingkasan.fromRaw(map['ringkasan']),
+      rekapPerTanggal: [
+        if (rekap is List)
+          for (final e in rekap)
+            if (e is Map) ArmadaMonitoringRekap.fromRaw(e),
+      ],
+      perUnit: [
+        if (perUnit is List)
+          for (final e in perUnit)
+            if (e is Map) ArmadaMonitoringUnit.fromRaw(e),
+      ],
+    );
+  }
+}
+
+class ArmadaMonitoringRingkasan {
+  const ArmadaMonitoringRingkasan({
+    this.totalArmada = 0,
+    this.totalHariUnitOperasi = 0,
+    this.totalJamAktif = 0,
+    this.totalHm = 0,
+    this.rasioHmJam,
+    this.totalOdoKm = 0,
+    this.totalSolarLiter = 0,
+    this.totalRitase = 0,
+    this.totalSewaJam = 0,
+    this.unitBermasalah = 0,
+    this.belumChecklistHariIni = 0,
+    this.downtimeAktif = 0,
+    this.servisMenunggu = 0,
+  });
+
+  final int totalArmada;
+  final int totalHariUnitOperasi;
+  final double totalJamAktif;
+  final double totalHm;
+  final double? rasioHmJam;
+  final double totalOdoKm;
+  final double totalSolarLiter;
+  final int totalRitase;
+  final double totalSewaJam;
+  final int unitBermasalah;
+  final int belumChecklistHariIni;
+  final int downtimeAktif;
+  final int servisMenunggu;
+
+  factory ArmadaMonitoringRingkasan.fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    double numOf(String key) => (map[key] as num?)?.toDouble() ?? 0;
+    int intOf(String key) => (map[key] as num?)?.toInt() ?? 0;
+    final rasio = map['rasio_hm_jam'];
+    return ArmadaMonitoringRingkasan(
+      totalArmada: intOf('total_armada'),
+      totalHariUnitOperasi: intOf('total_hari_unit_operasi'),
+      totalJamAktif: numOf('total_jam_aktif'),
+      totalHm: numOf('total_hm'),
+      rasioHmJam: rasio is num ? rasio.toDouble() : null,
+      totalOdoKm: numOf('total_odo_km'),
+      totalSolarLiter: numOf('total_solar_liter'),
+      totalRitase: intOf('total_ritase'),
+      totalSewaJam: numOf('total_sewa_jam'),
+      unitBermasalah: intOf('unit_bermasalah'),
+      belumChecklistHariIni: intOf('belum_checklist_hari_ini'),
+      downtimeAktif: intOf('downtime_aktif'),
+      servisMenunggu: intOf('servis_menunggu'),
+    );
+  }
+}
+
+class ArmadaMonitoringRekap {
+  const ArmadaMonitoringRekap({
+    required this.tanggal,
+    this.jumlahUnit = 0,
+    this.totalJamAktif = 0,
+    this.totalHm = 0,
+    this.totalOdoKm = 0,
+    this.totalSolarLiter = 0,
+    this.jumlahRit = 0,
+    this.totalSewaJam = 0,
+  });
+
+  final String tanggal;
+  final int jumlahUnit;
+  final double totalJamAktif;
+  final double totalHm;
+  final double totalOdoKm;
+  final double totalSolarLiter;
+  final int jumlahRit;
+  final double totalSewaJam;
+
+  factory ArmadaMonitoringRekap.fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    double numOf(String key) => (map[key] as num?)?.toDouble() ?? 0;
+    return ArmadaMonitoringRekap(
+      tanggal: map['tanggal']?.toString() ?? '',
+      jumlahUnit: (map['jumlah_unit'] as num?)?.toInt() ?? 0,
+      totalJamAktif: numOf('total_jam_aktif'),
+      totalHm: numOf('total_hm'),
+      totalOdoKm: numOf('total_odo_km'),
+      totalSolarLiter: numOf('total_solar_liter'),
+      jumlahRit: (map['jumlah_rit'] as num?)?.toInt() ?? 0,
+      totalSewaJam: numOf('total_sewa_jam'),
+    );
+  }
+}
+
+class ArmadaMonitoringUnit {
+  const ArmadaMonitoringUnit({
+    this.id = 0,
+    this.kodeUnit,
+    this.platNomor,
+    this.jenis,
+    this.tipeUnit,
+    this.modelTarif,
+    this.status,
+    this.aktif = false,
+    this.unitBisnis,
+    this.unitBisnisKode,
+    this.jumlahHariOperasi = 0,
+    this.totalJamAktif = 0,
+    this.totalHm = 0,
+    this.rasioHmJam,
+    this.totalOdoKm = 0,
+    this.totalSolarLiter = 0,
+    this.jumlahRit = 0,
+    this.totalSewaJam = 0,
+    this.kondisiTerakhir,
+    this.checklistHariIni = false,
+    this.downtimeAktif = false,
+    this.servisMenunggu = false,
+  });
+
+  final int id;
+  final String? kodeUnit;
+  final String? platNomor;
+  final String? jenis;
+  final String? tipeUnit;
+  final String? modelTarif;
+  final String? status;
+  final bool aktif;
+  final String? unitBisnis;
+  final String? unitBisnisKode;
+  final int jumlahHariOperasi;
+  final double totalJamAktif;
+  final double totalHm;
+  final double? rasioHmJam;
+  final double totalOdoKm;
+  final double totalSolarLiter;
+  final int jumlahRit;
+  final double totalSewaJam;
+  final ArmadaMonitoringKondisi? kondisiTerakhir;
+  final bool checklistHariIni;
+  final bool downtimeAktif;
+  final bool servisMenunggu;
+
+  factory ArmadaMonitoringUnit.fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    double numOf(String key) => (map[key] as num?)?.toDouble() ?? 0;
+    final rasio = map['rasio_hm_jam'];
+    return ArmadaMonitoringUnit(
+      id: (map['id'] as num?)?.toInt() ?? 0,
+      kodeUnit: map['kode_unit']?.toString(),
+      platNomor: map['plat_nomor']?.toString(),
+      jenis: map['jenis']?.toString(),
+      tipeUnit: map['tipe_unit']?.toString(),
+      modelTarif: map['model_tarif']?.toString(),
+      status: map['status']?.toString(),
+      aktif: map['aktif'] == true,
+      unitBisnis: map['unit_bisnis']?.toString(),
+      unitBisnisKode: map['unit_bisnis_kode']?.toString(),
+      jumlahHariOperasi: (map['jumlah_hari_operasi'] as num?)?.toInt() ?? 0,
+      totalJamAktif: numOf('total_jam_aktif'),
+      totalHm: numOf('total_hm'),
+      rasioHmJam: rasio is num ? rasio.toDouble() : null,
+      totalOdoKm: numOf('total_odo_km'),
+      totalSolarLiter: numOf('total_solar_liter'),
+      jumlahRit: (map['jumlah_rit'] as num?)?.toInt() ?? 0,
+      totalSewaJam: numOf('total_sewa_jam'),
+      kondisiTerakhir: map['kondisi_terakhir'] == null
+          ? null
+          : ArmadaMonitoringKondisi.fromRaw(map['kondisi_terakhir']),
+      checklistHariIni: map['checklist_hari_ini'] == true,
+      downtimeAktif: map['downtime_aktif'] == true,
+      servisMenunggu: map['servis_menunggu'] == true,
+    );
+  }
+}
+
+class ArmadaMonitoringKondisi {
+  const ArmadaMonitoringKondisi({
+    required this.tanggal,
+    required this.kondisiBaik,
+    this.itemBermasalah,
+  });
+
+  final String tanggal;
+  final bool kondisiBaik;
+  final String? itemBermasalah;
+
+  factory ArmadaMonitoringKondisi.fromRaw(Object? raw) {
+    final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    return ArmadaMonitoringKondisi(
+      tanggal: map['tanggal']?.toString() ?? '',
+      kondisiBaik: map['kondisi_baik'] == true,
+      itemBermasalah: map['item_bermasalah']?.toString(),
+    );
+  }
+}
+
 class KehadiranDivisiData {
   const KehadiranDivisiData({
     required this.tanggal,

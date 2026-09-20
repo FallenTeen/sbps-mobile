@@ -338,6 +338,12 @@ class ArmadaHomeScreen extends ConsumerWidget {
           onTap: (ctx) => ctx.push('/armada/overview'),
         ),
         _MenuItem(
+          icon: Icons.monitor_heart_outlined,
+          title: 'Monitoring Armada',
+          subtitle: 'Utilisasi (jam, HM/Jam) & kondisi seluruh armada',
+          onTap: (ctx) => ctx.push('/armada/monitoring'),
+        ),
+        _MenuItem(
           icon: Icons.route_outlined,
           title: 'Riwayat Muatan Armada',
           subtitle: 'Monitoring pengiriman & ritase seluruh armada',

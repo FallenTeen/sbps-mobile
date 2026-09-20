@@ -17,6 +17,25 @@ final armadaStatusProvider = FutureProvider.autoDispose<ArmadaStatusData>(
   (ref) => ref.watch(dashboardRepositoryProvider).getArmadaStatus(),
 );
 
+/// Filter monitoring armada (Bagian 21.11) — field null memakai default server
+/// (unit bisnis: semua; rentang: 30 hari terakhir).
+typedef ArmadaMonitoringFilter = ({
+  String? unitBisnisId,
+  String? dari,
+  String? sampai,
+});
+
+final armadaMonitoringProvider = FutureProvider.autoDispose
+    .family<ArmadaMonitoringData, ArmadaMonitoringFilter>(
+      (ref, filter) => ref
+          .watch(dashboardRepositoryProvider)
+          .getArmadaMonitoring(
+            unitBisnisId: filter.unitBisnisId,
+            dari: filter.dari,
+            sampai: filter.sampai,
+          ),
+    );
+
 final kehadiranDivisiProvider = FutureProvider.autoDispose<KehadiranDivisiData>(
   (ref) => ref.watch(dashboardRepositoryProvider).getKehadiranDivisi(),
 );

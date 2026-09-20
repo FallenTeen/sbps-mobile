@@ -14,6 +14,7 @@ import '../features/armada/checklist_screen.dart';
 import '../features/armada/checklist_major_screen.dart';
 import '../features/armada/detail_servis_screen.dart';
 import '../features/armada/helper_presensi_screen.dart';
+import '../features/armada/monitoring_armada_screen.dart';
 import '../features/armada/odo_awal_screen.dart';
 import '../features/armada/overview_armada_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
@@ -102,6 +103,7 @@ const kAppRoutePaths = <String>[
   '/armada/odo-awal',
   '/armada/helper-presensi',
   '/armada/overview',
+  '/armada/monitoring',
   '/armada/ritase-input',
   '/armada/checklist-major',
   '/armada/unit-saya',
@@ -562,6 +564,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
               child: const OverviewArmadaScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'monitoring',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const MonitoringArmadaScreen(),
             ),
           ),
           GoRoute(

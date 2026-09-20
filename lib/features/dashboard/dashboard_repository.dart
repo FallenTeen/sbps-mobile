@@ -58,6 +58,32 @@ class DashboardRepository {
     return res.data ?? const ArmadaStatusData(total: 0, items: []);
   }
 
+  /// GET /dashboard/armada-monitoring (Bagian 21.11) — metrik utilisasi &
+  /// kondisi seluruh armada. Filter opsional: unit_bisnis_id, dari, sampai.
+  Future<ArmadaMonitoringData> getArmadaMonitoring({
+    String? unitBisnisId,
+    String? dari,
+    String? sampai,
+  }) async {
+    final res = await _api.get<ArmadaMonitoringData>(
+      '/dashboard/armada-monitoring',
+      query: {
+        'unit_bisnis_id': ?unitBisnisId,
+        'dari': ?dari,
+        'sampai': ?sampai,
+      },
+      parse: ArmadaMonitoringData.fromRaw,
+    );
+    return res.data ??
+        ArmadaMonitoringData(
+          tanggalDari: '',
+          tanggalSampai: '',
+          ringkasan: const ArmadaMonitoringRingkasan(),
+          rekapPerTanggal: const [],
+          perUnit: const [],
+        );
+  }
+
   /// GET /dashboard/kehadiran-divisi — Owner/Admin.
   Future<KehadiranDivisiData> getKehadiranDivisi() async {
     final res = await _api.get<KehadiranDivisiData>(
