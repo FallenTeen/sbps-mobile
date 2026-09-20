@@ -25,6 +25,14 @@ class OutboxSyncService {
 
   static const _maxAttempts = 5;
 
+  /// Jumlah retry transient (connectivity flutter: handover WiFi↔seluler,
+  /// radio sempat off sebentar, DioException tanpa response).
+  /// Retry di sini berbeda dari backoff outbox: cuma 1x dengan delay kecil,
+  /// agar request yang sebenarnya "hanya salah timing" tidak langsung masuk
+  /// antrean offline (dan tidak menunjukkan snackbar kCopyQueued palsu).
+  static const _transientRetries = 1;
+  static const _transientDelay = Duration(seconds: 1);
+
   final OutboxRepository _repo;
   final ApiClient _api;
 
@@ -68,12 +76,30 @@ class OutboxSyncService {
       // reconnect). Join future yang sama: satu request, hasil asli.
       return await existing;
     }
-    final future = _dispatch(action);
+    final future = _sendWithTransientRetry(action);
     _inFlightActions[action.id] = future;
     try {
       return await future;
     } finally {
       _inFlightActions.remove(action.id);
+    }
+  }
+
+  /// Membungkus `_dispatch` dengan retry transient untuk error jaringan
+  /// flutter (DioException tanpa response, handover jaringan, 5xx). Hanya
+  /// retry bila hasil `delivered=false` BUKAN permanen DAN bertanda
+  /// [OutboxSendResult.transientRetryable] = true. Exception generic
+  /// (mis. bug internal) tidak di-retry supaya test reliability tetap
+  /// mengekspos bug (bukan malah tersembunyi retry).
+  Future<OutboxSendResult> _sendWithTransientRetry(PendingAction action) async {
+    var attempt = 0;
+    while (true) {
+      final result = await _dispatch(action);
+      if (result.delivered || result.permanentlyFailed) return result;
+      if (!result.transientRetryable) return result;
+      if (attempt >= _transientRetries) return result;
+      attempt++;
+      await Future<void>.delayed(_transientDelay);
     }
   }
 
@@ -84,7 +110,17 @@ class OutboxSyncService {
     try {
       try {
         await _repo.markSyncing(action.id);
-      } catch (_) {}
+      } catch (e) {
+        // `markSyncing` hanya gagal jika lock Hive bertabrakan hebat.
+        // Lewat lock `_serialized` di OutboxRepository kejadian ini sudah
+        // sangat jarang; jika tetap terjadi, jangan batalkan pengiriman
+        // (karena Idempotency-Key + client_uuid melindungi dari duplikat).
+        // Status box tidak diubah ke syncing; setelah delivered langsung
+        // dihapus, jika gagal retryable menulis ulang pending anyway.
+        if (e is! OutboxSendResult) {
+          AnalyticsService.outboxItemFail();
+        }
+      }
       // Endpoint JSON (produksi): tanpa lampiran file, body dari
       // payloadData; client_uuid disuntik dari action.clientUuid —
       // SAMA di setiap retry agar backend idempotent.
@@ -213,7 +249,15 @@ class OutboxSyncService {
           errorMessage: e.message,
         );
       }
-      return OutboxSendResult(delivered: false, errorMessage: e.message);
+      // 5xx (server down, timeout) ATAU statusCode == null (DioException
+      // tanpa response: connectivity flutter, DNS, socket). Keduanya
+      // dianggap transient dan bisa di-retry sebentar oleh
+      // `_sendWithTransientRetry` sebelum masuk antrean offline long-term.
+      return OutboxSendResult(
+        delivered: false,
+        transientRetryable: true,
+        errorMessage: e.message,
+      );
     } catch (e) {
       // Exception tak terduga (mis. file lampiran hilang / error parsing).
       // `send()` TIDAK BOLEH melempar: `enqueue()` memanggilnya SETELAH item
@@ -228,6 +272,9 @@ class OutboxSyncService {
               'File lampiran tidak ditemukan di perangkat. Ambil ulang foto lalu kirim lagi.',
         );
       }
+      // Exception generic (StateError, TypeError, dll.) JANGAN ditandai
+      // transient: retry 1x jarang menyembuhkan bug internal. Biarkan
+      // langsung masuk retryable backoff outbox biasa.
       return OutboxSendResult(
         delivered: false,
         errorMessage:
@@ -254,6 +301,11 @@ class OutboxSyncService {
     try {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
+        // Aksi yang sedang di tangan `enqueue` (jalur langsung dari form
+        // submit) — serahkan pemiliknya, jangan diperebutkan worker syncNow.
+        // Bersama `OutboxRepository._enqueuing`, ini menutup celah race
+        // "box.put() sudah tapi _inFlightActions[] belum".
+        if (_repo.isEnqueuing(action.id)) continue;
         if (_inFlightActions.containsKey(action.id)) continue;
         if (!ignoreBackoff && _inBackoff(action)) continue;
         if (!ignoreBackoff && action.retryCount >= _maxAttempts) continue;

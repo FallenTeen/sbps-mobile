@@ -55,6 +55,9 @@ class ApiClient {
         validateStatus: (status) => status != null && status < 500,
       ),
     );
+    // Urutan interceptor: pertama transient network retry, kemudian rate limit.
+    // Network flutter (response==null) di-retry duluan sebelum rate limit.
+    dio.interceptors.add(_TransientNetworkRetryInterceptor(dio));
     dio.interceptors.add(_RateLimitInterceptor(dio));
     return dio;
   }
@@ -231,6 +234,48 @@ class ApiClient {
   }
 
   void close() => _dio.close();
+}
+
+/// Interceptor transient network error — menangani DioException tanpa
+/// `response` (socket error, DNS flutter, handover WiFi↔seluler sempat off
+/// 200ms). Coba retry 1x dengan delay 750ms (cukup untuk radio switch)
+/// sebelum menyerahkan ke error handler (OutboxSyncService akan mengantre).
+///
+/// Retry hanya untuk method "idempotent enough": GET (sama sekali aman),
+/// POST/PUT/DELETE yang lewat outbox sudah memiliki Idempotency-Key
+/// di header. Endpoint non-outbox POST seperti approveServis hanya
+/// mengubah status dan tidak membuat record baru — retry 1x tetap aman
+/// (server harus idempotent untuk status transition).
+class _TransientNetworkRetryInterceptor extends Interceptor {
+  _TransientNetworkRetryInterceptor(this._dio);
+
+  final Dio _dio;
+  static const _maxRetries = 1;
+  static const _retryDelay = Duration(milliseconds: 750);
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Hanya menangani error tanpa response (network-level).
+    if (err.response != null) {
+      handler.next(err);
+      return;
+    }
+    final count =
+        (err.requestOptions.extra['_transientRetry'] as int?) ?? 0;
+    if (count >= _maxRetries) {
+      handler.next(err);
+      return;
+    }
+    await Future<void>.delayed(_retryDelay);
+    final opts = err.requestOptions;
+    opts.extra['_transientRetry'] = count + 1;
+    try {
+      final retried = await _dio.fetch<dynamic>(opts);
+      handler.resolve(retried);
+    } on DioException catch (e) {
+      handler.next(e);
+    }
+  }
 }
 
 /// Interceptor 429 Too Many Requests — per docs/api-security-policy.md:
