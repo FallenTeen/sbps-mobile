@@ -7,6 +7,7 @@ import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
+import '../../core/armada_jenis.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
 import 'models.dart';
@@ -189,13 +190,7 @@ class DetailTitikScreen extends ConsumerWidget {
     );
   }
 
-  static String _jenisLabel(String? jenis) {
-    if (jenis == null || jenis.isEmpty) return '-';
-    return switch (jenis) {
-      'dump_truck' => 'Dump truck',
-      _ => jenis,
-    };
-  }
+  static String _jenisLabel(String? jenis) => labelJenisArmada(jenis);
 
   static String _jam(DateTime? t) {
     if (t == null) return '-';

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
@@ -233,8 +234,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
       'Driver Armada' => 'Tugas Harian & Operasional',
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
-      'Ketua Armada' =>
-        'Monitoring & Approval',
+      'Ketua Armada' => 'Monitoring & Approval',
       'Owner' => 'Monitoring & Approval',
       'Admin Keuangan' => 'Monitoring & Approval',
       _ => 'Kendaraan & operasional harian',
@@ -246,8 +246,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
       'Driver Armada' => Icons.local_shipping_rounded,
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
-      'Ketua Armada' =>
-        Icons.supervisor_account_rounded,
+      'Ketua Armada' => Icons.supervisor_account_rounded,
       'Owner' => Icons.admin_panel_settings_rounded,
       'Admin Keuangan' => Icons.account_balance_wallet_rounded,
       _ => Icons.local_shipping_rounded,
@@ -259,8 +258,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
       'Driver Armada' => _driverSections(),
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
-      'Ketua Armada' =>
-        _kepalaDivisiSections(),
+      'Ketua Armada' => _kepalaDivisiSections(),
       'Owner' => _ownerSections(),
       'Admin Keuangan' => _adminKeuanganSections(),
       _ => _driverSections(), // default
@@ -698,10 +696,4 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-String _labelJenis(String jenis) => switch (jenis) {
-  'dump_truck' => 'Dump Truck',
-  'mixer_beton' => 'Mixer Beton',
-  'excavator' => 'Excavator',
-  'mobil_pickup' => 'Mobil Pickup',
-  _ => jenis,
-};
+String _labelJenis(String jenis) => labelJenisArmada(jenis);

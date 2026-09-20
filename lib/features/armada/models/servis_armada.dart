@@ -37,7 +37,7 @@ class MasterArmada {
         : null;
     return MasterArmada(
       id: json['id']?.toString() ?? '',
-      platNomor: json['plat_nomor']?.toString() ?? '',
+      platNomor: json['plat_nomor']?.toString() ?? '-',
       kodeUnit: json['kode_unit']?.toString(),
       jenis: json['jenis']?.toString(),
       status: json['status']?.toString(),
@@ -45,7 +45,8 @@ class MasterArmada {
       titikId: titik?['id']?.toString() ?? json['titik_id']?.toString(),
       titikNama: titik?['nama']?.toString() ?? json['titik_nama']?.toString(),
       odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
-      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)?.toDouble(),
+      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)
+          ?.toDouble(),
     );
   }
 }

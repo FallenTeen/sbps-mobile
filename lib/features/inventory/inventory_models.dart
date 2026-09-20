@@ -81,7 +81,7 @@ class InventoryRequest {
     return InventoryRequest(
       id: json['id'] as String,
       workshopJobId: json['workshop_job_id'] as String,
-      platNomor: json['plat_nomor'] as String,
+      platNomor: json['plat_nomor']?.toString() ?? '-',
       kategoriServis: json['kategori_servis'] as String,
       status: InventoryRequestStatus.fromString(json['status'] as String),
       items: (json['items'] as List<dynamic>)
@@ -234,8 +234,7 @@ enum MutasiTipe {
     return value == 'masuk' ? MutasiTipe.masuk : MutasiTipe.keluar;
   }
 
-  String get label =>
-      this == MutasiTipe.masuk ? 'Masuk' : 'Keluar';
+  String get label => this == MutasiTipe.masuk ? 'Masuk' : 'Keluar';
 }
 
 /// Asal catatan mutasi — dipetakan dari `referensi_type` di backend

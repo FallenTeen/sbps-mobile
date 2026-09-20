@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
+import '../../core/armada_jenis.dart';
 import '../../core/draft/draft_repository.dart';
 import '../../core/formatters.dart';
 import '../../core/outbox/pending_action.dart';
@@ -148,10 +149,9 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     } catch (_) {}
   }
 
-  int get _nextIndex =>
-      _records.isEmpty ? 1 : _records.map((r) => r.index).reduce(
-        (a, b) => a > b ? a : b,
-      ) + 1;
+  int get _nextIndex => _records.isEmpty
+      ? 1
+      : _records.map((r) => r.index).reduce((a, b) => a > b ? a : b) + 1;
 
   // -------------------------------------------------------------------------
   // Create / edit / delete
@@ -255,17 +255,19 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     for (final record in targets) {
       setState(() => _syncingIds.add(record.id));
       try {
-        final result = await ref.read(armadaRepositoryProvider).submitRitase(
-          armadaId: record.armadaId,
-          jumlahRit: record.jumlah,
-          satuanVolume: record.satuanVolume,
-          titikId: record.titikId,
-          proyekId: record.proyekId,
-          catatan: record.catatan,
-          odoPerTrip: record.odoPerTrip,
-          clientUuid: record.clientUuid,
-          idempotencyKey: record.idempotencyKey,
-        );
+        final result = await ref
+            .read(armadaRepositoryProvider)
+            .submitRitase(
+              armadaId: record.armadaId,
+              jumlahRit: record.jumlah,
+              satuanVolume: record.satuanVolume,
+              titikId: record.titikId,
+              proyekId: record.proyekId,
+              catatan: record.catatan,
+              odoPerTrip: record.odoPerTrip,
+              clientUuid: record.clientUuid,
+              idempotencyKey: record.idempotencyKey,
+            );
         final idx = _records.indexWhere((r) => r.id == record.id);
         if (idx >= 0) {
           if (result.delivered) {
@@ -322,7 +324,13 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     await _saveRecords();
     if (mounted) {
       if (targets.length == 1) {
-        _showSubmitSummary(targets.first.index, delivered, queued, failed, firstFail);
+        _showSubmitSummary(
+          targets.first.index,
+          delivered,
+          queued,
+          failed,
+          firstFail,
+        );
       }
       // Riwayat tab mengambil dari server — segarkan setelah ada yang terkirim.
       if (delivered > 0) ref.invalidate(ritaseRiwayatProvider);
@@ -429,11 +437,11 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           '$delivered muatan terkirim, $queued disimpan di antrean offline.',
         );
       } else if (failed == 0) {
-        _snack('$queued muatan tersimpan di antrean (akan disinkronkan saat online).');
-      } else {
         _snack(
-          'Gagal mengirim: $firstFail',
+          '$queued muatan tersimpan di antrean (akan disinkronkan saat online).',
         );
+      } else {
+        _snack('Gagal mengirim: $firstFail');
       }
     }
   }
@@ -446,7 +454,9 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
     String? errorMsg,
   ) {
     if (failed > 0) {
-      _snack('Muatan #$index gagal: ${errorMsg ?? "Periksa koneksi lalu coba lagi"}');
+      _snack(
+        'Muatan #$index gagal: ${errorMsg ?? "Periksa koneksi lalu coba lagi"}',
+      );
     } else if (queued > 0) {
       _snack('Muatan #$index tersimpan di perangkat (antrean sinkronisasi).');
     } else {
@@ -468,14 +478,14 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       if (match != null) {
         if (match.status == PendingStatus.failed) {
           await ref.read(outboxRepositoryProvider).markPending(match.id);
-          await ref.read(outboxSyncServiceProvider).syncNow(
-            ignoreBackoff: true,
-          );
+          await ref
+              .read(outboxSyncServiceProvider)
+              .syncNow(ignoreBackoff: true);
           _snack('Percobaan ulang muatan #${record.index} dikirim.');
         } else {
-          await ref.read(outboxSyncServiceProvider).syncNow(
-            ignoreBackoff: true,
-          );
+          await ref
+              .read(outboxSyncServiceProvider)
+              .syncNow(ignoreBackoff: true);
           _snack('Sedang mencoba mengirim muatan #${record.index}...');
         }
       } else {
@@ -537,7 +547,10 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
 
           return Column(
             children: [
-              _SummaryHeader(summary: summary, onAdd: () => _openFormSheet(armadaList: armadaList)),
+              _SummaryHeader(
+                summary: summary,
+                onAdd: () => _openFormSheet(armadaList: armadaList),
+              ),
               Expanded(
                 child: _records.isEmpty
                     ? AppEmptyState(
@@ -558,7 +571,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                           return _RecordCard(
                             record: record,
                             armada: byId[record.armadaId],
-                            submitting: _syncingIds.contains(record.id) ||
+                            submitting:
+                                _syncingIds.contains(record.id) ||
                                 (_submittingAll &&
                                     record.status == RitaseRecordStatus.draft),
                             onEdit: () => _openFormSheet(
@@ -573,11 +587,12 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                         },
                       ),
               ),
-              if (_records.isNotEmpty) _SubmitBar(
-                summary: summary,
-                submittingAll: _submittingAll,
-                onSendAll: _submitAll,
-              ),
+              if (_records.isNotEmpty)
+                _SubmitBar(
+                  summary: summary,
+                  submittingAll: _submittingAll,
+                  onSendAll: _submitAll,
+                ),
             ],
           );
         },
@@ -681,10 +696,26 @@ class _SummaryHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              _StatusDot(label: '${summary.draftCount} draft', color: Colors.blueGrey, show: summary.draftCount > 0),
-              _StatusDot(label: '${summary.queuedCount} menunggu sinkron', color: Colors.amber, show: summary.queuedCount > 0),
-              _StatusDot(label: '${summary.failedCount} gagal', color: context.colors.error, show: summary.failedCount > 0),
-              _StatusDot(label: '${summary.syncedCount} terkirim', color: context.colors.success, show: summary.syncedCount > 0),
+              _StatusDot(
+                label: '${summary.draftCount} draft',
+                color: Colors.blueGrey,
+                show: summary.draftCount > 0,
+              ),
+              _StatusDot(
+                label: '${summary.queuedCount} menunggu sinkron',
+                color: Colors.amber,
+                show: summary.queuedCount > 0,
+              ),
+              _StatusDot(
+                label: '${summary.failedCount} gagal',
+                color: context.colors.error,
+                show: summary.failedCount > 0,
+              ),
+              _StatusDot(
+                label: '${summary.syncedCount} terkirim',
+                color: context.colors.success,
+                show: summary.syncedCount > 0,
+              ),
               const Spacer(),
               if (summary.hasPending)
                 Text(
@@ -704,7 +735,11 @@ class _SummaryHeader extends StatelessWidget {
 }
 
 class _StatusDot extends StatelessWidget {
-  const _StatusDot({required this.label, required this.color, required this.show});
+  const _StatusDot({
+    required this.label,
+    required this.color,
+    required this.show,
+  });
 
   final String label;
   final Color color;
@@ -726,10 +761,7 @@ class _StatusDot extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: context.colors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
           ),
         ],
       ),
@@ -819,7 +851,8 @@ class _RecordCard extends StatelessWidget {
                 color: context.colors.textSecondary,
               ),
             ),
-            if (record.catatan != null && record.catatan!.trim().isNotEmpty) ...[
+            if (record.catatan != null &&
+                record.catatan!.trim().isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
                 record.catatan!,
@@ -852,10 +885,7 @@ class _RecordCard extends StatelessWidget {
                 ),
                 child: Text(
                   record.errorMessage!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.colors.error,
-                  ),
+                  style: TextStyle(fontSize: 12, color: context.colors.error),
                 ),
               ),
             ],
@@ -899,8 +929,7 @@ class _RecordCard extends StatelessWidget {
                     label: const Text('Coba Lagi'),
                   ),
                 _TextAction(label: 'Detail', onTap: onReview),
-                if (editable)
-                  _TextAction(label: 'Edit', onTap: onEdit),
+                if (editable) _TextAction(label: 'Edit', onTap: onEdit),
                 if (editable)
                   _TextAction(
                     label: 'Hapus',
@@ -918,11 +947,7 @@ class _RecordCard extends StatelessWidget {
 
 /// Inline text-link kecil (seperti link) untuk aksi per record.
 class _TextAction extends StatelessWidget {
-  const _TextAction({
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
+  const _TextAction({required this.label, required this.onTap, this.color});
 
   final String label;
   final VoidCallback onTap;
@@ -949,7 +974,11 @@ class _TextAction extends StatelessWidget {
 }
 
 class _ActionText extends StatelessWidget {
-  const _ActionText({required this.icon, required this.label, required this.color});
+  const _ActionText({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   final IconData icon;
   final String label;
@@ -964,7 +993,11 @@ class _ActionText extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
         ),
       ],
     );
@@ -980,7 +1013,10 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, icon) = switch (status) {
       RitaseRecordStatus.draft => (Colors.blueGrey, Icons.edit_note),
-      RitaseRecordStatus.queued => (Colors.amber.shade800, Icons.cloud_upload_outlined),
+      RitaseRecordStatus.queued => (
+        Colors.amber.shade800,
+        Icons.cloud_upload_outlined,
+      ),
       RitaseRecordStatus.synced => (context.colors.success, Icons.check_circle),
       RitaseRecordStatus.failed => (context.colors.error, Icons.error_outline),
     };
@@ -1019,8 +1055,7 @@ class _SubmitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final toSend =
-        summary.draftCount + summary.failedCount;
+    final toSend = summary.draftCount + summary.failedCount;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1042,10 +1077,7 @@ class _SubmitBar extends StatelessWidget {
               child: Text(
                 '${summary.queuedCount} menunggu sinkron — terkirim otomatis '
                 'saat online.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.amber.shade800,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.amber.shade800),
               ),
             ),
           SizedBox(
@@ -1076,13 +1108,7 @@ class _SubmitBar extends StatelessWidget {
   }
 }
 
-String _labelJenis(String? jenis) => switch (jenis) {
-  'dump_truck' => 'Dump Truck',
-  'mixer_beton' => 'Mixer Beton',
-  'excavator' => 'Excavator',
-  'mobil_pickup' => 'Mobil Pickup',
-  _ => jenis ?? 'Unit',
-};
+String _labelJenis(String? jenis) => labelJenisArmada(jenis, fallback: 'Unit');
 
 /// Format ODO/HM untuk tampilan (ribuan bertitik, bulat).
 String fmtOdo(double n) => fmtRibuan(n % 1 == 0 ? n.toInt() : n.round());
@@ -1299,12 +1325,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                       isDense: true,
                     ),
                     items: _satuanOptions
-                        .map(
-                          (s) => DropdownMenuItem(
-                            value: s,
-                            child: Text(s),
-                          ),
-                        )
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                         .toList(),
                     onChanged: (v) {
                       if (v != null) setState(() => _satuan = v);
@@ -1333,8 +1354,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
               decoration: const InputDecoration(
                 labelText: 'ODO per trip (opsional)',
                 border: OutlineInputBorder(),
-                helperText:
-                    'Dikirim sebagai odo_per_trip ke server bila diisi',
+                helperText: 'Dikirim sebagai odo_per_trip ke server bila diisi',
               ),
             ),
             const SizedBox(height: 20),
@@ -1399,11 +1419,16 @@ class _ReviewSheet extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     record.status.label,
@@ -1435,7 +1460,8 @@ class _ReviewSheet extends StatelessWidget {
                 children: [
                   _ReviewRow(
                     label: 'Kendaraan',
-                    value: '${record.armadaPlat ?? '-'}${record.armadaJenis != null ? ' • ${_labelJenis(record.armadaJenis)}' : ''}',
+                    value:
+                        '${record.armadaPlat ?? '-'}${record.armadaJenis != null ? ' • ${_labelJenis(record.armadaJenis)}' : ''}',
                   ),
                   const Divider(height: 12),
                   _ReviewRow(
@@ -1454,22 +1480,22 @@ class _ReviewSheet extends StatelessWidget {
                       value: '${fmtOdo(record.odoPerTrip!)} km',
                     ),
                   ],
-                  if (record.catatan != null && record.catatan!.trim().isNotEmpty) ...[
+                  if (record.catatan != null &&
+                      record.catatan!.trim().isNotEmpty) ...[
                     const Divider(height: 12),
-                    _ReviewRow(
-                      label: 'Catatan',
-                      value: record.catatan!.trim(),
-                    ),
+                    _ReviewRow(label: 'Catatan', value: record.catatan!.trim()),
                   ],
                   const Divider(height: 12),
                   _ReviewRow(
                     label: 'Waktu Input',
-                    value: '${fmtTanggal(record.createdAt.toIso8601String())} ${record.createdAt.hour.toString().padLeft(2, '0')}:${record.createdAt.minute.toString().padLeft(2, '0')}',
+                    value:
+                        '${fmtTanggal(record.createdAt.toIso8601String())} ${record.createdAt.hour.toString().padLeft(2, '0')}:${record.createdAt.minute.toString().padLeft(2, '0')}',
                   ),
                 ],
               ),
             ),
-            if (record.errorMessage != null && record.errorMessage!.isNotEmpty) ...[
+            if (record.errorMessage != null &&
+                record.errorMessage!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
@@ -1477,12 +1503,18 @@ class _ReviewSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: context.colors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: context.colors.error.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: context.colors.error.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.error_outline, color: context.colors.error, size: 18),
+                    Icon(
+                      Icons.error_outline,
+                      color: context.colors.error,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

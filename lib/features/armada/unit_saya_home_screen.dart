@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
+import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
@@ -76,10 +77,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 48,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 48),
                     child: AppEmptyState(
                       icon: Icons.no_crash_outlined,
                       title: 'Belum ada unit yang ditugaskan',
@@ -111,7 +109,8 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                   akhirDone: akhirDone,
                 ),
                 if (checklists.any(
-                  (c) => unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah,
+                  (c) =>
+                      unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah,
                 )) ...[
                   const SizedBox(height: 4),
                   _MasalahSection(checklists: checklists),
@@ -157,10 +156,7 @@ class _GreetingHeader extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             fmtTanggalPanjang(DateTime.now()),
-            style: TextStyle(
-              fontSize: 13,
-              color: context.colors.textTertiary,
-            ),
+            style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
           ),
         ],
       ),
@@ -275,7 +271,9 @@ class _UnitSayaSection extends StatelessWidget {
                           Text(
                             armada.jenis != null
                                 ? _labelJenis(armada.jenis!)
-                                : (armada.isAlatBerat ? 'Alat Berat' : 'Kendaraan'),
+                                : (armada.isAlatBerat
+                                      ? 'Alat Berat'
+                                      : 'Kendaraan'),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 13,
@@ -534,10 +532,7 @@ class _PekerjaanHariIni extends StatelessWidget {
             child: Column(
               children: [
                 for (var i = 0; i < steps.length; i++)
-                  _NumStepTile(
-                    step: steps[i],
-                    isLast: i == steps.length - 1,
-                  ),
+                  _NumStepTile(step: steps[i], isLast: i == steps.length - 1),
               ],
             ),
           ),
@@ -617,9 +612,7 @@ class _ProgressCard extends StatelessWidget {
               value: ratio,
               minHeight: 8,
               backgroundColor: context.colors.surfaceVariant,
-              color: allDone
-                  ? context.colors.success
-                  : context.colors.primary,
+              color: allDone ? context.colors.success : context.colors.primary,
             ),
           ),
           if (!allDone) ...[
@@ -735,11 +728,7 @@ class _NumStepTile extends StatelessWidget {
           ),
         ),
         if (!isLast)
-          Divider(
-            height: 1,
-            indent: 62,
-            color: context.colors.border,
-          ),
+          Divider(height: 1, indent: 62, color: context.colors.border),
       ],
     );
   }
@@ -755,9 +744,7 @@ class _MasalahSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bermasalah = checklists
-        .where(
-          (c) => unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah,
-        )
+        .where((c) => unitChecklistStatus(c) == ChecklistUnitStatus.bermasalah)
         .toList();
     if (bermasalah.isEmpty) return const SizedBox.shrink();
 
@@ -1099,10 +1086,4 @@ class _ShortcutTile extends StatelessWidget {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-String _labelJenis(String jenis) => switch (jenis) {
-  'dump_truck' => 'Dump Truck',
-  'mixer_beton' => 'Mixer Beton',
-  'excavator' => 'Excavator',
-  'mobil_pickup' => 'Mobil Pickup',
-  _ => jenis,
-};
+String _labelJenis(String jenis) => labelJenisArmada(jenis);

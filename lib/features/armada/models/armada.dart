@@ -56,7 +56,7 @@ class ArmadaSaya {
         : null;
     return ArmadaSaya(
       id: json['id']?.toString() ?? '',
-      platNomor: json['plat_nomor']?.toString() ?? '',
+      platNomor: json['plat_nomor']?.toString() ?? '-',
       kodeUnit: json['kode_unit']?.toString(),
       jenis: json['jenis']?.toString(),
       tipeUnit: json['tipe_unit']?.toString(),
@@ -206,7 +206,7 @@ class ArmadaChecklist {
   factory ArmadaChecklist.fromJson(Map<String, dynamic> json) {
     return ArmadaChecklist(
       armadaId: json['armada_id']?.toString() ?? '',
-      platNomor: json['plat_nomor']?.toString() ?? '',
+      platNomor: json['plat_nomor']?.toString() ?? '-',
       kodeUnit: json['kode_unit']?.toString(),
       jenis: json['jenis']?.toString(),
       tanggal: json['tanggal']?.toString(),

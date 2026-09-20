@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
+import '../../core/armada_jenis.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
@@ -146,18 +147,21 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     try {
       bool delivered = false;
       String? permanentError;
-      final titikId = (armada.titikId != null && armada.titikId!.trim().isNotEmpty)
+      final titikId =
+          (armada.titikId != null && armada.titikId!.trim().isNotEmpty)
           ? armada.titikId!.trim()
           : null;
 
       // 1. Simpan ODO/HM ke checklist harian agar langsung tercermin di unit saya
       try {
-        delivered = await ref.read(armadaRepositoryProvider).submitChecklist(
-          armadaId: armada.id,
-          kondisiBaik: true,
-          odoKm: armada.isAlatBerat ? null : odoValue,
-          jamOperasional: armada.isAlatBerat ? odoValue : null,
-        );
+        delivered = await ref
+            .read(armadaRepositoryProvider)
+            .submitChecklist(
+              armadaId: armada.id,
+              kondisiBaik: true,
+              odoKm: armada.isAlatBerat ? null : odoValue,
+              jamOperasional: armada.isAlatBerat ? odoValue : null,
+            );
       } on ApiException catch (e) {
         // 4xx permanen: jangan telan — permukaan ke user (queued ≠ gagal).
         permanentError = e.message;
@@ -391,26 +395,20 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           .map(
             (a) => DropdownMenuItem(
               value: a,
-              child: Text(
-                '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}',
-              ),
+              child: Text('${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}'),
             ),
           )
           .toList(),
-      onChanged: armadaList.length == 1 ? null : (v) {
-        if (v != null) _applyArmada(v);
-      },
+      onChanged: armadaList.length == 1
+          ? null
+          : (v) {
+              if (v != null) _applyArmada(v);
+            },
     );
   }
 }
 
-String _labelJenis(String? jenis) => switch (jenis) {
-  'dump_truck' => 'Dump Truck',
-  'mixer_beton' => 'Mixer Beton',
-  'excavator' => 'Excavator',
-  'mobil_pickup' => 'Mobil Pickup',
-  _ => jenis ?? 'Unit',
-};
+String _labelJenis(String? jenis) => labelJenisArmada(jenis, fallback: 'Unit');
 
 /// Format ODO/HM (bulat bila bulat, ribuan bertitik).
 String fmtOdo(double n) => fmtRibuan(n % 1 == 0 ? n.toInt() : n.round());
@@ -444,10 +442,7 @@ class _UnitTypeBanner extends StatelessWidget {
               isAlatBerat
                   ? 'Alat Berat — nilai dalam HM (jam mesin)'
                   : 'Kendaraan — nilai dalam KM (odometer)',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -551,10 +546,7 @@ class _ReadingCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 'Δ ${isAlatBerat ? 'jam' : 'km'} = sekarang - terakhir',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.colors.textMuted,
-                ),
+                style: TextStyle(fontSize: 11, color: context.colors.textMuted),
               ),
             ),
         ],

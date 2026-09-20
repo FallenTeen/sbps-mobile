@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
+import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -738,10 +739,4 @@ class _RitaseStatusBadge extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _labelJenis(String jenis) => switch (jenis) {
-  'dump_truck' => 'Dump Truck',
-  'mixer_beton' => 'Mixer Beton',
-  'excavator' => 'Excavator',
-  'mobil_pickup' => 'Mobil Pickup',
-  _ => jenis,
-};
+String _labelJenis(String jenis) => labelJenisArmada(jenis);
