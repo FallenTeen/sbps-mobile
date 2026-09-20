@@ -478,7 +478,7 @@ class ArmadaMonitoringRekap {
 
 class ArmadaMonitoringUnit {
   const ArmadaMonitoringUnit({
-    this.id = 0,
+    this.id = '',
     this.kodeUnit,
     this.platNomor,
     this.jenis,
@@ -502,7 +502,7 @@ class ArmadaMonitoringUnit {
     this.servisMenunggu = false,
   });
 
-  final int id;
+  final String id;
   final String? kodeUnit;
   final String? platNomor;
   final String? jenis;
@@ -530,7 +530,7 @@ class ArmadaMonitoringUnit {
     double numOf(String key) => (map[key] as num?)?.toDouble() ?? 0;
     final rasio = map['rasio_hm_jam'];
     return ArmadaMonitoringUnit(
-      id: (map['id'] as num?)?.toInt() ?? 0,
+      id: map['id']?.toString() ?? '',
       kodeUnit: map['kode_unit']?.toString(),
       platNomor: map['plat_nomor']?.toString(),
       jenis: map['jenis']?.toString(),

@@ -177,6 +177,7 @@ class ArmadaChecklist {
     this.tanggal,
     required this.sudahIsi,
     this.checklistId,
+    this.status,
     this.kondisiBaik,
     this.itemBermasalah,
     this.solarLiter,
@@ -191,6 +192,7 @@ class ArmadaChecklist {
   final String? tanggal;
   final bool sudahIsi;
   final String? checklistId;
+  final String? status;
   final bool? kondisiBaik;
   final String? itemBermasalah;
 
@@ -212,11 +214,15 @@ class ArmadaChecklist {
       tanggal: json['tanggal']?.toString(),
       sudahIsi: json['sudah_isi'] == true,
       checklistId: json['checklist_id']?.toString(),
+      status: json['status']?.toString(),
       kondisiBaik: json['kondisi_baik'] as bool?,
       itemBermasalah: json['item_bermasalah']?.toString(),
       solarLiter: (json['solar_liter'] as num?)?.toDouble(),
-      odoKm: (json['odo_km'] as num?)?.toDouble(),
-      jamOperasional: (json['jam_operasional'] as num?)?.toDouble(),
+      odoKm: (json['odo_km'] as num?)?.toDouble() ??
+          (json['odo_sore'] as num?)?.toDouble() ??
+          (json['odo_pagi'] as num?)?.toDouble(),
+      jamOperasional: (json['jam_operasional'] as num?)?.toDouble() ??
+          (json['hm_odo'] as num?)?.toDouble(),
     );
   }
 }

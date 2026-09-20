@@ -152,13 +152,23 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           ? armada.titikId!.trim()
           : null;
 
-      // 1. Simpan ODO/HM ke checklist harian agar langsung tercermin di unit saya
+      // 1. Simpan ODO/HM ke checklist harian agar langsung tercermin di unit saya.
+      // Pertahankan kondisi_baik & item_bermasalah yang sudah tercatat sebelumnya.
+      final existingChecklist = ref
+          .read(checklistHariIniProvider)
+          .value
+          ?.where((c) => c.armadaId == armada.id)
+          .firstOrNull;
+      final kondisiBaik = existingChecklist?.kondisiBaik ?? true;
+      final itemBermasalah = existingChecklist?.itemBermasalah;
+
       try {
         delivered = await ref
             .read(armadaRepositoryProvider)
             .submitChecklist(
               armadaId: armada.id,
-              kondisiBaik: true,
+              kondisiBaik: kondisiBaik,
+              itemBermasalah: itemBermasalah,
               odoKm: armada.isAlatBerat ? null : odoValue,
               jamOperasional: armada.isAlatBerat ? odoValue : null,
             );

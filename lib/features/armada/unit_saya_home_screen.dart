@@ -91,8 +91,16 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
             final armada = items.first;
             final checklists = checklistAsync.value ?? [];
             final ritItems = ritaseAsync.items;
+            final today = DateTime.now().toIso8601String().substring(0, 10);
+            final todayRitItems = ritItems
+                .where((r) => r.tanggal != null && r.tanggal!.startsWith(today))
+                .toList();
+            final myChecklists = checklists
+                .where((c) => c.armadaId == armada.id)
+                .toList();
             final akhirDone =
-                ref.watch(checklistAkhirDoneProvider(armada.id)).value ?? false;
+                (ref.watch(checklistAkhirDoneProvider(armada.id)).value ?? false) ||
+                myChecklists.any((c) => c.status == 'selesai');
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -105,7 +113,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 _PekerjaanHariIni(
                   armada: armada,
                   checklists: checklists,
-                  ritItems: ritItems,
+                  ritItems: todayRitItems,
                   akhirDone: akhirDone,
                 ),
                 if (checklists.any(
@@ -116,7 +124,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                   _MasalahSection(checklists: checklists),
                 ],
                 const SizedBox(height: 4),
-                _RingkasanKerja(armada: armada, ritItems: ritItems),
+                _RingkasanKerja(armada: armada, ritItems: todayRitItems),
                 const SizedBox(height: 8),
                 _ShortcutSection(armada: armada),
               ],
@@ -441,25 +449,29 @@ class _PekerjaanHariIni extends StatelessWidget {
         .where((c) => c.armadaId == armada.id)
         .toList();
     final hasChecklist = myChecklists.any((c) => c.sudahIsi);
-    final hasOdoAwal =
-        myChecklists.any(
-          (c) => armada.isAlatBerat
-              ? (c.jamOperasional != null && c.jamOperasional! > 0)
-              : (c.odoKm != null && c.odoKm! > 0),
-        ) ||
-        (armada.isAlatBerat
-            ? (armada.jamOperasionalTerkini != null &&
-                  armada.jamOperasionalTerkini! > 0)
-            : (armada.odoTerkini != null && armada.odoTerkini! > 0));
+    final hasOdoAwal = myChecklists.any(
+      (c) => armada.isAlatBerat
+          ? (c.jamOperasional != null && c.jamOperasional! > 0)
+          : (c.odoKm != null && c.odoKm! > 0),
+    );
     final ritCount = ritItems.length;
 
-    final odoSubtitle = armada.isAlatBerat
-        ? (armada.jamOperasionalTerkini != null
-              ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
-              : 'Belum tercatat')
-        : (armada.odoTerkini != null
-              ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
-              : 'Belum tercatat');
+    final todayChecklist = myChecklists.firstOrNull;
+    final todayOdo = armada.isAlatBerat
+        ? todayChecklist?.jamOperasional
+        : todayChecklist?.odoKm;
+
+    final odoSubtitle = hasOdoAwal
+        ? (armada.isAlatBerat
+              ? 'Hari ini: ${fmtJam(todayOdo)}'
+              : 'Hari ini: ${fmtKm(todayOdo)}')
+        : (armada.isAlatBerat
+              ? (armada.jamOperasionalTerkini != null
+                    ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
+                    : 'Belum tercatat')
+              : (armada.odoTerkini != null
+                    ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
+                    : 'Belum tercatat'));
 
     final steps = [
       _DayStep(
