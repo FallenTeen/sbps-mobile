@@ -213,33 +213,41 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog> {
       actionsPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        // Tombol batal selalu di kiri & jadi default focus (aman).
-        Expanded(
-          child: OutlinedButton(
-            autofocus: true,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.textSecondary,
-              side: BorderSide(color: context.colors.border),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+        // Bungkus dengan Row agar tombol bisa memakai Expanded. Expanded
+        // langsung di dalam AlertDialog.actions (yang dirender memakai
+        // OverflowBar, bukan Flex) akan gagal pada Flutter 3.38.x → dialog
+        // kosong / crash saat tombol batal/konfirmasi dipakai.
+        Row(
+          children: [
+            // Tombol batal selalu di kiri & jadi default focus (aman).
+            Expanded(
+              child: OutlinedButton(
+                autofocus: true,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.colors.textSecondary,
+                  side: BorderSide(color: context.colors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(widget.cancelLabel),
+              ),
             ),
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(widget.cancelLabel),
-          ),
-        ),
-        SizedBox(width: 12),
-        Expanded(
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: switch (_severity) {
-                ConfirmSeverity.warning => context.colors.secondary,
-                ConfirmSeverity.destructive ||
-                ConfirmSeverity.critical => context.colors.error,
-              },
-              padding: const EdgeInsets.symmetric(vertical: 12),
+            SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: switch (_severity) {
+                    ConfirmSeverity.warning => context.colors.secondary,
+                    ConfirmSeverity.destructive ||
+                    ConfirmSeverity.critical => context.colors.error,
+                  },
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: _canConfirm ? _confirm : null,
+                child: Text(widget.confirmLabel),
+              ),
             ),
-            onPressed: _canConfirm ? _confirm : null,
-            child: Text(widget.confirmLabel),
-          ),
+          ],
         ),
       ],
     );

@@ -5,9 +5,11 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/api_client.dart';
 import 'tracking_providers.dart';
+import 'tracking_rules.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../core/formatters.dart';
+import 'widgets/track_location_actions.dart';
 
 /// Jejak lokasi satu user hari ini (GET /tracking/hari-ini/{userId}) dengan
 /// visualisasi Peta OpenStreetMap interaktif dan daftar titik kronologis.
@@ -105,6 +107,15 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
             final firstTime = data.items.first.timestamp.toLocal();
             final lastTime = data.items.last.timestamp.toLocal();
 
+            // URL lokasi untuk aksi Buka/Bagikan — selalu utamakan kiriman
+            // server (format resmi); fallback koordinat titik terakhir.
+            final lastUrl = resolveLocationUrl(
+              fromServer: data.googleMapsUrlFromServer,
+              lat: data.lastLat ?? lastPoint.latitude,
+              lng: data.lastLng ?? lastPoint.longitude,
+            );
+            final lastNama = widget.nama ?? data.nama ?? 'Lokasi terakhir';
+
             return TabBarView(
               controller: _tabController,
               children: [
@@ -196,12 +207,28 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                                   ),
                                 ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.my_location),
-                                tooltip: 'Fokus ke Posisi Terakhir',
-                                onPressed: () {
-                                  _mapController.move(lastPoint, 16.0);
-                                },
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (lastUrl != null)
+                                    IconButton(
+                                      icon: const Icon(Icons.share_location),
+                                      tooltip: 'Buka / Bagikan Lokasi',
+                                      onPressed: () =>
+                                          showTrackLocationActions(
+                                        context,
+                                        url: lastUrl,
+                                        nama: lastNama,
+                                      ),
+                                    ),
+                                  IconButton(
+                                    icon: const Icon(Icons.my_location),
+                                    tooltip: 'Fokus ke Posisi Terakhir',
+                                    onPressed: () {
+                                      _mapController.move(lastPoint, 16.0);
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -238,9 +265,26 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                         'Lat: ${item.lat.toStringAsFixed(6)}, Lng: ${item.lng.toStringAsFixed(6)}',
                       ),
                       trailing: isLatest
-                          ? const Chip(
-                              label: Text('Terbaru'),
-                              visualDensity: VisualDensity.compact,
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (lastUrl != null)
+                                  IconButton(
+                                    tooltip: 'Buka / Bagikan Lokasi',
+                                    icon: const Icon(Icons.share_location),
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () =>
+                                        showTrackLocationActions(
+                                      context,
+                                      url: lastUrl,
+                                      nama: lastNama,
+                                    ),
+                                  ),
+                                const Chip(
+                                  label: Text('Terbaru'),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
                             )
                           : null,
                     );

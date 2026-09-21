@@ -104,3 +104,31 @@ String statusLabel(TrackingFreshness f) => switch (f.state) {
   TrackingFreshnessState.stale => 'Stale',
   TrackingFreshnessState.noData => 'Belum ada GPS',
 };
+
+// ─────────────────────────── URL Google Maps ───────────────────────────
+
+/// Format universal Google Maps (tanpa Maps SDK, tanpa API key) yang SAMA
+/// dengan server (app/Support/GeoUrl.php): bisa dibuka di browser & aplikasi
+/// Google Maps di perangkat.
+///
+///     https://www.google.com/maps/search/?api=1&query=LAT%2CLNG
+///
+/// Catatan: koma `,` sengaja dikodekan `%2C` agar hasilnya identik dengan
+/// yang dikirim backend (sumber kebenaran tunggal).
+String googleMapsUrl(double lat, double lng) {
+  return 'https://www.google.com/maps/search/?api=1&query=$lat%2C$lng';
+}
+
+/// Pilih URL lokasi untuk aksi "Buka di Google Maps" / "Bagikan Lokasi".
+/// Selalu utamakan `fromServer` (backend — format resmi, sama untuk mobile &
+/// web); bila server tak mengirim, bangun ulang lokal dari koordinat.
+/// Null bila tidak ada koordinat sama sekali.
+String? resolveLocationUrl({
+  String? fromServer,
+  double? lat,
+  double? lng,
+}) {
+  if (fromServer != null && fromServer.isNotEmpty) return fromServer;
+  if (lat == null || lng == null) return null;
+  return googleMapsUrl(lat, lng);
+}

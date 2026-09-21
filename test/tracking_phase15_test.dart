@@ -208,4 +208,103 @@ void main() {
       );
     });
   });
+
+  // -------------------------------------------------------------------
+  // ActiveUser.fromJson — koordinat GPS terakhir + url dari server
+  // -------------------------------------------------------------------
+  group('ActiveUser.fromJson last_lat/last_lng/google_maps_url', () {
+    test('parse koordinat & url dari server', () {
+      final u = ActiveUser.fromJson({
+        'user_id': '7',
+        'nama': 'Budi',
+        'last_lat': -7.101,
+        'last_lng': 110.202,
+        'google_maps_url':
+            'https://www.google.com/maps/search/?api=1&query=-7.101%2C110.202',
+      });
+      expect(u.lastLat, -7.101);
+      expect(u.lastLng, 110.202);
+      expect(u.googleMapsUrlFromServer,
+          'https://www.google.com/maps/search/?api=1&query=-7.101%2C110.202');
+    });
+
+    test('tanpa koordinat → semua null', () {
+      final u = ActiveUser.fromJson({'user_id': '1', 'nama': 'A'});
+      expect(u.lastLat, isNull);
+      expect(u.lastLng, isNull);
+      expect(u.googleMapsUrlFromServer, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------
+  // TrailData.fromRaw — last-point overview dari server
+  // -------------------------------------------------------------------
+  group('TrailData.fromRaw last_* overview', () {
+    test('parse last_lat/last_lng/google_maps_url', () {
+      final data = TrailData.fromRaw({
+        'user_id': '7',
+        'last_lat': -7.4685527,
+        'last_lng': 109.217636,
+        'google_maps_url':
+            'https://www.google.com/maps/search/?api=1&query=-7.4685527%2C109.217636',
+        'items': [
+          {'lat': -7.4, 'lng': 109.2, 'timestamp': '2026-09-17T10:15:00'},
+        ],
+      });
+      expect(data.lastLat, -7.4685527);
+      expect(data.lastLng, 109.217636);
+      expect(data.googleMapsUrlFromServer,
+          'https://www.google.com/maps/search/?api=1&query=-7.4685527%2C109.217636');
+      expect(data.items, hasLength(1));
+    });
+
+    test('tanpa last_* → null', () {
+      final data = TrailData.fromRaw({'user_id': '7', 'items': []});
+      expect(data.lastLat, isNull);
+      expect(data.lastLng, isNull);
+      expect(data.googleMapsUrlFromServer, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------
+  // Google Maps URL — format universal sama dengan server (GeoUrl.php)
+  // -------------------------------------------------------------------
+  group('googleMapsUrl / resolveLocationUrl', () {
+    test('format universal: query=lat%2Clng', () {
+      expect(
+        googleMapsUrl(-7.101, 110.202),
+        'https://www.google.com/maps/search/?api=1&query=-7.101%2C110.202',
+      );
+      expect(
+        googleMapsUrl(-7.4685527, 109.217636),
+        'https://www.google.com/maps/search/?api=1&query=-7.4685527%2C109.217636',
+      );
+    });
+
+    test('resolveLocationUrl utamakan url dari server', () {
+      final url = resolveLocationUrl(
+        fromServer: 'https://www.google.com/maps/search/?api=1&query=-7.1%2C110.2',
+        lat: -7.4,
+        lng: 109.2,
+      );
+      expect(url, 'https://www.google.com/maps/search/?api=1&query=-7.1%2C110.2');
+    });
+
+    test('resolveLocationUrl fallback koordinat lokal bila server kosong', () {
+      final url = resolveLocationUrl(
+        fromServer: null,
+        lat: -7.101,
+        lng: 110.202,
+      );
+      expect(url, 'https://www.google.com/maps/search/?api=1&query=-7.101%2C110.202');
+    });
+
+    test('resolveLocationUrl null bila tidak ada koordinat sama sekali', () {
+      expect(resolveLocationUrl(), isNull);
+      expect(
+        resolveLocationUrl(fromServer: '', lat: null, lng: null),
+        isNull,
+      );
+    });
+  });
 }

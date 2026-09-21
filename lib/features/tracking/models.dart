@@ -39,7 +39,9 @@ class TrackPoint {
 /// Item GET /tracking/active-users — karyawan yang masih ber-presensi aktif
 /// hari ini beserta status GPS aktual dari server:
 /// [titik], [aktifSejak] (waktu check-in), [lastSeen] (GPS terakhir hari ini,
-/// null bila belum ada), [pointCount] (titik GPS hari ini).
+/// null bila belum ada), [pointCount] (titik GPS hari ini), plus koordinat &
+/// URL Google Maps dari lokasi GPS terakhir ([lastLat]/[lastLng]/
+/// [googleMapsUrlFromServer], semuanya null bila server belum punya GPS).
 class ActiveUser {
   const ActiveUser({
     required this.userId,
@@ -49,6 +51,9 @@ class ActiveUser {
     this.aktifSejak,
     this.lastSeen,
     this.pointCount = 0,
+    this.lastLat,
+    this.lastLng,
+    this.googleMapsUrlFromServer,
   });
 
   final String userId;
@@ -65,6 +70,16 @@ class ActiveUser {
   final DateTime? lastSeen;
   final int pointCount;
 
+  /// Koordinat GPS TERAKHIR hari ini dari server. Null = belum ada GPS
+  /// tercatat (di luar lingkup radius namun server jujur menyatakannya).
+  final double? lastLat;
+  final double? lastLng;
+
+  /// URL universal Google Maps untuk aksi "Buka di Google Maps"/"Bagikan
+  /// Lokasi" — selalu pakai yang dikirim server (sumber kebenaran tunggal:
+  /// sama formatnya di mobile & web), fallback dihitung lokal bila null.
+  final String? googleMapsUrlFromServer;
+
   factory ActiveUser.fromJson(Map<String, dynamic> json) {
     final lastSeenRaw = json['last_seen']?.toString();
     final aktifSejakRaw = json['aktif_sejak']?.toString();
@@ -80,6 +95,9 @@ class ActiveUser {
           ? null
           : DateTime.tryParse(lastSeenRaw),
       pointCount: (json['point_count'] as num?)?.toInt() ?? 0,
+      lastLat: (json['last_lat'] as num?)?.toDouble(),
+      lastLng: (json['last_lng'] as num?)?.toDouble(),
+      googleMapsUrlFromServer: json['google_maps_url']?.toString(),
     );
   }
 }
@@ -91,12 +109,21 @@ class TrailData {
     this.nama,
     this.tanggal,
     this.items = const [],
+    this.lastLat,
+    this.lastLng,
+    this.googleMapsUrlFromServer,
   });
 
   final String userId;
   final String? nama;
   final String? tanggal;
   final List<TrackPoint> items;
+
+  /// Last-point overview dari server (lokasi GPS TERAKHIR + URL Google Maps).
+  /// Null bila hari ini belum ada GPS tercatat.
+  final double? lastLat;
+  final double? lastLng;
+  final String? googleMapsUrlFromServer;
 
   static TrailData fromRaw(Object? raw) {
     final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
@@ -105,6 +132,9 @@ class TrailData {
       userId: map['user_id']?.toString() ?? '',
       nama: map['nama']?.toString(),
       tanggal: map['tanggal']?.toString(),
+      lastLat: (map['last_lat'] as num?)?.toDouble(),
+      lastLng: (map['last_lng'] as num?)?.toDouble(),
+      googleMapsUrlFromServer: map['google_maps_url']?.toString(),
       items: [
         if (list is List)
           for (final e in list)
