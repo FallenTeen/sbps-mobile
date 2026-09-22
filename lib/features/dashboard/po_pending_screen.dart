@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/json_num.dart';
 import '../../shared/theme/app_theme.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
@@ -117,7 +118,7 @@ class PoPendingScreen extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              fmtRp((p['total'] as num?)?.toDouble() ?? 0),
+                              fmtRp(parseNum(p['total']) ?? 0),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                               ),

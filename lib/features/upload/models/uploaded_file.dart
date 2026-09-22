@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Satu file hasil upload (docs/api-mobile.md §11.1).
 class UploadedFile {
   const UploadedFile({
@@ -21,7 +23,7 @@ class UploadedFile {
     nama: json['nama']?.toString() ?? '-',
     fileType: json['file_type']?.toString() ?? '-',
     mime: json['mime']?.toString(),
-    size: (json['size'] as num?)?.toInt(),
+    size: parseInt(json['size']),
     url: json['url']?.toString(),
   );
 }

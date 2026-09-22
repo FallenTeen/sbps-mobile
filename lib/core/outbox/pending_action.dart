@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../json_num.dart';
+
 /// Jenis endpoint untuk aksi offline di outbox.
 enum PendingEndpoint {
   presensiCheckIn('/presensi/check-in'),
@@ -147,7 +149,7 @@ class PendingAction {
       lastAttemptAt: json['last_attempt_at'] == null
           ? null
           : DateTime.parse(json['last_attempt_at'] as String),
-      retryCount: (json['retry_count'] as num?)?.toInt() ?? 0,
+      retryCount: parseInt(json['retry_count']) ?? 0,
       errorMessage: json['error_message'] as String?,
       idempotencyKey: json['idempotency_key'] as String,
     );

@@ -2,6 +2,8 @@
 /// (docs manual-book Section 21 & api-mobile)
 library;
 
+import '../../../core/json_num.dart';
+
 /// Model Master Armada untuk dropdown pilihan unit saat pengajuan servis dan overview armada.
 class MasterArmada {
   const MasterArmada({
@@ -44,9 +46,8 @@ class MasterArmada {
       tipeUnit: json['tipe_unit']?.toString(),
       titikId: titik?['id']?.toString() ?? json['titik_id']?.toString(),
       titikNama: titik?['nama']?.toString() ?? json['titik_nama']?.toString(),
-      odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
-      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)
-          ?.toDouble(),
+      odoTerkini: parseNum(json['odo_terkini']),
+      jamOperasionalTerkini: parseNum(json['jam_operasional_terkini']),
     );
   }
 }
@@ -126,11 +127,10 @@ class ServisArmada {
           json['keluhan']?.toString() ?? json['deskripsi']?.toString() ?? '',
       kategori: json['kategori']?.toString(),
       odometerSaatAjuan:
-          (json['odometer_saat_ajuan'] as num?)?.toDouble() ??
-          (json['odo_km'] as num?)?.toDouble(),
+          parseNum(json['odometer_saat_ajuan']) ?? parseNum(json['odo_km']),
       jamOperasionalSaatAjuan:
-          (json['jam_operasional_saat_ajuan'] as num?)?.toDouble() ??
-          (json['jam_operasional'] as num?)?.toDouble(),
+          parseNum(json['jam_operasional_saat_ajuan']) ??
+          parseNum(json['jam_operasional']),
       diajukanOleh: json['diajukan_oleh'] is Map
           ? json['diajukan_oleh']['name']?.toString()
           : json['diajukan_oleh']?.toString(),
@@ -140,7 +140,7 @@ class ServisArmada {
       alasanPenolakan: json['alasan_penolakan']?.toString(),
       catatanWorkshop: json['catatan_workshop']?.toString(),
       tanggalSelesai: json['tanggal_selesai']?.toString(),
-      totalBiaya: (json['total_biaya'] as num?)?.toDouble(),
+      totalBiaya: parseNum(json['total_biaya']),
       spareparts: [
         if (parts is List)
           for (final p in parts)
@@ -175,12 +175,10 @@ class ServisSparepartItem {
       namaBarang:
           json['nama_barang']?.toString() ?? json['nama']?.toString() ?? '',
       jumlah:
-          (json['jumlah'] as num?)?.toDouble() ??
-          (json['qty'] as num?)?.toDouble() ??
-          1.0,
+          parseNum(json['jumlah']) ?? parseNum(json['qty']) ?? 1.0,
       satuan: json['satuan']?.toString(),
-      hargaSatuan: (json['harga_satuan'] as num?)?.toDouble(),
-      totalHarga: (json['total_harga'] as num?)?.toDouble(),
+      hargaSatuan: parseNum(json['harga_satuan']),
+      totalHarga: parseNum(json['total_harga']),
     );
   }
 }
@@ -210,9 +208,9 @@ class ServisArmadaPage {
           for (final e in list)
             if (e is Map) ServisArmada.fromJson(Map<String, dynamic>.from(e)),
       ],
-      currentPage: (map['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (map['last_page'] as num?)?.toInt() ?? 1,
-      total: (map['total'] as num?)?.toInt() ?? 0,
+      currentPage: parseInt(map['current_page']) ?? 1,
+      lastPage: parseInt(map['last_page']) ?? 1,
+      total: parseInt(map['total']) ?? 0,
     );
   }
 }

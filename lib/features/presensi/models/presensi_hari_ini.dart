@@ -1,4 +1,5 @@
 import 'titik.dart';
+import '../../../core/json_num.dart';
 
 /// Status presensi hari ini dari GET /presensi/hari-ini.
 enum PresensiStatus { belumCheckIn, menungguCheckOut, selesai }
@@ -121,8 +122,8 @@ class RiwayatPresensiPage {
       items: itemsRaw is List
           ? itemsRaw.map(RiwayatPresensi.fromJson).toList()
           : [],
-      currentPage: (pagination['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (pagination['last_page'] as num?)?.toInt() ?? 1,
+      currentPage: parseInt(pagination['current_page']) ?? 1,
+      lastPage: parseInt(pagination['last_page']) ?? 1,
     );
   }
 }

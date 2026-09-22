@@ -10,6 +10,7 @@ import '../../core/api_client.dart';
 import '../../core/armada_jenis.dart';
 import '../../core/draft/draft_repository.dart';
 import '../../core/formatters.dart';
+import '../../core/json_num.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
@@ -86,8 +87,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
       for (final e in rawRecords) {
         if (e is! Map) continue;
         final map = Map<String, dynamic>.from(e);
-        final index = (map['index'] as num?)?.toInt();
-        final jumlah = (map['jumlah'] as num?)?.toInt();
+        final index = parseInt(map['index']);
+        final jumlah = parseInt(map['jumlah']);
         final armadaId = map['armada_id']?.toString();
         if (index == null || jumlah == null || armadaId == null) continue;
         migrated.add(
@@ -98,7 +99,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
             jumlah: jumlah,
             satuan: (map['satuan'] as String?) ?? 'rit',
             catatan: map['catatan']?.toString(),
-            odoPerTrip: (map['odo_per_trip'] as num?)?.toDouble(),
+            odoPerTrip: parseNum(map['odo_per_trip']),
             createdAt: DateTime.now(),
             clientUuid: _uuid.v4(),
             idempotencyKey: _uuid.v4(),

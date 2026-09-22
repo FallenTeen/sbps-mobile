@@ -1,3 +1,5 @@
+import '../../core/json_num.dart';
+
 /// Titik lokasi GPS hasil perekaman perangkat.
 class TrackPoint {
   const TrackPoint({
@@ -94,9 +96,9 @@ class ActiveUser {
       lastSeen: lastSeenRaw == null || lastSeenRaw.isEmpty
           ? null
           : DateTime.tryParse(lastSeenRaw),
-      pointCount: (json['point_count'] as num?)?.toInt() ?? 0,
-      lastLat: (json['last_lat'] as num?)?.toDouble(),
-      lastLng: (json['last_lng'] as num?)?.toDouble(),
+      pointCount: parseInt(json['point_count']) ?? 0,
+      lastLat: parseNum(json['last_lat']),
+      lastLng: parseNum(json['last_lng']),
       googleMapsUrlFromServer: json['google_maps_url']?.toString(),
     );
   }
@@ -132,8 +134,8 @@ class TrailData {
       userId: map['user_id']?.toString() ?? '',
       nama: map['nama']?.toString(),
       tanggal: map['tanggal']?.toString(),
-      lastLat: (map['last_lat'] as num?)?.toDouble(),
-      lastLng: (map['last_lng'] as num?)?.toDouble(),
+      lastLat: parseNum(map['last_lat']),
+      lastLng: parseNum(map['last_lng']),
       googleMapsUrlFromServer: map['google_maps_url']?.toString(),
       items: [
         if (list is List)

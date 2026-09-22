@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Model master untuk halaman Mulai Sesi Produksi (GET /master/*).
 class MesinMaster {
   const MesinMaster({
@@ -27,7 +29,7 @@ class MesinMaster {
       id: json['id']?.toString() ?? '',
       nama: json['nama']?.toString() ?? '',
       jenis: json['jenis']?.toString(),
-      kapasitas: (json['kapasitas'] as num?)?.toDouble(),
+      kapasitas: parseNum(json['kapasitas']),
       titikId: titik is Map ? titik['id']?.toString() : null,
       titikNama: titik is Map ? titik['nama']?.toString() : null,
       produkDefaultId: produk is Map ? produk['id']?.toString() : null,

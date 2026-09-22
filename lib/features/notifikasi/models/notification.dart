@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Kategori notifikasi (Phase 16 action center). Dikirim server via field
 /// `category`; nilai tak dikenal di-parse sebagai [NotificationCategory.sistem].
 ///
@@ -114,7 +116,7 @@ class NotificationsPage {
       items: itemsRaw is List
           ? itemsRaw.map(AppNotification.fromJson).toList()
           : [],
-      unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      unreadCount: parseInt(json['unread_count']) ?? 0,
     );
   }
 }

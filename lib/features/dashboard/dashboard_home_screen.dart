@@ -151,24 +151,23 @@ class _SectionAttention extends ConsumerWidget {
     final role = ref.watch(activeRoleProvider);
     final admin = RolePermissions.isAdminLike(role);
 
-    final AsyncValue<ArmadaStatusData>? armada =
-        admin ? ref.watch(armadaStatusProvider) : null;
-    final AsyncValue<PoPendingPage>? po =
-        admin ? ref.watch(poPendingProvider) : null;
-    final AsyncValue<InvoicePendingPage>? invoice =
-        admin ? ref.watch(invoiceBelumDibayarProvider) : null;
-    final AsyncValue<InventorySummary>? stok =
-        role == 'Owner' ? ref.watch(inventorySummaryProvider) : null;
-    final AsyncValue<int>? qc =
-        role == 'Mandor Titik' ? ref.watch(produksiMenungguQcProvider) : null;
+    final AsyncValue<ArmadaStatusData>? armada = admin
+        ? ref.watch(armadaStatusProvider)
+        : null;
+    final AsyncValue<PoPendingPage>? po = admin
+        ? ref.watch(poPendingProvider)
+        : null;
+    final AsyncValue<InvoicePendingPage>? invoice = admin
+        ? ref.watch(invoiceBelumDibayarProvider)
+        : null;
+    final AsyncValue<InventorySummary>? stok = role == 'Owner'
+        ? ref.watch(inventorySummaryProvider)
+        : null;
+    final AsyncValue<int>? qc = role == 'Mandor Titik'
+        ? ref.watch(produksiMenungguQcProvider)
+        : null;
 
-    final asyncs = <AsyncValue>[
-      ?armada,
-      ?po,
-      ?invoice,
-      ?stok,
-      ?qc,
-    ];
+    final asyncs = <AsyncValue>[?armada, ?po, ?invoice, ?stok, ?qc];
 
     final counts = AttentionCounts(
       servis: _servisCount(armada?.value),
@@ -247,7 +246,7 @@ class _AttentionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = switch (item.tone) {
       AttentionTone.critical => Theme.of(context).colorScheme.error,
-      AttentionTone.warning => Colors.orange.shade800,
+      AttentionTone.warning => context.colors.warning,
       AttentionTone.info => Theme.of(context).colorScheme.primary,
     };
     return Card(
@@ -444,10 +443,7 @@ class _MiniChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: context.colors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
           ),
         ],
       ),
@@ -560,25 +556,76 @@ class _SectionKehadiran extends ConsumerWidget {
           if (d.items.isEmpty) {
             return const EmptyHint(text: 'Belum ada presensi hari ini.');
           }
+          final totalCheckOut = d.items.fold<int>(
+            0,
+            (sum, item) => sum + item.checkOut,
+          );
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  'Total hadir: ${d.totalHadir}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _KehadiranStat(
+                      icon: Icons.groups_outlined,
+                      label: 'Total hadir',
+                      value: '${d.totalHadir}',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _KehadiranStat(
+                      icon: Icons.check_circle_outline,
+                      label: 'Sudah check-out',
+                      value: '$totalCheckOut',
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
               for (final item in d.items)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Text(item.divisi)),
-                      Text(
-                        '${item.checkOut}/${item.hadir} check-out',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.divisi,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${item.checkOut}/${item.hadir} check-out',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: context.colors.textSecondary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: item.hadir == 0
+                              ? 0.0
+                              : (item.checkOut / item.hadir).clamp(0.0, 1.0),
+                          minHeight: 6,
+                          backgroundColor: context.colors.surfaceVariant,
+                          valueColor: AlwaysStoppedAnimation(
+                            item.hadir == 0
+                                ? context.colors.textMuted
+                                : item.checkOut >= item.hadir
+                                ? context.colors.success
+                                : context.colors.warning,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -586,6 +633,64 @@ class _SectionKehadiran extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Kartu KPI kecil (ikon + angka + label) — dipakai di ringkasan kehadiran.
+class _KehadiranStat extends StatelessWidget {
+  const _KehadiranStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '$label: $value',
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: context.colors.surfaceVariant,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: context.colors.textSecondary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: context.colors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -754,7 +859,8 @@ class _SectionRecentActivity extends ConsumerWidget {
           }
           return Column(
             children: [
-              for (final n in page.items.take(5)) _ActivityTile(notification: n),
+              for (final n in page.items.take(5))
+                _ActivityTile(notification: n),
             ],
           );
         },
@@ -777,21 +883,16 @@ class _ActivityTile extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       leading: Semantics(
         // Status belum dibaca tidak hanya diwarnai — dibacakan ke TalkBack.
-        label: unread
-            ? 'Notifikasi belum dibaca'
-            : 'Notifikasi sudah dibaca',
+        label: unread ? 'Notifikasi belum dibaca' : 'Notifikasi sudah dibaca',
         child: CircleAvatar(
           radius: 18,
-          backgroundColor:
-              unread
-                  ? context.colors.primary.withValues(alpha: 0.14)
-                  : context.colors.surfaceVariant,
+          backgroundColor: unread
+              ? context.colors.primary.withValues(alpha: 0.14)
+              : context.colors.surfaceVariant,
           child: Icon(
             Icons.circle_notifications_outlined,
             size: 20,
-            color: unread
-                ? context.colors.primary
-                : context.colors.textMuted,
+            color: unread ? context.colors.primary : context.colors.textMuted,
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import '../../core/json_num.dart';
+
 class InventorySummary {
   const InventorySummary({
     required this.totalItem,
@@ -13,11 +15,10 @@ class InventorySummary {
 
   factory InventorySummary.fromJson(Map<String, dynamic> json) {
     return InventorySummary(
-      totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
-      nilaiStok: (json['nilai_stok'] as num?)?.toDouble() ?? 0,
-      stokRendahCount: (json['stok_rendah_count'] as num?)?.toInt() ?? 0,
-      requestPendingCount:
-          (json['request_pending_count'] as num?)?.toInt() ?? 0,
+      totalItem: parseInt(json['total_item']) ?? 0,
+      nilaiStok: parseNum(json['nilai_stok']) ?? 0,
+      stokRendahCount: parseInt(json['stok_rendah_count']) ?? 0,
+      requestPendingCount: parseInt(json['request_pending_count']) ?? 0,
     );
   }
 }
@@ -139,8 +140,8 @@ class InventoryRequestItem {
     return InventoryRequestItem(
       id: json['id'] as String,
       namaBarang: json['nama_barang'] as String,
-      jumlahDiminta: (json['jumlah_diminta'] as num).toInt(),
-      jumlahTersedia: (json['jumlah_tersedia'] as num?)?.toInt(),
+      jumlahDiminta: parseInt(json['jumlah_diminta']) ?? 0,
+      jumlahTersedia: parseInt(json['jumlah_tersedia']),
       satuan: json['satuan'] as String,
       status: InventoryRequestItemStatus.fromString(json['status'] as String),
     );
@@ -196,8 +197,8 @@ class OpnameItem {
       id: json['id'] as String,
       namaBarang: json['nama_barang'] as String,
       kategori: json['kategori'] as String,
-      jumlahSistem: (json['jumlah_sistem'] as num).toInt(),
-      jumlahFisik: (json['jumlah_fisik'] as num?)?.toInt(),
+      jumlahSistem: parseInt(json['jumlah_sistem']) ?? 0,
+      jumlahFisik: parseInt(json['jumlah_fisik']),
       satuan: json['satuan'] as String,
     );
   }
@@ -305,7 +306,7 @@ class StokMutasi {
       kategori: json['kategori'] as String? ?? '-',
       satuan: json['satuan'] as String? ?? '-',
       tipe: MutasiTipe.fromString(json['tipe'] as String? ?? 'keluar'),
-      jumlah: (json['jumlah'] as num?)?.toDouble() ?? 0,
+      jumlah: parseNum(json['jumlah']) ?? 0,
       sumber: MutasiSumber.fromString(json['sumber'] as String? ?? ''),
       referensiId: json['referensi_id'] as String?,
       catatan: json['catatan'] as String?,
@@ -345,9 +346,9 @@ class StokMutasiPage {
           for (final e in list)
             if (e is Map) StokMutasi.fromJson(Map<String, dynamic>.from(e)),
       ],
-      currentPage: (pagMap['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (pagMap['last_page'] as num?)?.toInt() ?? 1,
-      total: (pagMap['total'] as num?)?.toInt() ?? 0,
+      currentPage: parseInt(pagMap['current_page']) ?? 1,
+      lastPage: parseInt(pagMap['last_page']) ?? 1,
+      total: parseInt(pagMap['total']) ?? 0,
     );
   }
 }

@@ -8,6 +8,7 @@
 library;
 
 import '../../core/outbox/pending_action.dart';
+import '../../core/json_num.dart';
 
 /// Status pengiriman satu record muatan.
 ///
@@ -162,17 +163,17 @@ class RitaseRecord {
 
   factory RitaseRecord.fromJson(Map<String, dynamic> json) => RitaseRecord(
     id: json['id']?.toString() ?? '',
-    index: (json['index'] as num?)?.toInt() ?? 0,
+    index: parseInt(json['index']) ?? 0,
     armadaId: json['armada_id']?.toString() ?? '',
     armadaPlat: json['armada_plat']?.toString(),
     armadaJenis: json['armada_jenis']?.toString(),
     isAlatBerat: json['is_alat_berat'] == true,
     titikId: json['titik_id']?.toString(),
     proyekId: json['proyek_id']?.toString(),
-    jumlah: (json['jumlah'] as num?)?.toInt() ?? 0,
+    jumlah: parseInt(json['jumlah']) ?? 0,
     satuan: json['satuan']?.toString() ?? 'rit',
     catatan: json['catatan']?.toString(),
-    odoPerTrip: (json['odo_per_trip'] as num?)?.toDouble(),
+    odoPerTrip: parseNum(json['odo_per_trip']),
     createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
         DateTime.now(),
     status: RitaseRecordStatus.values.firstWhere(

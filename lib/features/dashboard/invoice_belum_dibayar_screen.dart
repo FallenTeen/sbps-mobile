@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/json_num.dart';
 import '../../shared/theme/app_theme.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
@@ -82,7 +83,7 @@ class InvoiceBelumDibayarScreen extends ConsumerWidget {
                   return const _CappedBanner();
                 }
                 final v = data.items[itemIndex];
-                final sisa = (v['sisa'] as num?)?.toDouble() ?? 0;
+                final sisa = parseNum(v['sisa']) ?? 0;
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),

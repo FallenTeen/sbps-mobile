@@ -7,12 +7,17 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/api_client.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/searchable_list_header.dart';
 import 'models.dart';
 import 'tracking_providers.dart';
 import 'tracking_rules.dart';
 import 'widgets/track_location_actions.dart';
+
+enum _StatusFilter { semua, segar, stale }
 
 /// Daftar user yang masih ber-presensi aktif hari ini + status GPS terkini
 /// — khusus Owner/Admin Keuangan. Auto-refresh tiap 60 detik.
@@ -30,6 +35,8 @@ class ActiveUsersScreen extends ConsumerStatefulWidget {
 class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
   Timer? _timer;
   bool _showMap = false;
+  String _query = '';
+  _StatusFilter _statusFilter = _StatusFilter.semua;
 
   @override
   void initState() {
@@ -61,6 +68,38 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
     await showTrackLocationActions(context, url: url, nama: user.nama);
   }
 
+  void _resetFilters() {
+    setState(() {
+      _query = '';
+      _statusFilter = _StatusFilter.semua;
+    });
+  }
+
+  List<ActiveUser> _applyFilters(List<ActiveUser> items) {
+    final now = DateTime.now();
+    Iterable<ActiveUser> result = items;
+
+    final q = _query.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      result = result.where(
+        (u) =>
+            u.nama.toLowerCase().contains(q) ||
+            (u.titik ?? '').toLowerCase().contains(q),
+      );
+    }
+
+    if (_statusFilter != _StatusFilter.semua) {
+      result = result.where((u) {
+        final state = trackingFreshness(u.lastSeen, now: now).state;
+        return _statusFilter == _StatusFilter.segar
+            ? state == TrackingFreshnessState.fresh
+            : state == TrackingFreshnessState.stale;
+      });
+    }
+
+    return result.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final users = ref.watch(activeUsersProvider);
@@ -74,61 +113,83 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
         onRefresh: () async => ref.refresh(activeUsersProvider.future),
         child: users.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
-            children: [
-              const SizedBox(height: 140),
-              Icon(
-                Icons.cloud_off,
-                size: 44,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                e is ApiException ? e.message : 'Gagal memuat data tracking.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: OutlinedButton(
-                  onPressed: () => ref.invalidate(activeUsersProvider),
-                  child: const Text('Coba lagi'),
-                ),
-              ),
-            ],
+          error: (e, _) => AppEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: 'Gagal memuat data tracking',
+            subtitle: e is ApiException ? e.message : null,
+            actionLabel: 'Coba lagi',
+            onAction: () => ref.invalidate(activeUsersProvider),
           ),
           data: (items) {
             if (items.isEmpty) {
-              return ListView(
-                children: const [
-                  SizedBox(height: 160),
-                  Icon(Icons.person_search_outlined, size: 44),
-                  SizedBox(height: 12),
-                  Text(
-                    'Belum ada karyawan dengan presensi aktif hari ini.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              return const AppEmptyState(
+                icon: Icons.person_search_outlined,
+                title: 'Belum ada karyawan aktif',
+                subtitle: 'Belum ada karyawan dengan presensi aktif hari ini.',
               );
             }
 
+            final now = DateTime.now();
             final sorted = sortActiveUsers(items);
+            final filtered = _applyFilters(sorted);
 
-            return Column(
-              children: [
-                _SummaryBanner(users: sorted),
-                _ViewToggle(
-                  value: _showMap,
-                  onChanged: (map) => setState(() => _showMap = map),
-                ),
-                Expanded(
-                  child: _showMap
-                      ? _ActiveUsersMap(
-                          users: sorted,
-                          onTapUser: _showLocationActions,
-                        )
-                      : _ActiveUsersList(users: sorted),
-                ),
-              ],
+            var fresh = 0;
+            var stale = 0;
+            for (final u in sorted) {
+              switch (trackingFreshness(u.lastSeen, now: now).state) {
+                case TrackingFreshnessState.fresh:
+                  fresh++;
+                case TrackingFreshnessState.stale:
+                  stale++;
+                case TrackingFreshnessState.noData:
+                  break;
+              }
+            }
+
+            return ResponsiveCenter(
+              maxWidth: AppBreakpoints.maxContentWidth,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: _StatsRow(
+                      total: sorted.length,
+                      fresh: fresh,
+                      stale: stale,
+                    ),
+                  ),
+                  SearchableListHeader(
+                    hintText: 'Cari nama atau titik kerja...',
+                    onChanged: (v) => setState(() => _query = v),
+                    child: _StatusFilterChips(
+                      value: _statusFilter,
+                      onChanged: (v) => setState(() => _statusFilter = v),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _ViewToggle(
+                    value: _showMap,
+                    onChanged: (map) => setState(() => _showMap = map),
+                  ),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? AppEmptyState(
+                            icon: Icons.filter_alt_off_outlined,
+                            title: 'Tidak ada yang cocok',
+                            subtitle:
+                                'Coba ubah kata kunci pencarian atau filter status.',
+                            actionLabel: 'Reset Filter',
+                            onAction: _resetFilters,
+                          )
+                        : _showMap
+                        ? _ActiveUsersMap(
+                            users: filtered,
+                            onTapUser: _showLocationActions,
+                          )
+                        : _ActiveUsersList(users: filtered),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -137,66 +198,138 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
   }
 }
 
-/// Banner ringkas: berapa update segar vs stale — semua hitungan dari
-/// timestamp aktual server.
-class _SummaryBanner extends StatelessWidget {
-  const _SummaryBanner({required this.users});
+/// Ringkasan KPI: total user presensi aktif, berapa yang update-nya segar,
+/// dan berapa yang perlu dicek (stale) — semua hitungan dari timestamp
+/// AKTUAL server, senada dengan pola KPI di Monitoring Armada.
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({
+    required this.total,
+    required this.fresh,
+    required this.stale,
+  });
 
-  final List<ActiveUser> users;
+  final int total;
+  final int fresh;
+  final int stale;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    var fresh = 0;
-    var stale = 0;
-    for (final u in users) {
-      switch (trackingFreshness(u.lastSeen, now: now).state) {
-        case TrackingFreshnessState.fresh:
-          fresh++;
-        case TrackingFreshnessState.stale:
-          stale++;
-        case TrackingFreshnessState.noData:
-          break;
-      }
-    }
-
-    final staleText = stale > 0
-        ? '$fresh segar • $stale update lama'
-        : '$fresh update segar';
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: stale > 0
-            ? Colors.orange.shade50
-            : Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: stale > 0 ? Colors.orange.shade300 : Colors.transparent,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            stale > 0 ? Icons.warning_amber_rounded : Icons.sensors,
-            size: 18,
-            color: stale > 0
-                ? Colors.orange.shade800
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+    final colors = context.colors;
+    return Row(
+      children: [
+        Expanded(
+          child: _StatTile(
+            icon: Icons.groups_outlined,
+            label: 'Aktif hari ini',
+            value: '$total',
+            color: colors.primary,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${users.length} user presensi aktif • $staleText. '
-              'Data GPS sesuai catatan server.',
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            icon: Icons.sensors,
+            label: 'Update segar',
+            value: '$fresh',
+            color: colors.success,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            icon: Icons.warning_amber_rounded,
+            label: 'Perlu dicek',
+            value: '$stale',
+            color: stale > 0 ? colors.warning : colors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      label: '$label: $value',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+          boxShadow: AppTheme.shadowLv1,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
               style: TextStyle(
-                fontSize: 12,
-                color: stale > 0
-                    ? Colors.orange.shade900
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
               ),
             ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: colors.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Filter status (Semua/Segar/Perlu dicek) — child dari [SearchableListHeader].
+class _StatusFilterChips extends StatelessWidget {
+  const _StatusFilterChips({required this.value, required this.onChanged});
+
+  final _StatusFilter value;
+  final ValueChanged<_StatusFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        spacing: 8,
+        children: [
+          ChoiceChip(
+            label: const Text('Semua'),
+            selected: value == _StatusFilter.semua,
+            onSelected: (_) => onChanged(_StatusFilter.semua),
+          ),
+          ChoiceChip(
+            label: const Text('Segar'),
+            selected: value == _StatusFilter.segar,
+            onSelected: (_) => onChanged(_StatusFilter.segar),
+          ),
+          ChoiceChip(
+            label: const Text('Perlu dicek'),
+            selected: value == _StatusFilter.stale,
+            onSelected: (_) => onChanged(_StatusFilter.stale),
           ),
         ],
       ),
@@ -239,8 +372,8 @@ class _ViewToggle extends StatelessWidget {
   }
 }
 
-/// List/grid kartu user (tampilan default), sama seperti sebelumnya —
-/// dipisah supaya mudah berganti tampilan.
+/// List/grid kartu user (tampilan default), dipisah supaya mudah berganti
+/// tampilan. Grid dipakai mulai breakpoint Medium (tablet) ke atas.
 class _ActiveUsersList extends StatelessWidget {
   const _ActiveUsersList({required this.users});
 
@@ -267,7 +400,12 @@ class _ActiveUsersList extends StatelessWidget {
         ),
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 3.0,
+        // Tinggi TETAP (bukan aspect ratio): kartu punya 4 baris konten
+        // (nama+badge, titik, aktif sejak, lokasi terakhir, footer chip) —
+        // aspect ratio membuat tinggi ikut menyusut saat kolom melebar
+        // (grid 3 kolom di layar lebar → kartu overflow). Nilai ini punya
+        // slack untuk font scaling ~130%.
+        mainAxisExtent: 220,
       ),
       itemCount: users.length,
       itemBuilder: (context, i) => _UserCard(user: users[i]),
@@ -337,16 +475,10 @@ class _ActiveUsersMapState extends State<_ActiveUsersMap> {
     final now = DateTime.now();
 
     if (withCoords.isEmpty) {
-      return ListView(
-        children: const [
-          SizedBox(height: 120),
-          Icon(Icons.map_outlined, size: 44),
-          SizedBox(height: 12),
-          Text(
-            'Belum ada koordinat GPS untuk ditampilkan di peta.',
-            textAlign: TextAlign.center,
-          ),
-        ],
+      return const AppEmptyState(
+        icon: Icons.map_outlined,
+        title: 'Belum ada koordinat GPS',
+        subtitle: 'Belum ada koordinat GPS untuk ditampilkan di peta.',
       );
     }
 
@@ -357,7 +489,9 @@ class _ActiveUsersMapState extends State<_ActiveUsersMap> {
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: points.length == 1 ? points.first : const LatLng(0, 0),
+            initialCenter: points.length == 1
+                ? points.first
+                : const LatLng(0, 0),
             initialZoom: points.length == 1 ? 14.0 : 5.0,
             initialCameraFit: points.length > 1
                 ? CameraFit.bounds(
@@ -386,7 +520,7 @@ class _ActiveUsersMapState extends State<_ActiveUsersMap> {
                   Marker(
                     point: LatLng(u.lastLat!, u.lastLng!),
                     width: 130,
-                    height: 54,
+                    height: 60,
                     child: _UserMapMarker(
                       user: u,
                       freshness: trackingFreshness(u.lastSeen, now: now),
@@ -429,38 +563,49 @@ class _UserMapMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.colors;
     final color = switch (freshness.state) {
-      TrackingFreshnessState.fresh => Colors.green.shade700,
-      TrackingFreshnessState.stale => Colors.orange.shade700,
-      TrackingFreshnessState.noData => Colors.grey.shade600,
+      TrackingFreshnessState.fresh => appColors.success,
+      TrackingFreshnessState.stale => appColors.warning,
+      TrackingFreshnessState.noData => appColors.textMuted,
     };
     final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.location_on, size: 36, color: color),
-          Container(
-            constraints: const BoxConstraints(maxWidth: 120),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Text(
-              user.nama,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+      // FittedBox(scaleDown) — Marker di flutter_map punya width/height TETAP
+      // (dari MarkerLayer); jika konten (ikon pin + label nama) sedikit lebih
+      // tinggi dari yang dialokasikan (mis. metrik font platform berbeda,
+      // atau pengaturan font besar), ini menyusutkan tampilan alih-alih
+      // overflow, bukannya memotong/error.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.topCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.location_on, size: 36, color: color),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 120),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              child: Text(
+                user.nama,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  height: 1.0,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -474,7 +619,8 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = trackingFreshness(user.lastSeen);
-    final colors = Theme.of(context).colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final shareUrl = resolveLocationUrl(
       fromServer: user.googleMapsUrlFromServer,
       lat: user.lastLat,
@@ -514,7 +660,7 @@ class _UserCard extends StatelessWidget {
                             Icon(
                               Icons.place_outlined,
                               size: 14,
-                              color: colors.outline,
+                              color: colorScheme.outline,
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -536,7 +682,7 @@ class _UserCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Icon(Icons.schedule, size: 15, color: colors.outline),
+                  Icon(Icons.schedule, size: 15, color: colorScheme.outline),
                   const SizedBox(width: 6),
                   Text(
                     aktifSejakText(user.aktifSejak),
@@ -550,9 +696,7 @@ class _UserCard extends StatelessWidget {
                   Icon(
                     f.isStale ? Icons.location_off : Icons.my_location,
                     size: 15,
-                    color: f.isStale
-                        ? Colors.orange.shade800
-                        : colors.outline,
+                    color: f.isStale ? appColors.warning : colorScheme.outline,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
@@ -560,8 +704,8 @@ class _UserCard extends StatelessWidget {
                       lokasiTerakhirText(user.lastSeen),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: f.isStale
-                            ? Colors.orange.shade900
-                            : colors.onSurfaceVariant,
+                            ? appColors.warning
+                            : colorScheme.onSurfaceVariant,
                         fontWeight: f.isStale
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -587,7 +731,7 @@ class _UserCard extends StatelessWidget {
                           icon: const Icon(Icons.share_location),
                           iconSize: 20,
                           visualDensity: VisualDensity.compact,
-                          color: colors.primary,
+                          color: colorScheme.primary,
                           onPressed: () => showTrackLocationActions(
                             context,
                             url: shareUrl,
@@ -599,7 +743,7 @@ class _UserCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: colors.primary,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ],
@@ -621,22 +765,23 @@ class _FreshnessChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = switch (freshness.state) {
-      TrackingFreshnessState.fresh => (Colors.green.shade100, Colors.green.shade900),
-      TrackingFreshnessState.stale => (Colors.orange.shade100, Colors.orange.shade900),
-      TrackingFreshnessState.noData => (Colors.grey.shade200, Colors.grey.shade800),
+    final appColors = context.colors;
+    final color = switch (freshness.state) {
+      TrackingFreshnessState.fresh => appColors.success,
+      TrackingFreshnessState.stale => appColors.warning,
+      TrackingFreshnessState.noData => appColors.textMuted,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: bg,
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         statusLabel(freshness),
         style: TextStyle(
           fontSize: 11,
-          color: fg,
+          color: color,
           fontWeight: FontWeight.w700,
         ),
       ),

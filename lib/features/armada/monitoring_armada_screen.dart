@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/armada_jenis.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../dashboard/dashboard_providers.dart';
 import '../dashboard/models.dart';
 import 'armada_monitoring.dart';
+import 'models/servis_armada.dart';
+import 'unit_monitoring_screen.dart';
 
 /// Monitoring Armada (Bagian 21.11) — metrik utilisasi (total jam aktif,
 /// HM/Jam, rekap durasi per tanggal) + kondisi seluruh armada (checklist,
@@ -58,6 +61,28 @@ class _MonitoringArmadaScreenState
     ref.invalidate(armadaMonitoringProvider(_filter));
   }
 
+  /// Drill-down ke data satu unit — konsisten dengan Overview Armada
+  /// (checklist, ODO/HM, peringatan, riwayat servis).
+  void _openUnit(ArmadaMonitoringUnit unit) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => UnitMonitoringScreen(unit: _toMasterArmada(unit)),
+      ),
+    );
+  }
+
+  /// Endpoint monitoring tidak membawa titik/ODO/HM terkini; [MasterArmada]
+  /// hanya perlu identitas unit — sisanya diambil ulang dari `/armada/saya`,
+  /// `/armada/checklist-hari-ini`, dan `/servis-armada` di layar drill-down.
+  MasterArmada _toMasterArmada(ArmadaMonitoringUnit u) => MasterArmada(
+    id: u.id,
+    platNomor: u.platNomor ?? u.kodeUnit ?? 'Unit ${u.id}',
+    kodeUnit: u.kodeUnit,
+    jenis: u.jenis,
+    status: u.status,
+    tipeUnit: u.tipeUnit,
+  );
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(armadaMonitoringProvider(_filter));
@@ -68,95 +93,98 @@ class _MonitoringArmadaScreenState
         title: const Text('Monitoring Armada'),
         actions: const [PortalSwitchButton()],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    const Text('Gagal memuat monitoring armada.'),
-                    const SizedBox(height: 4),
-                    Text(
-                      friendlyErrorMessage(err),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: _refresh,
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          data: (data) {
-            if (data.perUnit.isEmpty) {
-              return const AppEmptyState(
-                icon: Icons.local_shipping_outlined,
-                title: 'Tidak ada armada',
-                subtitle: 'Belum ada unit armada terdaftar untuk dimonitor.',
-              );
-            }
-
-            return ListView(
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: async.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _RangeSelector(
-                  filter: _filter,
-                  tanggalDari: data.tanggalDari,
-                  tanggalSampai: data.tanggalSampai,
-                  onSelected: _setRange,
-                ),
-                const SizedBox(height: 12),
-                _RingkasanGrid(ringkasan: data.ringkasan),
-                const SizedBox(height: 12),
-                _PerhatianRow(ringkasan: data.ringkasan),
-                const SizedBox(height: 16),
-
-                // Daftar unit (dengan filter status dari data per unit).
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Daftar Unit Armada',
-                        style: Theme.of(context).textTheme.titleMedium,
+                Center(
+                  child: Column(
+                    children: [
+                      const Text('Gagal memuat monitoring armada.'),
+                      const SizedBox(height: 4),
+                      Text(
+                        friendlyErrorMessage(err),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.textTertiary,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${data.perUnit.length} unit',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.textTertiary,
+                      const SizedBox(height: 8),
+                      FilledButton(
+                        onPressed: _refresh,
+                        child: const Text('Coba Lagi'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _StatusChips(
-                  units: data.perUnit,
-                  selected: _statusFilter,
-                  onSelected: (s) => setState(() => _statusFilter = s),
-                ),
-                const SizedBox(height: 8),
-                for (final unit in data.perUnit)
-                  if (_statusFilter == null ||
-                      unit.status?.toLowerCase() ==
-                          _statusFilter!.toLowerCase())
-                    _UnitCard(unit: unit),
-
-                const SizedBox(height: 16),
-                _RekapTable(rekap: data.rekapPerTanggal),
-                const SizedBox(height: 24),
               ],
-            );
-          },
+            ),
+            data: (data) {
+              if (data.perUnit.isEmpty) {
+                return const AppEmptyState(
+                  icon: Icons.local_shipping_outlined,
+                  title: 'Tidak ada armada',
+                  subtitle: 'Belum ada unit armada terdaftar untuk dimonitor.',
+                );
+              }
+
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _RangeSelector(
+                    filter: _filter,
+                    tanggalDari: data.tanggalDari,
+                    tanggalSampai: data.tanggalSampai,
+                    onSelected: _setRange,
+                  ),
+                  const SizedBox(height: 12),
+                  _RingkasanGrid(ringkasan: data.ringkasan),
+                  const SizedBox(height: 12),
+                  _PerhatianRow(ringkasan: data.ringkasan),
+                  const SizedBox(height: 16),
+
+                  // Daftar unit (dengan filter status dari data per unit).
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Daftar Unit Armada',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      Text(
+                        '${data.perUnit.length} unit',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _StatusChips(
+                    units: data.perUnit,
+                    selected: _statusFilter,
+                    onSelected: (s) => setState(() => _statusFilter = s),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final unit in data.perUnit)
+                    if (_statusFilter == null ||
+                        unit.status?.toLowerCase() ==
+                            _statusFilter!.toLowerCase())
+                      _UnitCard(unit: unit, onTap: () => _openUnit(unit)),
+
+                  const SizedBox(height: 16),
+                  _RekapTable(rekap: data.rekapPerTanggal),
+                  const SizedBox(height: 24),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -182,26 +210,24 @@ class _RangeSelector extends StatelessWidget {
     final is7 = filter.dari != null;
     final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
 
-    return Row(
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
       children: [
         ChoiceChip(
           label: const Text('7 hari'),
           selected: is7,
           onSelected: (_) => onSelected(7),
         ),
-        const SizedBox(width: 8),
         ChoiceChip(
           label: const Text('30 hari'),
           selected: !is7,
           onSelected: (_) => onSelected(30),
         ),
-        const Spacer(),
-        Flexible(
-          child: Text(
-            '${fmtTanggal(tanggalDari)} – ${fmtTanggal(tanggalSampai)}',
-            textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 11, color: colors.textTertiary),
-          ),
+        Text(
+          '${fmtTanggal(tanggalDari)} – ${fmtTanggal(tanggalSampai)}',
+          style: TextStyle(fontSize: 11, color: colors.textTertiary),
         ),
       ],
     );
@@ -209,6 +235,11 @@ class _RangeSelector extends StatelessWidget {
 }
 
 /// Kartu KPI (bagian atas ringkasan 21.11).
+///
+/// Layout memakai `Wrap` + `LayoutBuilder` (bukan `GridView.count` dengan
+/// `childAspectRatio` tetap) supaya tinggi tiap kartu menyesuaikan isinya
+/// sendiri — aman terhadap font scaling besar (§22.8) dan label 2 kata
+/// (mis. "Pemakaian HM") tanpa memaksa kartu jadi terlalu pendek/overflow.
 class _RingkasanGrid extends StatelessWidget {
   const _RingkasanGrid({required this.ringkasan});
 
@@ -268,61 +299,87 @@ class _RingkasanGrid extends StatelessWidget {
       ),
     ];
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 1.9,
-      children: [
-        for (final c in cards)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: c.color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(c.icon, size: 14, color: c.color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        c.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: c.color,
-                        ),
-                      ),
-                    ),
-                  ],
+    return Semantics(
+      label:
+          'Ringkasan utilisasi armada. '
+          '${cards.map((c) => '${c.label}: ${c.value}').join(', ')}.',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 8.0;
+          // Tetap 2 kolom (konvensi kartu summary/dashboard di proyek ini,
+          // §22.8), tapi lebar dihitung dari constraints aktual — bukan
+          // GridView aspect-ratio — biar tinggi kartu bebas menyesuaikan isi.
+          final itemWidth = (constraints.maxWidth - spacing) / 2;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final c in cards)
+                SizedBox(
+                  width: itemWidth,
+                  child: _KpiCard(c: c),
                 ),
-                const Spacer(),
-                Text(
-                  c.value,
-                  maxLines: 1,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _KpiCard extends StatelessWidget {
+  const _KpiCard({required this.c});
+
+  final ({String label, String value, IconData icon, Color color}) c;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(c.icon, size: 14, color: c.color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  c.label,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: c.color,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            c.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// Baris perhatian: unit bermasalah / belum checklist / downtime / servis.
+///
+/// Wrap otomatis 2 kolom di layar sempit (bukan dipaksa 4 kolom sejajar)
+/// supaya label seperti "Belum checklist" tidak kepepet/terpotong.
 class _PerhatianRow extends StatelessWidget {
   const _PerhatianRow({required this.ringkasan});
 
@@ -357,39 +414,71 @@ class _PerhatianRow extends StatelessWidget {
       ),
     ];
 
-    return Row(
-      children: [
-        for (final e in items)
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: e.color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                children: [
-                  Icon(e.icon, size: 16, color: e.color),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${e.value}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: e.color,
-                    ),
-                  ),
-                  Text(
-                    e.label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9, color: e.color),
-                  ),
-                ],
-              ),
+    return Semantics(
+      label:
+          'Perlu perhatian. '
+          '${items.map((e) => '${e.label}: ${e.value}').join(', ')}.',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 6.0;
+          // 4 kolom kalau ada cukup ruang per item (>= 84dp), kalau tidak
+          // turun ke 2 kolom (2x2) daripada memaksa 4 kolom sempit.
+          final columns = constraints.maxWidth / 4 >= 84 ? 4 : 2;
+          final itemWidth =
+              (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final e in items)
+                SizedBox(
+                  width: itemWidth,
+                  child: _PerhatianTile(e: e),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PerhatianTile extends StatelessWidget {
+  const _PerhatianTile({required this.e});
+
+  final ({String label, int value, Color color, IconData icon}) e;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      decoration: BoxDecoration(
+        color: e.color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(e.icon, size: 16, color: e.color),
+          const SizedBox(height: 4),
+          Text(
+            '${e.value}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: e.color,
             ),
           ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            e.label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: e.color),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -438,9 +527,12 @@ class _StatusChips extends StatelessWidget {
 
 /// Kartu satu unit: identitas, kondisi, checklist + metrik utilisasi.
 class _UnitCard extends StatelessWidget {
-  const _UnitCard({required this.unit});
+  const _UnitCard({required this.unit, required this.onTap});
 
   final ArmadaMonitoringUnit unit;
+
+  /// Membuka drill-down data unit ini.
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -449,149 +541,191 @@ class _UnitCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: statusColor.withValues(alpha: 0.15),
-                  child: Icon(
-                    unit.tipeUnit == 'alat_berat'
-                        ? Icons.precision_manufacturing_outlined
-                        : Icons.local_shipping_outlined,
-                    size: 18,
-                    color: statusColor,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        unit.platNomor ?? unit.kodeUnit ?? 'Unit ${unit.id}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        [
-                          if (unit.kodeUnit != null &&
-                              unit.kodeUnit!.isNotEmpty)
-                            'Unit ${unit.kodeUnit}',
-                          labelJenisArmada(unit.jenis),
-                          if (unit.unitBisnisKode != null &&
-                              unit.unitBisnisKode!.isNotEmpty)
-                            unit.unitBisnisKode!,
-                        ].join(' • '),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    unit.status ?? 'aktif',
-                    style: TextStyle(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: statusColor.withValues(alpha: 0.15),
+                    child: Icon(
+                      unit.tipeUnit == 'alat_berat'
+                          ? Icons.precision_manufacturing_outlined
+                          : Icons.local_shipping_outlined,
+                      size: 18,
                       color: statusColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                if (unit.kondisiTerakhir != null)
-                  _Tag(
-                    icon: unit.kondisiTerakhir!.kondisiBaik
-                        ? Icons.check_circle_outline
-                        : Icons.warning_amber_outlined,
-                    label: unit.kondisiTerakhir!.kondisiBaik
-                        ? 'Kondisi baik'
-                        : (unit.kondisiTerakhir!.itemBermasalah ??
-                              'Bermasalah'),
-                    color: unit.kondisiTerakhir!.kondisiBaik
-                        ? colors.success
-                        : colors.error,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          unit.platNomor ?? unit.kodeUnit ?? 'Unit ${unit.id}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          [
+                            if (unit.kodeUnit != null &&
+                                unit.kodeUnit!.isNotEmpty)
+                              'Unit ${unit.kodeUnit}',
+                            labelJenisArmada(unit.jenis),
+                            if (unit.unitBisnisKode != null &&
+                                unit.unitBisnisKode!.isNotEmpty)
+                              unit.unitBisnisKode!,
+                          ].join(' • '),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                if (unit.checklistHariIni)
-                  _Tag(
-                    icon: Icons.checklist_rtl,
-                    label: 'Checklist hari ini',
-                    color: colors.success,
-                  )
-                else
-                  _Tag(
-                    icon: Icons.checklist_rtl,
-                    label: 'Belum checklist',
-                    color: colors.warning,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      unit.status ?? 'aktif',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
-                if (unit.downtimeAktif)
-                  _Tag(
-                    icon: Icons.construction_outlined,
-                    label: 'Downtime aktif',
-                    color: colors.warning,
-                  ),
-                if (unit.servisMenunggu)
-                  _Tag(
-                    icon: Icons.medical_services_outlined,
-                    label: 'Servis',
-                    color: colors.info,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _Metric(
-                  icon: Icons.schedule_outlined,
-                  label: 'Jam',
-                  value: fmtJam(unit.totalJamAktif),
-                ),
-                _Metric(
-                  icon: Icons.speed_outlined,
-                  label: 'ODO',
-                  value: fmtKm(unit.totalOdoKm),
-                ),
-                _Metric(
-                  icon: Icons.circle_outlined,
-                  label: 'HM',
-                  value: fmtNum(unit.totalHm),
-                ),
-                _Metric(
-                  icon: Icons.swap_vert_circle_outlined,
-                  label: 'Rit',
-                  value: fmtRitase(unit.jumlahRit),
-                ),
-              ],
-            ),
-            if (unit.rasioHmJam != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                'HM/Jam ${fmtNum(unit.rasioHmJam)} • '
-                'Hari operasi ${unit.jumlahHariOperasi}',
-                style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, color: colors.textMuted),
+                ],
               ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (unit.kondisiTerakhir != null)
+                    _Tag(
+                      icon: unit.kondisiTerakhir!.kondisiBaik
+                          ? Icons.check_circle_outline
+                          : Icons.warning_amber_outlined,
+                      label: unit.kondisiTerakhir!.kondisiBaik
+                          ? 'Kondisi baik'
+                          : (unit.kondisiTerakhir!.itemBermasalah ??
+                                'Bermasalah'),
+                      color: unit.kondisiTerakhir!.kondisiBaik
+                          ? colors.success
+                          : colors.error,
+                    ),
+                  if (unit.checklistHariIni)
+                    _Tag(
+                      icon: Icons.checklist_rtl,
+                      label: 'Checklist hari ini',
+                      color: colors.success,
+                    )
+                  else
+                    _Tag(
+                      icon: Icons.checklist_rtl,
+                      label: 'Belum checklist',
+                      color: colors.warning,
+                    ),
+                  if (unit.downtimeAktif)
+                    _Tag(
+                      icon: Icons.construction_outlined,
+                      label: 'Downtime aktif',
+                      color: colors.warning,
+                    ),
+                  if (unit.servisMenunggu)
+                    _Tag(
+                      icon: Icons.medical_services_outlined,
+                      label: 'Servis',
+                      color: colors.info,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Metrik Jam/ODO/HM/Rit: lebar per item dihitung dari ruang
+              // tersedia (bukan Expanded rata 4 kolom tetap) supaya nilai
+              // panjang (mis. "125.000 km") tidak terpotong "..." — lihat
+              // FittedBox di _Metric untuk pengaman tambahan.
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final metrics =
+                      <({IconData icon, String label, String value})>[
+                        (
+                          icon: Icons.schedule_outlined,
+                          label: 'Jam',
+                          value: fmtJam(unit.totalJamAktif),
+                        ),
+                        (
+                          icon: Icons.speed_outlined,
+                          label: 'ODO',
+                          value: fmtKm(unit.totalOdoKm),
+                        ),
+                        (
+                          icon: Icons.circle_outlined,
+                          label: 'HM',
+                          value: fmtNum(unit.totalHm),
+                        ),
+                        (
+                          icon: Icons.swap_vert_circle_outlined,
+                          label: 'Rit',
+                          value: fmtRitase(unit.jumlahRit),
+                        ),
+                      ];
+
+                  const minItemWidth = 72.0;
+                  final rawColumns = (constraints.maxWidth / minItemWidth)
+                      .floor();
+                  final columns = rawColumns.clamp(2, metrics.length);
+                  final itemWidth = constraints.maxWidth / columns;
+
+                  return Wrap(
+                    runSpacing: 6,
+                    children: [
+                      for (final m in metrics)
+                        SizedBox(
+                          width: itemWidth,
+                          child: _Metric(
+                            icon: m.icon,
+                            label: m.label,
+                            value: m.value,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              if (unit.rasioHmJam != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'HM/Jam ${fmtNum(unit.rasioHmJam)} • '
+                  'Hari operasi ${unit.jumlahHariOperasi}',
+                  style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -635,16 +769,23 @@ class _Metric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
-    return Expanded(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: colors.textTertiary),
           const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          // FittedBox: nilai mengecil otomatis kalau tidak muat, bukan
+          // dipotong "..." — penting untuk dashboard monitoring supaya
+          // angka tetap utuh terbaca.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+            ),
           ),
           Text(
             label,
@@ -657,10 +798,18 @@ class _Metric extends StatelessWidget {
 }
 
 /// Tabel rekap durasi per tanggal (mirror "REKAP HARIAN PERALATAN").
+///
+/// Kolom pakai lebar tetap (bukan `Expanded` rata) supaya angka tidak
+/// pernah terpotong "..."; kalau layar lebih sempit dari total lebar
+/// kolom, tabel di-scroll horizontal alih-alih memaksa menyempit.
 class _RekapTable extends StatelessWidget {
   const _RekapTable({required this.rekap});
 
   final List<ArmadaMonitoringRekap> rekap;
+
+  // Tanggal 84 + Unit 44 + Jam 60 + HM 60 + ODO km 76 + Rit 44
+  // + spacing 10 x 5 kolom antar-sel = 418.
+  static const double _minWidth = 418;
 
   @override
   Widget build(BuildContext context) {
@@ -680,16 +829,52 @@ class _RekapTable extends StatelessWidget {
                   color: colors.info,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  'Rekap Durasi per Tanggal',
-                  style: Theme.of(context).textTheme.titleMedium,
+                Expanded(
+                  child: Text(
+                    'Rekap Durasi per Tanggal',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            _RekapHeader(),
-            const Divider(height: 1),
-            for (final d in rekap.reversed) _RekapRow(rekap: d),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tableWidth = constraints.maxWidth > _minWidth
+                    ? constraints.maxWidth
+                    : _minWidth;
+                final table = SizedBox(
+                  width: tableWidth,
+                  child: Column(
+                    children: [
+                      _RekapHeader(colors: colors),
+                      const Divider(height: 12),
+                      for (final d in rekap.reversed) _RekapRow(rekap: d),
+                    ],
+                  ),
+                );
+
+                if (constraints.maxWidth >= _minWidth) return table;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Geser untuk lihat semua kolom →',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: table,
+                    ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -698,28 +883,39 @@ class _RekapTable extends StatelessWidget {
 }
 
 class _RekapHeader extends StatelessWidget {
+  const _RekapHeader({required this.colors});
+
+  final AppColors colors;
+
   @override
   Widget build(BuildContext context) {
-    Widget cell(String text, {TextAlign align = TextAlign.left}) => Expanded(
+    Widget cell(String text, double width, TextAlign align) => SizedBox(
+      width: width,
       child: Text(
         text,
         textAlign: align,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: Colors.grey,
+          color:
+              colors.textTertiary, // dulu hardcode Colors.grey (bug dark mode)
         ),
       ),
     );
 
     return Row(
       children: [
-        cell('Tanggal'),
-        cell('Unit', align: TextAlign.center),
-        cell('Jam', align: TextAlign.right),
-        cell('HM', align: TextAlign.right),
-        cell('ODO km', align: TextAlign.right),
-        cell('Rit', align: TextAlign.right),
+        cell('Tanggal', 84, TextAlign.left),
+        const SizedBox(width: 10),
+        cell('Unit', 44, TextAlign.center),
+        const SizedBox(width: 10),
+        cell('Jam', 60, TextAlign.right),
+        const SizedBox(width: 10),
+        cell('HM', 60, TextAlign.right),
+        const SizedBox(width: 10),
+        cell('ODO km', 76, TextAlign.right),
+        const SizedBox(width: 10),
+        cell('Rit', 44, TextAlign.right),
       ],
     );
   }
@@ -732,7 +928,8 @@ class _RekapRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget cell(String text, {TextAlign align = TextAlign.left}) => Expanded(
+    Widget cell(String text, double width, TextAlign align) => SizedBox(
+      width: width,
       child: Text(
         text,
         textAlign: align,
@@ -746,12 +943,17 @@ class _RekapRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          cell(fmtTanggal(rekap.tanggal)),
-          cell('${rekap.jumlahUnit}', align: TextAlign.center),
-          cell(fmtNum(rekap.totalJamAktif), align: TextAlign.right),
-          cell(fmtNum(rekap.totalHm), align: TextAlign.right),
-          cell(fmtNum(rekap.totalOdoKm), align: TextAlign.right),
-          cell('${rekap.jumlahRit}', align: TextAlign.right),
+          cell(fmtTanggal(rekap.tanggal), 84, TextAlign.left),
+          const SizedBox(width: 10),
+          cell('${rekap.jumlahUnit}', 44, TextAlign.center),
+          const SizedBox(width: 10),
+          cell(fmtNum(rekap.totalJamAktif), 60, TextAlign.right),
+          const SizedBox(width: 10),
+          cell(fmtNum(rekap.totalHm), 60, TextAlign.right),
+          const SizedBox(width: 10),
+          cell(fmtNum(rekap.totalOdoKm), 76, TextAlign.right),
+          const SizedBox(width: 10),
+          cell('${rekap.jumlahRit}', 44, TextAlign.right),
         ],
       ),
     );

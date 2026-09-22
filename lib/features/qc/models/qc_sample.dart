@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Sample QC (slump test / uji tekan) — docs/api-mobile.md §10.
 ///
 /// Bentuk `produksi` berbeda antar endpoint: respons slump/uji-tekan
@@ -75,8 +77,8 @@ class QcSample {
       id: json['id']?.toString() ?? '',
       jenisUji: json['jenis_uji']?.toString() ?? 'slump_test',
       status: json['status']?.toString() ?? '',
-      nilaiSlump: (json['nilai_slump'] as num?)?.toDouble(),
-      hasilUjiTekan: (json['hasil_uji_tekan'] as num?)?.toDouble(),
+      nilaiSlump: parseNum(json['nilai_slump']),
+      hasilUjiTekan: parseNum(json['hasil_uji_tekan']),
       tanggalUjiTekanRencana: json['tanggal_uji_tekan_rencana']?.toString(),
       catatan: json['catatan']?.toString(),
       createdAt: parseDt(json['created_at']),
@@ -119,9 +121,9 @@ class QcRiwayatPage {
           for (final e in list)
             QcSample.fromJson(Map<String, dynamic>.from(e as Map)),
       ],
-      currentPage: (pagMap['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (pagMap['last_page'] as num?)?.toInt() ?? 1,
-      total: (pagMap['total'] as num?)?.toInt() ?? 0,
+      currentPage: parseInt(pagMap['current_page']) ?? 1,
+      lastPage: parseInt(pagMap['last_page']) ?? 1,
+      total: parseInt(pagMap['total']) ?? 0,
     );
   }
 }

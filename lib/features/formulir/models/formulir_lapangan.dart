@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Satu entri Formulir Lapangan (docs/api-mobile.md §7).
 class FormulirLapangan {
   const FormulirLapangan({
@@ -70,8 +72,8 @@ class RiwayatFormulirPage {
       items: itemsRaw is List
           ? itemsRaw.map(FormulirLapangan.fromJson).toList()
           : [],
-      currentPage: (pagination['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (pagination['last_page'] as num?)?.toInt() ?? 1,
+      currentPage: parseInt(pagination['current_page']) ?? 1,
+      lastPage: parseInt(pagination['last_page']) ?? 1,
     );
   }
 }

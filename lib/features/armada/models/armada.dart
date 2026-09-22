@@ -4,6 +4,8 @@
 /// `armada/checklist-hari-ini`.
 library;
 
+import '../../../core/json_num.dart';
+
 /// Kendaraan yang saat ini dipegang driver (ArmadaDriver aktif).
 class ArmadaSaya {
   const ArmadaSaya({
@@ -61,16 +63,15 @@ class ArmadaSaya {
       jenis: json['jenis']?.toString(),
       tipeUnit: json['tipe_unit']?.toString(),
       modelTarif: json['model_tarif']?.toString(),
-      tahun: (json['tahun'] as num?)?.toInt(),
+      tahun: parseInt(json['tahun']),
       kapasitas: json['kapasitas']?.toString(),
       status: json['status']?.toString(),
       unitBisnis: json['unit_bisnis']?.toString(),
       titikId: titik?['id']?.toString(),
       titikNama: titik?['nama']?.toString(),
       proyekId: (titik?['proyek_id'] ?? json['proyek_id'])?.toString(),
-      odoTerkini: (json['odo_terkini'] as num?)?.toDouble(),
-      jamOperasionalTerkini: (json['jam_operasional_terkini'] as num?)
-          ?.toDouble(),
+      odoTerkini: parseNum(json['odo_terkini']),
+      jamOperasionalTerkini: parseNum(json['jam_operasional_terkini']),
     );
   }
 }
@@ -120,9 +121,9 @@ class RitaseItem {
       tanggal: json['tanggal']?.toString(),
       kategori: json['kategori']?.toString(),
       material: json['material']?.toString(),
-      jumlahRit: (json['jumlah_rit'] as num?)?.toInt(),
-      tarifPerRit: (json['tarif_per_rit_snapshot'] as num?)?.toDouble(),
-      totalUpahRit: (json['total_upah_rit'] as num?)?.toDouble(),
+      jumlahRit: parseInt(json['jumlah_rit']),
+      tarifPerRit: parseNum(json['tarif_per_rit_snapshot']),
+      totalUpahRit: parseNum(json['total_upah_rit']),
       status: json['status']?.toString(),
       catatan: json['catatan']?.toString(),
       customer: json['customer']?.toString(),
@@ -160,9 +161,9 @@ class RitasePage {
           for (final e in list)
             RitaseItem.fromJson(Map<String, dynamic>.from(e as Map)),
       ],
-      currentPage: (map['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (map['last_page'] as num?)?.toInt() ?? 1,
-      total: (map['total'] as num?)?.toInt() ?? 0,
+      currentPage: parseInt(map['current_page']) ?? 1,
+      lastPage: parseInt(map['last_page']) ?? 1,
+      total: parseInt(map['total']) ?? 0,
     );
   }
 }
@@ -217,12 +218,13 @@ class ArmadaChecklist {
       status: json['status']?.toString(),
       kondisiBaik: json['kondisi_baik'] as bool?,
       itemBermasalah: json['item_bermasalah']?.toString(),
-      solarLiter: (json['solar_liter'] as num?)?.toDouble(),
-      odoKm: (json['odo_km'] as num?)?.toDouble() ??
-          (json['odo_sore'] as num?)?.toDouble() ??
-          (json['odo_pagi'] as num?)?.toDouble(),
-      jamOperasional: (json['jam_operasional'] as num?)?.toDouble() ??
-          (json['hm_odo'] as num?)?.toDouble(),
+      solarLiter: parseNum(json['solar_liter']),
+      odoKm:
+          parseNum(json['odo_km']) ??
+          parseNum(json['odo_sore']) ??
+          parseNum(json['odo_pagi']),
+      jamOperasional:
+          parseNum(json['jam_operasional']) ?? parseNum(json['hm_odo']),
     );
   }
 }

@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Sesi produksi — struktur `data` dari /produksi/mulai, /selesai,
 /// /sesi-aktif, dan item /riwayat (docs/api-mobile.md §8).
 class ProductionSession {
@@ -50,7 +52,7 @@ class ProductionSession {
       titikNama: titik?['nama']?.toString(),
       mulai: _parseDate(json['mulai']),
       selesai: _parseDate(json['selesai']),
-      hasilOutput: (json['hasil_output'] as num?)?.toDouble() ?? 0,
+      hasilOutput: parseNum(json['hasil_output']) ?? 0,
       status: json['status']?.toString() ?? 'berjalan',
       catatan: json['catatan']?.toString(),
     );
@@ -80,8 +82,8 @@ class TitikProgressItem {
     return TitikProgressItem(
       titikId: json['titik_id']?.toString() ?? '',
       titikNama: json['titik']?.toString(),
-      totalOutput: (json['total_output'] as num?)?.toDouble() ?? 0,
-      jumlahSesi: (json['jumlah_sesi'] as num?)?.toInt() ?? 0,
+      totalOutput: parseNum(json['total_output']) ?? 0,
+      jumlahSesi: parseInt(json['jumlah_sesi']) ?? 0,
     );
   }
 }
@@ -112,9 +114,9 @@ class ProduksiRiwayatPage {
         for (final e in list)
           ProductionSession.fromJson(Map<String, dynamic>.from(e as Map)),
       ],
-      currentPage: (pagMap['current_page'] as num?)?.toInt() ?? 1,
-      lastPage: (pagMap['last_page'] as num?)?.toInt() ?? 1,
-      total: (pagMap['total'] as num?)?.toInt() ?? 0,
+      currentPage: parseInt(pagMap['current_page']) ?? 1,
+      lastPage: parseInt(pagMap['last_page']) ?? 1,
+      total: parseInt(pagMap['total']) ?? 0,
     );
   }
 }

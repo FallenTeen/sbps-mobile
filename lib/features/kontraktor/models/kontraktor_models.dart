@@ -1,6 +1,8 @@
 /// Model-model untuk Portal Kontraktor (Proyek Kontrak, Invoice, Komunikasi Log).
 library;
 
+import '../../../core/json_num.dart';
+
 class ProyekKontrakItem {
   const ProyekKontrakItem({
     required this.id,
@@ -67,9 +69,9 @@ class InvoiceKontrakItem {
       tanggalTerbit: json['tanggal_terbit']?.toString(),
       tanggalJatuhTempo: json['tanggal_jatuh_tempo']?.toString(),
       status: json['status']?.toString() ?? '',
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
-      paid: (json['paid'] as num?)?.toDouble() ?? 0.0,
-      sisa: (json['sisa'] as num?)?.toDouble() ?? 0.0,
+      total: parseNum(json['total']) ?? 0.0,
+      paid: parseNum(json['paid']) ?? 0.0,
+      sisa: parseNum(json['sisa']) ?? 0.0,
     );
   }
 }
@@ -91,8 +93,8 @@ class ProduksiSummaryItem {
     return ProduksiSummaryItem(
       nama: json['nama']?.toString() ?? '',
       satuan: json['satuan']?.toString() ?? '',
-      totalOutput: (json['total_output'] as num?)?.toDouble() ?? 0.0,
-      sesiCount: (json['sesi_count'] as num?)?.toInt() ?? 0,
+      totalOutput: parseNum(json['total_output']) ?? 0.0,
+      sesiCount: parseInt(json['sesi_count']) ?? 0,
     );
   }
 }
@@ -161,9 +163,9 @@ class DetailProyekKontrak {
             if (p is Map)
               ProduksiSummaryItem.fromJson(Map<String, dynamic>.from(p)),
       ],
-      totalRencana: (rabMap['total_rencana'] as num?)?.toDouble() ?? 0.0,
-      totalRealisasi: (rabMap['total_realisasi'] as num?)?.toDouble() ?? 0.0,
-      persentaseRab: (rabMap['persentase'] as num?)?.toDouble() ?? 0.0,
+      totalRencana: parseNum(rabMap['total_rencana']) ?? 0.0,
+      totalRealisasi: parseNum(rabMap['total_realisasi']) ?? 0.0,
+      persentaseRab: parseNum(rabMap['persentase']) ?? 0.0,
       invoices: [
         if (invList is List)
           for (final i in invList)

@@ -1,3 +1,5 @@
+import '../../../core/json_num.dart';
+
 /// Titik kerja aktif dari GET /titik-aktif atau GET /titik-map (docs/api-mobile.md).
 /// Koordinat dipakai validasi radius check-in/check-out di backend dan peta interaktif.
 class Titik {
@@ -43,10 +45,9 @@ class Titik {
     proyekId: json['proyek_id']?.toString(),
     proyekNama: json['proyek_nama']?.toString() ?? json['proyek']?.toString(),
     status: json['status']?.toString(),
-    latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-    longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-    radiusPresensiMeter:
-        (json['radius_presensi_meter'] as num?)?.toDouble() ?? 0,
+    latitude: parseNum(json['latitude']) ?? 0,
+    longitude: parseNum(json['longitude']) ?? 0,
+    radiusPresensiMeter: parseNum(json['radius_presensi_meter']) ?? 0,
   );
 
   /// Parse toleran — null bila [raw] bukan objek titik yang valid.

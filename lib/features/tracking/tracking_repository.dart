@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/json_num.dart';
 import 'models.dart';
 
 /// Repository Live Tracking (docs/api-mobile.md §9).
@@ -25,8 +26,8 @@ class TrackingRepository {
     );
     final data = res.data ?? const {};
     return BatchSendResult(
-      received: (data['received'] as num?)?.toInt() ?? 0,
-      saved: (data['saved'] as num?)?.toInt() ?? 0,
+      received: parseInt(data['received']) ?? 0,
+      saved: parseInt(data['saved']) ?? 0,
       duplicate: data['duplicate'] == true,
     );
   }
