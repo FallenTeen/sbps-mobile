@@ -35,7 +35,7 @@ String _formatToday(DateTime now) => DateFormat('d MMM y', 'id_ID').format(now);
 
 String? _fmtIsoTime(String? iso) {
   if (iso == null || iso.isEmpty) return null;
-  final dt = DateTime.tryParse(iso);
+  final dt = DateTime.tryParse(iso)?.toLocal();
   if (dt == null) return iso;
   return DateFormat('HH:mm', 'id_ID').format(dt);
 }

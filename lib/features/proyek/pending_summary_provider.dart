@@ -24,7 +24,7 @@ final pendingSummaryProvider = Provider.autoDispose<PendingSummary>((ref) {
 
 class PendingSummary {
   PendingSummary({required OutboxRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final OutboxRepository _repository;
 
@@ -46,60 +46,70 @@ class PendingSummary {
 
     // --- Armada: checklist harian, ODO awal, helper presensi, ritase,
     // checklist major, dan ajuan servis (driver mengajukan via form). ---
-    final armadaCount = actions.where(
-      (a) =>
-          a.endpoint == PendingEndpoint.armadaChecklist ||
-          a.endpoint == PendingEndpoint.armadaOdoAwal ||
-          a.endpoint == PendingEndpoint.helperPresensi ||
-          a.endpoint == PendingEndpoint.armadaRitase ||
-          a.endpoint == PendingEndpoint.armadaChecklistMajor ||
-          a.endpoint == PendingEndpoint.servisAjuan,
-    ).length;
+    final armadaCount = actions
+        .where(
+          (a) =>
+              a.endpoint == PendingEndpoint.armadaChecklist ||
+              a.endpoint == PendingEndpoint.armadaOdoAwal ||
+              a.endpoint == PendingEndpoint.helperPresensi ||
+              a.endpoint == PendingEndpoint.armadaRitase ||
+              a.endpoint == PendingEndpoint.armadaChecklistMajor ||
+              a.endpoint == PendingEndpoint.servisAjuan,
+        )
+        .length;
 
     // --- Produksi: mulai & selesai sesi ---
-    final produksiCount = actions.where(
-      (a) =>
-          a.endpoint == PendingEndpoint.produksiMulai ||
-          a.endpoint == PendingEndpoint.produksiSelesai,
-    ).length;
+    final produksiCount = actions
+        .where(
+          (a) =>
+              a.endpoint == PendingEndpoint.produksiMulai ||
+              a.endpoint == PendingEndpoint.produksiSelesai,
+        )
+        .length;
 
     // --- QC: slump test & uji tekan ---
-    final qcCount = actions.where(
-      (a) =>
-          a.endpoint == PendingEndpoint.qcSlumpTest ||
-          a.endpoint == PendingEndpoint.qcUjiTekan,
-    ).length;
+    final qcCount = actions
+        .where(
+          (a) =>
+              a.endpoint == PendingEndpoint.qcSlumpTest ||
+              a.endpoint == PendingEndpoint.qcUjiTekan,
+        )
+        .length;
 
     // --- Workshop: mulai, selesai, foto bukti todo, request sparepart. ---
-    final workshopCount = actions.where(
-      (a) =>
-          a.endpoint == PendingEndpoint.workshopMulai ||
-          a.endpoint == PendingEndpoint.workshopSelesai ||
-          a.endpoint == PendingEndpoint.workshopTodoPhoto ||
-          a.endpoint == PendingEndpoint.workshopRequestSparepart,
-    ).length;
+    final workshopCount = actions
+        .where(
+          (a) =>
+              a.endpoint == PendingEndpoint.workshopMulai ||
+              a.endpoint == PendingEndpoint.workshopSelesai ||
+              a.endpoint == PendingEndpoint.workshopTodoPhoto ||
+              a.endpoint == PendingEndpoint.workshopRequestSparepart,
+        )
+        .length;
 
     // --- Inventory: opname ---
-    final inventoryCount = actions.where(
-      (a) => a.endpoint == PendingEndpoint.inventoryOpname,
-    ).length;
+    final inventoryCount = actions
+        .where((a) => a.endpoint == PendingEndpoint.inventoryOpname)
+        .length;
 
     // --- Formulir lapangan ---
-    final formulirCount = actions.where(
-      (a) => a.endpoint == PendingEndpoint.formulirSubmit,
-    ).length;
+    final formulirCount = actions
+        .where((a) => a.endpoint == PendingEndpoint.formulirSubmit)
+        .length;
 
     // --- Upload media ---
-    final uploadCount = actions.where(
-      (a) => a.endpoint == PendingEndpoint.uploadMedia,
-    ).length;
+    final uploadCount = actions
+        .where((a) => a.endpoint == PendingEndpoint.uploadMedia)
+        .length;
 
     // --- Presensi: check-in & check-out ---
-    final presensiCount = actions.where(
-      (a) =>
-          a.endpoint == PendingEndpoint.presensiCheckIn ||
-          a.endpoint == PendingEndpoint.presensiCheckOut,
-    ).length;
+    final presensiCount = actions
+        .where(
+          (a) =>
+              a.endpoint == PendingEndpoint.presensiCheckIn ||
+              a.endpoint == PendingEndpoint.presensiCheckOut,
+        )
+        .length;
 
     final counts = ModulePendingCounts(
       armada: _canAccessArmada(role) ? armadaCount : 0,
@@ -116,28 +126,47 @@ class PendingSummary {
   }
 
   bool _canAccessArmada(String role) => [
-        'Driver Armada',
-        'Kepala Divisi Armada',
-        'Ketua Divisi Armada',
-        'Ketua Armada',
-        'Owner',
-        'Admin Keuangan',
-      ].contains(role);
+    'Driver Armada',
+    'Kepala Divisi Armada',
+    'Ketua Divisi Armada',
+    'Ketua Armada',
+    'Owner',
+    'Admin Keuangan',
+  ].contains(role);
 
-  bool _canAccessProduksi(String role) =>
-      ['Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
+  bool _canAccessProduksi(String role) => [
+    'Mandor Titik',
+    'Mandor Proyek',
+    'Koordinator CBP',
+    'Koordinator AMP',
+    'Ketua Divisi Produksi CBP',
+    'Ketua Divisi Produksi AMP',
+    'Owner',
+    'Operator Mesin',
+  ].contains(role);
 
-  bool _canAccessWorkshop(String role) =>
-      ['Workshop', 'Owner'].contains(role);
+  bool _canAccessWorkshop(String role) => ['Workshop', 'Owner'].contains(role);
 
-  bool _canAccessQC(String role) =>
-      ['Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
+  bool _canAccessQC(String role) => [
+    'Mandor Titik',
+    'Mandor Proyek',
+    'Koordinator CBP',
+    'Koordinator AMP',
+    'Ketua Divisi Produksi CBP',
+    'Ketua Divisi Produksi AMP',
+    'Owner',
+    'Operator Mesin',
+  ].contains(role);
 
   bool _canAccessInventory(String role) =>
       ['Inventory', 'Owner', 'Mandor Titik'].contains(role);
 
-  bool _canAccessFormulir(String role) =>
-      ['Driver Armada', 'Mandor Titik', 'Owner', 'Operator Mesin'].contains(role);
+  bool _canAccessFormulir(String role) => [
+    'Driver Armada',
+    'Mandor Titik',
+    'Owner',
+    'Operator Mesin',
+  ].contains(role);
 
   bool _canAccessUpload(String role) =>
       ['Owner', 'Admin Keuangan'].contains(role);
@@ -168,7 +197,14 @@ class ModulePendingCounts {
   final int presensi;
 
   int get total =>
-      armada + produksi + workshop + qc + inventory + formulir + upload + presensi;
+      armada +
+      produksi +
+      workshop +
+      qc +
+      inventory +
+      formulir +
+      upload +
+      presensi;
 
   bool get hasPending => total > 0;
 }

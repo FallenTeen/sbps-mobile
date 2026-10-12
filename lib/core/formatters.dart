@@ -66,10 +66,14 @@ const kBulanNama = [
 /// ──────────────────── TANGGAL & WAKTU ────────────────────
 
 /// Parse input flexible: DateTime, ISO string, atau null.
+///
+/// Selalu dikonversi ke waktu lokal perangkat (WIB). Backend mengirim ISO-8601
+/// dengan offset UTC/+07:00; tanpa [DateTime.toLocal] DateTime hasil parse
+/// menyimpan field dalam UTC sehingga jam tampil 7 jam lebih awal (server time).
 DateTime? _parseDate(dynamic input) {
   if (input == null) return null;
-  if (input is DateTime) return input;
-  if (input is String) return DateTime.tryParse(input);
+  if (input is DateTime) return input.toLocal();
+  if (input is String) return DateTime.tryParse(input)?.toLocal();
   return null;
 }
 

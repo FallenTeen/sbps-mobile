@@ -58,6 +58,11 @@ class RolePermissions {
 
   static const Map<String, Set<String>> _matrix = <String, Set<String>>{
     'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
+    'Mandor Proyek': {'produksi', 'qc'},
+    'Koordinator CBP': {'produksi', 'qc'},
+    'Koordinator AMP': {'produksi', 'qc'},
+    'Ketua Divisi Produksi CBP': {'produksi', 'qc'},
+    'Ketua Divisi Produksi AMP': {'produksi', 'qc'},
     'Kontraktor': {'dashboard', 'kontraktor'},
     'Owner': {
       'produksi',
@@ -137,6 +142,11 @@ const kNotifikasiBranchIndex = 11;
 /// sudah langsung pekerjaan hari ini, jadi tab Tugas tidak perlu dirender.
 const _tugasModuleByRole = <String, String>{
   'Mandor Titik': 'produksi',
+  'Mandor Proyek': 'produksi',
+  'Koordinator CBP': 'produksi',
+  'Koordinator AMP': 'produksi',
+  'Ketua Divisi Produksi CBP': 'produksi',
+  'Ketua Divisi Produksi AMP': 'produksi',
   'Owner': 'dashboard',
   'Admin Keuangan': 'keuangan',
   'Kepala Divisi Armada': 'armada',
@@ -160,7 +170,10 @@ enum AppHomeKind { presensi, driver, workshop, inventory, proyek }
 /// - Inventory → "Perhatian Hari Ini" (stok rendah / request / opname).
 /// - Role lain (Mandor/Owner/Admin/Kontraktor/Kepala Divisi) → module cards
 ///   penuh ([ProyekHomeScreen]) — attention + operational + modul.
-AppHomeKind appHomeKindFor({required String? role, required bool presensiPortal}) {
+AppHomeKind appHomeKindFor({
+  required String? role,
+  required bool presensiPortal,
+}) {
   if (presensiPortal || role == null) return AppHomeKind.presensi;
   return switch (role) {
     'Driver Armada' => AppHomeKind.driver,

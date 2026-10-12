@@ -73,6 +73,11 @@ const kPresensiRoles = <String>[
   'Workshop',
   'Inventory',
   'Operator Mesin',
+  'Mandor Proyek',
+  'Koordinator CBP',
+  'Koordinator AMP',
+  'Ketua Divisi Produksi CBP',
+  'Ketua Divisi Produksi AMP',
 ];
 
 /// Role yang relevan untuk portal proyek (setara `kApp2Roles`).
@@ -88,6 +93,11 @@ const kProyekRoles = <String>[
   'Workshop',
   'Inventory',
   'Operator Mesin',
+  'Mandor Proyek',
+  'Koordinator CBP',
+  'Koordinator AMP',
+  'Ketua Divisi Produksi CBP',
+  'Ketua Divisi Produksi AMP',
 ];
 
 /// Presensi tersedia untuk SEMUA user (semua role) — tiap karyawan wajib
