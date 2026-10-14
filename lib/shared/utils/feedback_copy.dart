@@ -6,7 +6,8 @@ import '../../core/api_client.dart';
 /// JANGAN menampilkan "berhasil disimpan" bila server belum menerima data.
 
 /// Data tersimpan lokal, belum diterima server.
-const String kCopyQueued = 'Tersimpan di perangkat. Menunggu sinkronisasi.';
+const String kCopyQueued =
+    'Tersimpan. Pengiriman tertunda — akan dikirim otomatis.';
 
 /// Data benar-benar diterima server.
 const String kCopySynced = 'Berhasil disinkronkan.';

@@ -247,12 +247,24 @@ class OutboxSyncService {
       );
       return OutboxSendResult(delivered: true, responseData: response.data);
     } on ApiException catch (e) {
-      // 4xx: validasi/konflik tidak akan membaik dengan retry.
+      // 429 (rate limit) & 408 (request timeout) bersifat SEMENTARA: server
+      // hanya meminta kita melambat / mencoba lagi, dan retry key yang sama
+      // tetap idempotent. Klasifikasikan sebagai transient agar outbox
+      // mem-backoff, bukan menandai "Gagal dikirim".
+      final status = e.statusCode ?? 0;
+      if (status == 429 || status == 408) {
+        return OutboxSendResult(
+          delivered: false,
+          transientRetryable: true,
+          errorMessage: e.message,
+        );
+      }
+      // 4xx lain: validasi/konflik tidak akan membaik dengan retry.
       // Catatan: dengan Idempotency-Key aktif, retry key yang sama TIDAK
       // menghasilkan 422 "sudah check-in" — respons asli dikembalikan.
       // 422 di sini berarti konflik sungguhan (mis. sudah check-in lewat
       // jalur lain) atau payload invalid.
-      if ((e.statusCode ?? 0) >= 400 && (e.statusCode ?? 0) < 500) {
+      if (status >= 400 && status < 500) {
         return OutboxSendResult(
           delivered: false,
           permanentlyFailed: true,

@@ -505,8 +505,11 @@ class _PekerjaanHariIni extends ConsumerWidget {
       ),
     ];
 
+    // Indikator menghitung SEMUA langkah yang tampil (termasuk Pengisian Solar
+    // yang bersifat opsional). Langkah wajib tetap menentukan "Berikutnya" dan
+    // status selesai: solar boleh dilewati tanpa menghalangi penyelesaian.
     final requiredSteps = steps.where((s) => !s.optional).toList();
-    final doneCount = requiredSteps.where((s) => s.done).length;
+    final doneCount = steps.where((s) => s.done).length;
     _DayStep? next;
     for (final s in requiredSteps) {
       if (!s.done) {
@@ -531,7 +534,7 @@ class _PekerjaanHariIni extends ConsumerWidget {
           const SizedBox(height: 10),
           _ProgressCard(
             doneCount: doneCount,
-            total: requiredSteps.length,
+            total: steps.length,
             next: next,
           ),
           const SizedBox(height: 12),

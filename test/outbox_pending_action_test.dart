@@ -62,4 +62,51 @@ void main() {
       }
     });
   });
+
+  group('PendingAction endpoint foto bernama (awal/akhir & pengisian)', () {
+    const awal = PendingEndpoint.armadaChecklistAwal;
+    const akhir = PendingEndpoint.armadaChecklistAkhir;
+    const solar = PendingEndpoint.armadaPengisianSolar;
+
+    test('path & sifat multipart bernama', () {
+      expect(awal.path, '/armada/checklist/awal');
+      expect(akhir.path, '/armada/checklist/akhir');
+      expect(solar.path, '/armada/pengisian-solar');
+
+      for (final e in [awal, akhir, solar]) {
+        expect(e.isNamedPhoto, isTrue, reason: e.name);
+        expect(e.isJson, isFalse, reason: e.name);
+        expect(e.isUploadMedia, isFalse, reason: e.name);
+      }
+    });
+
+    test('encode/decode mempertahankan photoFields bernama', () {
+      final action = PendingAction(
+        id: 'a-2',
+        clientUuid: 'uuid-b',
+        endpoint: PendingEndpoint.armadaChecklistAwal,
+        payloadJson: {
+          'armada_id': 'armada-1',
+          'stok_solar': 'setengah',
+          'items[0][bagian]': 'Ban',
+          'items[0][kondisi]': 'baik',
+        },
+        photoFields: {
+          'foto_stok_solar': '/tmp/stok.jpg',
+          'foto_odo_pagi': '/tmp/odo.jpg',
+        },
+        createdAt: DateTime.utc(2026, 1, 1),
+        idempotencyKey: 'idem-2',
+      );
+
+      final decoded = PendingAction.decode(action.encode());
+
+      expect(decoded.endpoint, PendingEndpoint.armadaChecklistAwal);
+      expect(decoded.payloadJson['stok_solar'], 'setengah');
+      expect(decoded.payloadJson['items[0][bagian]'], 'Ban');
+      expect(decoded.photoFields['foto_stok_solar'], '/tmp/stok.jpg');
+      expect(decoded.photoFields['foto_odo_pagi'], '/tmp/odo.jpg');
+      expect(decoded.endpoint.isNamedPhoto, isTrue);
+    });
+  });
 }

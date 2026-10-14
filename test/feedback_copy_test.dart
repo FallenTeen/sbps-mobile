@@ -4,10 +4,14 @@ import 'package:sbps_mobile/shared/utils/feedback_copy.dart';
 
 void main() {
   group('Feedback copy standar sinkronisasi (PHASE 04)', () {
-    test('copy queued tidak mengklaim berhasil tersimpan ke server', () {
-      expect(kCopyQueued, 'Tersimpan di perangkat. Menunggu sinkronisasi.');
+    test('copy queued menegaskan pengiriman tertunda otomatis', () {
+      expect(
+        kCopyQueued,
+        'Tersimpan. Pengiriman tertunda — akan dikirim otomatis.',
+      );
       expect(kCopyQueued.contains('berhasil'), isFalse);
       expect(kCopyQueued.contains('berhasil disimpan'), isFalse);
+      expect(kCopyQueued.toLowerCase().contains('saat online'), isFalse);
     });
 
     test('copy synced mengklaim server sudah menerima', () {

@@ -42,8 +42,11 @@ class ApiClient {
     final dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 30),
+        // Upload multipart (foto lapangan) bisa besar & sinyal lambat — beri
+        // jendela kirim yang longgar agar tidak false-negative saat online.
+        sendTimeout: const Duration(seconds: 60),
         headers: {
           'Accept': 'application/json',
           // Backend hanya menolak jika KEDUANYA kosong (hasil audit); nilai
@@ -267,8 +270,8 @@ class _TransientNetworkRetryInterceptor extends Interceptor {
       return;
     }
     await Future<void>.delayed(_retryDelay);
-    final opts = err.requestOptions;
-    opts.extra['_transientRetry'] = count + 1;
+    final opts = _cloneRequestForRetry(err.requestOptions)
+      ..extra['_transientRetry'] = count + 1;
     try {
       final retried = await _dio.fetch<dynamic>(opts);
       handler.resolve(retried);
@@ -326,8 +329,8 @@ class _RateLimitInterceptor extends Interceptor {
 
     await Future<void>.delayed(delay);
 
-    final opts = response.requestOptions;
-    opts.extra['_rateLimitRetry'] = retryCount + 1;
+    final opts = _cloneRequestForRetry(response.requestOptions)
+      ..extra['_rateLimitRetry'] = retryCount + 1;
     try {
       final retried = await _dio.fetch(opts);
       handler.resolve(retried);
@@ -335,4 +338,17 @@ class _RateLimitInterceptor extends Interceptor {
       handler.reject(e);
     }
   }
+}
+
+/// Salinan [RequestOptions] untuk dikirim ulang dengan aman.
+///
+/// Dio melarang pemakaian ulang `FormData` yang sudah di-finalize
+/// ("The FormData has already been finalized"). Retry endpoint multipart
+/// (transient network & rate-limit) karena itu harus memakai body hasil
+/// [FormData.clone]. Tanpa ini, hiccup jaringan singkat pada request berfoto
+/// membuat percobaan ulang gagal → outbox menandai "menunggu sinkronisasi"
+/// meski perangkat sedang online.
+RequestOptions _cloneRequestForRetry(RequestOptions opts) {
+  final data = opts.data;
+  return opts.copyWith(data: data is FormData ? data.clone() : data);
 }

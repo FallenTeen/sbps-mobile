@@ -439,7 +439,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         );
       } else if (failed == 0) {
         _snack(
-          '$queued muatan tersimpan di antrean (akan disinkronkan saat online).',
+          '$queued muatan tersimpan — akan dikirim otomatis.',
         );
       } else {
         _snack('Gagal mengirim: $firstFail');
@@ -459,7 +459,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         'Muatan #$index gagal: ${errorMsg ?? "Periksa koneksi lalu coba lagi"}',
       );
     } else if (queued > 0) {
-      _snack('Muatan #$index tersimpan di perangkat (antrean sinkronisasi).');
+      _snack('Muatan #$index tersimpan — akan dikirim otomatis.');
     } else {
       _snack('Muatan #$index berhasil dikirim ke server.');
     }
@@ -898,7 +898,7 @@ class _RecordCard extends StatelessWidget {
                 if (record.status == RitaseRecordStatus.queued)
                   _ActionText(
                     icon: Icons.cloud_upload_outlined,
-                    label: 'Otomatis saat online',
+                    label: 'Terkirim otomatis',
                     color: Colors.amber.shade800,
                   ),
                 if (editable &&
@@ -1076,8 +1076,7 @@ class _SubmitBar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                '${summary.queuedCount} menunggu sinkron — terkirim otomatis '
-                'saat online.',
+                '${summary.queuedCount} tersimpan — terkirim otomatis.',
                 style: TextStyle(fontSize: 12, color: Colors.amber.shade800),
               ),
             ),

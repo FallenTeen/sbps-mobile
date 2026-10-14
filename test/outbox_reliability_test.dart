@@ -275,6 +275,47 @@ void main() {
 
     expect(slow.calls, 2, reason: 'trigger force dijalankan setelah siklus aktif');
   });
+
+  group('Klasifikasi ApiException — rate limit bukan kegagalan permanen', () {
+    late OutboxRepository repo;
+
+    setUp(() async {
+      repo = OutboxRepository(boxName: 'rel_status');
+      await (await Hive.openBox<String>('rel_status')).clear();
+    });
+
+    test('429 (rate limit) → transient, data tidak dibuang', () async {
+      final service = OutboxSyncService(repo, _StatusApiClient(429));
+      final result = await service.send(
+        _action('s-429', PendingEndpoint.servisAjuan, payloadData: const {}),
+      );
+
+      expect(result.delivered, isFalse);
+      expect(result.permanentlyFailed, isFalse, reason: '429 bukan kegagalan final');
+      expect(result.transientRetryable, isTrue);
+    }, timeout: const Timeout(Duration(seconds: 15)));
+
+    test('408 (request timeout) juga transient', () async {
+      final service = OutboxSyncService(repo, _StatusApiClient(408));
+      final result = await service.send(
+        _action('s-408', PendingEndpoint.servisAjuan, payloadData: const {}),
+      );
+
+      expect(result.permanentlyFailed, isFalse);
+      expect(result.transientRetryable, isTrue);
+    }, timeout: const Timeout(Duration(seconds: 10)));
+
+    test('422 (validasi nyata) tetap permanen', () async {
+      final service = OutboxSyncService(repo, _StatusApiClient(422));
+      final result = await service.send(
+        _action('s-422', PendingEndpoint.servisAjuan, payloadData: const {}),
+      );
+
+      expect(result.delivered, isFalse);
+      expect(result.permanentlyFailed, isTrue);
+      expect(result.transientRetryable, isFalse);
+    }, timeout: const Timeout(Duration(seconds: 10)));
+  });
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -356,6 +397,36 @@ class _ThrowingApiClient extends ApiClient {
     await _awaitGate();
     _maybeThrow();
     return const ApiResponse(status: 'success', message: 'ok');
+  }
+}
+
+/// Fake yang SELALU melempar [ApiException] dengan status tertentu —
+/// untuk mengunci klasifikasi 429/408 (transient) vs 4xx lain (permanen).
+class _StatusApiClient extends ApiClient {
+  _StatusApiClient(this.statusCode);
+
+  final int statusCode;
+
+  @override
+  Future<ApiResponse<T>> post<T>(
+    String path, {
+    Object? body,
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    T Function(Object? raw)? parse,
+  }) async {
+    throw ApiException('status $statusCode', statusCode: statusCode);
+  }
+
+  @override
+  Future<ApiResponse<T>> postMultipart<T>(
+    String path, {
+    Map<String, String> fields = const {},
+    required List<MultipartFileSpec> files,
+    Map<String, dynamic>? headers,
+    T Function(Object? raw)? parse,
+  }) async {
+    throw ApiException('status $statusCode', statusCode: statusCode);
   }
 }
 
