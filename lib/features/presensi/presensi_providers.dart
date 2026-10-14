@@ -120,10 +120,7 @@ class LocationController extends Notifier<LocationSnapshot> {
 
     final position = await location.getCurrentPosition();
     if (position == null) {
-      state = LocationSnapshot(
-        position: null,
-        problem: GpsProblem.unavailable,
-      );
+      state = LocationSnapshot(position: null, problem: GpsProblem.unavailable);
       return;
     }
     state = LocationSnapshot(position: position, acquiredAt: DateTime.now());
@@ -180,12 +177,23 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
 /// Dipanggil dari [OutboxRepository.onChanged] — antrean berubah.
 /// Dipecah ke fungsi biasa supaya tidak menimbulkan siklus inferensi tipe
 /// antara `outboxRepositoryProvider` dan `pendingActionsProvider`.
+// void _onOutboxChanged(Ref ref) {
+//   ref.read(pendingCountProvider.notifier).reload();
+//   // Pending presensi berubah (check-in/out queued) — daftar aksi harus
+//   // ikut ter-update supaya mis. kartu bisa menampilkan "menunggu sinkron"
+//   // dan memblokir duplicate check-in.
+//   ref.invalidate(pendingActionsProvider);
+// }
+
 void _onOutboxChanged(Ref ref) {
-  ref.read(pendingCountProvider.notifier).reload();
-  // Pending presensi berubah (check-in/out queued) — daftar aksi harus
-  // ikut ter-update supaya mis. kartu bisa menampilkan "menunggu sinkron"
-  // dan memblokir duplicate check-in.
-  ref.invalidate(pendingActionsProvider);
+  // Perbarui jumlah antrean.
+  unawaited(ref.read(pendingCountProvider.notifier).reload());
+
+  // Jangan menginvalidasi provider secara sinkron di dalam
+  // callback perubahan Outbox.
+  scheduleMicrotask(() {
+    ref.invalidate(pendingActionsProvider);
+  });
 }
 
 /// Badge jumlah aksi outbox yang belum tersinkron.
