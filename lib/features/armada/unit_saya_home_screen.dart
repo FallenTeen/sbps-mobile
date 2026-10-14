@@ -1002,15 +1002,16 @@ class _ShortcutSection extends StatelessWidget {
             subtitle: 'Riwayat perbaikan unit',
             onTap: () => context.push('/armada/servis'),
           ),
-          _ShortcutTile(
-            icon: Icons.badge_outlined,
-            title: 'Presensi Pendamping',
-            subtitle: 'Catat kehadiran rekan kerja Anda',
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/armada/helper-presensi');
-            },
-          ),
+          if (armada.helperAktifCount > 0)
+            _ShortcutTile(
+              icon: Icons.badge_outlined,
+              title: 'Presensi Pendamping',
+              subtitle: 'Catat kehadiran rekan kerja Anda',
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/armada/helper-presensi');
+              },
+            ),
         ],
       ),
     );

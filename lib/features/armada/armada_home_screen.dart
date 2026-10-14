@@ -31,12 +31,14 @@ class ArmadaHomeScreen extends ConsumerWidget {
       return UnitSayaHomeScreen();
     }
 
-    final sections = _buildSections(activeRole);
-
     final isManager = _isManager(activeRole);
     final armadaAsync = ref.watch(armadaSayaProvider);
     final hasArmada = armadaAsync.value?.isNotEmpty == true;
+    final hasHelperAktif =
+        armadaAsync.value?.any((a) => a.helperAktifCount > 0) ?? false;
     final showKendaraanSaya = !isManager || hasArmada;
+
+    final sections = _buildSections(activeRole, hasHelperAktif);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -253,19 +255,19 @@ class ArmadaHomeScreen extends ConsumerWidget {
     };
   }
 
-  List<_MenuSection> _buildSections(String? role) {
+  List<_MenuSection> _buildSections(String? role, bool hasHelperAktif) {
     return switch (role) {
-      'Driver Armada' => _driverSections(),
+      'Driver Armada' => _driverSections(hasHelperAktif),
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
       'Ketua Armada' => _kepalaDivisiSections(),
       'Owner' => _ownerSections(),
       'Admin Keuangan' => _adminKeuanganSections(),
-      _ => _driverSections(), // default
+      _ => _driverSections(hasHelperAktif), // default
     };
   }
 
-  List<_MenuSection> _driverSections() => [
+  List<_MenuSection> _driverSections(bool hasHelperAktif) => [
     _MenuSection(
       icon: Icons.task_alt_rounded,
       title: 'Tugas Harian Saya',
@@ -292,12 +294,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
           subtitle: 'Catat KM awal kendaraan per muatan',
           onTap: (ctx) => ctx.push('/armada/odo-awal'),
         ),
-        _MenuItem(
-          icon: Icons.badge_outlined,
-          title: 'Presensi Helper',
-          subtitle: 'Absenkan helper armada hari ini',
-          onTap: (ctx) => ctx.push('/armada/helper-presensi'),
-        ),
+        if (hasHelperAktif)
+          _MenuItem(
+            icon: Icons.badge_outlined,
+            title: 'Presensi Helper',
+            subtitle: 'Absenkan helper armada hari ini',
+            onTap: (ctx) => ctx.push('/armada/helper-presensi'),
+          ),
       ],
     ),
     _MenuSection(

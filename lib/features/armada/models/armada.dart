@@ -24,6 +24,7 @@ class ArmadaSaya {
     this.proyekId,
     this.odoTerkini,
     this.jamOperasionalTerkini,
+    this.helperAktifCount = 0,
   });
 
   final String id;
@@ -45,6 +46,9 @@ class ArmadaSaya {
   final String? proyekId;
   final double? odoTerkini;
   final double? jamOperasionalTerkini;
+
+  /// Jumlah helper yang aktif hari ini pada unit ini (endpoint armada/saya).
+  final int helperAktifCount;
 
   /// True jika unit ini alat berat stasioner (pakai Jam Operasional, bukan ODO).
   bool get isAlatBerat => tipeUnit == 'alat_berat_stasioner';
@@ -72,6 +76,7 @@ class ArmadaSaya {
       proyekId: (titik?['proyek_id'] ?? json['proyek_id'])?.toString(),
       odoTerkini: parseNum(json['odo_terkini']),
       jamOperasionalTerkini: parseNum(json['jam_operasional_terkini']),
+      helperAktifCount: parseInt(json['helper_aktif_count']) ?? 0,
     );
   }
 }
