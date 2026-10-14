@@ -83,7 +83,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
     // Armada restore dilakukan saat data masterArmada sudah dimuat.
     final armadaId = fields['armadaId'] as String?;
     if (armadaId != null) {
-      final armadaList = ref.read(masterArmadaProvider).value;
+      final armadaList = ref.read(servisArmadaOptionsProvider).value;
       if (armadaList != null) {
         final match = armadaList.where((a) => a.id == armadaId).toList();
         if (match.isNotEmpty) setState(() => _selectedArmada = match.first);
@@ -119,7 +119,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
 
   /// Prefill armada terpilih (dari query atau draft) sampai punya unit context.
   void _ensureArmadaContext() {
-    final armadaList = ref.read(masterArmadaProvider).value;
+    final armadaList = ref.read(servisArmadaOptionsProvider).value;
     if (armadaList == null || _initialized) return;
     _initialized = true;
     final id = widget.initialArmadaId;
@@ -257,7 +257,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
 
   @override
   Widget build(BuildContext context) {
-    final masterArmadaAsync = ref.watch(masterArmadaProvider);
+    final masterArmadaAsync = ref.watch(servisArmadaOptionsProvider);
 
     return masterArmadaAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -270,7 +270,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
             const Text('Gagal memuat data armada'),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => ref.invalidate(masterArmadaProvider),
+              onPressed: () => ref.invalidate(servisArmadaOptionsProvider),
               child: const Text('Coba Lagi'),
             ),
           ],

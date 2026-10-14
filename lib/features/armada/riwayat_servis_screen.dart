@@ -587,6 +587,28 @@ class _ServisQueueCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Detail Servis',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.primary,
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: context.colors.primary,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

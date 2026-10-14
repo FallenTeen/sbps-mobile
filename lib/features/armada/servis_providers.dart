@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
+import 'armada_providers.dart';
+import 'models/armada.dart';
 import 'models/servis_armada.dart';
 import 'servis_repository.dart';
+import 'servis_status.dart';
 
 final servisRepositoryProvider = Provider<ServisRepository>(
   (ref) => ServisRepository(
@@ -13,6 +16,10 @@ final servisRepositoryProvider = Provider<ServisRepository>(
     sync: ref.watch(outboxSyncServiceProvider),
   ),
 );
+
+/// True bila user aktif boleh melihat seluruh servis (role manajer).
+bool servisIsManager(Ref ref) =>
+    canApproveServis(ref.read(activeRoleProvider));
 
 // ---------------------------------------------------------------------------
 // Master Armada Dropdown
@@ -23,6 +30,32 @@ final masterArmadaProvider = FutureProvider.autoDispose<List<MasterArmada>>((
 ) {
   return ref.watch(servisRepositoryProvider).getMasterArmada();
 });
+
+/// Opsi armada untuk form ajuan servis.
+///
+/// Manajer → seluruh master armada (`/master/armada`).
+/// Driver → hanya armada yang dipegangnya (`/armada/saya`).
+final servisArmadaOptionsProvider =
+    FutureProvider.autoDispose<List<MasterArmada>>((ref) async {
+      if (servisIsManager(ref)) {
+        return ref.watch(servisRepositoryProvider).getMasterArmada();
+      }
+      final units = await ref.watch(armadaSayaProvider.future);
+      return [for (final u in units) _masterFromSaya(u)];
+    });
+
+MasterArmada _masterFromSaya(ArmadaSaya u) => MasterArmada(
+  id: u.id,
+  platNomor: u.platNomor,
+  kodeUnit: u.kodeUnit,
+  jenis: u.jenis,
+  status: u.status,
+  tipeUnit: u.tipeUnit,
+  titikId: u.titikId,
+  titikNama: u.titikNama,
+  odoTerkini: u.odoTerkini,
+  jamOperasionalTerkini: u.jamOperasionalTerkini,
+);
 
 // ---------------------------------------------------------------------------
 // Riwayat Servis (Pagination + Filter Status)
@@ -76,10 +109,28 @@ class ServisRiwayatController extends Notifier<ServisRiwayatState> {
   }
 
   Future<void> _loadPage({required int page}) async {
+    final repo = ref.read(servisRepositoryProvider);
     try {
-      final result = await ref
-          .read(servisRepositoryProvider)
-          .getRiwayatServis(page: page, status: state.statusFilter);
+      if (!servisIsManager(ref)) {
+        // Driver: hanya servis milik armada sendiri (tanpa paginasi server).
+        final all = await repo.getServisSaya();
+        final filter = state.statusFilter;
+        final items = filter == null
+            ? all
+            : all.where((s) => s.status == filter).toList();
+        state = state.copyWith(
+          items: items,
+          currentPage: 1,
+          lastPage: 1,
+          total: all.length,
+          loading: false,
+        );
+        return;
+      }
+      final result = await repo.getRiwayatServis(
+        page: page,
+        status: state.statusFilter,
+      );
       state = state.copyWith(
         items: page == 1 ? result.items : [...state.items, ...result.items],
         currentPage: result.currentPage,
@@ -161,6 +212,18 @@ final servisQueueSummaryProvider = FutureProvider.autoDispose<
   ServisQueueSummary
 >((ref) async {
   final repo = ref.watch(servisRepositoryProvider);
+  if (!servisIsManager(ref)) {
+    final all = await repo.getServisSaya();
+    int countFor(String status) =>
+        all.where((s) => s.status == status).length;
+    return ServisQueueSummary(
+      diajukan: countFor('diajukan'),
+      disetujui: countFor('disetujui'),
+      dikerjakan: countFor('dikerjakan'),
+      selesai: countFor('selesai'),
+      ditolak: countFor('ditolak'),
+    );
+  }
   final results = await Future.wait([
     repo.getRiwayatServis(page: 1, status: 'diajukan'),
     repo.getRiwayatServis(page: 1, status: 'disetujui'),
