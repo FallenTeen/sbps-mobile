@@ -145,56 +145,23 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
     setState(() => _isLoading = true);
 
     try {
-      bool delivered = false;
-      String? permanentError;
       final titikId =
           (armada.titikId != null && armada.titikId!.trim().isNotEmpty)
           ? armada.titikId!.trim()
           : null;
 
-      // 1. Simpan ODO/HM ke checklist harian agar langsung tercermin di unit saya.
-      // Pertahankan kondisi_baik & item_bermasalah yang sudah tercatat sebelumnya.
-      final existingChecklist = ref
-          .read(checklistHariIniProvider)
-          .value
-          ?.where((c) => c.armadaId == armada.id)
-          .firstOrNull;
-      final kondisiBaik = existingChecklist?.kondisiBaik ?? true;
-      final itemBermasalah = existingChecklist?.itemBermasalah;
-
-      try {
-        delivered = await ref
-            .read(armadaRepositoryProvider)
-            .submitChecklist(
-              armadaId: armada.id,
-              kondisiBaik: kondisiBaik,
-              itemBermasalah: itemBermasalah,
-              odoKm: armada.isAlatBerat ? null : odoValue,
-              jamOperasional: armada.isAlatBerat ? odoValue : null,
-            );
-      } on ApiException catch (e) {
-        // 4xx permanen: jangan telan — permukaan ke user (queued ≠ gagal).
-        permanentError = e.message;
-      } catch (_) {}
-
-      // 2. Simpan ODO awal proyek bila belum pernah tercatat
-      try {
-        final odoAwalDelivered = await ref
-            .read(armadaRepositoryProvider)
-            .submitOdoAwalProyek(
-              armadaId: armada.id,
-              titikId: titikId,
-              odoAwal: odoValue,
-            );
-        delivered = delivered || odoAwalDelivered;
-      } on ApiException catch (e) {
-        // 422 = sudah pernah tercatat (efektif sukses) — abaikan. Error lain
-        // (403/404/400) tetap permukaan bila tidak ada yang berhasil.
-        if (e.statusCode != 422) permanentError ??= e.message;
-      } catch (_) {}
+      // Simpan ODO awal proyek (sekali per armada x proyek). ODO/HM harian
+      // kini dicatat lewat Checklist Awal (langkah 01).
+      final delivered = await ref
+          .read(armadaRepositoryProvider)
+          .submitOdoAwalProyek(
+            armadaId: armada.id,
+            titikId: titikId,
+            odoAwal: odoValue,
+          );
 
       ref.invalidate(armadaSayaProvider);
-      ref.invalidate(checklistHariIniProvider);
+      ref.invalidate(odoAwalProyekProvider(armada.id));
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
@@ -202,11 +169,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            delivered
-                ? (armada.isAlatBerat
-                      ? 'Jam Kerja Unit berhasil diperbarui'
-                      : 'KM terkini berhasil diperbarui')
-                : (permanentError ?? kCopyQueued),
+            delivered ? 'ODO awal proyek disimpan' : kCopyQueued,
           ),
         ),
       );
@@ -252,7 +215,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ODO / HM Harian'),
+        title: const Text('ODO Awal Proyek'),
         actions: [PortalSwitchButton()],
       ),
       body: armadaAsync.when(

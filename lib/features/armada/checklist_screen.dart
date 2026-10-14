@@ -12,14 +12,14 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
-import '../../shared/widgets/rich_list_tile.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'checklist_draft_store.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
 
-const _dailyItems = <String>[
+/// Daftar bagian default checklist (dipakai bila server belum mengirim).
+const _bagianDefault = <String>[
   'Ban',
   'Rem',
   'Lampu',
@@ -27,11 +27,22 @@ const _dailyItems = <String>[
   'Air radiator',
   'Body',
   'Kabin',
-  'Dokumen & STNK',
 ];
 
-/// Checklist harian armada: work queue unit hari ini (summary + filter) dan
-/// form per item dengan autosave.
+/// Opsi stok solar fallback (6 level) bila server belum mengirim.
+const _stokSolarFallback = <OpsiStokSolar>[
+  OpsiStokSolar(value: 'hampir_habis', label: 'Hampir Habis'),
+  OpsiStokSolar(value: 'seperempat', label: '1/4 Tangki'),
+  OpsiStokSolar(value: 'setengah', label: '1/2 Tangki'),
+  OpsiStokSolar(value: 'tiga_perempat', label: '3/4 Tangki'),
+  OpsiStokSolar(value: 'hampir_penuh', label: 'Hampir Penuh'),
+  OpsiStokSolar(value: 'penuh', label: 'Penuh'),
+];
+
+/// Checklist awal / akhir armada — pilih unit, isi data operasional, dan
+/// periksa tiap bagian dalam accordion.
+///
+/// [isAkhir] = true untuk checklist akhir (final setelah dikirim).
 class ChecklistScreen extends ConsumerStatefulWidget {
   const ChecklistScreen({super.key, this.isAkhir = false});
 
@@ -42,780 +53,417 @@ class ChecklistScreen extends ConsumerStatefulWidget {
 }
 
 class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
-  ChecklistFilterK _filter = ChecklistFilterK.semua;
-
-  Future<void> _openForm(ArmadaChecklist item) async {
-    final armadaList = ref.read(armadaSayaProvider).value;
-    final armada = armadaList?.where((a) => a.id == item.armadaId).firstOrNull;
-
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _ChecklistFillScreen(
-          item: item,
-          isAkhir: widget.isAkhir,
-          odoTerkini: armada?.odoTerkini,
-          jamOperasionalTerkini: armada?.jamOperasionalTerkini,
-          isAlatBerat: armada?.isAlatBerat ?? false,
-        ),
-      ),
-    );
-    ref.invalidate(checklistHariIniProvider);
-    ref.invalidate(checklistAkhirDoneProvider(item.armadaId));
-  }
+  String? _armadaId;
 
   @override
   Widget build(BuildContext context) {
-    final checklist = ref.watch(checklistHariIniProvider);
+    final armadaAsync = ref.watch(armadaSayaProvider);
+    final checklistAsync = ref.watch(checklistHariIniProvider);
 
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: Text(widget.isAkhir ? 'Checklist akhir' : 'Checklist harian'),
+        title: Text(widget.isAkhir ? 'Checklist Akhir' : 'Checklist Awal'),
         actions: [PortalSwitchButton()],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(checklistHariIniProvider),
-        child: switch (checklist) {
-          AsyncData(value: final items) => items.isEmpty
-              ? AppEmptyState(
-                  icon: Icons.checklist_rtl,
-                  title: 'Belum ada armada untuk dicatat',
-                  subtitle:
-                      'Armada yang ditugaskan ke titik Anda akan muncul di sini.',
-                  actionLabel: 'Muat Ulang',
-                  onAction: () => ref.invalidate(checklistHariIniProvider),
-                )
-              : _ChecklistQueue(
-                  items: items,
-                  isAkhir: widget.isAkhir,
-                  filter: _filter,
-                  onFilterChanged: (f) => setState(() => _filter = f),
-                  onTap: _openForm,
-                ),
-          AsyncError() => AppEmptyState(
-            icon: Icons.cloud_off_outlined,
-            title: 'Gagal memuat data checklist',
-            subtitle:
-                'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
-            actionLabel: 'Coba Lagi',
-            onAction: () => ref.invalidate(checklistHariIniProvider),
-          ),
-          _ => const Center(child: CircularProgressIndicator()),
-        },
-      ),
-    );
-  }
-}
-
-/// Work queue hari ini: header summary, filter tab, lalu daftar unit.
-class _ChecklistQueue extends StatelessWidget {
-  const _ChecklistQueue({
-    required this.items,
-    required this.isAkhir,
-    required this.filter,
-    required this.onFilterChanged,
-    required this.onTap,
-  });
-
-  final List<ArmadaChecklist> items;
-  final bool isAkhir;
-  final ChecklistFilterK filter;
-  final ValueChanged<ChecklistFilterK> onFilterChanged;
-  final void Function(ArmadaChecklist) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final summary = checklistSummary(items);
-    final filtered = applyChecklistFilter(items, filter);
-
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        _SummaryHeader(summary: summary, isAkhir: isAkhir),
-        const SizedBox(height: 12),
-        _FilterChips(
-          current: filter,
-          summary: summary,
-          onChanged: onFilterChanged,
+      body: armadaAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => AppEmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Gagal memuat data armada',
+          subtitle:
+              'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          actionLabel: 'Coba Lagi',
+          onAction: () => ref.invalidate(armadaSayaProvider),
         ),
-        const SizedBox(height: 12),
-        if (filtered.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: AppEmptyState(
-              icon: Icons.filter_alt_off_outlined,
-              title: 'Tidak ada unit dengan status ini',
-              subtitle:
-                  'Ubah filter untuk melihat unit lain hari ini.',
-            ),
-          )
-        else
-          for (final c in filtered) ...[
-            _ChecklistCard(item: c, isAkhir: isAkhir, onTap: () => onTap(c)),
-            const SizedBox(height: 10),
-          ],
-      ],
-    );
-  }
-}
+        data: (armadaList) {
+          if (armadaList.isEmpty) {
+            return const AppEmptyState(
+              icon: Icons.no_crash_outlined,
+              title: 'Belum ada unit yang ditugaskan',
+              subtitle: 'Hubungi admin untuk penugasan unit.',
+            );
+          }
+          if (armadaList.length == 1 && _armadaId != armadaList.first.id) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _armadaId != armadaList.first.id) {
+                setState(() => _armadaId = armadaList.first.id);
+              }
+            });
+          }
+          final armada = armadaList.length == 1
+              ? armadaList.first
+              : armadaList.where((a) => a.id == _armadaId).firstOrNull;
 
-class _SummaryHeader extends StatelessWidget {
-  const _SummaryHeader({required this.summary, required this.isAkhir});
+          final items = checklistAsync.value ?? const <ArmadaChecklist>[];
+          final item = armada == null
+              ? null
+              : items.where((c) => c.armadaId == armada.id).firstOrNull;
 
-  final ChecklistSummary summary;
-  final bool isAkhir;
-
-  @override
-  Widget build(BuildContext context) {
-    final allDone = summary.menunggu == 0;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: allDone
-              ? context.colors.success.withValues(alpha: 0.35)
-              : context.colors.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
-              Icon(
-                Icons.checklist_rounded,
-                size: 20,
-                color: allDone
-                    ? context.colors.success
-                    : context.colors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isAkhir
-                    ? 'Checklist Akhir Kendaraan Hari Ini'
-                    : 'Checklist Kendaraan Hari Ini',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: context.colors.textPrimary,
+              if (armadaList.length > 1)
+                DropdownButtonFormField<String>(
+                  initialValue: _armadaId,
+                  decoration: const InputDecoration(
+                    labelText: 'Pilih Kendaraan',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.local_shipping_outlined),
+                    helperText: 'Pilih unit yang Anda operasikan hari ini',
+                  ),
+                  items: armadaList
+                      .map(
+                        (a) => DropdownMenuItem(
+                          value: a.id,
+                          child: Text(
+                            '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ''}',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) => setState(() => _armadaId = v),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${summary.checked}',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: allDone
-                      ? context.colors.success
-                      : context.colors.primary,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Text(
-                  'dari ${summary.total} sudah diperiksa',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.colors.textSecondary,
+              if (armada != null) ...[
+                const SizedBox(height: 12),
+                _ArmadaHeader(armada: armada),
+                const SizedBox(height: 16),
+                if (checklistAsync.isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else
+                  _ChecklistForm(
+                    key: ValueKey('${armada.id}-${widget.isAkhir}'),
+                    armada: armada,
+                    item: item,
+                    isAkhir: widget.isAkhir,
+                  ),
+              ] else
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text(
+                    'Pilih unit untuk memulai checklist.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.colors.textTertiary,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-              ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            summary.menunggu == 0
-                ? 'Semua unit sudah diperiksa hari ini.'
-                : '${summary.menunggu} masih menunggu.'
-                      '${summary.bermasalah > 0 ? ' ${summary.bermasalah} bermasalah.' : ''}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: summary.bermasalah > 0
-                  ? context.colors.warning
-                  : context.colors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: summary.progressRatio,
-              minHeight: 8,
-              backgroundColor: context.colors.surfaceVariant,
-              color: allDone
-                  ? context.colors.success
-                  : context.colors.primary,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-class _FilterChips extends StatelessWidget {
-  const _FilterChips({
-    required this.current,
-    required this.summary,
-    required this.onChanged,
-  });
+class _ArmadaHeader extends StatelessWidget {
+  const _ArmadaHeader({required this.armada});
 
-  final ChecklistFilterK current;
-  final ChecklistSummary summary;
-  final ValueChanged<ChecklistFilterK> onChanged;
+  final ArmadaSaya armada;
 
   @override
   Widget build(BuildContext context) {
-    final zipped = [
-      (ChecklistFilterK.semua, summary.total),
-      (ChecklistFilterK.belumDicek, summary.menunggu),
-      (ChecklistFilterK.bermasalah, summary.bermasalah),
-      (ChecklistFilterK.selesai, summary.checked - summary.bermasalah),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    final baris = [
+      armada.platNomor,
+      if (armada.kodeUnit != null) armada.kodeUnit!,
+      armada.jenis ?? (armada.isAlatBerat ? 'Alat Berat' : 'Kendaraan'),
+      if (armada.titikNama != null) armada.titikNama!,
+    ].join(' • ');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.colors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
+      ),
       child: Row(
         children: [
-          for (final entry in zipped) ...[
-            ChoiceChip(
-              label: Text(
-                entry.$1 == ChecklistFilterK.semua
-                    ? entry.$1.label
-                    : '${entry.$1.label} (${entry.$2})',
-              ),
-              selected: current == entry.$1,
-              onSelected: (_) => onChanged(entry.$1),
-              showCheckmark: false,
-              labelStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: current == entry.$1
-                    ? FontWeight.w700
-                    : FontWeight.w500,
-                color: current == entry.$1
-                    ? context.colors.primary
-                    : context.colors.textSecondary,
-              ),
-              selectedColor: context.colors.primary.withValues(alpha: 0.12),
-              backgroundColor: context.colors.surfaceVariant,
-              side: BorderSide(
-                color: current == entry.$1
-                    ? context.colors.primary
-                    : context.colors.border,
-              ),
+          Icon(Icons.local_shipping, size: 18, color: context.colors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              baris,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(width: 8),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _ChecklistCard extends StatelessWidget {
-  const _ChecklistCard({
+class _BagianState {
+  _BagianState({required this.bagian});
+
+  final String bagian;
+  ChecklistItemLevel? level;
+  String catatan = '';
+  String? fotoPath;
+}
+
+/// Nama field foto checklist awal/akhir.
+enum _FotoSlot { stokSolar, odo }
+
+class _ChecklistForm extends ConsumerStatefulWidget {
+  const _ChecklistForm({
+    super.key,
+    required this.armada,
     required this.item,
     required this.isAkhir,
-    required this.onTap,
   });
 
-  final ArmadaChecklist item;
+  final ArmadaSaya armada;
+  final ArmadaChecklist? item;
   final bool isAkhir;
-  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final status = unitChecklistStatus(item);
-    final filled = item.sudahIsi;
-
-    final (title, subtitle, color) = switch (status) {
-      ChecklistUnitStatus.selesai => (
-          'Sudah diperiksa — kondisi baik',
-          '${_tanggalInfo(item)}${_masalahSuffix(item.itemBermasalah)}',
-          context.colors.success,
-        ),
-      ChecklistUnitStatus.bermasalah => (
-          filled
-              ? 'Sudah diperiksa — ada masalah${_masalahSuffix(item.itemBermasalah)}'
-              : 'Ada masalah',
-          'Periksa kondisi dan lampirkan catatan kondisi unit',
-          context.colors.error,
-        ),
-      ChecklistUnitStatus.menunggu => (
-          'Menunggu diperiksa',
-          _belumDicekSubtitle(item),
-          context.colors.textMuted,
-        ),
-    };
-
-    return RichListTile(
-      title: item.platNomor,
-      subtitle: subtitle,
-      meta: isAkhir
-          ? 'Akhir'
-          : status == ChecklistUnitStatus.bermasalah
-          ? 'Bermasalah'
-          : 'Harian',
-      metaColor: status == ChecklistUnitStatus.bermasalah
-          ? context.colors.error
-          : null,
-      leading: _ChecklistStatusLeading(color: color, status: status),
-      onTap: onTap,
-    );
-  }
-
-  String _belumDicekSubtitle(ArmadaChecklist item) {
-    final checkDate = _parseDate(item.tanggal);
-    final daysAgo = checkDate == null ? null : _daysSince(checkDate);
-    return switch (daysAgo) {
-      null => 'Belum dicatat hari ini · Belum pernah dicek',
-      0 => 'Belum dicatat hari ini',
-      1 => 'Belum dicatat hari ini · Terakhir: kemarin',
-      _ => 'Belum dicatat hari ini · Terakhir: $daysAgo hari lalu',
-    };
-  }
-
-  String _tanggalInfo(ArmadaChecklist item) {
-    final odo = item.odoKm;
-    final jam = item.jamOperasional;
-    if (odo != null && odo > 0) return 'ODO ${fmtKm(odo)}';
-    if (jam != null && jam > 0) return 'HM ${fmtJam(jam)}';
-    return 'Hari ini';
-  }
-
-  DateTime? _parseDate(String? tanggal) {
-    if (tanggal == null || tanggal.isEmpty) return null;
-    return DateTime.tryParse(tanggal);
-  }
-
-  int _daysSince(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final target = DateTime(date.year, date.month, date.day);
-    return today.difference(target).inDays;
-  }
-
-  String _masalahSuffix(String? masalah) =>
-      (masalah == null || masalah.isEmpty) ? '' : ' — $masalah';
+  ConsumerState<_ChecklistForm> createState() => _ChecklistFormState();
 }
 
-/// Leading status checklist: hijau berisi centang (selesai), merah tanda bahaya
-/// (bermasalah), abu outline (belum dicek).
-class _ChecklistStatusLeading extends StatelessWidget {
-  const _ChecklistStatusLeading({required this.color, required this.status});
-
-  final Color color;
-  final ChecklistUnitStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final tinted = color.withValues(alpha: 0.12);
-    final isHighlighted = status != ChecklistUnitStatus.menunggu;
-
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isHighlighted ? tinted : null,
-        border: isHighlighted ? null : Border.all(color: color, width: 2),
-      ),
-      child: Icon(
-        switch (status) {
-          ChecklistUnitStatus.selesai => Icons.check_rounded,
-          ChecklistUnitStatus.bermasalah => Icons.error_outline_rounded,
-          ChecklistUnitStatus.menunggu => Icons.radio_button_unchecked_rounded,
-        },
-        color: color,
-        size: 26,
-      ),
-    );
-  }
-}
-
-// ── Form isi checklist ────────────────────────────────────────────────────────
-
-class _ChecklistFillScreen extends ConsumerStatefulWidget {
-  const _ChecklistFillScreen({
-    required this.item,
-    required this.isAkhir,
-    this.odoTerkini,
-    this.jamOperasionalTerkini,
-    required this.isAlatBerat,
-  });
-
-  final ArmadaChecklist item;
-  final bool isAkhir;
-  final double? odoTerkini;
-  final double? jamOperasionalTerkini;
-  final bool isAlatBerat;
-
-  @override
-  ConsumerState<_ChecklistFillScreen> createState() =>
-      _ChecklistFillScreenState();
-}
-
-class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
-  late List<ChecklistItemDraft> _items;
-  late List<TextEditingController> _catatanCtrls;
-  final _solarCtrl = TextEditingController();
+class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
+  late List<_BagianState> _bagian;
+  late List<TextEditingController> _catatanCtrl;
   final _odoCtrl = TextEditingController();
-  final _jamCtrl = TextEditingController();
-  double? _odoPrev;
-  double? _jamPrev;
+
+  String? _stokSolar;
+  CapturedPhoto? _fotoStok;
+  CapturedPhoto? _fotoOdo;
+  String? _fotoStokUrl;
+  String? _fotoOdoUrl;
+  int? _expanded;
   bool _busy = false;
-  bool _draftLoaded = false;
-  String? _draftHint;
+
+  bool get _readOnly {
+    if (widget.isAkhir) return widget.item?.akhir != null;
+    final awal = widget.item?.awal;
+    if (awal == null) return false;
+    return !awal.bisaDiedit;
+  }
+
+  bool get _isEdit => widget.item?.awal != null && !widget.isAkhir;
+
+  String? get _lockReason {
+    if (!widget.isAkhir) return widget.item?.awal?.alasanTerkunci;
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
-    _items = [for (final label in _dailyItems) ChecklistItemDraft(label: label)];
-    _catatanCtrls = [
-      for (final _ in _dailyItems) TextEditingController(),
-    ];
+    final bagianList =
+        widget.item?.bagianDefault.isNotEmpty == true
+            ? widget.item!.bagianDefault
+            : _bagianDefault;
+    _bagian = [for (final b in bagianList) _BagianState(bagian: b)];
+    _catatanCtrl = [for (final _ in _bagian) TextEditingController()];
 
-    _odoPrev = _positive(widget.item.odoKm) ? widget.item.odoKm : widget.odoTerkini;
-    _jamPrev = _positive(widget.item.jamOperasional)
-        ? widget.item.jamOperasional
-        : widget.jamOperasionalTerkini;
-
-    if (widget.item.solarLiter != null) {
-      _solarCtrl.text = widget.item.solarLiter.toString();
+    if (widget.isAkhir) {
+      final a = widget.item?.akhir;
+      if (a != null) {
+        _stokSolar = a.stokSolar;
+        _fotoStokUrl = a.fotoStokSolarUrl;
+        _fotoOdoUrl = a.fotoOdoAkhirUrl;
+        _odoCtrl.text = _fmtNum(
+          widget.armada.isAlatBerat ? a.hmAkhir : a.odoAkhir,
+        );
+        _applyItems(a.items);
+      }
+    } else {
+      final a = widget.item?.awal;
+      if (a != null) {
+        _stokSolar = a.stokSolar;
+        _fotoStokUrl = a.fotoStokSolarUrl;
+        _fotoOdoUrl = a.fotoOdoPagiUrl;
+        _odoCtrl.text = _fmtNum(
+          widget.armada.isAlatBerat ? a.hmOdo : a.odoPagi,
+        );
+        _applyItems(a.items);
+      }
+      if (_odoCtrl.text.isEmpty) {
+        final t = widget.armada.isAlatBerat
+            ? widget.armada.jamOperasionalTerkini
+            : widget.armada.odoTerkini;
+        _odoCtrl.text = _fmtNum(t);
+      }
     }
-    if (widget.item.odoKm != null) {
-      _odoCtrl.text = widget.item.odoKm.toString();
-    } else if (widget.odoTerkini != null) {
-      _odoCtrl.text = widget.odoTerkini!.toStringAsFixed(0);
-    }
-    if (widget.item.jamOperasional != null) {
-      _jamCtrl.text = widget.item.jamOperasional.toString();
-    } else if (widget.jamOperasionalTerkini != null) {
-      _jamCtrl.text = widget.jamOperasionalTerkini.toString();
-    }
-
-    _solarCtrl.addListener(_autosave);
-    _odoCtrl.addListener(_autosave);
-    _jamCtrl.addListener(_autosave);
-    for (final c in _catatanCtrls) {
-      c.addListener(_onCatatanChanged);
-    }
-    _restoreDraft();
+    _expanded = _firstUnfilled();
   }
 
-  bool _positive(double? v) => v != null && v.isFinite && v > 0;
+  void _applyItems(List<Map<String, dynamic>> items) {
+    for (final raw in items) {
+      final bagian = raw['bagian']?.toString();
+      if (bagian == null) continue;
+      final idx = _bagian.indexWhere((b) => b.bagian == bagian);
+      if (idx < 0) continue;
+      final kondisi = raw['kondisi']?.toString();
+      _bagian[idx]
+        ..level = ChecklistItemLevel.values
+            .where((l) => l.wireValue == kondisi)
+            .firstOrNull
+        ..catatan = raw['catatan']?.toString() ?? ''
+        ..fotoPath = raw['foto']?.toString();
+      _catatanCtrl[idx].text = _bagian[idx].catatan;
+    }
+  }
+
+  int? _firstUnfilled() {
+    for (var i = 0; i < _bagian.length; i++) {
+      if (_bagian[i].level == null) return i;
+    }
+    return null;
+  }
 
   @override
   void dispose() {
-    _solarCtrl.dispose();
     _odoCtrl.dispose();
-    _jamCtrl.dispose();
-    for (final c in _catatanCtrls) {
+    for (final c in _catatanCtrl) {
       c.dispose();
     }
     super.dispose();
   }
 
-  void _onCatatanChanged() {
-    if (!_draftLoaded) return;
-    for (var i = 0; i < _items.length; i++) {
-      final text = _catatanCtrls[i].text;
-      if (_items[i].catatan != text) {
-        _items[i] = _items[i].copyWith(catatan: text);
-      }
-    }
-    _autosave();
-  }
-
-  Future<void> _restoreDraft() async {
-    final draft = await ChecklistDraftStore.load(
-      widget.item.armadaId,
-      isAkhir: widget.isAkhir,
-    );
-    if (!mounted || draft == null) {
-      setState(() => _draftLoaded = true);
-      return;
-    }
-    final savedItems = draft['items'];
-    if (savedItems is List) {
-      for (var i = 0; i < _items.length; i++) {
-        final match = savedItems
-            .whereType<Map>()
-            .map((m) => Map<String, dynamic>.from(m))
-            .where((m) => m['label'] == _items[i].label)
-            .firstOrNull;
-        if (match == null) continue;
-        final levelRaw = match['level']?.toString();
-        final level = ChecklistItemLevel.values
-            .where((l) => l.wireValue == levelRaw)
-            .firstOrNull ??
-            ChecklistItemLevel.baik;
-        _items[i] = _items[i].copyWith(
-          level: level,
-          photoPath: match['photo_path']?.toString(),
-          catatan: match['catatan']?.toString() ?? '',
-        );
-        _catatanCtrls[i].text = match['catatan']?.toString() ?? '';
-      }
-    }
-    _solarCtrl.text = draft['solar']?.toString() ?? _solarCtrl.text;
-    _odoCtrl.text = draft['odo']?.toString() ?? _odoCtrl.text;
-    _jamCtrl.text = draft['jam']?.toString() ?? _jamCtrl.text;
-    setState(() {
-      _draftLoaded = true;
-      _draftHint = 'Draft tersimpan di HP';
-    });
-  }
-
-  Future<void> _autosave() async {
-    if (!_draftLoaded) return;
-    await ChecklistDraftStore.save(
-      widget.item.armadaId,
-      isAkhir: widget.isAkhir,
-      data: {
-        'items': [
-          for (final i in _items)
-            {
-              'label': i.label,
-              'level': i.level.wireValue,
-              'catatan': i.catatan,
-              'photo_path': i.photoPath,
-            },
-        ],
-        'solar': _solarCtrl.text,
-        'odo': _odoCtrl.text,
-        'jam': _jamCtrl.text,
-      },
-    );
-    if (mounted) {
-      setState(() => _draftHint = 'Tersimpan otomatis');
-    }
-  }
-
-  Future<void> _setLevel(int index, ChecklistItemLevel level) async {
+  void _setLevel(int index, ChecklistItemLevel level) {
+    if (_readOnly) return;
     HapticFeedback.selectionClick();
-    final item = _items[index];
     setState(() {
-      _items[index] = item.copyWith(level: level);
+      final b = _bagian[index];
+      b.level = level;
+      AnalyticsService.checklistItemToggle(b.bagian, !level.isBermasalah);
+      _expanded = _firstUnfilled();
     });
-    AnalyticsService.checklistItemToggle(item.label, !level.isBermasalah);
-
-    // Rusak/Tidak Aman wajib ada foto bukti: langsung buka kamera.
-    if (level == ChecklistItemLevel.rusak &&
-        (item.photoPath == null || item.photoPath!.isEmpty)) {
-      final photo = await takeWatermarkedPhoto(ref);
-      if (photo != null && mounted) {
-        final updated = _items[index];
-        setState(() {
-          _items[index] = updated.copyWith(photoPath: photo.path);
-        });
-      }
-    }
-    await _autosave();
   }
 
-  Future<void> _takePhoto(int index) async {
+  Future<void> _pickFoto(_FotoSlot slot) async {
     final photo = await takeWatermarkedPhoto(ref);
-    if (photo != null && mounted) {
-      final updated = _items[index];
-      setState(() {
-        _items[index] = updated.copyWith(photoPath: photo.path);
-      });
-      await _autosave();
-    }
+    if (photo == null || !mounted) return;
+    setState(() {
+      if (slot == _FotoSlot.stokSolar) {
+        _fotoStok = photo;
+      } else {
+        _fotoOdo = photo;
+      }
+    });
   }
 
-  List<ChecklistItemDraft> get _bermasalah =>
-      _items.where((i) => i.level.isBermasalah).toList();
-
-  Future<void> _confirmAndSubmit() async {
-    final issues = _bermasalah;
-
-    final rusakNoFoto = _items
-        .where(
-          (i) =>
-              i.level == ChecklistItemLevel.rusak &&
-              (i.photoPath == null || i.photoPath!.isEmpty),
-        )
-        .map((i) => i.label)
-        .toList();
-    if (rusakNoFoto.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Ambil foto kerusakan terlebih dahulu: ${rusakNoFoto.join(', ')}',
-          ),
-        ),
-      );
-      return;
-    }
-
-    final rusakNoDesc = _items
-        .where(
-          (i) =>
-              i.level == ChecklistItemLevel.rusak &&
-              i.catatan.trim().isEmpty,
-        )
-        .map((i) => i.label)
-        .toList();
-    if (rusakNoDesc.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Jelaskan masalahnya terlebih dahulu: ${rusakNoDesc.join(', ')}',
-          ),
-        ),
-      );
-      return;
-    }
-
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            20,
-            20,
-            MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Ringkasan sebelum kirim',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.item.platNomor,
-                style: TextStyle(color: context.colors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _summaryLine(issues),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              if (issues.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                for (final i in issues)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      '• ${i.label} — ${i.level.label}'
-                      '${i.catatan.trim().isNotEmpty ? ' · ${i.catatan.trim()}' : ''}'
-                      '${i.photoPath != null ? ' · ada foto' : ''}',
-                    ),
-                  ),
-              ],
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 48,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Kirim checklist'),
-                ),
-              ),
-              SizedBox(height: 8),
-              SizedBox(
-                height: 48,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Periksa lagi'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    if (confirmed == true) await _submit();
-  }
-
-  String _summaryLine(List<ChecklistItemDraft> issues) {
-    final baik = _items.length - issues.length;
-    final perhatian = issues
-        .where((i) => i.level == ChecklistItemLevel.perluPerhatian)
-        .length;
-    final rusak = issues.length - perhatian;
-    if (issues.isEmpty) {
-      return 'Semua item: baik (${_items.length} dari ${_items.length})';
-    }
-    final parts = <String>['$baik baik'];
-    if (perhatian > 0) parts.add('$perhatian perlu perhatian');
-    if (rusak > 0) parts.add('$rusak rusak / tidak aman');
-    return parts.join(' · ');
+  Future<void> _pickItemFoto(int index) async {
+    final photo = await takeWatermarkedPhoto(ref);
+    if (photo == null || !mounted) return;
+    setState(() => _bagian[index].fotoPath = photo.path);
   }
 
   Future<void> _submit() async {
+    final armada = widget.armada;
+    final isAlatBerat = armada.isAlatBerat;
+    final odo = double.tryParse(_odoCtrl.text.trim());
+
+    if (_stokSolar == null || _stokSolar!.isEmpty) {
+      _snack('Pilih perkiraan stok solar terlebih dahulu.');
+      return;
+    }
+    if (_fotoStok == null && _fotoStokUrl == null) {
+      _snack('Foto indikator stok solar wajib diambil dari kamera.');
+      return;
+    }
+    if (odo == null) {
+      _snack(isAlatBerat ? 'HM wajib diisi.' : 'ODO wajib diisi.');
+      return;
+    }
+    if (_fotoOdo == null && _fotoOdoUrl == null) {
+      _snack(
+        isAlatBerat
+            ? 'Foto HM wajib diambil dari kamera.'
+            : 'Foto ODO wajib diambil dari kamera.',
+      );
+      return;
+    }
+    final belum = _bagian.where((b) => b.level == null).map((b) => b.bagian);
+    if (belum.isNotEmpty) {
+      _snack('Masih ada bagian yang belum diperiksa: ${belum.join(', ')}');
+      return;
+    }
+    final catatanKosong = _bagian
+        .where((b) => b.level!.isBermasalah && b.catatan.trim().isEmpty)
+        .map((b) => b.bagian)
+        .toList();
+    if (catatanKosong.isNotEmpty) {
+      _snack('Jelaskan kondisi: ${catatanKosong.join(', ')}');
+      return;
+    }
+    final rusakTanpaFoto = _bagian
+        .where(
+          (b) =>
+              b.level == ChecklistItemLevel.rusak &&
+              (b.fotoPath == null || b.fotoPath!.isEmpty),
+        )
+        .map((b) => b.bagian)
+        .toList();
+    if (rusakTanpaFoto.isNotEmpty) {
+      _snack('Ambil foto kerusakan: ${rusakTanpaFoto.join(', ')}');
+      return;
+    }
+
+    final items = [
+      for (final b in _bagian)
+        {
+          'bagian': b.bagian,
+          'kondisi': b.level!.wireValue,
+          if (b.catatan.trim().isNotEmpty) 'catatan': b.catatan.trim(),
+          if (b.fotoPath != null && b.fotoPath!.isNotEmpty) 'foto': b.fotoPath!,
+        },
+    ];
+
     HapticFeedback.mediumImpact();
     setState(() => _busy = true);
     try {
-      final issues = _bermasalah;
-      final delivered = await ref
-          .read(armadaRepositoryProvider)
-          .submitChecklist(
-            armadaId: widget.item.armadaId,
-            kondisiBaik: issues.isEmpty,
-            isAkhir: widget.isAkhir,
-            itemBermasalah: issues.map((i) => i.label).join(', '),
-            solarLiter: double.tryParse(_solarCtrl.text),
-            odoKm: double.tryParse(_odoCtrl.text),
-            jamOperasional: double.tryParse(_jamCtrl.text),
-            itemDetails: [for (final i in _items) i.toPayload()],
-          );
-      if (widget.isAkhir) {
-        await ChecklistDraftStore.markAkhirSubmitted(widget.item.armadaId);
-      }
-      await ChecklistDraftStore.clear(
-        widget.item.armadaId,
-        isAkhir: widget.isAkhir,
-      );
+      final repo = ref.read(armadaRepositoryProvider);
+      final delivered = widget.isAkhir
+          ? await repo.submitChecklistAkhir(
+              armadaId: armada.id,
+              items: items,
+              stokSolar: _stokSolar!,
+              odoAkhir: isAlatBerat ? null : odo,
+              hmAkhir: isAlatBerat ? odo : null,
+              fotoStokSolarPath: _fotoStok?.path,
+              fotoOdoAkhirPath: _fotoOdo?.path,
+            )
+          : await repo.submitChecklistAwal(
+              armadaId: armada.id,
+              items: items,
+              stokSolar: _stokSolar!,
+              odoPagi: isAlatBerat ? null : odo,
+              hmOdo: isAlatBerat ? odo : null,
+              fotoStokSolarPath: _fotoStok?.path,
+              fotoOdoPagiPath: _fotoOdo?.path,
+            );
       if (!mounted) return;
-      AnalyticsService.checklistSubmit(issues.isEmpty);
+      AnalyticsService.checklistSubmit(true);
       HapticFeedback.lightImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            delivered
-                ? (widget.isAkhir
-                      ? 'Checklist akhir berhasil disimpan.'
-                      : 'Checklist harian berhasil disimpan.')
-                : kCopyQueued,
-          ),
-        ),
-      );
-      Navigator.of(context).pop();
-    } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+      if (widget.isAkhir && !delivered) {
+        ChecklistDraftStore.markAkhirSubmitted(armada.id).ignore();
       }
+      ref.invalidate(checklistAkhirDoneProvider(armada.id));
+      ref.invalidate(checklistHariIniProvider);
+      _snack(
+        delivered
+            ? (widget.isAkhir
+                  ? 'Checklist akhir berhasil disimpan.'
+                  : 'Checklist awal berhasil disimpan.')
+            : kCopyQueued,
+      );
+      if (context.mounted) Navigator.of(context).pop();
+    } on ApiException catch (e) {
+      if (mounted) _snack(e.message);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              friendlyErrorMessage(
-                e,
-                fallback: 'Gagal menyimpan checklist. Periksa koneksi lalu coba lagi.',
-              ),
-            ),
+        _snack(
+          friendlyErrorMessage(
+            e,
+            fallback: 'Gagal menyimpan checklist. Periksa koneksi lalu coba lagi.',
           ),
         );
       }
@@ -824,66 +472,212 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
     }
   }
 
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(title: Text(widget.item.platNomor)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          if (_draftHint != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                _draftHint!,
+    final diperiksa = _bagian.where((b) => b.level != null).length;
+    final stokOpsi =
+        widget.item?.opsiStokSolar.isNotEmpty == true
+            ? widget.item!.opsiStokSolar
+            : _stokSolarFallback;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_readOnly) _LockedBanner(isAkhir: widget.isAkhir, alasan: _lockReason),
+        if (_readOnly) const SizedBox(height: 12),
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Data operasional',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: context.colors.textTertiary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _stokSolar,
+                decoration: const InputDecoration(
+                  labelText: 'Stok Solar (indikator)',
+                  border: OutlineInputBorder(),
+                  helperText:
+                      'Perkiraan isi tangki berdasarkan indikator bahan bakar (bukan liter)',
+                ),
+                items: stokOpsi
+                    .map(
+                      (o) => DropdownMenuItem(
+                        value: o.value,
+                        child: Text(o.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: _readOnly
+                    ? null
+                    : (v) => setState(() => _stokSolar = v),
+              ),
+              const SizedBox(height: 10),
+              _PhotoField(
+                label: 'Foto indikator stok solar (wajib)',
+                localPath: _fotoStok?.path,
+                hasExisting: _fotoStokUrl != null,
+                enabled: !_readOnly,
+                onTap: () => _pickFoto(_FotoSlot.stokSolar),
+              ),
+              _PhotoField(
+                label: 'Foto indikator stok solar (wajib)',
+                localPath: _fotoStok?.path,
+                hasExisting: _fotoStokUrl != null,
+                enabled: !_readOnly,
+                onTap: () => _pickFoto(_FotoSlot.stokSolar),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _odoCtrl,
+                enabled: !_readOnly,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: widget.armada.isAlatBerat
+                      ? 'HM (Jam Kerja Unit)'
+                      : 'ODO (Odometer km)',
+                  border: const OutlineInputBorder(),
+                  helperText: widget.armada.isAlatBerat
+                      ? 'Perkiraan jam kerja unit (bukan km)'
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _odoCtrl,
+                builder: (context, value, _) {
+                  final current = double.tryParse(value.text.trim());
+                  final previous = widget.armada.isAlatBerat
+                      ? widget.armada.jamOperasionalTerkini
+                      : widget.armada.odoTerkini;
+                  return _OdoCompare(
+                    isAlatBerat: widget.armada.isAlatBerat,
+                    reading: OdoReading(previous: previous, current: current),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              _PhotoField(
+                label: widget.armada.isAlatBerat
+                    ? 'Foto HM (wajib)'
+                    : 'Foto ODO (wajib)',
+                localPath: _fotoOdo?.path,
+                hasExisting: _fotoOdoUrl != null,
+                enabled: !_readOnly,
+                onTap: () => _pickFoto(_FotoSlot.odo),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Text(
+              'Pemeriksaan bagian',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$diperiksa/${_bagian.length} bagian diperiksa',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: diperiksa == _bagian.length
+                    ? context.colors.success
+                    : context.colors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _bagian.length; i++) ...[
+          _BagianAccordion(
+            state: _bagian[i],
+            expanded: _expanded == i,
+            readOnly: _readOnly,
+            catatanCtrl: _catatanCtrl[i],
+            onToggle: () => setState(
+              () => _expanded = _expanded == i ? null : i,
+            ),
+            onLevelChanged: (level) => _setLevel(i, level),
+            onFoto: () => _pickItemFoto(i),
+          ),
+          const SizedBox(height: 8),
+        ],
+        const SizedBox(height: 12),
+        if (!_readOnly)
+          SizedBox(
+            height: 48,
+            child: BouncingButton(
+              onPressed: _busy ? null : _submit,
+              child: FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: Text(
+                  _busy
+                      ? 'Menyimpan...'
+                      : _isEdit
+                      ? 'Simpan Perubahan'
+                      : 'Kirim Checklist',
                 ),
               ),
             ),
-          Text(
-            widget.isAkhir
-                ? 'Periksa kondisi unit di akhir hari. Pilih Baik, Perlu Perhatian, atau Rusak / Tidak Aman untuk tiap item.'
-                : 'Periksa kondisi unit. Pilih Baik, Perlu Perhatian, atau Rusak / Tidak Aman untuk tiap item.',
-            style: TextStyle(color: context.colors.textSecondary),
           ),
-          SizedBox(height: 12),
-          for (var i = 0; i < _items.length; i++) ...[
-            _ItemTile(
-              item: _items[i],
-              catatanCtrl: _catatanCtrls[i],
-              onLevelChanged: (level) => _setLevel(i, level),
-              onFoto: () => _takePhoto(i),
-            ),
-            const SizedBox(height: 10),
-          ],
-          const SizedBox(height: 8),
-          _DataOperasionalSection(
-            isAlatBerat: widget.isAlatBerat,
-            solarCtrl: _solarCtrl,
-            odoCtrl: _odoCtrl,
-            jamCtrl: _jamCtrl,
-            odoReading: OdoReading(
-              previous: _odoPrev,
-              current: double.tryParse(_odoCtrl.text),
-            ),
-            jamReading: OdoReading(
-              previous: _jamPrev,
-              current: double.tryParse(_jamCtrl.text),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 48,
-            width: double.infinity,
-            child: BouncingButton(
-              onPressed: _busy ? null : _confirmAndSubmit,
-              child: FilledButton(
-                onPressed: _busy ? null : _confirmAndSubmit,
-                child: Text(_busy ? 'Menyimpan...' : 'Lihat ringkasan & kirim'),
-              ),
+      ],
+    );
+  }
+}
+
+class _LockedBanner extends StatelessWidget {
+  const _LockedBanner({
+    required this.isAkhir,
+    required this.alasan,
+  });
+
+  final bool isAkhir;
+  final String? alasan;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = isAkhir
+        ? 'Checklist akhir sudah dikirim dan bersifat final.'
+        : (alasan ?? 'Checklist awal sudah terkunci dan tidak bisa diubah.');
+    final warna = context.colors.warning;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: warna.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: warna.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_outline, color: warna, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -892,30 +686,13 @@ class _ChecklistFillScreenState extends ConsumerState<_ChecklistFillScreen> {
   }
 }
 
-/// Bagian data operasional: solar + ODO/HM dengan previous/current/delta dan
-/// warning ketika nilainya turun dari bacaan sebelumnya.
-class _DataOperasionalSection extends StatelessWidget {
-  const _DataOperasionalSection({
-    required this.isAlatBerat,
-    required this.solarCtrl,
-    required this.odoCtrl,
-    required this.jamCtrl,
-    required this.odoReading,
-    required this.jamReading,
-  });
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
 
-  final bool isAlatBerat;
-  final TextEditingController solarCtrl;
-  final TextEditingController odoCtrl;
-  final TextEditingController jamCtrl;
-  final OdoReading odoReading;
-  final OdoReading jamReading;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final reading = isAlatBerat ? jamReading : odoReading;
-    final activeCtrl = isAlatBerat ? jamCtrl : odoCtrl;
-
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -923,47 +700,271 @@ class _DataOperasionalSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.border),
       ),
+      child: child,
+    );
+  }
+}
+
+class _BagianAccordion extends StatelessWidget {
+  const _BagianAccordion({
+    required this.state,
+    required this.expanded,
+    required this.readOnly,
+    required this.catatanCtrl,
+    required this.onToggle,
+    required this.onLevelChanged,
+    required this.onFoto,
+  });
+
+  final _BagianState state;
+  final bool expanded;
+  final bool readOnly;
+  final TextEditingController catatanCtrl;
+  final VoidCallback onToggle;
+  final ValueChanged<ChecklistItemLevel> onLevelChanged;
+  final VoidCallback onFoto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.colors.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Data operasional',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
+          InkWell(
+            onTap: readOnly ? null : onToggle,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      state.bagian,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  _LevelChip(level: state.level),
+                  if (!readOnly) ...[
+                    const SizedBox(width: 6),
+                    Icon(
+                      expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: context.colors.textMuted,
+                      size: 20,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: solarCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Stok Solar (liter)',
-              border: OutlineInputBorder(),
-              helperText: 'Jumlah solar yang diisi hari ini',
+          if (expanded) ...[
+            Divider(height: 1, color: context.colors.border),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ToggleChip(
+                          label: ChecklistItemLevel.baik.label,
+                          selected:
+                              state.level == ChecklistItemLevel.baik,
+                          selectedColor: context.colors.success,
+                          onTap: () => onLevelChanged(ChecklistItemLevel.baik),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ToggleChip(
+                          label: ChecklistItemLevel.perluPerhatian.label,
+                          selected:
+                              state.level ==
+                              ChecklistItemLevel.perluPerhatian,
+                          selectedColor: context.colors.warning,
+                          onTap: () =>
+                              onLevelChanged(ChecklistItemLevel.perluPerhatian),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ToggleChip(
+                          label: ChecklistItemLevel.rusak.label,
+                          selected: state.level == ChecklistItemLevel.rusak,
+                          selectedColor: context.colors.error,
+                          onTap: () => onLevelChanged(ChecklistItemLevel.rusak),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (state.level != null && state.level!.isBermasalah) ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: catatanCtrl,
+                      maxLines: 2,
+                      onChanged: (v) => state.catatan = v,
+                      decoration: InputDecoration(
+                        labelText: 'Jelaskan kondisi (wajib)',
+                        border: const OutlineInputBorder(),
+                        hintText: state.level == ChecklistItemLevel.rusak
+                            ? 'Contoh: rem tidak pakem saat mengerem'
+                            : 'Contoh: suara mesin kasar',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _PhotoField(
+                      label: state.level == ChecklistItemLevel.rusak
+                          ? 'Foto kerusakan (wajib)'
+                          : 'Foto kondisi (opsional)',
+                      localPath: state.fotoPath,
+                      hasExisting: false,
+                      enabled: true,
+                      onTap: onFoto,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: activeCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: isAlatBerat
-                  ? 'Jam Kerja Unit (HM)'
-                  : 'KM Sekarang (Odometer)',
-              border: const OutlineInputBorder(),
-              helperText: isAlatBerat
-                  ? 'Total jam mesin menyala — Hour Meter'
-                  : 'Angka pada odometer (penghitung km) kendaraan',
-            ),
-          ),
-          const SizedBox(height: 10),
-          _OdoCompare(
-            isAlatBerat: isAlatBerat,
-            reading: reading,
-          ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _LevelChip extends StatelessWidget {
+  const _LevelChip({required this.level});
+
+  final ChecklistItemLevel? level;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (level) {
+      ChecklistItemLevel.baik => (level!.label, context.colors.success),
+      ChecklistItemLevel.perluPerhatian => (
+        level!.label,
+        context.colors.warning,
+      ),
+      ChecklistItemLevel.rusak => (level!.label, context.colors.error),
+      null => ('Belum dipilih', context.colors.textMuted),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoField extends StatelessWidget {
+  const _PhotoField({
+    required this.label,
+    required this.localPath,
+    required this.hasExisting,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? localPath;
+  final bool hasExisting;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  bool get _hasLocal => localPath != null && localPath!.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    final tersedia = _hasLocal || hasExisting;
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: context.colors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: tersedia
+                ? context.colors.success.withValues(alpha: 0.5)
+                : context.colors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (_hasLocal && File(localPath!).existsSync())
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(localPath!),
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  cacheWidth: 160,
+                  errorBuilder: (_, _, _) => const SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: Icon(Icons.image_not_supported_outlined),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  tersedia
+                      ? Icons.check_circle_outline
+                      : Icons.camera_alt_outlined,
+                  color: tersedia
+                      ? context.colors.success
+                      : context.colors.textTertiary,
+                ),
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                tersedia ? '$label — foto tersedia' : '$label — ketuk untuk ambil',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+            ),
+            if (enabled)
+              Icon(
+                Icons.camera_alt_outlined,
+                size: 18,
+                color: context.colors.primary,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -977,9 +978,7 @@ class _OdoCompare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!reading.hasBoth) {
-      if (reading.previous == null) return const SizedBox.shrink();
-    }
+    if (reading.previous == null) return const SizedBox.shrink();
 
     final sebelumnya = isAlatBerat
         ? fmtJam(reading.previous)
@@ -996,10 +995,7 @@ class _OdoCompare extends StatelessWidget {
         ),
         child: Text(
           'Sebelumnya: $sebelumnya',
-          style: TextStyle(
-            fontSize: 12,
-            color: context.colors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
         ),
       );
     }
@@ -1024,166 +1020,22 @@ class _OdoCompare extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sebelumnya: $sebelumnya · Sekarang: ${isAlatBerat ? fmtJam(reading.current) : fmtKm(reading.current)}',
-            style: TextStyle(
-              fontSize: 12,
-              color: context.colors.textSecondary,
-            ),
+            'Sebelumnya: $sebelumnya · Sekarang: '
+            '${isAlatBerat ? fmtJam(reading.current) : fmtKm(reading.current)}',
+            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
           ),
           const SizedBox(height: 4),
           if (reading.decreased)
             Text(
               'Perhatian: nilai $satuan ini lebih kecil dari bacaan sebelumnya '
-              '(selisih $deltaLbl). Pastikan angka odometer/jam yang dimasukkan benar.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: context.colors.error,
-              ),
+              '(selisih $deltaLbl). Pastikan angka sudah benar.',
+              style: TextStyle(fontSize: 12, color: context.colors.error),
             )
           else
             Text(
               'Pemakaian: $deltaLbl',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: context.colors.success,
-              ),
+              style: TextStyle(fontSize: 12, color: context.colors.success),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ItemTile extends StatelessWidget {
-  const _ItemTile({
-    required this.item,
-    required this.catatanCtrl,
-    required this.onLevelChanged,
-    required this.onFoto,
-  });
-
-  final ChecklistItemDraft item;
-  final TextEditingController catatanCtrl;
-  final ValueChanged<ChecklistItemLevel> onLevelChanged;
-  final VoidCallback onFoto;
-
-@override
-  Widget build(BuildContext context) {
-    final bermasalah = item.level.isBermasalah;
-
-return Container(
-      padding: EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _ToggleChip(
-                  label: ChecklistItemLevel.baik.label,
-                  selected: item.level == ChecklistItemLevel.baik,
-                  selectedColor: context.colors.success,
-                  onTap: () => onLevelChanged(ChecklistItemLevel.baik),
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _ToggleChip(
-                  label: ChecklistItemLevel.perluPerhatian.label,
-                  selected: item.level == ChecklistItemLevel.perluPerhatian,
-                  selectedColor: context.colors.warning,
-                  onTap: () =>
-                      onLevelChanged(ChecklistItemLevel.perluPerhatian),
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _ToggleChip(
-                  label: ChecklistItemLevel.rusak.label,
-                  selected: item.level == ChecklistItemLevel.rusak,
-                  selectedColor: context.colors.error,
-                  onTap: () => onLevelChanged(ChecklistItemLevel.rusak),
-                ),
-              ),
-            ],
-          ),
-          if (bermasalah) ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: catatanCtrl,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: item.level == ChecklistItemLevel.rusak
-                    ? 'Jelaskan masalah (wajib)'
-                    : 'Jelaskan kondisi (opsional)',
-                border: const OutlineInputBorder(),
-                hintText: item.level == ChecklistItemLevel.rusak
-                    ? 'Contoh: rem tidak pakem saat mengerem'
-                    : 'Contoh: suara mesin kasar',
-              ),
-            ),
-            const SizedBox(height: 10),
-            if (item.photoPath != null && File(item.photoPath!).existsSync())
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(item.photoPath!),
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      cacheWidth: 200,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      item.level == ChecklistItemLevel.rusak
-                          ? 'Foto bukti kerusakan sudah tersedia.'
-                          : 'Foto bukti tersedia.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: onFoto,
-                    child: const Text('Ambil ulang'),
-                  ),
-                ],
-              )
-            else
-              SizedBox(
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: onFoto,
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(
-                    item.level == ChecklistItemLevel.rusak
-                        ? 'Ambil foto kerusakan (wajib)'
-                        : 'Ambil foto (opsional)',
-                  ),
-                ),
-              ),
-          ],
         ],
       ),
     );
@@ -1206,8 +1058,6 @@ class _ToggleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      // minHeight 48 (bukan fixed): baris tetap ≥48dp, namun bisa tumbuh
-      // bila label wrap di text scale 130%.
       constraints: const BoxConstraints(minHeight: 48),
       child: Material(
         color: selected
@@ -1243,4 +1093,9 @@ class _ToggleChip extends StatelessWidget {
       ),
     );
   }
+}
+
+String _fmtNum(double? n) {
+  if (n == null) return '';
+  return n % 1 == 0 ? n.toInt().toString() : n.toStringAsFixed(1);
 }

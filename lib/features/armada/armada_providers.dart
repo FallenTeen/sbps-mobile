@@ -39,6 +39,17 @@ final checklistAkhirDoneProvider = FutureProvider.autoDispose
     });
 
 // ---------------------------------------------------------------------------
+// ODO awal proyek (1 baris per armada x proyek)
+// ---------------------------------------------------------------------------
+
+final odoAwalProyekProvider = FutureProvider.autoDispose
+    .family<List<OdoAwalProyekItem>, String>((ref, armadaId) {
+      return ref
+          .watch(armadaRepositoryProvider)
+          .getOdoAwalProyek(armadaId: armadaId);
+    });
+
+// ---------------------------------------------------------------------------
 // Riwayat ritase (pagination)
 // ---------------------------------------------------------------------------
 

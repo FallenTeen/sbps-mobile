@@ -17,6 +17,7 @@ import '../features/armada/helper_presensi_screen.dart';
 import '../features/armada/monitoring_armada_screen.dart';
 import '../features/armada/odo_awal_screen.dart';
 import '../features/armada/overview_armada_screen.dart';
+import '../features/armada/pengisian_solar_screen.dart';
 import '../features/armada/riwayat_ritase_screen.dart';
 import '../features/armada/riwayat_servis_screen.dart';
 import '../features/armada/ritase_input_screen.dart';
@@ -550,6 +551,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
               child: const OdoAwalScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'pengisian-solar',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const PengisianSolarScreen(),
             ),
           ),
           GoRoute(

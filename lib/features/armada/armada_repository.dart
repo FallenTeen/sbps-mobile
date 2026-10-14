@@ -37,7 +37,35 @@ class ArmadaRepository {
       '/armada/saya',
       parse: _parseList<ArmadaSaya>(ArmadaSaya.fromJson),
     );
-    return res.data ?? const [];
+    return res.data ?? [];
+  }
+
+  /// GET /armada/pengisian-solar?armada_id=&tanggal= — riwayat pengisian.
+  Future<List<PengisianSolarItem>> getPengisianSolar({
+    String? armadaId,
+    String? tanggal,
+  }) async {
+    final res = await _api.get<List<PengisianSolarItem>>(
+      '/armada/pengisian-solar',
+      query: {
+        if (armadaId != null && armadaId.isNotEmpty) 'armada_id': armadaId,
+        if (tanggal != null && tanggal.isNotEmpty) 'tanggal': tanggal,
+      },
+      parse: _parseList<PengisianSolarItem>(PengisianSolarItem.fromJson),
+    );
+    return res.data ?? [];
+  }
+
+  /// GET /armada/odo-awal-proyek?armada_id= — riwayat ODO awal proyek.
+  Future<List<OdoAwalProyekItem>> getOdoAwalProyek({String? armadaId}) async {
+    final res = await _api.get<List<OdoAwalProyekItem>>(
+      '/armada/odo-awal-proyek',
+      query: {
+        if (armadaId != null && armadaId.isNotEmpty) 'armada_id': armadaId,
+      },
+      parse: _parseList<OdoAwalProyekItem>(OdoAwalProyekItem.fromJson),
+    );
+    return res.data ?? [];
   }
 
   /// GET /armada/ritase?page=&per_page= — riwayat pengiriman driver.
@@ -73,35 +101,38 @@ class ArmadaRepository {
   // POST endpoints (write — lewat outbox untuk offline support)
   // ---------------------------------------------------------------------------
 
-  /// POST /armada/checklist — catat (create/update) checklist harian (2-stage).
-  /// Pagi: status=berjalan, odo_pagi, hm_odo, solar_liter.
-  /// Sore (isAkhir=true): status=selesai, odo_sore, hm_odo.
-  Future<bool> submitChecklist({
+  /// POST /armada/checklist/awal (multipart) — checklist awal hari ini.
+  /// [items] berisi `{bagian, kondisi, catatan?, foto?}`.
+  /// [fotoStokSolarPath]/[fotoOdoPagiPath] wajib saat pembuatan pertama.
+  Future<bool> submitChecklistAwal({
     required String armadaId,
-    required bool kondisiBaik,
-    bool isAkhir = false,
-    String? itemBermasalah,
-    double? solarLiter,
-    double? odoKm,
-    double? jamOperasional,
-    List<Map<String, dynamic>>? itemDetails,
+    required List<Map<String, dynamic>> items,
+    required String stokSolar,
+    double? odoPagi,
+    double? hmOdo,
+    String? jamMulaiOperasi,
+    String? fotoStokSolarPath,
+    String? fotoOdoPagiPath,
+    String? clientUuid,
   }) async {
     final action = PendingAction(
       id: _uuid.v4(),
-      clientUuid: _uuid.v4(),
-      endpoint: PendingEndpoint.armadaChecklist,
-      payloadJson: {},
-      payloadData: {
+      clientUuid: clientUuid ?? _uuid.v4(),
+      endpoint: PendingEndpoint.armadaChecklistAwal,
+      payloadJson: {
         'armada_id': armadaId,
-        'kondisi_baik': kondisiBaik,
-        'status': isAkhir ? 'selesai' : 'berjalan',
-        if (itemBermasalah != null && itemBermasalah.trim().isNotEmpty)
-          'item_bermasalah': itemBermasalah.trim(),
-        if (solarLiter != null) 'solar_liter': solarLiter,
-        if (odoKm != null)
-          isAkhir ? 'odo_sore' : 'odo_pagi': odoKm,
-        if (jamOperasional != null) 'hm_odo': jamOperasional,
-        if (itemDetails != null) 'items': itemDetails,
+        ..._itemFields(items),
+        'stok_solar': stokSolar,
+        if (odoPagi != null) 'odo_pagi': _numStr(odoPagi),
+        if (hmOdo != null) 'hm_odo': _numStr(hmOdo),
+        if (jamMulaiOperasi != null && jamMulaiOperasi.isNotEmpty)
+          'jam_mulai_operasi': jamMulaiOperasi,
+      },
+      photoFields: {
+        if (fotoStokSolarPath != null && fotoStokSolarPath.isNotEmpty)
+          'foto_stok_solar': fotoStokSolarPath,
+        if (fotoOdoPagiPath != null && fotoOdoPagiPath.isNotEmpty)
+          'foto_odo_pagi': fotoOdoPagiPath,
       },
       createdAt: DateTime.now(),
       idempotencyKey: _uuid.v4(),
@@ -109,7 +140,96 @@ class ArmadaRepository {
 
     final result = await _outbox.enqueue(action, _sync.send);
     if (result.permanentlyFailed) {
-      throw ApiException(result.errorMessage ?? 'Gagal menyimpan checklist.');
+      throw ApiException(
+        result.errorMessage ?? 'Gagal menyimpan checklist awal.',
+      );
+    }
+    return result.delivered;
+  }
+
+  /// POST /armada/checklist/akhir (multipart) — checklist akhir (final).
+  Future<bool> submitChecklistAkhir({
+    required String armadaId,
+    required List<Map<String, dynamic>> items,
+    required String stokSolar,
+    double? odoAkhir,
+    double? hmAkhir,
+    String? jamSelesaiOperasi,
+    String? fotoStokSolarPath,
+    String? fotoOdoAkhirPath,
+    String? clientUuid,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: clientUuid ?? _uuid.v4(),
+      endpoint: PendingEndpoint.armadaChecklistAkhir,
+      payloadJson: {
+        'armada_id': armadaId,
+        ..._itemFields(items),
+        'stok_solar': stokSolar,
+        if (odoAkhir != null) 'odo_akhir': _numStr(odoAkhir),
+        if (hmAkhir != null) 'hm_akhir': _numStr(hmAkhir),
+        if (jamSelesaiOperasi != null && jamSelesaiOperasi.isNotEmpty)
+          'jam_selesai_operasi': jamSelesaiOperasi,
+      },
+      photoFields: {
+        if (fotoStokSolarPath != null && fotoStokSolarPath.isNotEmpty)
+          'foto_stok_solar': fotoStokSolarPath,
+        if (fotoOdoAkhirPath != null && fotoOdoAkhirPath.isNotEmpty)
+          'foto_odo_akhir': fotoOdoAkhirPath,
+      },
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(
+        result.errorMessage ?? 'Gagal menyimpan checklist akhir.',
+      );
+    }
+    return result.delivered;
+  }
+
+  /// POST /armada/pengisian-solar (multipart) — catat satu pengisian solar.
+  /// [fotoOdoPath] dan [fotoNotaPath] wajib.
+  Future<bool> submitPengisianSolar({
+    required String armadaId,
+    required double odoAtauHm,
+    required double liter,
+    required double nominalRp,
+    required String fotoOdoPath,
+    required String fotoNotaPath,
+    String? tanggal,
+    String? catatan,
+    String? clientUuid,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: clientUuid ?? _uuid.v4(),
+      endpoint: PendingEndpoint.armadaPengisianSolar,
+      payloadJson: {
+        'armada_id': armadaId,
+        'odo_atau_hm': _numStr(odoAtauHm),
+        'liter': _numStr(liter),
+        'nominal_rp': _numStr(nominalRp),
+        if (tanggal != null && tanggal.isNotEmpty) 'tanggal': tanggal,
+        if (catatan != null && catatan.trim().isNotEmpty)
+          'catatan': catatan.trim(),
+      },
+      photoFields: {
+        'foto_odo': fotoOdoPath,
+        'foto_nota': fotoNotaPath,
+      },
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(
+        result.errorMessage ?? 'Gagal menyimpan pengisian solar.',
+      );
     }
     return result.delivered;
   }
@@ -256,4 +376,26 @@ class ArmadaRepository {
       ];
     };
   }
+
+  /// Ubah daftar item checklist menjadi form field bracket-notation
+  /// (`items[0][bagian]`, dst.) agar Laravel mem-parse sebagai array.
+  static Map<String, String> _itemFields(
+    List<Map<String, dynamic>> items,
+  ) {
+    final fields = <String, String>{};
+    for (var i = 0; i < items.length; i++) {
+      final it = items[i];
+      fields['items[$i][bagian]'] = it['bagian']?.toString() ?? '';
+      fields['items[$i][kondisi]'] = it['kondisi']?.toString() ?? 'baik';
+      final catatan = it['catatan']?.toString() ?? '';
+      if (catatan.isNotEmpty) fields['items[$i][catatan]'] = catatan;
+      final foto = it['foto']?.toString() ?? '';
+      if (foto.isNotEmpty) fields['items[$i][foto]'] = foto;
+    }
+    return fields;
+  }
+
+  /// Format angka untuk field multipart (bulat tanpa desimal).
+  static String _numStr(double n) =>
+      n % 1 == 0 ? n.toInt().toString() : n.toString();
 }

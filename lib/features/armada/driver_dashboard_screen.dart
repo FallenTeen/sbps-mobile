@@ -365,7 +365,7 @@ class _ChecklistSection extends StatelessWidget {
               ),
               SizedBox(width: 8),
               Text(
-                'Checklist Hari Ini',
+                'Checklist Awal',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,

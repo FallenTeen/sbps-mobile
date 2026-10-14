@@ -284,7 +284,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
         ),
         _MenuItem(
           icon: Icons.checklist_rtl,
-          title: 'Checklist Harian',
+          title: 'Checklist Awal',
           subtitle: 'Catat kondisi kendaraan hari ini',
           onTap: (ctx) => ctx.push('/armada/checklist'),
         ),

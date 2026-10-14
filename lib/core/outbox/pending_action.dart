@@ -14,6 +14,9 @@ enum PendingEndpoint {
   uploadMedia('/upload'),
   helperPresensi('/armada/helper'),
   armadaChecklist('/armada/checklist'),
+  armadaChecklistAwal('/armada/checklist/awal'),
+  armadaChecklistAkhir('/armada/checklist/akhir'),
+  armadaPengisianSolar('/armada/pengisian-solar'),
   armadaOdoAwal('/armada/odo-awal-proyek'),
   armadaRitase('/armada/ritase/input'),
   workshopMulai('/servis-armada/{id}/mulai'),
@@ -47,6 +50,15 @@ enum PendingEndpoint {
   /// (1-10 file, docs/api-mobile.md §11.1). `client_uuid` dikirim sebagai
   /// FORM FIELD — sync service menyuntikkannya dari [PendingAction.clientUuid].
   bool get isUploadMedia => this == uploadMedia;
+
+  /// Endpoint multipart dengan file bernama (bukan `photo`/`photos[]`),
+  /// mis. checklist awal (`foto_stok_solar`, `foto_odo_pagi`), checklist
+  /// akhir, dan pengisian solar (`foto_odo`, `foto_nota`). File diambil dari
+  /// [PendingAction.photoFields] dan `client_uuid` disuntik sebagai form field.
+  bool get isNamedPhoto =>
+      this == armadaChecklistAwal ||
+      this == armadaChecklistAkhir ||
+      this == armadaPengisianSolar;
 }
 
 /// Status sinkronisasi satu aksi outbox.
@@ -71,6 +83,7 @@ class PendingAction {
     required this.idempotencyKey,
     this.photoLocalPath,
     this.photoLocalPaths = const [],
+    this.photoFields = const {},
     this.status = PendingStatus.pending,
     this.lastAttemptAt,
     this.retryCount = 0,
@@ -97,6 +110,11 @@ class PendingAction {
   /// Banyak file sekaligus (formulir lapangan: `photos[]`, maks 5).
   final List<String> photoLocalPaths;
 
+  /// File bernama: nama field multipart → path file lokal
+  /// (checklist awal/akhir & pengisian solar). Field multipart tidak boleh
+  /// mengandung `[` / `]`.
+  final Map<String, String> photoFields;
+
   PendingStatus status;
 
   DateTime createdAt;
@@ -114,6 +132,7 @@ class PendingAction {
     'payload_data': payloadData,
     'photo_local_path': photoLocalPath,
     'photo_local_paths': photoLocalPaths,
+    'photo_fields': photoFields,
     'status': status.name,
     'created_at': createdAt.toIso8601String(),
     'last_attempt_at': lastAttemptAt?.toIso8601String(),
@@ -141,6 +160,9 @@ class PendingAction {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      photoFields: Map<String, String>.from(
+        (json['photo_fields'] as Map?) ?? const {},
+      ),
       status: PendingStatus.values.firstWhere(
         (s) => s.name == json['status'],
         orElse: () => PendingStatus.pending,

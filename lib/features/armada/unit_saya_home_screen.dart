@@ -99,8 +99,9 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 .where((c) => c.armadaId == armada.id)
                 .toList();
             final akhirDone =
-                (ref.watch(checklistAkhirDoneProvider(armada.id)).value ?? false) ||
-                myChecklists.any((c) => c.status == 'selesai');
+                myChecklists.any((c) => c.akhir != null) ||
+                (ref.watch(checklistAkhirDoneProvider(armada.id)).value ??
+                    false);
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -420,6 +421,7 @@ class _DayStep {
     required this.route,
     required this.cta,
     required this.subtitle,
+    this.optional = false,
   });
 
   final int number;
@@ -428,9 +430,13 @@ class _DayStep {
   final String route;
   final String cta;
   final String subtitle;
+
+  /// Langkah opsional tidak menghalangi langkah berikutnya dan tidak
+  /// dihitung dalam progres wajib (mis. Pengisian Solar).
+  final bool optional;
 }
 
-class _PekerjaanHariIni extends StatelessWidget {
+class _PekerjaanHariIni extends ConsumerWidget {
   const _PekerjaanHariIni({
     required this.armada,
     required this.checklists,
@@ -444,51 +450,40 @@ class _PekerjaanHariIni extends StatelessWidget {
   final bool akhirDone;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final myChecklists = checklists
         .where((c) => c.armadaId == armada.id)
         .toList();
     final hasChecklist = myChecklists.any((c) => c.sudahIsi);
-    final hasOdoAwal = myChecklists.any(
-      (c) => armada.isAlatBerat
-          ? (c.jamOperasional != null && c.jamOperasional! > 0)
-          : (c.odoKm != null && c.odoKm! > 0),
-    );
     final ritCount = ritItems.length;
 
     final todayChecklist = myChecklists.firstOrNull;
-    final todayOdo = armada.isAlatBerat
-        ? todayChecklist?.jamOperasional
-        : todayChecklist?.odoKm;
+    final pengisianCount = todayChecklist?.pengisian.length ?? 0;
+    final pengisianLiter = todayChecklist?.totalLiterPengisian ?? 0;
+    final hasPengisian = pengisianCount > 0;
 
-    final odoSubtitle = hasOdoAwal
-        ? (armada.isAlatBerat
-              ? 'Hari ini: ${fmtJam(todayOdo)}'
-              : 'Hari ini: ${fmtKm(todayOdo)}')
-        : (armada.isAlatBerat
-              ? (armada.jamOperasionalTerkini != null
-                    ? 'Terakhir: ${fmtJam(armada.jamOperasionalTerkini)}'
-                    : 'Belum tercatat')
-              : (armada.odoTerkini != null
-                    ? 'Terakhir: ${fmtKm(armada.odoTerkini)}'
-                    : 'Belum tercatat'));
+    final odoAwalAsync = ref.watch(odoAwalProyekProvider(armada.id));
+    final showOdoAwalProyek = odoAwalAsync.value?.isEmpty == true;
 
     final steps = [
       _DayStep(
         number: 1,
-        label: 'Checklist',
+        label: 'Checklist Awal',
         done: hasChecklist,
         route: '/armada/checklist',
-        cta: 'Isi checklist',
+        cta: 'Isi checklist awal',
         subtitle: hasChecklist ? 'Sudah diperiksa' : 'Menunggu diperiksa',
       ),
       _DayStep(
         number: 2,
-        label: armada.isAlatBerat ? 'ODO/HM (Jam Awal)' : 'ODO/HM (KM Awal)',
-        done: hasOdoAwal,
-        route: '/armada/odo-awal',
-        cta: armada.isAlatBerat ? 'Catat jam' : 'Catat KM',
-        subtitle: odoSubtitle,
+        label: 'Pengisian Solar',
+        done: hasPengisian,
+        route: '/armada/pengisian-solar',
+        cta: 'Catat pengisian',
+        subtitle: hasPengisian
+            ? '$pengisianCount kali • ${pengisianLiter % 1 == 0 ? pengisianLiter.toInt() : pengisianLiter.toStringAsFixed(1)} L'
+            : 'Belum ada pengisian',
+        optional: true,
       ),
       _DayStep(
         number: 3,
@@ -510,9 +505,10 @@ class _PekerjaanHariIni extends StatelessWidget {
       ),
     ];
 
-    final doneCount = steps.where((s) => s.done).length;
+    final requiredSteps = steps.where((s) => !s.optional).toList();
+    final doneCount = requiredSteps.where((s) => s.done).length;
     _DayStep? next;
-    for (final s in steps) {
+    for (final s in requiredSteps) {
       if (!s.done) {
         next = s;
         break;
@@ -533,7 +529,11 @@ class _PekerjaanHariIni extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _ProgressCard(doneCount: doneCount, total: steps.length, next: next),
+          _ProgressCard(
+            doneCount: doneCount,
+            total: requiredSteps.length,
+            next: next,
+          ),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -548,6 +548,21 @@ class _PekerjaanHariIni extends StatelessWidget {
               ],
             ),
           ),
+          if (showOdoAwalProyek) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/armada/odo-awal');
+                },
+                icon: const Icon(Icons.straighten_rounded, size: 18),
+                label: const Text('Catat ODO Awal Proyek'),
+              ),
+            ),
+          ],
         ],
       ),
     );

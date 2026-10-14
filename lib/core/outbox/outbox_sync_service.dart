@@ -205,6 +205,13 @@ class OutboxSyncService {
           for (final path in action.photoLocalPaths)
             MultipartFileSpec('files[]', path),
         ],
+        // Checklist awal/akhir & pengisian solar: field bernama per foto.
+        PendingEndpoint.armadaChecklistAwal ||
+        PendingEndpoint.armadaChecklistAkhir ||
+        PendingEndpoint.armadaPengisianSolar => [
+          for (final e in action.photoFields.entries)
+            MultipartFileSpec(e.key, e.value),
+        ],
         // Presensi & helper presensi: satu foto wajib dengan field `photo`.
         _ => [
           if (action.photoLocalPath != null)
@@ -213,7 +220,8 @@ class OutboxSyncService {
       };
       if (specs.isEmpty &&
           action.endpoint != PendingEndpoint.armadaChecklistMajor &&
-          action.endpoint != PendingEndpoint.formulirSubmit) {
+          action.endpoint != PendingEndpoint.formulirSubmit &&
+          !action.endpoint.isNamedPhoto) {
         return const OutboxSendResult(
           delivered: false,
           permanentlyFailed: true,
@@ -224,9 +232,11 @@ class OutboxSyncService {
         multipartPath,
         fields: {
           ...action.payloadJson,
-          // Endpoint /upload mensyaratkan client_uuid sebagai form field
-          // (bukan hanya header Idempotency-Key) — nilai SAMA tiap retry.
-          if (action.endpoint.isUploadMedia) 'client_uuid': action.clientUuid,
+          // Endpoint /upload & checklist/pengisian mensyaratkan client_uuid
+          // sebagai form field (bukan hanya header Idempotency-Key) — nilai
+          // SAMA tiap retry.
+          if (action.endpoint.isUploadMedia || action.endpoint.isNamedPhoto)
+            'client_uuid': action.clientUuid,
         },
         files: specs,
         headers: {
