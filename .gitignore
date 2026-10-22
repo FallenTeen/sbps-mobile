@@ -49,9 +49,14 @@ android/key.properties
 **/*.jks
 **/*.keystore
 
-# Firebase config (jangan commit credential Firebase per flavor)
+# Firebase config
 android/app/src/*/google-services.json
 **/GoogleService-Info*.plist
+
+# Shorebird config and token
+shorebird_token.txt
+shorebird_token*.txt
+.secrets/
 
 # Environment config per app (API base URL, dsb)
 env/*.json
