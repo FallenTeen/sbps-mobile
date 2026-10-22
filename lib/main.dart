@@ -22,7 +22,6 @@ import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/notification_handler.dart';
 import 'shared/widgets/sync_action_button.dart';
-
 /// Top-level handler untuk pesan yang diterima di background/terminated.
 /// Harus top-level function (bukan closure) menurut Firebase docs.
 @pragma('vm:entry-point')
@@ -108,6 +107,9 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(outboxSyncServiceProvider).syncNow(ignoreBackoff: true);
+      // Recek OTA saat app kembali dibuka — patch yang terunduh di
+      // background selama app tidak aktif bisa langsung siap restart.
+      ref.read(shorebirdUpdateProvider.notifier).refresh();
     }
   }
 
@@ -156,17 +158,6 @@ class _App extends ConsumerWidget {
         themeMode: themeMode,
         debugShowCheckedModeBanner: banner,
         home: _Splash(),
-      );
-    }
-    final blocked = gate.value?.blocked ?? false;
-    if (blocked) {
-      return MaterialApp(
-        title: title,
-        theme: theme,
-        darkTheme: darkTheme,
-        themeMode: themeMode,
-        debugShowCheckedModeBanner: banner,
-        home: const UpdateRequiredScreen(),
       );
     }
 

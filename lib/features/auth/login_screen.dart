@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/submit_spinner.dart';
+import '../update/stale_app_dialog.dart';
 import 'auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -51,7 +52,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
     final submitting = auth.isLoading;
 
-    return Scaffold(
+    return StaleAppGate(
+      child: Scaffold(
       backgroundColor: context.colors.background,
       body: SafeArea(
         child: Center(
@@ -221,6 +223,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

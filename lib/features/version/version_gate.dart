@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'version_service.dart';
 
@@ -66,75 +64,3 @@ final versionGateProvider =
       VersionGateController.new,
     );
 
-/// Layar wajib-update — menutup seluruh aplikasi sampai user update.
-class UpdateRequiredScreen extends ConsumerWidget {
-  const UpdateRequiredScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final info = ref.watch(versionGateProvider).value?.info;
-
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(
-                  Icons.system_update_alt,
-                  size: 64,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Versi aplikasi sudah usang',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Silakan perbarui ke versi minimal '
-                  '${info?.minVersion ?? '-'} untuk melanjutkan bekerja.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                if ((info?.changelog ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(info!.changelog!),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => _bukaToko(context, info?.updateUrl ?? ''),
-                  icon: const Icon(Icons.download),
-                  label: const Text('Perbarui Sekarang'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _bukaToko(BuildContext context, String url) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final uri = Uri.tryParse(url);
-    if (url.isEmpty || uri == null) return;
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka tautan pembaruan.')),
-      );
-    }
-  }
-}

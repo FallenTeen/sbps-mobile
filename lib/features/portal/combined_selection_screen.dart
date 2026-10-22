@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/auth_providers.dart';
+import '../update/stale_app_dialog.dart';
 import 'portal_providers.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
@@ -113,9 +114,10 @@ class _CombinedSelectionScreenState
 
     return PopScope(
       canPop: false,
-      child: Scaffold(
-        backgroundColor: context.colors.background,
-        body: SafeArea(
+      child: StaleAppGate(
+        child: Scaffold(
+          backgroundColor: context.colors.background,
+          body: SafeArea(
           child: Column(
             children: [
               // Header
@@ -217,6 +219,7 @@ class _CombinedSelectionScreenState
             ],
           ),
         ),
+      ),
       ),
     );
   }
