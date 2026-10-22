@@ -7,8 +7,8 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/info_tooltip.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'models/qc_sample.dart';
@@ -33,12 +33,15 @@ class QcHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Quality Control'),
         actions: [
-          IconButton(
-            tooltip: 'Riwayat QC',
-            icon: const Icon(Icons.history_rounded),
-            onPressed: () => context.push('/qc/riwayat'),
+          AppTopBarActions(
+            extraLeadingActions: [
+              IconButton(
+                tooltip: 'Riwayat QC',
+                icon: const Icon(Icons.history_rounded),
+                onPressed: () => context.push('/qc/riwayat'),
+              ),
+            ],
           ),
-          const PortalSwitchButton(),
         ],
       ),
       body: ResponsiveCenter(

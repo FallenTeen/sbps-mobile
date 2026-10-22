@@ -1,5 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sbps_mobile/core/app_router.dart';
+import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
+import 'package:sbps_mobile/core/outbox/pending_action.dart';
+import 'package:sbps_mobile/features/proyek/pending_summary_provider.dart';
 import 'package:sbps_mobile/features/proyek/role_permissions.dart';
+import 'package:sbps_mobile/shared/widgets/adaptive_nav_shell.dart';
 
 /// Peta key modul → index branch shell (sama dengan `_proyekBranchByModule`
 /// di `lib/core/app_router.dart`). Dipakai [navBranchFor] sebagai parameter.
@@ -198,4 +204,156 @@ void main() {
       }
     });
   });
+
+  group('Destination tap & initialLocation rules', () {
+    test('tap active destination → initialLocation true (resets to branch root)', () {
+      // Rule: targetBranch == currentBranch => initialLocation = true
+      const currentBranch = 1; // e.g. Produksi branch
+      final targetBranch = navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey);
+      expect(targetBranch, 1);
+      final initialLocation = targetBranch == currentBranch;
+      expect(initialLocation, isTrue);
+    });
+
+    test('switching destination → initialLocation false (preserves stack)', () {
+      const currentBranch = 0; // On Home
+      final targetBranch = navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey);
+      expect(targetBranch, 1);
+      final initialLocation = targetBranch == currentBranch;
+      expect(initialLocation, isFalse);
+    });
+
+    test('tap active Presensi branch → initialLocation true', () {
+      const currentBranch = kPresensiBranchIndex; // 10
+      final targetBranch = navBranchFor('presensi', 'Owner', _moduleBranchByKey);
+      expect(targetBranch == currentBranch, isTrue);
+    });
+  });
+
+  group('kAppRoutePaths completeness', () {
+    test('contains /armada/pengisian-solar', () {
+      expect(kAppRoutePaths, contains('/armada/pengisian-solar'));
+    });
+
+    test('contains /kontraktor/proyek', () {
+      expect(kAppRoutePaths, contains('/kontraktor/proyek'));
+    });
+  });
+
+  group('RolePermissions access controls', () {
+    test('Kontraktor module access', () {
+      expect(RolePermissions.canAccess('Kontraktor', 'kontraktor'), isTrue);
+      expect(RolePermissions.canAccess('Owner', 'kontraktor'), isTrue);
+      expect(RolePermissions.canAccess('Admin Keuangan', 'kontraktor'), isTrue);
+      expect(RolePermissions.canAccess('Mandor Titik', 'kontraktor'), isFalse);
+      expect(RolePermissions.canAccess('Driver Armada', 'kontraktor'), isFalse);
+      expect(RolePermissions.canAccess('Workshop', 'kontraktor'), isFalse);
+      expect(RolePermissions.canAccess('Inventory', 'kontraktor'), isFalse);
+    });
+
+    test('Mandor Titik cannot access inventory', () {
+      expect(RolePermissions.canAccess('Mandor Titik', 'inventory'), isFalse);
+      expect(RolePermissions.canAccess('Inventory', 'inventory'), isTrue);
+      expect(RolePermissions.canAccess('Owner', 'inventory'), isTrue);
+    });
+  });
+
+  group('PendingSummary uses RolePermissions delegation', () {
+    test('Mandor Titik gets 0 for inventory even if outbox has opname', () async {
+      final repo = _NavFakeOutboxRepository([
+        PendingAction(
+          id: 'inv-1',
+          clientUuid: 'uuid-1',
+          endpoint: PendingEndpoint.inventoryOpname,
+          payloadJson: const {},
+          createdAt: DateTime.now(),
+          idempotencyKey: 'idem-1',
+        ),
+      ]);
+      final summary = PendingSummary(repository: repo);
+      final mandorCounts = await summary.getSummary('Mandor Titik');
+      expect(mandorCounts.inventory, 0);
+
+      final invCounts = await summary.getSummary('Inventory');
+      expect(invCounts.inventory, 1);
+    });
+  });
+
+  group('AdaptiveNavShell null currentIndex handling', () {
+    final destinations = buildNavDestinations('Mandor Titik');
+
+    testWidgets('null currentIndex on compact screen does not render NavigationBar', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AdaptiveNavShell(
+            currentIndex: null,
+            onDestinationSelected: (_) {},
+            destinations: destinations,
+            child: const Scaffold(body: Center(child: Text('Auxiliary Screen'))),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Auxiliary Screen'), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+    });
+
+    testWidgets('valid currentIndex on compact screen renders NavigationBar with selected index', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AdaptiveNavShell(
+            currentIndex: 1,
+            onDestinationSelected: (_) {},
+            destinations: destinations,
+            child: const Scaffold(body: Center(child: Text('Tugas Screen'))),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tugas Screen'), findsOneWidget);
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      expect(navBar.selectedIndex, 1);
+    });
+
+    testWidgets('null currentIndex on medium screen renders NavigationRail with unselected state', (tester) async {
+      tester.view.physicalSize = const Size(700, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AdaptiveNavShell(
+            currentIndex: null,
+            onDestinationSelected: (_) {},
+            destinations: destinations,
+            child: const Scaffold(body: Center(child: Text('Tablet Aux Screen'))),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tablet Aux Screen'), findsOneWidget);
+      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+      expect(rail.selectedIndex, isNull);
+    });
+  });
+}
+
+class _NavFakeOutboxRepository extends OutboxRepository {
+  _NavFakeOutboxRepository(List<PendingAction> actions) : _actions = actions;
+
+  final List<PendingAction> _actions;
+
+  @override
+  Future<List<PendingAction>> pendingActions() async => List.of(_actions);
 }

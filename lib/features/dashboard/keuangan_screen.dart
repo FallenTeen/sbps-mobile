@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
-import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'dashboard_providers.dart';
 import 'fmt.dart';
@@ -31,7 +31,7 @@ class KeuanganScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Finansial'),
-        actions: const [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,

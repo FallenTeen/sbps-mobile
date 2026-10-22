@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/adaptive_grid.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import 'inventory_models.dart';
@@ -37,7 +37,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       appBar: AppBar(
         title: const Text('Inventory'),
         bottom: const BrandStrip(),
-        actions: [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

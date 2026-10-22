@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/entrance_fader.dart';
@@ -58,40 +59,7 @@ class ProyekHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: null,
         bottom: const BrandStrip(),
-        actions: [
-          IconButton(
-            tooltip: 'Profil',
-            icon: const Icon(Icons.account_circle_outlined),
-            onPressed: () => context.push('/profile'),
-          ),
-          const PortalSwitchButton(),
-          const SyncActionButton(),
-          const _NotifikasiBadgeAction(),
-          if (roles.length > 1)
-            PopupMenuButton<String>(
-              tooltip: 'Ganti peran',
-              icon: const Icon(Icons.swap_horiz),
-              onSelected: (r) => _confirmRoleSwitch(context, ref, r, role),
-              itemBuilder: (context) => [
-                for (final r in roles)
-                  CheckedPopupMenuItem<String>(
-                    value: r,
-                    checked: r == role,
-                    child: Text(r),
-                  ),
-              ],
-            ),
-          IconButton(
-            tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              final result = await confirmLogout(context);
-              if (result?.confirmed == true) {
-                ref.read(authControllerProvider.notifier).logout();
-              }
-            },
-          ),
-        ],
+        actions: const [AppTopBarActions()],
       ),
       body: role == null
           ? const _NoActiveRoleView()
@@ -266,7 +234,7 @@ class _ModuleCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _navigate(context),
+          onTap: () => _navigate(context, ref),
           child: Padding(
             padding: EdgeInsets.all(14),
             child: Row(
@@ -324,26 +292,37 @@ class _ModuleCard extends ConsumerWidget {
     );
   }
 
-  void _navigate(BuildContext context) {
+  void _navigate(BuildContext context, WidgetRef ref) {
+    final role = ref.read(activeRoleProvider);
+    final isPrimaryTugas = module.key == tugasModuleFor(role);
+
+    void open(String route) {
+      if (isPrimaryTugas) {
+        context.go(route);
+      } else {
+        context.push(route);
+      }
+    }
+
     switch (module.key) {
       case 'produksi':
-        context.push('/produksi/sesi-aktif');
+        open('/produksi/sesi-aktif');
       case 'qc':
-        context.push('/qc');
+        open('/qc');
       case 'tracking':
-        context.push('/tracking/pengguna-aktif');
+        open('/tracking/pengguna-aktif');
       case 'dashboard':
-        context.push('/dashboard');
+        open('/dashboard');
       case 'keuangan':
-        context.push('/dashboard/keuangan');
+        open('/dashboard/keuangan');
       case 'armada':
-        context.push('/armada');
+        open('/armada');
       case 'kontraktor':
-        context.push('/kontraktor/proyek');
+        open('/kontraktor/proyek');
       case 'workshop':
-        context.push('/workshop');
+        open('/workshop');
       case 'inventory':
-        context.push('/inventory');
+        open('/inventory');
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${module.label} belum tersedia')),

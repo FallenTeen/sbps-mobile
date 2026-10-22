@@ -169,7 +169,7 @@ class ApiClient {
       throw _mapDioError(e);
     }
     if (response.statusCode == null || response.statusCode! >= 400) {
-      throw _httpError(response);
+      throw _httpError(response, method: method);
     }
     final decoded = response.data;
     if (decoded is! Map<String, dynamic>) {
@@ -184,21 +184,41 @@ class ApiClient {
   /// HTTP >= 400: bisa envelope `{status:"error", message, errors}` maupun
   /// error validasi bawaan Laravel 422 `{message, errors}` tanpa wrapper.
   /// Format pesan: 3 baris — apa terjadi → kenapa → apa bisa dilakukan.
-  ApiException _httpError(Response<dynamic> response) {
+  ApiException _httpError(Response<dynamic> response, {String? method}) {
     final data = response.data;
     if (data is Map) {
       final json = Map<String, dynamic>.from(data);
       final serverMsg = json['message'] as String?;
       final errors = _parseErrors(json['errors']);
       final statusMsg = serverMsg ?? 'Terjadi kesalahan';
-      final reason = json['errors'] != null
-          ? 'Validasi gagal: periksa field yang ditandai merah.'
-          : '';
+      final isGet =
+          (method ?? response.requestOptions.method).toUpperCase() == 'GET';
+
+      String reason = '';
+      if (json['errors'] != null) {
+        if (errors != null && errors.containsKey('karyawan')) {
+          reason = errors['karyawan']?.join(' ') ?? '';
+        } else if (isGet) {
+          reason = errors?.values.expand((e) => e).join(' ') ?? '';
+        } else {
+          reason = 'Validasi gagal: periksa field yang ditandai merah.';
+        }
+      }
+
       final action = response.statusCode! >= 500
           ? 'Coba lagi beberapa saat. Jika masih gagal, hubungi admin.'
-          : 'Periksa kembali data Anda dan coba kirim ulang.';
+          : (isGet || (errors != null && errors.containsKey('karyawan'))
+              ? 'Hubungi admin atau coba lagi.'
+              : 'Periksa kembali data Anda dan coba kirim ulang.');
+
+      final parts = [
+        statusMsg,
+        if (reason.isNotEmpty && reason != statusMsg) reason,
+        action,
+      ];
+
       return ApiException(
-        '$statusMsg\n$reason\n$action',
+        parts.join('\n'),
         statusCode: response.statusCode,
         errors: errors,
       );
@@ -219,7 +239,7 @@ class ApiClient {
     if (response.statusCode == 401 && !_isPublic(e.requestOptions.path)) {
       onUnauthorized?.call();
     }
-    return _httpError(response);
+    return _httpError(response, method: e.requestOptions.method);
   }
 
   bool _isPublic(String path) => _publicPaths.any((p) => path.endsWith(p));

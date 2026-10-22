@@ -7,8 +7,8 @@ import '../../core/formatters.dart';
 import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'checklist_model.dart';
@@ -40,7 +40,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
           'Unit Saya',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
-        actions: const [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

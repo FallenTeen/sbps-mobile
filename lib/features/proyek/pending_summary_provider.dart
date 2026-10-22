@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/pending_action.dart';
 import '../presensi/presensi_providers.dart';
+import 'role_permissions.dart';
 
 /// Provider untuk ringkasan jumlah item pending per modul.
 ///
@@ -125,41 +126,19 @@ class PendingSummary {
     return counts;
   }
 
-  bool _canAccessArmada(String role) => [
-    'Driver Armada',
-    'Kepala Divisi Armada',
-    'Ketua Divisi Armada',
-    'Ketua Armada',
-    'Owner',
-    'Admin Keuangan',
-  ].contains(role);
+  bool _canAccessArmada(String role) =>
+      RolePermissions.canAccess(role, 'armada');
 
-  bool _canAccessProduksi(String role) => [
-    'Mandor Titik',
-    'Mandor Proyek',
-    'Koordinator CBP',
-    'Koordinator AMP',
-    'Ketua Divisi Produksi CBP',
-    'Ketua Divisi Produksi AMP',
-    'Owner',
-    'Operator Mesin',
-  ].contains(role);
+  bool _canAccessProduksi(String role) =>
+      RolePermissions.canAccess(role, 'produksi');
 
-  bool _canAccessWorkshop(String role) => ['Workshop', 'Owner'].contains(role);
+  bool _canAccessWorkshop(String role) =>
+      RolePermissions.canAccess(role, 'workshop');
 
-  bool _canAccessQC(String role) => [
-    'Mandor Titik',
-    'Mandor Proyek',
-    'Koordinator CBP',
-    'Koordinator AMP',
-    'Ketua Divisi Produksi CBP',
-    'Ketua Divisi Produksi AMP',
-    'Owner',
-    'Operator Mesin',
-  ].contains(role);
+  bool _canAccessQC(String role) => RolePermissions.canAccess(role, 'qc');
 
   bool _canAccessInventory(String role) =>
-      ['Inventory', 'Owner', 'Mandor Titik'].contains(role);
+      RolePermissions.canAccess(role, 'inventory');
 
   bool _canAccessFormulir(String role) => [
     'Driver Armada',

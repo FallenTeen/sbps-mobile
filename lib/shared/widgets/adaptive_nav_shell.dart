@@ -48,7 +48,8 @@ class AdaptiveNavShell extends StatelessWidget {
   final Widget child;
 
   /// Indeks destinasi yang sedang aktif (0-based di dalam [destinations]).
-  final int currentIndex;
+  /// Null jika rute aktif saat ini berada di luar destinasi utama shell.
+  final int? currentIndex;
 
   /// Dipanggil saat user mengetuk destinasi lain.
   final ValueChanged<int> onDestinationSelected;
@@ -129,18 +130,20 @@ class AdaptiveNavShell extends StatelessWidget {
               Expanded(child: child),
             ],
           ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: currentIndex,
-            onDestinationSelected: onDestinationSelected,
-            destinations: [
-              for (final d in destinations)
-                NavigationDestination(
-                  icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon),
-                  label: d.label,
+          bottomNavigationBar: currentIndex == null
+              ? null
+              : NavigationBar(
+                  selectedIndex: currentIndex!,
+                  onDestinationSelected: onDestinationSelected,
+                  destinations: [
+                    for (final d in destinations)
+                      NavigationDestination(
+                        icon: Icon(d.icon),
+                        selectedIcon: Icon(d.selectedIcon),
+                        label: d.label,
+                      ),
+                  ],
                 ),
-            ],
-          ),
         );
     }
   }

@@ -6,8 +6,8 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import 'kontraktor_providers.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 
 /// Screen Portal Kontraktor: Menampilkan tab Proyek Kontrak & Invoice Klien.
 class ProyekKontrakScreen extends ConsumerStatefulWidget {
@@ -52,7 +52,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portal Kontraktor'),
-        actions: const [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

@@ -8,6 +8,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/animated_badge.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/info_tooltip.dart';
@@ -77,29 +78,14 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
         title: const HomeTitle(),
         bottom: const BrandStrip(),
         actions: [
-          // Profil user
-          IconButton(
-            tooltip: 'Profil',
-            icon: const Icon(Icons.account_circle_outlined),
-            onPressed: () => context.push('/profile'),
-          ),
-          PortalSwitchButton(),
-          IconButton(
-            tooltip: 'Riwayat presensi',
-            icon: const Icon(Icons.history),
-            onPressed: () => context.push('/presensi/riwayat'),
-          ),
-          const _PendingBadgeAction(),
-          const _NotifikasiBadgeAction(),
-          IconButton(
-            tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              final result = await confirmLogout(context);
-              if (result?.confirmed == true) {
-                ref.read(authControllerProvider.notifier).logout();
-              }
-            },
+          AppTopBarActions(
+            extraLeadingActions: [
+              IconButton(
+                tooltip: 'Riwayat presensi',
+                icon: const Icon(Icons.history),
+                onPressed: () => context.push('/presensi/riwayat'),
+              ),
+            ],
           ),
         ],
       ),

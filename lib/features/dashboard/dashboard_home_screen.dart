@@ -20,8 +20,8 @@ import 'fmt.dart';
 import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/notification_routes.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard operasional per role (Phase 15 — attention-first):
@@ -43,7 +43,7 @@ class DashboardHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Operasional'),
-        actions: const [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

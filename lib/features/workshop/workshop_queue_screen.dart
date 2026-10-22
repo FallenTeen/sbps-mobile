@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/info_tooltip.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../armada/servis_status.dart';
@@ -74,7 +74,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       appBar: AppBar(
         title: const Text('Workshop Hari Ini'),
         bottom: const BrandStrip(),
-        actions: [PortalSwitchButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: AdaptiveMasterDetail(
         key: _masterDetailKey,

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sbps_mobile/features/auth/models/user.dart';
 import 'package:sbps_mobile/features/portal/portal_providers.dart';
+import 'package:sbps_mobile/features/proyek/role_permissions.dart';
 
 User _user(List<String> roles) => User(
       id: 'u-1',
@@ -75,6 +76,25 @@ void main() {
 
     test('tanpa role: tetap bisa presensi (untuk user yang hanya absen)', () {
       expect(autoPortal(_user([])), AppPortal.presensi);
+    });
+  });
+
+  group('Portal Presensi navigation state isolation', () {
+    test('portal presensi menghasilkan hanya Beranda + Notifikasi', () {
+      // Ketika portal presensi aktif, router menganggap activeRole null untuk shell
+      final destinations = buildNavDestinations(null);
+      expect(destinations.map((d) => d.key).toList(), ['home', 'notifikasi']);
+    });
+
+    test('portal presensi beranda selalu Titik Kerja untuk role apa pun', () {
+      expect(
+        appHomeKindFor(role: 'Owner', presensiPortal: true),
+        AppHomeKind.presensi,
+      );
+      expect(
+        appHomeKindFor(role: 'Mandor Titik', presensiPortal: true),
+        AppHomeKind.presensi,
+      );
     });
   });
 }

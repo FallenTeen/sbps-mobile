@@ -102,6 +102,7 @@ const kAppRoutePaths = <String>[
   '/armada/checklist',
   '/armada/checklist-akhir',
   '/armada/odo-awal',
+  '/armada/pengisian-solar',
   '/armada/helper-presensi',
   '/armada/overview',
   '/armada/monitoring',
@@ -144,7 +145,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   StatefulShellRoute buildShellRoute() {
     return StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        final activeRole = ref.read(activeRoleProvider);
+        final portal = ref.read(selectedPortalProvider).value;
+        final isPresensiPortal = portal == AppPortal.presensi;
+        final activeRole =
+            isPresensiPortal ? null : ref.read(activeRoleProvider);
         final destinations = buildNavDestinations(activeRole);
         if (destinations.isEmpty) return navigationShell;
 
@@ -156,12 +160,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         );
 
         return AdaptiveNavShell(
-          currentIndex: currentDestIndex < 0 ? 0 : currentDestIndex,
+          currentIndex: currentDestIndex < 0 ? null : currentDestIndex,
           onDestinationSelected: (destIndex) {
             final dest = destinations[destIndex];
+            final targetBranch =
+                navBranchFor(dest.key, activeRole, _proyekBranchByModule);
             navigationShell.goBranch(
-              navBranchFor(dest.key, activeRole, _proyekBranchByModule),
-              initialLocation: false,
+              targetBranch,
+              initialLocation: targetBranch == currentBranch,
             );
           },
           destinations: destinations,
@@ -200,6 +206,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         }
 
         if (!needsSelection && location == '/portal') {
+          return currentHomeFor();
+        }
+
+        // Guard portal presensi: tidak boleh membuka modul proyek operasional.
+        const proyekModulePrefixes = <String>[
+          '/produksi',
+          '/qc',
+          '/tracking',
+          '/dashboard',
+          '/armada',
+          '/kontraktor',
+          '/workshop',
+          '/inventory',
+          '/dokumentasi',
+        ];
+        if (portal == AppPortal.presensi &&
+            proyekModulePrefixes.any(location.startsWith)) {
           return currentHomeFor();
         }
 
@@ -247,6 +270,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             !RolePermissions.canAccess(
               ref.read(activeRoleProvider),
               'armada',
+            )) {
+          return currentHomeFor();
+        }
+
+        // Guard modul kontraktor.
+        if (location.startsWith('/kontraktor') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'kontraktor',
             )) {
           return currentHomeFor();
         }

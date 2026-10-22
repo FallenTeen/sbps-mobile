@@ -10,8 +10,9 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
-import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/status_pill.dart';
+import '../auth/auth_providers.dart';
 import '../qc/qc_providers.dart';
 import '../qc/qc_sheets.dart';
 import '../qc/models/qc_sample.dart';
@@ -68,56 +69,59 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
       appBar: AppBar(
         title: const Text('Sesi Produksi'),
         actions: [
-          const PortalSwitchButton(),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'ringkasan':
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ProduksiRingkasanScreen(),
+          AppTopBarActions(
+            extraTrailingActions: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'ringkasan':
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ProduksiRingkasanScreen(),
+                        ),
+                      );
+                      break;
+                    case 'dokumentasi':
+                      context.push('/dokumentasi');
+                      break;
+                    case 'qc':
+                      context.push('/qc/riwayat');
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'ringkasan',
+                    child: Row(
+                      children: [
+                        Icon(Icons.dashboard_outlined),
+                        SizedBox(width: 12),
+                        Text('Ringkasan Produksi'),
+                      ],
                     ),
-                  );
-                  break;
-                case 'dokumentasi':
-                  context.push('/dokumentasi');
-                  break;
-                case 'qc':
-                  context.push('/qc/riwayat');
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'ringkasan',
-                child: Row(
-                  children: [
-                    Icon(Icons.dashboard_outlined),
-                    SizedBox(width: 12),
-                    Text('Ringkasan Produksi'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'dokumentasi',
-                child: Row(
-                  children: [
-                    Icon(Icons.attach_file),
-                    SizedBox(width: 12),
-                    Text('Dokumentasi'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'qc',
-                child: Row(
-                  children: [
-                    Icon(Icons.science_outlined),
-                    SizedBox(width: 12),
-                    Text('Riwayat QC'),
-                  ],
-                ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'dokumentasi',
+                    child: Row(
+                      children: [
+                        Icon(Icons.attach_file),
+                        SizedBox(width: 12),
+                        Text('Dokumentasi'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'qc',
+                    child: Row(
+                      children: [
+                        Icon(Icons.science_outlined),
+                        SizedBox(width: 12),
+                        Text('Riwayat QC'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -168,6 +172,29 @@ class _ActiveSessionsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authControllerProvider).value;
+    if (user != null && !user.hasKaryawan) {
+      return RefreshIndicator(
+        onRefresh: () => _refreshAll(ref),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            const SizedBox(height: 48),
+            AppEmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'Akun Belum Terhubung',
+              subtitle:
+                  'Akun "${user.email}" belum terhubung ke data karyawan aktif.\n'
+                  'Hubungi admin untuk menghubungkan akun ke data karyawan agar dapat mengoperasikan sesi produksi.',
+              actionLabel: 'Muat Ulang',
+              onAction: () => _refreshAll(ref),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: () => _refreshAll(ref),
       child: sesi.when(
@@ -237,6 +264,7 @@ class _ActiveSessionsTab extends ConsumerWidget {
 
 /// Invalidasi semua sumber data tab sesi aktif lalu tunggu refresh selesai.
 Future<void> _refreshAll(WidgetRef ref) async {
+  ref.invalidate(authControllerProvider);
   ref.invalidate(sesiAktifProvider);
   ref.invalidate(titikProgressProvider);
   ref.invalidate(waitingSamplesBySessionProvider);

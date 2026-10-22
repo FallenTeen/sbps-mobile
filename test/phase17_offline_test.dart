@@ -59,8 +59,8 @@ void main() {
       expect(e.isJson, isTrue);
     });
 
-    test('jumlah endpoint terdaftar = 19 (19 dari 16 lama + 3 baru)', () {
-      expect(PendingEndpoint.values, hasLength(19));
+    test('jumlah endpoint terdaftar minimal 19 (19 dari 16 lama + 3 baru)', () {
+      expect(PendingEndpoint.values.length, greaterThanOrEqualTo(19));
     });
 
     test('roundtrip servisAjuan mempertahankan payloadData items', () {

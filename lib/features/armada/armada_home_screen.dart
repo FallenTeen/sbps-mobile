@@ -7,9 +7,8 @@ import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
-import '../../shared/widgets/portal_switch_button.dart';
-import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'driver_dashboard_screen.dart';
@@ -60,7 +59,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
           ],
         ),
         bottom: const BrandStrip(),
-        actions: [PortalSwitchButton(), SyncActionButton()],
+        actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
