@@ -17,6 +17,7 @@ import 'core/push_token_service.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/notifikasi/notifikasi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
+import 'features/update/shorebird_update_banner.dart';
 import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/notification_handler.dart';
@@ -175,8 +176,9 @@ class _App extends ConsumerWidget {
       darkTheme: darkTheme,
       themeMode: themeMode,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      builder: (context, child) =>
-          OfflineBanner(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ShorebirdUpdateBanner(
+        child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+      ),
       debugShowCheckedModeBanner: banner,
       routerConfig: ref.watch(appRouterProvider),
     );
