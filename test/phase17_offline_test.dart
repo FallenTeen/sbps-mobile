@@ -349,13 +349,13 @@ void main() {
       await (await Hive.openBox<String>('phase17_backoff')).clear();
     });
 
-    Future<void> _seed(PendingAction action) async {
+    Future<void> seed(PendingAction action) async {
       final box = await Hive.openBox<String>('phase17_backoff');
       await box.put(action.id, action.encode());
     }
 
     test('aksa pending yang baru diantre dikirim pada siklus default', () async {
-      await _seed(
+      await seed(
         _action('b-0', PendingEndpoint.armadaRitase),
       );
 
@@ -365,7 +365,7 @@ void main() {
     });
 
     test('aksa dalam backoff (lastAttemptAt baru) TIDAK dikirim default, TERKIRIM saat ignoreBackoff', () async {
-      await _seed(
+      await seed(
         _action(
           'b-1',
           PendingEndpoint.armadaRitase,
@@ -385,7 +385,7 @@ void main() {
     });
 
     test('aksa melewati batas maks otomatis (retryCount >= 5) baru dikirim lewat force', () async {
-      await _seed(
+      await seed(
         _action(
           'b-2',
           PendingEndpoint.armadaRitase,
@@ -500,7 +500,7 @@ void main() {
   });
 
   group('Data Belum Terkirim — status yang jujur', () {
-    Widget _wrap(OutboxRepository repo) => ProviderScope(
+    Widget wrap(OutboxRepository repo) => ProviderScope(
       overrides: [
         outboxRepositoryProvider.overrideWithValue(repo),
       ],
@@ -517,7 +517,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpWidget(wrap(repo));
       await tester.pumpAndSettle();
 
       expect(find.text('Ajuan servis armada'), findsOneWidget);
@@ -537,7 +537,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpWidget(wrap(repo));
       await tester.pumpAndSettle();
 
       expect(find.text('Request sparepart workshop'), findsOneWidget);
@@ -556,7 +556,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpWidget(wrap(repo));
       await tester.pumpAndSettle();
 
       expect(find.text('Ajuan servis armada'), findsOneWidget);

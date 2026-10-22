@@ -54,7 +54,7 @@ workflows:
           include: true
 
     environment:
-      flutter: stable
+      flutter: 3.38.5
       groups:
         - android-signing
         - firebase-app-distribution
@@ -94,6 +94,16 @@ workflows:
         script: |
           set -e
           flutter pub get
+
+      - name: Gate: flutter analyze
+        script: |
+          set -e
+          flutter analyze
+
+      - name: Gate: flutter test
+        script: |
+          set -e
+          flutter test
 
       - name: Setup Shorebird CLI
         script: |
@@ -144,7 +154,7 @@ workflows:
     instance_type: linux_x2
 
     environment:
-      flutter: stable
+      flutter: 3.38.5
       groups:
         - shorebird
         - notifications
@@ -164,6 +174,16 @@ workflows:
         script: |
           set -e
           flutter pub get
+
+      - name: Gate: flutter analyze
+        script: |
+          set -e
+          flutter analyze
+
+      - name: Gate: flutter test
+        script: |
+          set -e
+          flutter test
 
       - name: Shorebird patch (OTA ke semua user aktif)
         script: |

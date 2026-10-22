@@ -5,41 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
-import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
-import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/entrance_fader.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../auth/auth_providers.dart';
-import '../notifikasi/notifikasi_providers.dart';
-import '../../shared/widgets/sync_action_button.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
 import 'pending_summary_provider.dart';
-
-/// Ganti role hanya setelah konfirmasi — user wajib sadar konteks/context
-/// aktif sebelum beroperasi (perbaikan audit role switch Phase 18).
-Future<void> _confirmRoleSwitch(
-  BuildContext context,
-  WidgetRef ref,
-  String target,
-  String? current,
-) async {
-  if (target == current) return;
-  final result = await ConfirmationDialog.show(
-    context,
-    severity: ConfirmSeverity.warning,
-    title: 'Bekerja sebagai $target?',
-    message:
-        'Role menentukan menu dan data yang tampil. Anda akan bekerja '
-        'sebagai "$target" setelah pergantian ini.',
-    confirmLabel: 'Ya, Gunakan $target',
-    icon: Icons.swap_horiz_rounded,
-  );
-  if (result?.confirmed != true || !context.mounted) return;
-  await ref.read(activeRoleProvider.notifier).switchRole(target);
-}
 
 class ProyekHomeScreen extends ConsumerWidget {
   const ProyekHomeScreen({super.key});
@@ -48,7 +20,6 @@ class ProyekHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).value;
     final role = ref.watch(activeRoleProvider);
-    final roles = user == null ? <String>[] : app2RolesOf(user);
     final allowed = kProyekModules
         .where((m) => RolePermissions.canAccess(role, m.key))
         .where((m) => m.key != 'tracking' || RolePermissions.isAdminLike(role))
@@ -432,29 +403,6 @@ class _TrackingStatusCard extends ConsumerWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-// ── Notifikasi Badge ──────────────────────────────────────────────────────────
-
-class _NotifikasiBadgeAction extends ConsumerWidget {
-  const _NotifikasiBadgeAction();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(unreadCountProvider);
-
-    return IconButton(
-      tooltip: 'Notifikasi',
-      icon: AnimatedCountBadge(
-        count: count,
-        child: const Icon(Icons.notifications_outlined),
-      ),
-      onPressed: () {
-        context.go('/notifikasi');
-        ref.read(unreadCountProvider.notifier).reload();
-      },
     );
   }
 }

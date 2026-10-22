@@ -151,7 +151,6 @@ class ArmadaHomeScreen extends ConsumerWidget {
                       icon: item.icon,
                       title: item.title,
                       subtitle: item.subtitle,
-                      badge: item.badge,
                       onTap: () => item.onTap(context),
                     ),
                 ],
@@ -422,14 +421,12 @@ class _MenuItem {
     required this.icon,
     required this.title,
     required this.subtitle,
-    this.badge,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final int? badge;
   final void Function(BuildContext) onTap;
 }
 
@@ -440,14 +437,12 @@ class _MenuTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    this.badge,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final int? badge;
   final VoidCallback onTap;
 
   @override
@@ -501,22 +496,6 @@ class _MenuTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (badge != null && badge! > 0)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: context.colors.warning.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$badge',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: context.colors.warning,
-                      ),
-                    ),
-                  ),
                 Icon(
                   Icons.chevron_right_rounded,
                   color: context.colors.textMuted,
@@ -681,25 +660,6 @@ class _EmptyArmada extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.error.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
-      ),
-      child: Text(message, textAlign: TextAlign.center),
     );
   }
 }

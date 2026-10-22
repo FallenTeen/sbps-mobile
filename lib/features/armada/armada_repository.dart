@@ -350,7 +350,7 @@ class ArmadaRepository {
           'proyek_id': proyekId.trim(),
         if (catatan != null && catatan.trim().isNotEmpty)
           'catatan': catatan.trim(),
-        if (odoPerTrip != null) 'odo_per_trip': odoPerTrip,
+        'odo_per_trip': ?odoPerTrip,
       },
       createdAt: DateTime.now(),
       idempotencyKey: idempotencyKey ?? _uuid.v4(),

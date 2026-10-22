@@ -107,7 +107,7 @@ class _StepTile extends StatelessWidget {
     return Semantics(
       button: step.onTap != null && step.status != WorkflowStepStatus.selesai,
       label:
-          'Langkah ${index + 1}: ${step.label}. Status: $statusText${step.subtitle != null ? ". " + step.subtitle! : ""}',
+          'Langkah ${index + 1}: ${step.label}. Status: $statusText${step.subtitle != null ? ". ${step.subtitle}" : ""}',
       child: InkWell(
         onTap: step.onTap,
         borderRadius: BorderRadius.circular(12),

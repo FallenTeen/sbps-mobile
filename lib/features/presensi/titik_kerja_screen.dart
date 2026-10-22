@@ -7,16 +7,11 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
-import '../../shared/widgets/animated_badge.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
-import '../../shared/widgets/brand_strip.dart';
-import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/brand_strip.dart';import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/info_tooltip.dart';
-import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
-import '../../shared/widgets/sync_action_button.dart';
 import '../auth/auth_providers.dart';
-import '../../shared/widgets/confirmation_dialog.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../titik/titik_selector.dart';
@@ -289,38 +284,6 @@ class _FormulirEntryPoint extends ConsumerWidget {
         onTap: () => context.push('/formulir'),
       ),
     );
-  }
-}
-
-/// Lonceng notifikasi dengan badge unread (Fase A1.7). Badge di-refresh
-/// saat kembali dari halaman notifikasi.
-class _NotifikasiBadgeAction extends ConsumerWidget {
-  const _NotifikasiBadgeAction();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(unreadCountProvider);
-
-    return IconButton(
-      tooltip: 'Notifikasi',
-      icon: AnimatedCountBadge(
-        count: count,
-        child: const Icon(Icons.notifications_outlined),
-      ),
-      onPressed: () {
-        context.go('/notifikasi');
-        ref.read(unreadCountProvider.notifier).reload();
-      },
-    );
-  }
-}
-
-class _PendingBadgeAction extends ConsumerWidget {
-  const _PendingBadgeAction();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return const SyncActionButton();
   }
 }
 

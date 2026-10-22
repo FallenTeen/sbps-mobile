@@ -54,7 +54,7 @@ class KeuanganScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               chart.when(
                 loading: () => const _RingkasanSkeleton(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
                 data: (data) => data.items.isEmpty
                     ? const SizedBox.shrink()
                     : _RingkasanKpiRow(items: data.items),

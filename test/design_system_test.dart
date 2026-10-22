@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sbps_mobile/shared/theme/app_theme.dart';
 import 'package:sbps_mobile/shared/widgets/action_card.dart';
-import 'package:sbps_mobile/shared/widgets/app_empty_state.dart';
 import 'package:sbps_mobile/shared/widgets/app_error_state.dart';
 import 'package:sbps_mobile/shared/widgets/form_section.dart';
 import 'package:sbps_mobile/shared/widgets/key_value_row.dart';
@@ -39,9 +37,10 @@ void main() {
       expect(find.text('Deskripsi singkat'), findsOneWidget);
       expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
       expect(
-        tester.getSemantics(find.text('Judul Halaman')).hasFlag(
-          SemanticsFlag.isHeader,
-        ),
+        tester
+            .getSemantics(find.text('Judul Halaman'))
+            .flagsCollection
+            .isHeader,
         isTrue,
       );
     });
