@@ -54,176 +54,177 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return StaleAppGate(
       child: Scaffold(
-      backgroundColor: context.colors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Logo ──
-                  Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.colors.primary.withValues(
-                              alpha: 0.3,
+        backgroundColor: context.colors.background,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Logo ──
+                    Center(
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.colors.primary.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
                             ),
-                            blurRadius: 24,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'S',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'S',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-                  // ── Title ──
-                  Text(
-                    'Selamat Datang',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: context.colors.textPrimary,
-                      letterSpacing: -0.5,
+                    // ── Title ──
+                    Text(
+                      'Selamat Datang',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: context.colors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Masuk ke akun SBPS Anda',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: context.colors.textTertiary,
+                    SizedBox(height: 6),
+                    Text(
+                      'Masuk ke akun SBPS Anda',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.colors.textTertiary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-                  // ── Email Field ──
-                  _CustomTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    hint: 'Masukkan email Anda',
-                    prefixIcon: Icons.alternate_email_rounded,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    validator: (value) =>
-                        (value == null || value.trim().isEmpty)
-                        ? 'Email wajib diisi'
-                        : null,
-                  ),
-                  SizedBox(height: 16),
+                    // ── Email Field ──
+                    _CustomTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'Masukkan email Anda',
+                      prefixIcon: Icons.alternate_email_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Email wajib diisi'
+                          : null,
+                    ),
+                    SizedBox(height: 16),
 
-                  // ── Password Field ──
-                  _CustomTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    hint: 'Masukkan password Anda',
-                    prefixIcon: Icons.lock_outline_rounded,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => submitting ? null : _submit(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_rounded
-                            : Icons.visibility_rounded,
+                    // ── Password Field ──
+                    _CustomTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hint: 'Masukkan password Anda',
+                      prefixIcon: Icons.lock_outline_rounded,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => submitting ? null : _submit(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: context.colors.textMuted,
+                          size: 20,
+                        ),
+                        tooltip: _obscurePassword
+                            ? 'Tampilkan sandi'
+                            : 'Sembunyikan sandi',
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty)
+                          ? 'Password wajib diisi'
+                          : null,
+                    ),
+
+                    // ── Error Message ──
+                    if (auth.hasError) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.colors.error.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.colors.error.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              color: context.colors.error,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                friendlyErrorMessage(
+                                  auth.error!,
+                                  fallback:
+                                      'Gagal masuk. Periksa kembali email dan '
+                                      'password Anda.',
+                                ),
+                                style: TextStyle(
+                                  color: context.colors.error,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 28),
+
+                    // ── Login Button ──
+                    _LoginButton(
+                      onPressed: submitting ? null : _submit,
+                      isLoading: submitting,
+                    ),
+                    SizedBox(height: 16),
+
+                    // ── Footer ──
+                    Text(
+                      'SBPS Mobile v1.0',
+                      style: TextStyle(
+                        fontSize: 12,
                         color: context.colors.textMuted,
-                        size: 20,
                       ),
-                      tooltip: _obscurePassword
-                          ? 'Tampilkan sandi'
-                          : 'Sembunyikan sandi',
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    validator: (value) => (value == null || value.isEmpty)
-                        ? 'Password wajib diisi'
-                        : null,
-                  ),
-
-                  // ── Error Message ──
-                  if (auth.hasError) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: context.colors.error.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: context.colors.error.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline_rounded,
-                            color: context.colors.error,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              friendlyErrorMessage(
-                                auth.error!,
-                                fallback:
-                                    'Gagal masuk. Periksa kembali email dan '
-                                    'password Anda.',
-                              ),
-                              style: TextStyle(
-                                color: context.colors.error,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
-                  const SizedBox(height: 28),
-
-                  // ── Login Button ──
-                  _LoginButton(
-                    onPressed: submitting ? null : _submit,
-                    isLoading: submitting,
-                  ),
-                  SizedBox(height: 16),
-
-                  // ── Footer ──
-                  Text(
-                    'SBPS Mobile v1.0',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.colors.textMuted,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
