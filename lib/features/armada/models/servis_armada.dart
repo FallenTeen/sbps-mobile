@@ -147,6 +147,17 @@ class ServisArmada {
   bool get isSelesai => status == 'selesai';
 
   factory ServisArmada.fromJson(Map<String, dynamic> json) {
+    List<String> extractUrls(Object? value) {
+      if (value is String) return value.isEmpty ? const [] : [value];
+      if (value is List) {
+        return [for (final item in value) ...extractUrls(item)];
+      }
+      if (value is Map) {
+        return extractUrls(value['url'] ?? value['foto'] ?? value['foto_url']);
+      }
+      return const [];
+    }
+
     final armada = json['armada'] is Map
         ? Map<String, dynamic>.from(json['armada'] as Map)
         : null;
@@ -159,7 +170,10 @@ class ServisArmada {
                 )
               : null);
     final notas =
-        json['notas'] ?? json['foto_notas'] ?? json['servis_eksternal_notas'];
+        json['notas'] ??
+        json['eksternal_notas'] ??
+        json['foto_notas'] ??
+        json['servis_eksternal_notas'];
     final hasilFotos =
         json['foto_hasil_kerja'] ??
         json['foto_hasil'] ??
@@ -213,10 +227,10 @@ class ServisArmada {
       latitude: parseNum(eksternalDetail?['latitude'] ?? json['latitude']),
       longitude: parseNum(eksternalDetail?['longitude'] ?? json['longitude']),
       fotoBengkelUrl:
-          (eksternalDetail?['foto_bengkel'] ??
-                  eksternalDetail?['foto_bengkel_url'] ??
-                  json['foto_bengkel'] ??
-                  json['foto_bengkel_url'])
+          extractUrls(
+            eksternalDetail?['foto_bengkel_url'] ?? json['foto_bengkel_url'],
+          ).firstOrNull ??
+          (eksternalDetail?['foto_bengkel'] ?? json['foto_bengkel'])
               ?.toString(),
       rincianPekerjaan:
           (eksternalDetail?['rincian_pekerjaan'] ?? json['rincian_pekerjaan'])
@@ -233,7 +247,8 @@ class ServisArmada {
                   json['verifikasi_workshop'])
               ?.toString(),
       verifikasiWorkshopCatatan:
-          (eksternalDetail?['catatan_pengerjaan'] ?? json['catatan_pengerjaan'])
+          (eksternalDetail?['verifikasi_workshop_catatan'] ??
+                  json['verifikasi_workshop_catatan'])
               ?.toString(),
       verifikasiWorkshopOleh:
           (eksternalDetail?['verifikasi_workshop_oleh'] ??
@@ -246,11 +261,10 @@ class ServisArmada {
       fotoNotaUrls: [
         if (notas is List)
           for (final n in notas)
-            if (n is Map &&
-                (n['foto_nota'] != null ||
-                    n['foto_nota_url'] != null ||
-                    n['url'] != null))
-              (n['foto_nota_url'] ?? n['foto_nota'] ?? n['url']).toString()
+            if (n is Map && extractUrls(n['foto_nota_url']).isNotEmpty)
+              ...extractUrls(n['foto_nota_url'])
+            else if (n is Map && (n['foto_nota'] != null || n['url'] != null))
+              ...extractUrls(n['foto_nota'] ?? n['url'])
             else if (n is String && n.isNotEmpty)
               n,
       ],
