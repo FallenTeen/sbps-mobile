@@ -29,13 +29,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _phoneCtrl;
-  final _passwordCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
   bool _saving = false;
   bool _loggingOut = false;
   bool _loggingOutAll = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
 
   @override
   void initState() {
@@ -55,8 +51,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
-    _passwordCtrl.dispose();
-    _confirmCtrl.dispose();
     super.dispose();
   }
 
@@ -69,16 +63,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .updateProfile(
             name: _nameCtrl.text,
             phone: _phoneCtrl.text,
-            password: _passwordCtrl.text.isEmpty ? null : _passwordCtrl.text,
-            passwordConfirmation: _confirmCtrl.text.isEmpty
-                ? null
-                : _confirmCtrl.text,
           );
       // Refresh auth state agar UI lain ikut update.
       ref.invalidate(authControllerProvider);
       if (!mounted) return;
-      _passwordCtrl.clear();
-      _confirmCtrl.clear();
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -407,79 +395,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   keyboardType: TextInputType.phone,
                 ),
-                const SizedBox(height: 24),
-
-                _SectionHeader(
-                  icon: Icons.lock_outline,
-                  label: 'Keamanan',
-                  helper:
-                      'Bila mengganti password, masukkan keduanya '
-                      '(baru + konfirmasi).',
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _passwordCtrl,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password Baru',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      tooltip: _obscurePassword
-                          ? 'Tampilkan sandi'
-                          : 'Sembunyikan sandi',
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v != null && v.isNotEmpty && v.length < 8) {
-                      return 'Password minimal 8 karakter';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _confirmCtrl,
-                  obscureText: _obscureConfirm,
-                  decoration: InputDecoration(
-                    labelText: 'Konfirmasi Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      tooltip: _obscureConfirm
-                          ? 'Tampilkan sandi'
-                          : 'Sembunyikan sandi',
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  validator: (v) {
-                    final pwd = _passwordCtrl.text;
-                    if (v == null || v.isEmpty) {
-                      return pwd.isEmpty ? null : 'Konfirmasi password wajib diisi';
-                    }
-                    if (pwd.isEmpty) {
-                      return 'Isi password baru terlebih dahulu';
-                    }
-                    if (v != pwd) {
-                      return 'Konfirmasi password tidak cocok';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _saving ? null : _save,
                   icon: _saving
@@ -489,9 +405,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save),
-                  label: const Text('Simpan Perubahan'),
+                  label: const Text('Simpan Profil'),
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Keamanan ────────────────────────────────────────────────────────
+          _SectionHeader(
+            icon: Icons.lock_outline,
+            label: 'Keamanan',
+            helper: 'Kelola password akun Anda.',
+          ),
+          const SizedBox(height: 8),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(Icons.lock_reset_outlined),
+              title: const Text('Ubah Password'),
+              subtitle: const Text('Ganti password akun Anda'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/profil/ubah-password'),
             ),
           ),
 

@@ -192,14 +192,16 @@ class ArmadaRepository {
   }
 
   /// POST /armada/pengisian-solar (multipart) — catat satu pengisian solar.
-  /// [fotoOdoPath] dan [fotoNotaPath] wajib.
+  /// Catat pengisian solar baru (TD-A).
+  ///
+  /// [fotoOdoPath] wajib; [fotoNotaPath] opsional; [liter] opsional.
   Future<bool> submitPengisianSolar({
     required String armadaId,
     required double odoAtauHm,
-    required double liter,
+    double? liter,
     required double nominalRp,
     required String fotoOdoPath,
-    required String fotoNotaPath,
+    String? fotoNotaPath,
     String? tanggal,
     String? catatan,
     String? clientUuid,
@@ -211,7 +213,7 @@ class ArmadaRepository {
       payloadJson: {
         'armada_id': armadaId,
         'odo_atau_hm': _numStr(odoAtauHm),
-        'liter': _numStr(liter),
+        if (liter != null && liter > 0) 'liter': _numStr(liter),
         'nominal_rp': _numStr(nominalRp),
         if (tanggal != null && tanggal.isNotEmpty) 'tanggal': tanggal,
         if (catatan != null && catatan.trim().isNotEmpty)
@@ -219,7 +221,8 @@ class ArmadaRepository {
       },
       photoFields: {
         'foto_odo': fotoOdoPath,
-        'foto_nota': fotoNotaPath,
+        if (fotoNotaPath != null && fotoNotaPath.isNotEmpty)
+          'foto_nota': fotoNotaPath,
       },
       createdAt: DateTime.now(),
       idempotencyKey: _uuid.v4(),

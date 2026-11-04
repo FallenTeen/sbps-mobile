@@ -47,6 +47,16 @@ const kProyekModules = <ProyekModule>[
     label: 'Inventory',
     icon: Icons.inventory_2_outlined,
   ),
+  ProyekModule(
+    key: 'logistik',
+    label: 'Logistik & Timbang',
+    icon: Icons.scale_rounded,
+  ),
+  ProyekModule(
+    key: 'security',
+    label: 'Security & Keamanan',
+    icon: Icons.shield_outlined,
+  ),
 ];
 
 /// Permission matrix sisi client — HANYA lapisan UX untuk navigasi/guard
@@ -74,6 +84,8 @@ class RolePermissions {
       'kontraktor',
       'workshop',
       'inventory',
+      'logistik',
+      'security',
     },
     'Admin Keuangan': {
       'tracking',
@@ -83,11 +95,14 @@ class RolePermissions {
       'kontraktor',
     },
     'Driver Armada': {'armada'},
-    'Kepala Divisi Armada': {'armada', 'dashboard'},
-    'Ketua Divisi Armada': {'armada', 'dashboard'},
-    'Ketua Armada': {'armada', 'dashboard'},
+    'Operator Alat Berat': {'armada'},
+    'Kepala Divisi Armada': {'armada', 'dashboard', 'logistik'},
+    'Ketua Divisi Armada': {'armada', 'dashboard', 'logistik'},
+    'Ketua Armada': {'armada', 'dashboard', 'logistik'},
     'Workshop': {'workshop'},
     'Inventory': {'inventory'},
+    'Logistik': {'logistik', 'inventory'},
+    'Security': {'security'},
     'Operator Mesin': {'produksi', 'qc'},
   };
 
@@ -153,6 +168,8 @@ const _tugasModuleByRole = <String, String>{
   'Ketua Divisi Armada': 'armada',
   'Ketua Armada': 'armada',
   'Kontraktor': 'kontraktor',
+  'Logistik': 'logistik',
+  'Security': 'security',
   'Operator Mesin': 'produksi',
 };
 
@@ -160,7 +177,7 @@ const _tugasModuleByRole = <String, String>{
 String? tugasModuleFor(String? role) => _tugasModuleByRole[role];
 
 /// Jenis isi Beranda (role-aware).
-enum AppHomeKind { presensi, driver, workshop, inventory, proyek }
+enum AppHomeKind { presensi, driver, workshop, inventory, logistik, security, proyek }
 
 /// Mapping role + portal → isi Beranda.
 ///
@@ -176,9 +193,11 @@ AppHomeKind appHomeKindFor({
 }) {
   if (presensiPortal || role == null) return AppHomeKind.presensi;
   return switch (role) {
-    'Driver Armada' => AppHomeKind.driver,
+    'Driver Armada' || 'Operator Alat Berat' => AppHomeKind.driver,
     'Workshop' => AppHomeKind.workshop,
     'Inventory' => AppHomeKind.inventory,
+    'Logistik' => AppHomeKind.logistik,
+    'Security' => AppHomeKind.security,
     _ => AppHomeKind.proyek,
   };
 }

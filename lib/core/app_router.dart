@@ -8,6 +8,7 @@ import '../features/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/profile_screen.dart';
 import '../features/auth/register_screen.dart';
+import '../features/auth/ubah_password_screen.dart';
 import '../features/armada/ajuan_servis_screen.dart';
 import '../features/armada/armada_home_screen.dart';
 import '../features/armada/checklist_screen.dart';
@@ -24,12 +25,22 @@ import '../features/armada/ritase_input_screen.dart';
 import '../features/armada/unit_saya_home_screen.dart';
 import '../features/workshop/workshop_queue_screen.dart';
 import '../features/workshop/workshop_job_detail_screen.dart';
+import '../features/workshop/workshop_verifikasi_eksternal_screen.dart';
 import '../features/inventory/inventory_home_screen.dart';
 import '../features/inventory/inventory_detail_stok_screen.dart';
 import '../features/inventory/inventory_riwayat_screen.dart';
 import '../features/inventory/inventory_request_detail_screen.dart';
 import '../features/inventory/inventory_stok_screen.dart';
 import '../features/inventory/inventory_opname_screen.dart';
+import '../features/logistik/logistik_home_screen.dart';
+import '../features/logistik/logistik_verifikasi_screen.dart';
+import '../features/security/security_home_screen.dart';
+import '../features/security/security_buku_tamu_screen.dart';
+import '../features/security/security_buku_tamu_form_screen.dart';
+import '../features/security/security_checklist_screen.dart';
+import '../features/security/security_laporan_darurat_screen.dart';
+import '../features/security/security_verifikasi_ritase_screen.dart';
+import '../features/armada/models/armada.dart';
 import '../features/dashboard/dashboard_home_screen.dart';
 import '../features/dashboard/detail_titik_screen.dart';
 import '../features/dashboard/invoice_belum_dibayar_screen.dart';
@@ -71,6 +82,8 @@ const kAppRoutePaths = <String>[
   '/register',
   '/portal',
   '/profile',
+  '/profile/ubah-password',
+  '/profil/ubah-password',
   '/data-belum-terkirim',
   '/dokumentasi',
   '/formulir',
@@ -112,12 +125,14 @@ const kAppRoutePaths = <String>[
   '/armada/servis',
   '/armada/servis/ajuan',
   '/armada/servis/:id',
+  '/armada/servis/eksternal/:id',
   // Branch 7 — Kontraktor.
   '/kontraktor/proyek',
   '/kontraktor/proyek/:id',
   // Branch 8 — Workshop.
   '/workshop',
   '/workshop/job/:id',
+  '/workshop/servis-eksternal',
   // Branch 9 — Inventory.
   '/inventory',
   '/inventory/stok',
@@ -301,6 +316,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return currentHomeFor();
         }
 
+        // Guard modul logistik.
+        if (location.startsWith('/logistik') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'logistik',
+            )) {
+          return currentHomeFor();
+        }
+
+        // Guard modul security.
+        if (location.startsWith('/security') &&
+            !RolePermissions.canAccess(
+              ref.read(activeRoleProvider),
+              'security',
+            )) {
+          return currentHomeFor();
+        }
+
         // Guard finansial: khusus Owner / Admin Keuangan.
         const financialPrefixes = <String>[
           '/dashboard/keuangan',
@@ -344,6 +377,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/profil/ubah-password',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const UbahPasswordScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/profile/ubah-password',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const UbahPasswordScreen(),
+        ),
+      ),
+      GoRoute(
         path: '/data-belum-terkirim',
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
@@ -363,6 +410,71 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const FormulirScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/logistik',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const LogistikHomeScreen(),
+        ),
+        routes: [
+          GoRoute(
+            path: 'verifikasi/:ritaseId',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: LogistikVerifikasiScreen(
+                ritaseId: state.pathParameters['ritaseId']!,
+                ritase: state.extra is RitaseItem ? state.extra as RitaseItem : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/security',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const SecurityHomeScreen(),
+        ),
+        routes: [
+          GoRoute(
+            path: 'buku-tamu',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const SecurityBukuTamuScreen(),
+            ),
+            routes: [
+              GoRoute(
+                path: 'baru',
+                pageBuilder: (context, state) => buildAppTransitionPage(
+                  key: state.pageKey,
+                  child: const SecurityBukuTamuFormScreen(),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'checklist',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const SecurityChecklistScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'darurat/baru',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const SecurityLaporanDaruratScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'verifikasi-ritase',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const SecurityVerifikasiRitaseScreen(),
+            ),
+          ),
+        ],
       ),
       // ── Shell tunggal: semua portal & role (StatefulShellRoute.indexedStack) ──
       buildShellRoute(),
@@ -653,6 +765,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
                 ),
               ),
               GoRoute(
+                path: 'eksternal/:id',
+                pageBuilder: (context, state) => buildAppTransitionPage(
+                  key: state.pageKey,
+                  child: DetailServisScreen(id: state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
                 path: ':id',
                 pageBuilder: (context, state) => buildAppTransitionPage(
                   key: state.pageKey,
@@ -698,6 +817,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
           ),
         ),
         routes: [
+          GoRoute(
+            path: 'servis-eksternal',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const WorkshopVerifikasiEksternalScreen(),
+            ),
+          ),
           GoRoute(
             path: 'job/:id',
             pageBuilder: (context, state) => buildAppTransitionPage(
@@ -820,6 +946,8 @@ Widget _homeScreenFor(String? role, AppPortal? portal) {
     AppHomeKind.driver => const UnitSayaHomeScreen(),
     AppHomeKind.workshop => const WorkshopQueueScreen(),
     AppHomeKind.inventory => const InventoryHomeScreen(),
+    AppHomeKind.logistik => const LogistikHomeScreen(),
+    AppHomeKind.security => const SecurityHomeScreen(),
     AppHomeKind.proyek => const ProyekHomeScreen(),
   };
 }

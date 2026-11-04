@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -224,6 +225,36 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                   color: const Color(0xFFB9F6CA),
                 ),
             ],
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: () => context.push('/workshop/servis-eksternal'),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white24),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.verified_outlined, size: 16, color: Colors.white),
+                  SizedBox(width: 6),
+                  Text(
+                    'Verifikasi Servis Eksternal',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.chevron_right, size: 16, color: Colors.white70),
+                ],
+              ),
+            ),
           ),
         ],
       ),

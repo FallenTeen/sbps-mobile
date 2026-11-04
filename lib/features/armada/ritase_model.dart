@@ -49,6 +49,9 @@ class RitaseRecord {
     this.proyekId,
     this.catatan,
     this.odoPerTrip,
+    this.muatanJenis,
+    this.muatanJumlah,
+    this.muatanSatuan = 'ton',
     this.status = RitaseRecordStatus.draft,
     this.errorMessage,
     this.clientUuid = '',
@@ -76,6 +79,11 @@ class RitaseRecord {
 
   /// Odometer per trip (km) — dikirim sebagai `odo_per_trip` bila diisi.
   final double? odoPerTrip;
+
+  /// TD-E1: Blok Muatan (draft, opsional) diisi driver versi driver.
+  final String? muatanJenis;
+  final double? muatanJumlah;
+  final String? muatanSatuan;
 
   final DateTime createdAt;
 
@@ -114,6 +122,16 @@ class RitaseRecord {
       if (proyek != null && proyek.trim().isNotEmpty) 'proyek_id': proyek.trim(),
       if (cat != null && cat.trim().isNotEmpty) 'catatan': cat.trim(),
       'odo_per_trip': ?odo,
+      if (muatanJenis != null && muatanJenis!.trim().isNotEmpty) ...{
+        'material': muatanJenis!.trim(),
+        'muatan_jenis': muatanJenis!.trim(),
+      },
+      if (muatanJumlah != null) ...{
+        'jumlah_volume': muatanJumlah,
+        'muatan_jumlah': muatanJumlah,
+      },
+      if (muatanSatuan != null && muatanSatuan!.trim().isNotEmpty)
+        'muatan_satuan': muatanSatuan!.trim(),
     };
   }
 
@@ -121,6 +139,9 @@ class RitaseRecord {
     RitaseRecordStatus? status,
     String? errorMessage,
     bool clearError = false,
+    String? muatanJenis,
+    double? muatanJumlah,
+    String? muatanSatuan,
   }) => RitaseRecord(
     id: id,
     index: index,
@@ -134,6 +155,9 @@ class RitaseRecord {
     satuan: satuan,
     catatan: catatan,
     odoPerTrip: odoPerTrip,
+    muatanJenis: muatanJenis ?? this.muatanJenis,
+    muatanJumlah: muatanJumlah ?? this.muatanJumlah,
+    muatanSatuan: muatanSatuan ?? this.muatanSatuan,
     createdAt: createdAt,
     status: status ?? this.status,
     errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
@@ -154,6 +178,9 @@ class RitaseRecord {
     'satuan': satuan,
     'catatan': catatan,
     'odo_per_trip': odoPerTrip,
+    'muatan_jenis': muatanJenis,
+    'muatan_jumlah': muatanJumlah,
+    'muatan_satuan': muatanSatuan,
     'created_at': createdAt.toIso8601String(),
     'status': status.name,
     'error_message': errorMessage,
@@ -174,6 +201,9 @@ class RitaseRecord {
     satuan: json['satuan']?.toString() ?? 'rit',
     catatan: json['catatan']?.toString(),
     odoPerTrip: parseNum(json['odo_per_trip']),
+    muatanJenis: json['muatan_jenis']?.toString() ?? json['material']?.toString(),
+    muatanJumlah: parseNum(json['muatan_jumlah']) ?? parseNum(json['jumlah_volume']),
+    muatanSatuan: json['muatan_satuan']?.toString() ?? 'ton',
     createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
         DateTime.now(),
     status: RitaseRecordStatus.values.firstWhere(

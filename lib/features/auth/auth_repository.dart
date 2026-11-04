@@ -131,6 +131,28 @@ class AuthRepository {
     return User.fromJson(res.data!);
   }
 
+  /// Ubah password user (TD-G2) — POST /change-password
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String passwordConfirmation,
+    bool logoutOtherDevices = false,
+  }) async {
+    final body = <String, dynamic>{
+      'current_password': currentPassword,
+      'password': newPassword,
+      'password_confirmation': passwordConfirmation,
+      if (logoutOtherDevices) 'logout_other_devices': true,
+    };
+    final res = await _api.post<Map<String, dynamic>>(
+      '/change-password',
+      body: body,
+      parse: (raw) =>
+          raw is Map ? Map<String, dynamic>.from(raw) : const <String, dynamic>{},
+    );
+    _ensureSuccess(res);
+  }
+
   /// Logout dari semua perangkat — POST /logout-all-devices
   /// (docs/api-mobile.md §5.8). Cabut semua token Sanctum kecuali
   /// token saat ini (bila backend mendukung), lalu bersihkan sesi lokal.

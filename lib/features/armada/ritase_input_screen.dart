@@ -1148,8 +1148,11 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
   final _jumlahCtrl = TextEditingController();
   final _catatanCtrl = TextEditingController();
   final _odoCtrl = TextEditingController();
+  final _muatanJenisCtrl = TextEditingController();
+  final _muatanJumlahCtrl = TextEditingController();
   ArmadaSaya? _armada;
   String _satuan = 'rit';
+  String _muatanSatuan = 'ton';
   bool _isSingleUnit = false;
 
   @override
@@ -1166,6 +1169,11 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
       if (existing.odoPerTrip != null) {
         _odoCtrl.text = existing.odoPerTrip.toString();
       }
+      _muatanJenisCtrl.text = existing.muatanJenis ?? '';
+      if (existing.muatanJumlah != null) {
+        _muatanJumlahCtrl.text = existing.muatanJumlah.toString();
+      }
+      _muatanSatuan = existing.muatanSatuan ?? 'ton';
     } else if (_isSingleUnit) {
       _armada = widget.armadaList.first;
       final odo = widget.armadaList.first.odoTerkini;
@@ -1185,6 +1193,8 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
     _jumlahCtrl.dispose();
     _catatanCtrl.dispose();
     _odoCtrl.dispose();
+    _muatanJenisCtrl.dispose();
+    _muatanJumlahCtrl.dispose();
     super.dispose();
   }
 
@@ -1221,6 +1231,11 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
           ? null
           : _catatanCtrl.text.trim(),
       odoPerTrip: double.tryParse(_odoCtrl.text.trim()),
+      muatanJenis: _muatanJenisCtrl.text.trim().isEmpty
+          ? null
+          : _muatanJenisCtrl.text.trim(),
+      muatanJumlah: double.tryParse(_muatanJumlahCtrl.text.trim()),
+      muatanSatuan: _muatanSatuan,
       createdAt: existing?.createdAt ?? now,
       // Edit = mulai fresh dari draft (idempotency dichecksum ulang).
       status: RitaseRecordStatus.draft,
@@ -1357,6 +1372,92 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                 helperText: 'Dikirim sebagai odo_per_trip ke server bila diisi',
               ),
             ),
+            const SizedBox(height: 16),
+
+            // TD-E1: Blok Muatan (draft, opsional)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: context.colors.surfaceVariant.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.colors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.scale_rounded, size: 18, color: context.colors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Muatan (Draft, Opsional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Diisi driver sebagai angka versi driver. Boleh kosong untuk ritase non-Kantor Pusat.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _muatanJenisCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Jenis / Material Muatan',
+                      hintText: 'Contoh: Pasir, Tanah Urug, Sirtu, Split',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: _muatanJumlahCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Jumlah Muatan',
+                            hintText: 'Contoh: 12.5',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _muatanSatuan,
+                          decoration: const InputDecoration(
+                            labelText: 'Satuan',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'ton', child: Text('ton')),
+                            DropdownMenuItem(value: 'm3', child: Text('m³')),
+                            DropdownMenuItem(value: 'kg', child: Text('kg')),
+                            DropdownMenuItem(value: 'rit', child: Text('rit')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) setState(() => _muatanSatuan = v);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
 
             SizedBox(
@@ -1473,6 +1574,13 @@ class _ReviewSheet extends StatelessWidget {
                     label: 'Satuan Sistem',
                     value: record.satuanVolume,
                   ),
+                  if (record.muatanJumlah != null || (record.muatanJenis != null && record.muatanJenis!.isNotEmpty)) ...[
+                    const Divider(height: 12),
+                    _ReviewRow(
+                      label: 'Muatan (Draft)',
+                      value: '${record.muatanJumlah != null ? "${record.muatanJumlah} ${record.muatanSatuan ?? 'ton'}" : ""}${record.muatanJenis != null ? " · ${record.muatanJenis}" : ""}',
+                    ),
+                  ],
                   if (record.odoPerTrip != null) ...[
                     const Divider(height: 12),
                     _ReviewRow(

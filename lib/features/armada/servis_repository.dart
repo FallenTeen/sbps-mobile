@@ -139,6 +139,142 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
+  /// POST /servis-armada/eksternal — Pengajuan servis eksternal (TD-B1, TD-B2, TD-B5).
+  Future<OutboxSendResult> submitServisEksternal({
+    required String armadaId,
+    required String namaBengkel,
+    required String alamatBengkel,
+    required String fotoBengkelPath,
+    double? latitude,
+    double? longitude,
+    String? rincianPekerjaan,
+    required double totalBiayaEstimasi,
+    List<String> fotoNotaPaths = const [],
+    double? odometer,
+    double? jamOperasional,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.servisEksternalCreate,
+      payloadJson: {
+        'armada_id': armadaId,
+        'nama_bengkel': namaBengkel,
+        'alamat_bengkel': alamatBengkel,
+        'tipe_servis': 'eksternal',
+        if (latitude != null) 'latitude': latitude.toString(),
+        if (longitude != null) 'longitude': longitude.toString(),
+        if (rincianPekerjaan != null && rincianPekerjaan.trim().isNotEmpty)
+          'rincian_pekerjaan': rincianPekerjaan.trim(),
+        'total_biaya_estimasi': totalBiayaEstimasi.toString(),
+        if (odometer != null) 'odometer_saat_ajuan': odometer.toString(),
+        if (jamOperasional != null)
+          'jam_operasional_saat_ajuan': jamOperasional.toString(),
+      },
+      photoLocalPath: fotoBengkelPath,
+      photoLocalPaths: fotoNotaPaths,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(
+        result.errorMessage ?? 'Gagal mengajukan servis eksternal.',
+      );
+    }
+    return result;
+  }
+
+  /// POST /servis-armada/{id}/eksternal/nota — Tambah foto nota servis eksternal (TD-B4, TD-B5).
+  Future<OutboxSendResult> submitServisEksternalNota({
+    required String servisId,
+    required List<String> fotoNotaPaths,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.servisEksternalNota,
+      payloadJson: {'servis_id': servisId},
+      photoLocalPaths: fotoNotaPaths,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(
+        result.errorMessage ?? 'Gagal mengunggah nota servis eksternal.',
+      );
+    }
+    return result;
+  }
+
+  /// POST /servis-armada/{id}/foto-hasil — Tambah foto hasil pengerjaan (TD-B4, TD-B5).
+  Future<OutboxSendResult> submitServisFotoHasil({
+    required String servisId,
+    required String fotoPath,
+  }) async {
+    final action = PendingAction(
+      id: _uuid.v4(),
+      clientUuid: _uuid.v4(),
+      endpoint: PendingEndpoint.servisEksternalFotoHasil,
+      payloadJson: {'servis_id': servisId},
+      photoLocalPath: fotoPath,
+      createdAt: DateTime.now(),
+      idempotencyKey: _uuid.v4(),
+    );
+
+    final result = await _outbox.enqueue(action, _sync.send);
+    if (result.permanentlyFailed) {
+      throw ApiException(
+        result.errorMessage ?? 'Gagal mengunggah foto hasil servis.',
+      );
+    }
+    return result;
+  }
+
+  /// POST /servis-armada/{id}/selesai — Driver atau workshop menandai servis selesai (TD-B3).
+  Future<void> selesaiServis({required String servisId}) async {
+    final res = await _api.post<Object?>('/servis-armada/$servisId/selesai');
+    _ensureSuccess(res);
+  }
+
+  /// POST /workshop/servis-eksternal/{id}/verifikasi — Verifikasi Workshop (TD-B7).
+  Future<void> verifikasiServisEksternal({
+    required String servisId,
+    required String status,
+    String? catatan,
+  }) async {
+    final res = await _api.post<Object?>(
+      '/workshop/servis-eksternal/$servisId/verifikasi',
+      body: {
+        'status': status,
+        if (catatan != null && catatan.trim().isNotEmpty)
+          'catatan': catatan.trim(),
+      },
+    );
+    _ensureSuccess(res);
+  }
+
+  /// GET /servis-armada?tipe_servis=eksternal — Daftar servis eksternal untuk verifikasi workshop (TD-B7).
+  Future<List<ServisArmada>> getServisEksternalList() async {
+    final res = await _api.get<List<ServisArmada>>(
+      '/servis-armada',
+      query: {'tipe_servis': 'eksternal'},
+      parse: (raw) {
+        final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+        final items = map['items'] ?? map['data'] ?? (raw is List ? raw : const []);
+        return <ServisArmada>[
+          if (items is List)
+            for (final e in items)
+              if (e is Map) ServisArmada.fromJson(Map<String, dynamic>.from(e)),
+        ];
+      },
+    );
+    return res.data ?? const [];
+  }
+
   void _ensureSuccess(ApiResponse<dynamic> res) {
     if (!res.isSuccess) throw ApiException(res.message);
   }

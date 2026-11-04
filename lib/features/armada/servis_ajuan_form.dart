@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 import 'models/servis_armada.dart';
@@ -55,6 +58,17 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
   final _odoController = TextEditingController();
   final _jamController = TextEditingController();
 
+  // Field Servis Eksternal (TD-B1, TD-B2)
+  String _tipeServis = 'internal';
+  final _namaBengkelController = TextEditingController();
+  final _alamatBengkelController = TextEditingController();
+  final _rincianPekerjaanController = TextEditingController();
+  final _estimasiBiayaController = TextEditingController();
+  String? _fotoBengkelPath;
+  double? _fotoBengkelLat;
+  double? _fotoBengkelLng;
+  final List<String> _fotoNotaPaths = [];
+
   MasterArmada? _selectedArmada;
   String _kategori = 'rutin';
   bool _isLoading = false;
@@ -67,19 +81,29 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
   String get _draftKey => 'servis_ajuan_${widget.initialArmadaId ?? 'new'}';
 
   Map<String, dynamic> _snapshot() => {
+    'tipeServis': _tipeServis,
     'armadaId': _selectedArmada?.id,
     'kategori': _kategori,
     'keluhan': _keluhanController.text,
     'odo': _odoController.text,
     'jam': _jamController.text,
+    'namaBengkel': _namaBengkelController.text,
+    'alamatBengkel': _alamatBengkelController.text,
+    'rincianPekerjaan': _rincianPekerjaanController.text,
+    'estimasiBiaya': _estimasiBiayaController.text,
   };
 
   void _restoreFromDraft(FormDraft draft) {
     final fields = draft.fieldsJson;
+    if (fields['tipeServis'] is String) _tipeServis = fields['tipeServis']!;
     _keluhanController.text = fields['keluhan'] as String? ?? '';
     if (fields['kategori'] is String) _kategori = fields['kategori']!;
     _odoController.text = fields['odo'] as String? ?? '';
     _jamController.text = fields['jam'] as String? ?? '';
+    _namaBengkelController.text = fields['namaBengkel'] as String? ?? '';
+    _alamatBengkelController.text = fields['alamatBengkel'] as String? ?? '';
+    _rincianPekerjaanController.text = fields['rincianPekerjaan'] as String? ?? '';
+    _estimasiBiayaController.text = fields['estimasiBiaya'] as String? ?? '';
     // Armada restore dilakukan saat data masterArmada sudah dimuat.
     final armadaId = fields['armadaId'] as String?;
     if (armadaId != null) {
@@ -110,6 +134,10 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
     _keluhanController.addListener(_autosave.onFieldChanged);
     _odoController.addListener(_autosave.onFieldChanged);
     _jamController.addListener(_autosave.onFieldChanged);
+    _namaBengkelController.addListener(_autosave.onFieldChanged);
+    _alamatBengkelController.addListener(_autosave.onFieldChanged);
+    _rincianPekerjaanController.addListener(_autosave.onFieldChanged);
+    _estimasiBiayaController.addListener(_autosave.onFieldChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _autosave.load();
@@ -169,7 +197,33 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
     _keluhanController.dispose();
     _odoController.dispose();
     _jamController.dispose();
+    _namaBengkelController.dispose();
+    _alamatBengkelController.dispose();
+    _rincianPekerjaanController.dispose();
+    _estimasiBiayaController.dispose();
     super.dispose();
+  }
+
+  Future<void> _takeFotoBengkel() async {
+    final photo = await takeWatermarkedPhoto(ref);
+    if (photo != null) {
+      setState(() {
+        _fotoBengkelPath = photo.path;
+        _fotoBengkelLat = photo.latitude;
+        _fotoBengkelLng = photo.longitude;
+      });
+      _autosave.onFieldChanged();
+    }
+  }
+
+  Future<void> _addFotoNota() async {
+    final photo = await takeWatermarkedPhoto(ref);
+    if (photo != null) {
+      setState(() {
+        _fotoNotaPaths.add(photo.path);
+      });
+      _autosave.onFieldChanged();
+    }
   }
 
   Future<void> _submit() async {
@@ -204,19 +258,58 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
       return;
     }
 
+    if (_tipeServis == 'eksternal') {
+      if (_fotoBengkelPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto bengkel wajib diambil')),
+        );
+        return;
+      }
+      final biayaText = _estimasiBiayaController.text
+          .trim()
+          .replaceAll('.', '')
+          .replaceAll(',', '');
+      final biaya = double.tryParse(biayaText);
+      if (biaya == null || biaya <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Total biaya estimasi harus lebih dari 0'),
+          ),
+        );
+        return;
+      }
+    }
+
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
     try {
-      final result = await ref
-          .read(servisRepositoryProvider)
-          .submitAjuanServis(
-            armadaId: _selectedArmada!.id,
-            keluhan: _keluhanController.text.trim(),
-            kategori: _kategori,
-            odometerSaatAjuan: odo,
-            jamOperasionalSaatAjuan: jam,
-          );
+      final result = _tipeServis == 'eksternal'
+          ? await ref.read(servisRepositoryProvider).submitServisEksternal(
+              armadaId: _selectedArmada!.id,
+              namaBengkel: _namaBengkelController.text.trim(),
+              alamatBengkel: _alamatBengkelController.text.trim(),
+              fotoBengkelPath: _fotoBengkelPath!,
+              latitude: _fotoBengkelLat,
+              longitude: _fotoBengkelLng,
+              rincianPekerjaan: _rincianPekerjaanController.text.trim(),
+              totalBiayaEstimasi: double.parse(
+                _estimasiBiayaController.text
+                    .trim()
+                    .replaceAll('.', '')
+                    .replaceAll(',', ''),
+              ),
+              fotoNotaPaths: _fotoNotaPaths,
+              odometer: odo,
+              jamOperasional: jam,
+            )
+          : await ref.read(servisRepositoryProvider).submitAjuanServis(
+              armadaId: _selectedArmada!.id,
+              keluhan: _keluhanController.text.trim(),
+              kategori: _kategori,
+              odometerSaatAjuan: odo,
+              jamOperasionalSaatAjuan: jam,
+            );
 
       AnalyticsService.servisAjuanSubmit();
       // Data kini tersimpan aman (di server ATAU di outbox) — draft tidak
@@ -228,7 +321,9 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
         SnackBar(
           content: Text(
             result.delivered
-                ? 'Pengajuan servis berhasil dikirim'
+                ? (_tipeServis == 'eksternal'
+                    ? 'Servis eksternal berhasil dicatat (status: Dikerjakan)'
+                    : 'Pengajuan servis berhasil dikirim')
                 : kCopyQueued,
           ),
         ),
@@ -320,6 +415,27 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'internal',
+                        label: Text('Internal (Workshop)'),
+                        icon: Icon(Icons.build_outlined),
+                      ),
+                      ButtonSegment(
+                        value: 'eksternal',
+                        label: Text('Eksternal (Bengkel Luar)'),
+                        icon: Icon(Icons.storefront_outlined),
+                      ),
+                    ],
+                    selected: {_tipeServis},
+                    onSelectionChanged: (set) {
+                      setState(() => _tipeServis = set.first);
+                      _autosave.onFieldChanged();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
                   DropdownButtonFormField<MasterArmada>(
                     decoration: const InputDecoration(
                       labelText: 'Pilih Armada *',
@@ -421,47 +537,279 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                     const SizedBox(height: 16),
                   ],
 
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
-                      labelText: 'Kategori Servis',
-                      border: OutlineInputBorder(),
-                      helperText:
-                          'Rutin = servis terjadwal. Darurat = unit mogok, '
-                          'prioritas tertinggi. Ganti Oli = servis ringan.',
+                  if (_tipeServis == 'internal') ...[
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Kategori Servis',
+                        border: OutlineInputBorder(),
+                        helperText:
+                            'Rutin = servis terjadwal. Darurat = unit mogok, '
+                            'prioritas tertinggi. Ganti Oli = servis ringan.',
+                      ),
+                      initialValue: _kategori,
+                      items: kKategoriServisOptions.map((k) {
+                        return DropdownMenuItem(
+                          value: k,
+                          child: Text(formatKategoriServis(k)),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _kategori = val);
+                        }
+                        _autosave.onFieldChanged();
+                      },
                     ),
-                    initialValue: _kategori,
-                    items: kKategoriServisOptions.map((k) {
-                      return DropdownMenuItem(
-                        value: k,
-                        child: Text(formatKategoriServis(k)),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _kategori = val);
-                      }
-                      _autosave.onFieldChanged();
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  TextFormField(
-                    controller: _keluhanController,
-                    decoration: const InputDecoration(
-                      labelText: 'Keluhan / Deskripsi Masalah',
-                      hintText:
-                          'Contoh: mesin berisik saat jalan, rem kurang pakem, '
-                          'oli bocor',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint: true,
+                    TextFormField(
+                      controller: _keluhanController,
+                      decoration: const InputDecoration(
+                        labelText: 'Keluhan / Deskripsi Masalah',
+                        hintText:
+                            'Contoh: mesin berisik saat jalan, rem kurang pakem, '
+                            'oli bocor',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 4,
+                      minLines: 3,
+                      validator: (val) =>
+                          (_tipeServis == 'internal' &&
+                                  (val == null || val.trim().isEmpty))
+                              ? 'Keluhan wajib diisi'
+                              : null,
                     ),
-                    maxLines: 4,
-                    minLines: 3,
-                    validator: (val) =>
-                        (val == null || val.trim().isEmpty)
-                        ? 'Keluhan wajib diisi'
-                        : null,
-                  ),
+                  ] else ...[
+                    // ── Form Eksternal (TD-B2) ─────────────────────────────
+                    // Foto Bengkel (wajib, watermark + GPS)
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Foto Bengkel *',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                if (_fotoBengkelPath != null)
+                                  TextButton.icon(
+                                    onPressed: _takeFotoBengkel,
+                                    icon: const Icon(Icons.camera_alt, size: 16),
+                                    label: const Text('Foto Ulang'),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (_fotoBengkelPath != null) ...[
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(_fotoBengkelPath!),
+                                  height: 140,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.colors.primary.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 14,
+                                      color: context.colors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'GPS: ${_fotoBengkelLat?.toStringAsFixed(6) ?? '-'}, '
+                                      '${_fotoBengkelLng?.toStringAsFixed(6) ?? '-'} (otomatis)',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.colors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ] else
+                              OutlinedButton.icon(
+                                onPressed: _takeFotoBengkel,
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(48),
+                                ),
+                                icon: const Icon(Icons.camera_alt_outlined),
+                                label: const Text('Ambil Foto Bengkel (Wajib)'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _namaBengkelController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Bengkel *',
+                        hintText: 'Contoh: Bengkel Maju Motor',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.storefront_outlined),
+                      ),
+                      validator: (val) =>
+                          (_tipeServis == 'eksternal' &&
+                                  (val == null || val.trim().isEmpty))
+                              ? 'Nama bengkel wajib diisi'
+                              : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _alamatBengkelController,
+                      decoration: const InputDecoration(
+                        labelText: 'Alamat Bengkel *',
+                        hintText: 'Alamat lengkap bengkel eksternal',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.pin_drop_outlined),
+                      ),
+                      maxLines: 2,
+                      validator: (val) =>
+                          (_tipeServis == 'eksternal' &&
+                                  (val == null || val.trim().isEmpty))
+                              ? 'Alamat bengkel wajib diisi'
+                              : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _rincianPekerjaanController,
+                      decoration: const InputDecoration(
+                        labelText: 'Rincian Pekerjaan (opsional)',
+                        hintText:
+                            'Contoh: Ganti kanvas rem depan, perbaikan dinamo starter',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _estimasiBiayaController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Total Biaya Estimasi (Rp) *',
+                        hintText: 'Estimasi total biaya pengerjaan',
+                        border: OutlineInputBorder(),
+                        prefixText: 'Rp ',
+                        prefixIcon: Icon(Icons.payments_outlined),
+                      ),
+                      validator: (val) =>
+                          (_tipeServis == 'eksternal' &&
+                                  (val == null || val.trim().isEmpty))
+                              ? 'Total biaya estimasi wajib diisi'
+                              : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Foto Nota (opsional, boleh lebih dari 1)
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Foto Nota (opsional, ${_fotoNotaPaths.length} foto)',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _addFotoNota,
+                                  icon: const Icon(Icons.add_a_photo, size: 16),
+                                  label: const Text('Tambah Nota'),
+                                ),
+                              ],
+                            ),
+                            if (_fotoNotaPaths.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  for (int i = 0; i < _fotoNotaPaths.length; i++)
+                                    Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Image.file(
+                                            File(_fotoNotaPaths[i]),
+                                            width: 72,
+                                            height: 72,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          right: -4,
+                                          top: -4,
+                                          child: IconButton(
+                                            icon: const CircleAvatar(
+                                              radius: 10,
+                                              backgroundColor: Colors.black54,
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 12,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _fotoNotaPaths.removeAt(i);
+                                              });
+                                              _autosave.onFieldChanged();
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 4),
+                            Text(
+                              'Nota fisik diserahkan ke Ketua Armada/Keuangan. '
+                              'Nominal resmi nota diinput via web.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
 
                   SizedBox(
@@ -480,12 +828,16 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                                   Text('Mengirim...'),
                                 ],
                               )
-                            : const Row(
+                            : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.send_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Kirim Pengajuan Servis'),
+                                  const Icon(Icons.send_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _tipeServis == 'eksternal'
+                                        ? 'Catat Servis Eksternal'
+                                        : 'Kirim Pengajuan Servis',
+                                  ),
                                 ],
                               ),
                       ),

@@ -141,8 +141,9 @@ class OutboxSyncService {
         // Workshop & request sparepart: path dinamis dengan id job di payload.
         if (action.endpoint == PendingEndpoint.workshopMulai ||
             action.endpoint == PendingEndpoint.workshopSelesai ||
-            action.endpoint == PendingEndpoint.workshopRequestSparepart) {
-          final jobId = body.remove('job_id');
+            action.endpoint == PendingEndpoint.workshopRequestSparepart ||
+            action.endpoint == PendingEndpoint.workshopVerifikasiEksternal) {
+          final jobId = body.remove('job_id') ?? body.remove('servis_id');
           if (jobId == null || jobId.toString().isEmpty) {
             return const OutboxSendResult(
               delivered: false,
@@ -151,6 +152,11 @@ class OutboxSyncService {
             );
           }
           path = path.replaceAll('{id}', jobId.toString());
+        } else if (action.endpoint == PendingEndpoint.securityBukuTamuKeluar) {
+          final tamuId = body.remove('tamu_id') ?? body.remove('id');
+          if (tamuId != null && tamuId.toString().isNotEmpty) {
+            path = path.replaceAll('{id}', tamuId.toString());
+          }
         }
         await _api.post<Object?>(
           path,
@@ -186,6 +192,23 @@ class OutboxSyncService {
           );
         }
         multipartPath = '/workshop/job/$jobId/todo/$todoId/photo';
+      } else if (action.endpoint == PendingEndpoint.servisEksternalNota ||
+          action.endpoint == PendingEndpoint.servisEksternalFotoHasil) {
+        final servisId = action.payloadJson['servis_id'];
+        if (servisId == null || servisId.isEmpty) {
+          return const OutboxSendResult(
+            delivered: false,
+            permanentlyFailed: true,
+            errorMessage: 'ID servis hilang dari antrean.',
+          );
+        }
+        multipartPath = multipartPath.replaceAll('{id}', servisId);
+      } else if (action.endpoint == PendingEndpoint.logistikVerifikasiRitase ||
+          action.endpoint == PendingEndpoint.securityVerifikasiRitase) {
+        final ritaseId = action.payloadJson['ritase_id'] ?? action.payloadJson['id'];
+        if (ritaseId != null && ritaseId.toString().isNotEmpty) {
+          multipartPath = multipartPath.replaceAll('{id}', ritaseId.toString());
+        }
       }
 
       final specs = switch (action.endpoint) {
@@ -212,6 +235,50 @@ class OutboxSyncService {
           for (final e in action.photoFields.entries)
             MultipartFileSpec(e.key, e.value),
         ],
+        PendingEndpoint.servisEksternalCreate => [
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto_bengkel', action.photoLocalPath!),
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('foto_nota[]', path),
+          for (final e in action.photoFields.entries)
+            MultipartFileSpec(e.key, e.value),
+        ],
+        PendingEndpoint.servisEksternalNota => [
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('foto_nota[]', path),
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto_nota[]', action.photoLocalPath!),
+        ],
+        PendingEndpoint.servisEksternalFotoHasil => [
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto_hasil', action.photoLocalPath!),
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('foto_hasil[]', path),
+        ],
+        PendingEndpoint.logistikVerifikasiRitase => [
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto_tiket', action.photoLocalPath!),
+        ],
+        PendingEndpoint.securityVerifikasiRitase => [
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto', action.photoLocalPath!),
+        ],
+        PendingEndpoint.securityBukuTamuCreate => [
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('foto', action.photoLocalPath!),
+        ],
+        PendingEndpoint.securityChecklistSubmit => [
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('photos[]', path),
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('photo', action.photoLocalPath!),
+        ],
+        PendingEndpoint.securityLaporanDarurat => [
+          for (final path in action.photoLocalPaths)
+            MultipartFileSpec('photos[]', path),
+          if (action.photoLocalPath != null)
+            MultipartFileSpec('photos[]', action.photoLocalPath!),
+        ],
         // Presensi & helper presensi: satu foto wajib dengan field `photo`.
         _ => [
           if (action.photoLocalPath != null)
@@ -221,6 +288,11 @@ class OutboxSyncService {
       if (specs.isEmpty &&
           action.endpoint != PendingEndpoint.armadaChecklistMajor &&
           action.endpoint != PendingEndpoint.formulirSubmit &&
+          action.endpoint != PendingEndpoint.logistikVerifikasiRitase &&
+          action.endpoint != PendingEndpoint.securityVerifikasiRitase &&
+          action.endpoint != PendingEndpoint.securityBukuTamuCreate &&
+          action.endpoint != PendingEndpoint.securityChecklistSubmit &&
+          action.endpoint != PendingEndpoint.securityLaporanDarurat &&
           !action.endpoint.isNamedPhoto) {
         return const OutboxSendResult(
           delivered: false,

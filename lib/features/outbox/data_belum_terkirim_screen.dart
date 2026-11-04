@@ -115,8 +115,18 @@ class _PendingActionTile extends StatelessWidget {
     PendingEndpoint.workshopSelesai => 'Selesai servis workshop',
     PendingEndpoint.inventoryOpname => 'Stok opname inventory',
     PendingEndpoint.servisAjuan => 'Ajuan servis armada',
+    PendingEndpoint.servisEksternalCreate => 'Servis eksternal armada',
+    PendingEndpoint.servisEksternalNota => 'Nota servis eksternal',
+    PendingEndpoint.servisEksternalFotoHasil => 'Foto hasil servis',
+    PendingEndpoint.workshopVerifikasiEksternal => 'Verifikasi servis eksternal',
     PendingEndpoint.workshopTodoPhoto => 'Foto bukti todo workshop',
     PendingEndpoint.workshopRequestSparepart => 'Request sparepart workshop',
+    PendingEndpoint.logistikVerifikasiRitase => 'Verifikasi ritase logistik',
+    PendingEndpoint.securityVerifikasiRitase => 'Verifikasi ritase security',
+    PendingEndpoint.securityBukuTamuCreate => 'Buku tamu security',
+    PendingEndpoint.securityBukuTamuKeluar => 'Tandai keluar tamu security',
+    PendingEndpoint.securityChecklistSubmit => 'Checklist pemantauan kantor',
+    PendingEndpoint.securityLaporanDarurat => 'Laporan darurat security',
   };
 
   String get _status => switch (action.status) {

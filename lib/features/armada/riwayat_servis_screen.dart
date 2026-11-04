@@ -484,34 +484,102 @@ class _ServisQueueCard extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (item.kategori != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    formatKategoriServis(item.kategori!),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.primary,
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (item.isEksternal
+                              ? context.colors.info
+                              : context.colors.primary)
+                          .withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      item.isEksternal ? 'Eksternal' : 'Internal',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: item.isEksternal
+                            ? context.colors.info
+                            : context.colors.primary,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  if (item.kategori != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        formatKategoriServis(item.kategori!),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.primary,
+                        ),
+                      ),
+                    ),
+                  if (item.isEksternal && !item.hasNota)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Nota belum lengkap',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.warning,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               Text(
-                item.keluhan,
+                item.isEksternal
+                    ? (item.namaBengkel != null
+                        ? 'Bengkel: ${item.namaBengkel!} • ${item.rincianPekerjaan ?? item.keluhan}'
+                        : item.keluhan)
+                    : item.keluhan,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 14),
               ),
+              if (item.isEksternal) ...[
+                const SizedBox(height: 4),
+                Text(
+                  item.totalBiayaResmi != null
+                      ? 'Biaya resmi: ${fmtRp(item.totalBiayaResmi!)}'
+                      : (item.totalBiayaEstimasi != null
+                          ? 'Estimasi: ${fmtRp(item.totalBiayaEstimasi!)}'
+                          : ''),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: item.totalBiayaResmi != null
+                        ? context.colors.success
+                        : context.colors.textSecondary,
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               Row(
                 children: [

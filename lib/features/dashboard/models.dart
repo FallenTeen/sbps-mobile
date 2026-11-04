@@ -499,6 +499,7 @@ class ArmadaMonitoringUnit {
     this.checklistHariIni = false,
     this.downtimeAktif = false,
     this.servisMenunggu = false,
+    this.fotoUrl,
   });
 
   final String id;
@@ -506,6 +507,7 @@ class ArmadaMonitoringUnit {
   final String? platNomor;
   final String? jenis;
   final String? tipeUnit;
+  final String? fotoUrl;
   final String? modelTarif;
   final String? status;
   final bool aktif;
@@ -534,6 +536,7 @@ class ArmadaMonitoringUnit {
       platNomor: map['plat_nomor']?.toString(),
       jenis: map['jenis']?.toString(),
       tipeUnit: map['tipe_unit']?.toString(),
+      fotoUrl: map['foto_url']?.toString() ?? map['foto_unit_url']?.toString(),
       modelTarif: map['model_tarif']?.toString(),
       status: map['status']?.toString(),
       aktif: map['aktif'] == true,

@@ -25,6 +25,8 @@ class ArmadaSaya {
     this.odoTerkini,
     this.jamOperasionalTerkini,
     this.helperAktifCount = 0,
+    this.fotoUrl,
+    this.dokumenBerkala = const [],
   });
 
   final String id;
@@ -47,8 +49,14 @@ class ArmadaSaya {
   final double? odoTerkini;
   final double? jamOperasionalTerkini;
 
+  /// Ringkasan dokumen berkala mendekati jatuh tempo (TD-C2).
+  final List<DokumenBerkalaItem> dokumenBerkala;
+
   /// Jumlah helper yang aktif hari ini pada unit ini (endpoint armada/saya).
   final int helperAktifCount;
+
+  /// URL foto/thumbnail unit dari server (TD-C1).
+  final String? fotoUrl;
 
   /// True jika unit ini alat berat stasioner (pakai Jam Operasional, bukan ODO).
   bool get isAlatBerat => tipeUnit == 'alat_berat_stasioner';
@@ -77,6 +85,51 @@ class ArmadaSaya {
       odoTerkini: parseNum(json['odo_terkini']),
       jamOperasionalTerkini: parseNum(json['jam_operasional_terkini']),
       helperAktifCount: parseInt(json['helper_aktif_count']) ?? 0,
+      fotoUrl: (json['foto_url'] ?? json['foto_unit_url'])?.toString(),
+      dokumenBerkala: [
+        if (json['dokumen_berkala'] is List)
+          for (final d in json['dokumen_berkala'] as List)
+            if (d is Map)
+              DokumenBerkalaItem.fromJson(Map<String, dynamic>.from(d))
+        else if (json['dokumen'] is List)
+          for (final d in json['dokumen'] as List)
+            if (d is Map)
+              DokumenBerkalaItem.fromJson(Map<String, dynamic>.from(d)),
+      ],
+    );
+  }
+}
+
+/// Item dokumen berkala (Pajak, STNK, KIR, dll) pada unit armada (TD-C2).
+class DokumenBerkalaItem {
+  const DokumenBerkalaItem({
+    required this.jenis,
+    this.nomor,
+    this.jatuhTempo,
+    this.sisaHari,
+  });
+
+  final String jenis;
+  final String? nomor;
+  final String? jatuhTempo;
+  final int? sisaHari;
+
+  /// True bila jatuh tempo dalam 30 hari ke depan atau sudah lewat.
+  bool get isJatuhTempoSegera => sisaHari != null && sisaHari! <= 30;
+
+  factory DokumenBerkalaItem.fromJson(Map<String, dynamic> json) {
+    return DokumenBerkalaItem(
+      jenis: json['jenis']?.toString() ??
+          json['nama']?.toString() ??
+          json['kategori']?.toString() ??
+          'Dokumen',
+      nomor: json['nomor']?.toString() ?? json['nomor_dokumen']?.toString(),
+      jatuhTempo: json['jatuh_tempo']?.toString() ??
+          json['tanggal_kadaluarsa']?.toString() ??
+          json['tanggal_berlaku_sampai']?.toString(),
+      sisaHari: parseInt(json['sisa_hari']) ??
+          parseInt(json['hari_tersisa']) ??
+          parseInt(json['days_left']),
     );
   }
 }
@@ -94,11 +147,24 @@ class RitaseItem {
     this.status,
     this.catatan,
     this.customer,
+    this.armadaId,
     this.armadaPlat,
+    this.driverNama,
     this.ruteAsal,
     this.ruteTujuan,
     this.proyek,
     this.titik,
+    this.wajibJembatanTimbang,
+    this.statusVerifikasiLogistik,
+    this.statusVerifikasiSecurity,
+    this.jumlahDriver,
+    this.jumlahVerifikasiLogistik,
+    this.satuanMuatan,
+    this.adaSelisih,
+    this.taraMasterKg,
+    this.beratKosongKg,
+    this.beratIsiKg,
+    this.beratNettoKg,
   });
 
   final String id;
@@ -111,32 +177,105 @@ class RitaseItem {
   final String? status;
   final String? catatan;
   final String? customer;
+  final String? armadaId;
   final String? armadaPlat;
+  final String? driverNama;
   final String? ruteAsal;
   final String? ruteTujuan;
   final String? proyek;
   final String? titik;
 
+  // TD-E1..E5: Verifikasi muatan & timbang
+  final bool? wajibJembatanTimbang;
+  final String? statusVerifikasiLogistik;
+  final String? statusVerifikasiSecurity;
+  final double? jumlahDriver;
+  final double? jumlahVerifikasiLogistik;
+  final String? satuanMuatan;
+  final bool? adaSelisih;
+  final double? taraMasterKg;
+  final double? beratKosongKg;
+  final double? beratIsiKg;
+  final double? beratNettoKg;
+
+  bool get isVerifiedLogistik => statusVerifikasiLogistik == 'terverifikasi';
+  bool get isVerifiedSecurity => statusVerifikasiSecurity == 'terverifikasi';
+  bool get isMenungguVerifikasi =>
+      (wajibJembatanTimbang == true && !isVerifiedLogistik) ||
+      statusVerifikasiLogistik == 'menunggu';
+  bool get hasSelisih =>
+      adaSelisih == true ||
+      (jumlahDriver != null &&
+          jumlahVerifikasiLogistik != null &&
+          (jumlahDriver! - jumlahVerifikasiLogistik!).abs() > 0.001);
+  bool get hasVerifikasiData =>
+      statusVerifikasiLogistik != null ||
+      statusVerifikasiSecurity != null ||
+      wajibJembatanTimbang == true ||
+      jumlahDriver != null;
+
   factory RitaseItem.fromJson(Map<String, dynamic> json) {
     final rute = json['rute'] is Map
         ? Map<String, dynamic>.from(json['rute'] as Map)
         : null;
+    final ruteAsal = rute?['asal']?.toString() ?? json['rute_asal']?.toString();
+    final isWajibTimbang = json['wajib_jembatan_timbang'] == true ||
+        (ruteAsal != null && ruteAsal.toLowerCase().contains('kantor pusat'));
+
+    final muatanMap = json['muatan'] is Map ? json['muatan'] as Map : null;
+    final verifLogistikMap = json['verifikasi_logistik'] is Map ? json['verifikasi_logistik'] as Map : null;
+    final verifSecurityMap = json['verifikasi_security'] is Map ? json['verifikasi_security'] as Map : null;
+    final timbangMap = json['timbang'] is Map ? json['timbang'] as Map : null;
+
+    final jmlDriver = parseNum(json['jumlah_driver']) ??
+        parseNum(muatanMap?['jumlah_driver']) ??
+        parseNum(json['muatan_jumlah']) ??
+        parseNum(json['jumlah_volume']);
+
+    final jmlVerif = parseNum(json['jumlah_verifikasi']) ??
+        parseNum(json['jumlah_verifikasi_logistik']) ??
+        parseNum(verifLogistikMap?['jumlah_verifikasi']);
+
     return RitaseItem(
       id: json['id']?.toString() ?? '',
       tanggal: json['tanggal']?.toString(),
       kategori: json['kategori']?.toString(),
-      material: json['material']?.toString(),
+      material: json['material']?.toString() ??
+          json['muatan_jenis']?.toString() ??
+          muatanMap?['jenis_muatan']?.toString(),
       jumlahRit: parseInt(json['jumlah_rit']),
       tarifPerRit: parseNum(json['tarif_per_rit_snapshot']),
       totalUpahRit: parseNum(json['total_upah_rit']),
       status: json['status']?.toString(),
       catatan: json['catatan']?.toString(),
       customer: json['customer']?.toString(),
-      armadaPlat: json['armada_plat']?.toString(),
-      ruteAsal: rute?['asal']?.toString(),
-      ruteTujuan: rute?['tujuan']?.toString(),
-      proyek: json['proyek']?.toString(),
-      titik: json['titik']?.toString(),
+      armadaId: json['armada_id']?.toString() ?? json['armada']?['id']?.toString(),
+      armadaPlat: json['armada_plat']?.toString() ?? json['armada']?['plat_nomor']?.toString(),
+      driverNama: json['driver_nama']?.toString() ?? json['driver']?['nama']?.toString(),
+      ruteAsal: ruteAsal,
+      ruteTujuan: rute?['tujuan']?.toString() ?? json['rute_tujuan']?.toString(),
+      proyek: json['proyek'] is Map ? (json['proyek'] as Map)['nama']?.toString() : json['proyek']?.toString(),
+      titik: json['titik'] is Map ? (json['titik'] as Map)['nama']?.toString() : json['titik']?.toString(),
+      wajibJembatanTimbang: isWajibTimbang,
+      statusVerifikasiLogistik: json['status_verifikasi_logistik']?.toString() ??
+          verifLogistikMap?['status']?.toString(),
+      statusVerifikasiSecurity: json['status_verifikasi_security']?.toString() ??
+          verifSecurityMap?['status']?.toString(),
+      jumlahDriver: jmlDriver,
+      jumlahVerifikasiLogistik: jmlVerif,
+      satuanMuatan: json['satuan_muatan']?.toString() ??
+          json['muatan_satuan']?.toString() ??
+          muatanMap?['satuan']?.toString() ??
+          json['satuan_volume']?.toString(),
+      adaSelisih: json['ada_selisih'] == true || json['selisih'] == true,
+      taraMasterKg: parseNum(json['tara_master_kg']) ??
+          parseNum(json['armada']?['tara_master_kg']),
+      beratKosongKg: parseNum(json['berat_kosong_kg']) ??
+          parseNum(timbangMap?['berat_kosong_kg']),
+      beratIsiKg: parseNum(json['berat_isi_kg']) ??
+          parseNum(timbangMap?['berat_isi_kg']),
+      beratNettoKg: parseNum(json['berat_netto_kg']) ??
+          parseNum(timbangMap?['berat_netto_kg']),
     );
   }
 }
@@ -469,6 +608,7 @@ class PengisianSolarItem {
     this.fotoNotaUrl,
     this.catatan,
     this.driver,
+    this.notaLengkap,
   });
 
   final String id;
@@ -483,6 +623,9 @@ class PengisianSolarItem {
   final String? catatan;
   final String? driver;
 
+  /// True jika foto nota tersedia (TD-A2).
+  final bool? notaLengkap;
+
   factory PengisianSolarItem.fromJson(Map<String, dynamic> json) =>
       PengisianSolarItem(
         id: json['id']?.toString() ?? '',
@@ -496,6 +639,8 @@ class PengisianSolarItem {
         fotoNotaUrl: json['foto_nota_url']?.toString(),
         catatan: json['catatan']?.toString(),
         driver: json['driver']?.toString(),
+        notaLengkap: json['nota_lengkap'] as bool? ??
+            (json['foto_nota_url'] != null || json['foto_nota'] != null),
       );
 }
 

@@ -73,6 +73,21 @@ class ServisArmada {
     this.tanggalSelesai,
     this.totalBiaya,
     this.spareparts = const [],
+    this.tipeServis = 'internal',
+    this.namaBengkel,
+    this.alamatBengkel,
+    this.latitude,
+    this.longitude,
+    this.fotoBengkelUrl,
+    this.rincianPekerjaan,
+    this.totalBiayaEstimasi,
+    this.totalBiayaResmi,
+    this.verifikasiWorkshop,
+    this.verifikasiWorkshopCatatan,
+    this.verifikasiWorkshopOleh,
+    this.verifikasiWorkshopPada,
+    this.fotoNotaUrls = const [],
+    this.fotoHasilUrls = const [],
   });
 
   final String id;
@@ -96,6 +111,35 @@ class ServisArmada {
   final double? totalBiaya;
   final List<ServisSparepartItem> spareparts;
 
+  /// Tipe servis: 'internal' atau 'eksternal' (TD-B1). Default 'internal'.
+  final String tipeServis;
+
+  // ── Servis Eksternal Detail (TD-B2..B7) ───────────────────────────────────
+  final String? namaBengkel;
+  final String? alamatBengkel;
+  final double? latitude;
+  final double? longitude;
+  final String? fotoBengkelUrl;
+  final String? rincianPekerjaan;
+  final double? totalBiayaEstimasi;
+  final double? totalBiayaResmi;
+
+  /// Verifikasi Workshop: 'belum', 'terverifikasi', 'bermasalah'
+  final String? verifikasiWorkshop;
+  final String? verifikasiWorkshopCatatan;
+  final String? verifikasiWorkshopOleh;
+  final String? verifikasiWorkshopPada;
+
+  /// Foto nota bengkel (TD-B3, B4)
+  final List<String> fotoNotaUrls;
+
+  /// Foto hasil pengerjaan (TD-B4, B5)
+  final List<String> fotoHasilUrls;
+
+  bool get isEksternal => tipeServis.toLowerCase() == 'eksternal';
+  bool get isInternal => !isEksternal;
+  bool get hasNota => fotoNotaUrls.isNotEmpty;
+
   bool get isMenungguApproval => status == 'diajukan';
   bool get isDisetujui => status == 'disetujui';
   bool get isDitolak => status == 'ditolak';
@@ -107,6 +151,13 @@ class ServisArmada {
         ? Map<String, dynamic>.from(json['armada'] as Map)
         : null;
     final parts = json['spareparts'];
+    final eksternalDetail = json['eksternal_detail'] is Map
+        ? Map<String, dynamic>.from(json['eksternal_detail'] as Map)
+        : (json['servis_eksternal_detail'] is Map
+            ? Map<String, dynamic>.from(json['servis_eksternal_detail'] as Map)
+            : null);
+    final notas = json['notas'] ?? json['foto_notas'] ?? json['servis_eksternal_notas'];
+    final hasilFotos = json['foto_hasil_kerja'] ?? json['foto_hasil'] ?? json['foto_hasil_urls'];
 
     return ServisArmada(
       id: json['id']?.toString() ?? '',
@@ -146,6 +197,53 @@ class ServisArmada {
           for (final p in parts)
             if (p is Map)
               ServisSparepartItem.fromJson(Map<String, dynamic>.from(p)),
+      ],
+      tipeServis: json['tipe_servis']?.toString() ?? 'internal',
+      namaBengkel: (eksternalDetail?['nama_bengkel'] ?? json['nama_bengkel'])?.toString(),
+      alamatBengkel: (eksternalDetail?['alamat_bengkel'] ?? json['alamat_bengkel'])?.toString(),
+      latitude: parseNum(eksternalDetail?['latitude'] ?? json['latitude']),
+      longitude: parseNum(eksternalDetail?['longitude'] ?? json['longitude']),
+      fotoBengkelUrl: (eksternalDetail?['foto_bengkel'] ??
+              eksternalDetail?['foto_bengkel_url'] ??
+              json['foto_bengkel'] ??
+              json['foto_bengkel_url'])
+          ?.toString(),
+      rincianPekerjaan: (eksternalDetail?['rincian_pekerjaan'] ??
+              json['rincian_pekerjaan'])
+          ?.toString(),
+      totalBiayaEstimasi: parseNum(
+        eksternalDetail?['total_biaya_estimasi'] ?? json['total_biaya_estimasi'],
+      ),
+      totalBiayaResmi: parseNum(
+        eksternalDetail?['total_biaya_resmi'] ?? json['total_biaya_resmi'],
+      ),
+      verifikasiWorkshop: (eksternalDetail?['verifikasi_workshop'] ??
+              json['verifikasi_workshop'])
+          ?.toString(),
+      verifikasiWorkshopCatatan: (eksternalDetail?['verifikasi_workshop_catatan'] ??
+              json['verifikasi_workshop_catatan'])
+          ?.toString(),
+      verifikasiWorkshopOleh: (eksternalDetail?['verifikasi_workshop_oleh'] ??
+              json['verifikasi_workshop_oleh'])
+          ?.toString(),
+      verifikasiWorkshopPada: (eksternalDetail?['verifikasi_workshop_pada'] ??
+              json['verifikasi_workshop_pada'])
+          ?.toString(),
+      fotoNotaUrls: [
+        if (notas is List)
+          for (final n in notas)
+            if (n is Map && (n['foto_nota'] != null || n['foto_nota_url'] != null || n['url'] != null))
+              (n['foto_nota_url'] ?? n['foto_nota'] ?? n['url']).toString()
+            else if (n is String && n.isNotEmpty)
+              n,
+      ],
+      fotoHasilUrls: [
+        if (hasilFotos is List)
+          for (final h in hasilFotos)
+            if (h is Map && (h['url'] != null || h['foto'] != null))
+              (h['url'] ?? h['foto']).toString()
+            else if (h is String && h.isNotEmpty)
+              h,
       ],
     );
   }

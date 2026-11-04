@@ -110,6 +110,14 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 _GreetingHeader(nama: user?.name),
                 const SizedBox(height: 4),
                 _UnitSayaSection(armada: armada),
+                if (armada.dokumenBerkala.any((d) => d.isJatuhTempoSegera)) ...[
+                  const SizedBox(height: 4),
+                  _DokumenBerkalaBanner(
+                    dokumenList: armada.dokumenBerkala
+                        .where((d) => d.isJatuhTempoSegera)
+                        .toList(),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 _PekerjaanHariIni(
                   armada: armada,
@@ -238,13 +246,30 @@ class _UnitSayaSection extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
-                        armada.isAlatBerat
-                            ? Icons.construction_rounded
-                            : Icons.local_shipping_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
+                      child: armada.fotoUrl != null && armada.fotoUrl!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.network(
+                                armada.fotoUrl!,
+                                width: 48,
+                                height: 48,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Icon(
+                                  armada.isAlatBerat
+                                      ? Icons.construction_rounded
+                                      : Icons.local_shipping_rounded,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                              ),
+                            )
+                          : Icon(
+                              armada.isAlatBerat
+                                  ? Icons.construction_rounded
+                                  : Icons.local_shipping_rounded,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -465,6 +490,10 @@ class _PekerjaanHariIni extends ConsumerWidget {
     final odoAwalAsync = ref.watch(odoAwalProyekProvider(armada.id));
     final showOdoAwalProyek = odoAwalAsync.value?.isEmpty == true;
 
+    final activeRole = ref.watch(activeRoleProvider);
+    final isOperatorAlatBerat =
+        activeRole == 'Operator Alat Berat' || armada.isAlatBerat;
+
     final steps = [
       _DayStep(
         number: 1,
@@ -481,22 +510,25 @@ class _PekerjaanHariIni extends ConsumerWidget {
         route: '/armada/pengisian-solar',
         cta: 'Catat pengisian',
         subtitle: hasPengisian
-            ? '$pengisianCount kali • ${pengisianLiter % 1 == 0 ? pengisianLiter.toInt() : pengisianLiter.toStringAsFixed(1)} L'
+            ? (pengisianLiter > 0
+                ? '$pengisianCount kali • ${pengisianLiter % 1 == 0 ? pengisianLiter.toInt() : pengisianLiter.toStringAsFixed(1)} L'
+                : '$pengisianCount kali dicatat')
             : 'Belum ada pengisian',
         optional: true,
       ),
+      if (!isOperatorAlatBerat)
+        _DayStep(
+          number: 3,
+          label: 'Muatan / Jam Kerja',
+          done: ritCount > 0,
+          route: '/armada/ritase-input',
+          cta: 'Catat muatan',
+          subtitle: ritCount > 0
+              ? '$ritCount muatan tercatat'
+              : 'Belum ada muatan',
+        ),
       _DayStep(
-        number: 3,
-        label: 'Muatan / Jam Kerja',
-        done: ritCount > 0,
-        route: '/armada/ritase-input',
-        cta: 'Catat muatan',
-        subtitle: ritCount > 0
-            ? (armada.isAlatBerat ? 'Aktif' : '$ritCount muatan tercatat')
-            : 'Belum ada muatan',
-      ),
-      _DayStep(
-        number: 4,
+        number: isOperatorAlatBerat ? 3 : 4,
         label: 'Checklist Akhir',
         done: akhirDone,
         route: '/armada/checklist-akhir',
@@ -1118,3 +1150,93 @@ class _ShortcutTile extends StatelessWidget {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 String _labelJenis(String jenis) => labelJenisArmada(jenis);
+
+// ── Banner Dokumen Berkala (TD-C2) ──────────────────────────────────────────
+
+class _DokumenBerkalaBanner extends StatelessWidget {
+  const _DokumenBerkalaBanner({required this.dokumenList});
+
+  final List<DokumenBerkalaItem> dokumenList;
+
+  @override
+  Widget build(BuildContext context) {
+    if (dokumenList.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.colors.warning.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: context.colors.warning.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.assignment_late_outlined,
+                  color: context.colors.warning,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Pajak/STNK/KIR Jatuh Tempo ≤ 30 Hari',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            for (final doc in dokumenList)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: context.colors.warning,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${doc.jenis}${doc.nomor != null ? ' (${doc.nomor})' : ''}: '
+                        '${doc.sisaHari != null && doc.sisaHari! < 0 ? 'Sudah lewat tempo (${doc.sisaHari!.abs()} hari lalu)' : 'Sisa ${doc.sisaHari ?? 0} hari'}'
+                        '${doc.jatuhTempo != null ? ' (jatuh tempo ${doc.jatuhTempo})' : ''}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.colors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              'Pengelolaan dokumen berkala dilakukan oleh Keuangan/Admin via web.',
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: context.colors.textTertiary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

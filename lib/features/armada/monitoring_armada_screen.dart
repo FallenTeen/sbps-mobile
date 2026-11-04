@@ -293,7 +293,7 @@ class _RingkasanGrid extends StatelessWidget {
       ),
       (
         label: 'Total Solar',
-        value: fmtLiter(r.totalSolarLiter),
+        value: r.totalSolarLiter > 0 ? fmtLiter(r.totalSolarLiter) : '-',
         icon: Icons.local_gas_station_outlined,
         color: Colors.orange,
       ),
@@ -555,13 +555,23 @@ class _UnitCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: statusColor.withValues(alpha: 0.15),
-                    child: Icon(
-                      unit.tipeUnit == 'alat_berat'
-                          ? Icons.precision_manufacturing_outlined
-                          : Icons.local_shipping_outlined,
-                      size: 18,
-                      color: statusColor,
-                    ),
+                    backgroundImage: unit.fotoUrl != null &&
+                            unit.fotoUrl!.isNotEmpty
+                        ? NetworkImage(unit.fotoUrl!)
+                        : null,
+                    onBackgroundImageError: unit.fotoUrl != null &&
+                            unit.fotoUrl!.isNotEmpty
+                        ? (_, _) {} // silently fallback to child icon
+                        : null,
+                    child: unit.fotoUrl != null && unit.fotoUrl!.isNotEmpty
+                        ? null
+                        : Icon(
+                            unit.tipeUnit == 'alat_berat'
+                                ? Icons.precision_manufacturing_outlined
+                                : Icons.local_shipping_outlined,
+                            size: 18,
+                            color: statusColor,
+                          ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(

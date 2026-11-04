@@ -12,6 +12,7 @@ import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../auth/auth_providers.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
@@ -166,6 +167,114 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
     }
   }
 
+  Future<void> _selesaiServis() async {
+    final confirm = await ConfirmationDialog.show(
+      context,
+      severity: ConfirmSeverity.warning,
+      title: 'Tandai Servis Selesai?',
+      message:
+          'Pastikan seluruh pengerjaan telah selesai dan unit siap '
+          'digunakan kembali.',
+      confirmLabel: 'Selesai',
+      icon: Icons.check_circle_outline_rounded,
+    );
+    if (confirm == null || !confirm.confirmed || !mounted) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await ref
+          .read(servisRepositoryProvider)
+          .selesaiServis(servisId: widget.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Servis berhasil ditandai selesai')),
+      );
+      ref.invalidate(detailServisProvider(widget.id));
+      ref.read(servisRiwayatProvider.notifier).refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal menyelesaikan servis.'),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _tambahFotoNota() async {
+    final photo = await takeWatermarkedPhoto(ref);
+    if (photo == null || !mounted) return;
+    setState(() => _isProcessing = true);
+    try {
+      final res = await ref
+          .read(servisRepositoryProvider)
+          .submitServisEksternalNota(
+            servisId: widget.id,
+            fotoNotaPaths: [photo.path],
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            res.delivered ? 'Foto nota berhasil diunggah' : kCopyQueued,
+          ),
+        ),
+      );
+      ref.invalidate(detailServisProvider(widget.id));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal mengunggah foto nota.'),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _tambahFotoHasil() async {
+    final photo = await takeWatermarkedPhoto(ref);
+    if (photo == null || !mounted) return;
+    setState(() => _isProcessing = true);
+    try {
+      final res = await ref
+          .read(servisRepositoryProvider)
+          .submitServisFotoHasil(
+            servisId: widget.id,
+            fotoPath: photo.path,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            res.delivered
+                ? 'Foto hasil pengerjaan berhasil diunggah'
+                : kCopyQueued,
+          ),
+        ),
+      );
+      ref.invalidate(detailServisProvider(widget.id));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal mengunggah foto hasil.'),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(detailServisProvider(widget.id));
@@ -241,32 +350,119 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                           ),
                         ),
                       ],
-                      if (item.kategori != null) ...[
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: context.colors.primary.withValues(
-                                alpha: 0.08,
-                              ),
+                              color: (item.isEksternal
+                                      ? context.colors.info
+                                      : context.colors.primary)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              formatKategoriServis(item.kategori!),
+                              item.isEksternal
+                                  ? 'Servis Eksternal'
+                                  : 'Servis Internal',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: context.colors.primary,
+                                color: item.isEksternal
+                                    ? context.colors.info
+                                    : context.colors.primary,
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          if (item.kategori != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.colors.primary.withValues(
+                                  alpha: 0.08,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                formatKategoriServis(item.kategori!),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                            ),
+                          if (item.isEksternal && !item.hasNota)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.colors.warning.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Nota belum lengkap',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.colors.warning,
+                                ),
+                              ),
+                            ),
+                          if (item.isEksternal) ...[
+                            Builder(
+                              builder: (context) {
+                                final (verifLabel, verifColor) = switch (
+                                    item.verifikasiWorkshop?.toLowerCase()) {
+                                  'terverifikasi' => (
+                                    'Workshop: Terverifikasi',
+                                    context.colors.success,
+                                  ),
+                                  'bermasalah' => (
+                                    'Workshop: Bermasalah',
+                                    context.colors.error,
+                                  ),
+                                  _ => (
+                                    'Workshop: Belum',
+                                    context.colors.textMuted,
+                                  ),
+                                };
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: verifColor.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    verifLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: verifColor,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -290,6 +486,39 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                       ),
                       const Divider(height: 20),
                       _infoRow('Tanggal Ajuan', fmtTanggal(item.tanggalAjuan)),
+                      if (item.isEksternal) ...[
+                        _infoRow('Tipe Servis', 'Servis Eksternal'),
+                        if (item.namaBengkel != null)
+                          _infoRow('Bengkel', item.namaBengkel!),
+                        if (item.alamatBengkel != null)
+                          _infoRow('Alamat Bengkel', item.alamatBengkel!),
+                        if (item.latitude != null && item.longitude != null)
+                          _infoRow(
+                            'GPS Bengkel',
+                            '${item.latitude!.toStringAsFixed(6)}, ${item.longitude!.toStringAsFixed(6)}',
+                          ),
+                        if (item.totalBiayaEstimasi != null)
+                          _infoRow(
+                            'Estimasi Biaya',
+                            fmtRp(item.totalBiayaEstimasi!),
+                          ),
+                        if (item.totalBiayaResmi != null)
+                          _infoRow(
+                            'Biaya Resmi (Nota)',
+                            fmtRp(item.totalBiayaResmi!),
+                          )
+                        else
+                          _infoRow('Biaya Resmi', 'Menunggu input via web'),
+                        if (item.rincianPekerjaan != null &&
+                            item.rincianPekerjaan!.isNotEmpty)
+                          _infoRow('Rincian Pekerjaan', item.rincianPekerjaan!),
+                        if (item.verifikasiWorkshopCatatan != null &&
+                            item.verifikasiWorkshopCatatan!.isNotEmpty)
+                          _infoRow(
+                            'Catatan Workshop',
+                            item.verifikasiWorkshopCatatan!,
+                          ),
+                      ],
                       if (item.kategori != null)
                         _infoRow('Kategori', formatKategoriServis(item.kategori!)),
                       if (item.odometerSaatAjuan != null)
@@ -433,6 +662,205 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
               ],
 
               // Action Buttons for Approval (if status is 'diajukan')
+              if (item.isEksternal) ...[
+                // Foto Bengkel Card
+                if (item.fotoBengkelUrl != null &&
+                    item.fotoBengkelUrl!.isNotEmpty) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Foto Bengkel',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Divider(height: 20),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              item.fotoBengkelUrl!,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Container(
+                                height: 120,
+                                color: Colors.grey.shade200,
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.broken_image, size: 36),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Foto Nota Card (TD-B4)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Foto Nota (${item.fotoNotaUrls.length})',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            TextButton.icon(
+                              onPressed: _isProcessing ? null : _tambahFotoNota,
+                              icon: const Icon(Icons.add_a_photo, size: 16),
+                              label: const Text('Tambah Nota'),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 20),
+                        if (item.fotoNotaUrls.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              'Belum ada foto nota. Driver dapat menambahkan foto nota di sini, '
+                              'dan menyetor nota fisik ke Ketua Armada / Keuangan.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.colors.textTertiary,
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final url in item.fotoNotaUrls)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    url,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey.shade200,
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Foto Hasil Pengerjaan Card (TD-B4, TD-B5)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Foto Hasil (${item.fotoHasilUrls.length})',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            TextButton.icon(
+                              onPressed: _isProcessing ? null : _tambahFotoHasil,
+                              icon: const Icon(Icons.camera_alt, size: 16),
+                              label: const Text('Tambah Foto Hasil'),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 20),
+                        if (item.fotoHasilUrls.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              'Foto hasil pengerjaan bersifat opsional.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.colors.textTertiary,
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final url in item.fotoHasilUrls)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    url,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey.shade200,
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Action Selesai untuk Driver (TD-B3)
+                if (item.isDikerjakan) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: BouncingButton(
+                      onPressed: _isProcessing ? null : _selesaiServis,
+                      child: FilledButton.icon(
+                        onPressed: _isProcessing ? null : _selesaiServis,
+                        icon: _isProcessing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outline),
+                        label: const Text('Tandai Pengerjaan Selesai'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.colors.success,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+
+              // Action Buttons for Approval (Internal service - if status is 'diajukan')
               if (item.isMenungguApproval && canApprove) ...[
                 const SizedBox(height: 12),
                 Row(

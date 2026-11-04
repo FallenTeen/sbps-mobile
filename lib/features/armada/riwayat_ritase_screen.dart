@@ -275,6 +275,7 @@ class _RitaseCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
@@ -282,6 +283,7 @@ class _RitaseCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
+                const SizedBox(width: 8),
                 if (ritase.status != null) _RitaseBadge(status: ritase.status!),
               ],
             ),
@@ -290,6 +292,32 @@ class _RitaseCard extends StatelessWidget {
               '${fmtRitase(ritase.jumlahRit)}'
               '${ritase.ruteAsal != null && ritase.ruteTujuan != null ? ' • ${ritase.ruteAsal} → ${ritase.ruteTujuan}' : ''}',
             ),
+            if (ritase.jumlahDriver != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.scale_outlined, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Muatan: ${ritase.jumlahDriver} ${ritase.satuanMuatan ?? 'ton'}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (ritase.jumlahVerifikasiLogistik != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '• Netto: ${ritase.jumlahVerifikasiLogistik} ton',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
             if (ritase.totalUpahRit != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -297,8 +325,89 @@ class _RitaseCard extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
+            // TD-E2: Badge verifikasi ritase (Menunggu, Verified Logistik, Verified Security, Selisih)
+            if (ritase.hasVerifikasiData) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (ritase.hasSelisih)
+                    const _VerifikasiChip(
+                      label: 'Selisih',
+                      color: Colors.deepOrange,
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                  if (ritase.isVerifiedSecurity)
+                    const _VerifikasiChip(
+                      label: 'Verified (Security)',
+                      color: Colors.teal,
+                      icon: Icons.shield_outlined,
+                    ),
+                  if (ritase.isVerifiedLogistik)
+                    const _VerifikasiChip(
+                      label: 'Verified (Logistik)',
+                      color: Colors.blue,
+                      icon: Icons.verified_outlined,
+                    )
+                  else if (ritase.isMenungguVerifikasi)
+                    _VerifikasiChip(
+                      label: 'Menunggu verifikasi',
+                      color: Colors.amber.shade800,
+                      icon: Icons.hourglass_top_rounded,
+                    ),
+                  if (ritase.wajibJembatanTimbang == true && !ritase.isVerifiedLogistik)
+                    const _VerifikasiChip(
+                      label: 'Wajib Timbang',
+                      color: Colors.purple,
+                      icon: Icons.scale_rounded,
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _VerifikasiChip extends StatelessWidget {
+  const _VerifikasiChip({
+    required this.label,
+    required this.color,
+    this.icon,
+  });
+
+  final String label;
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

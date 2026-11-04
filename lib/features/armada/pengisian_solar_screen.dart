@@ -246,6 +246,8 @@ class _PengisianCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasNota = item.notaLengkap == true ||
+        (item.fotoNotaUrl != null && item.fotoNotaUrl!.isNotEmpty);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
@@ -268,9 +270,19 @@ class _PengisianCard extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
+                if (item.tanggal != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '• ${item.tanggal}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.textTertiary,
+                    ),
+                  ),
+                ],
                 const Spacer(),
                 Text(
-                  '${_fmtNum(item.liter)} L',
+                  fmtRp(item.nominalRp ?? 0),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
@@ -280,14 +292,45 @@ class _PengisianCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              '${fmtRp(item.nominalRp ?? 0)} • ${fmtRp(item.hargaPerLiter ?? 0)}/L',
-              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'ODO/HM: ${_fmtNum(item.odoAtauHm)}',
-              style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
+            Row(
+              children: [
+                Text(
+                  'ODO/HM: ${_fmtNum(item.odoAtauHm)}',
+                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                ),
+                if (!hasNota) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: context.colors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.colors.warning.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 12,
+                          color: context.colors.warning,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Nota belum lengkap',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
             if (item.catatan != null && item.catatan!.trim().isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -315,7 +358,6 @@ class _PengisianFormSheet extends ConsumerStatefulWidget {
 
 class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
   final _odoCtrl = TextEditingController();
-  final _literCtrl = TextEditingController();
   final _nominalCtrl = TextEditingController();
   final _catatanCtrl = TextEditingController();
   CapturedPhoto? _fotoOdo;
@@ -329,27 +371,17 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
         ? widget.armada.jamOperasionalTerkini
         : widget.armada.odoTerkini;
     if (odo != null) _odoCtrl.text = _fmtNum(odo);
-    _literCtrl.addListener(() => setState(() {}));
-    _nominalCtrl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _odoCtrl.dispose();
-    _literCtrl.dispose();
     _nominalCtrl.dispose();
     _catatanCtrl.dispose();
     super.dispose();
   }
 
-  double? get _liter => double.tryParse(_literCtrl.text.trim());
   double? get _nominal => double.tryParse(_nominalCtrl.text.trim());
-  double? get _hargaPerLiter {
-    final l = _liter;
-    final n = _nominal;
-    if (l == null || n == null || l <= 0) return null;
-    return n / l;
-  }
 
   Future<void> _pickFoto({required bool isOdo}) async {
     final photo = await takeWatermarkedPhoto(ref);
@@ -365,16 +397,11 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
 
   Future<void> _submit() async {
     final odo = double.tryParse(_odoCtrl.text.trim());
-    final liter = _liter;
     final nominal = _nominal;
     if (odo == null) {
       _snack(widget.armada.isAlatBerat
           ? 'HM saat isi wajib diisi.'
           : 'ODO saat isi wajib diisi.');
-      return;
-    }
-    if (liter == null || liter <= 0) {
-      _snack('Liter harus diisi dan lebih dari 0.');
       return;
     }
     if (nominal == null || nominal <= 0) {
@@ -383,10 +410,6 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
     }
     if (_fotoOdo == null) {
       _snack('Foto ODO/HM saat isi wajib diambil dari kamera.');
-      return;
-    }
-    if (_fotoNota == null) {
-      _snack('Foto nota wajib diambil dari kamera.');
       return;
     }
 
@@ -398,10 +421,9 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
           .submitPengisianSolar(
             armadaId: widget.armada.id,
             odoAtauHm: odo,
-            liter: liter,
             nominalRp: nominal,
             fotoOdoPath: _fotoOdo!.path,
-            fotoNotaPath: _fotoNota!.path,
+            fotoNotaPath: _fotoNota?.path,
             catatan: _catatanCtrl.text,
           );
       if (!mounted) return;
@@ -430,7 +452,6 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
   Widget build(BuildContext context) {
     final armada = widget.armada;
     final satuan = armada.isAlatBerat ? 'HM' : 'KM';
-    final harga = _hargaPerLiter;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -487,46 +508,14 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _literCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Liter',
-                      border: OutlineInputBorder(),
-                      suffixText: 'L',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _nominalCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Nominal',
-                      border: OutlineInputBorder(),
-                      prefixText: 'Rp ',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
             TextField(
-              controller: TextEditingController(
-                text: harga == null ? '' : fmtRp(harga),
-              ),
-              enabled: false,
+              controller: _nominalCtrl,
+              keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Harga per Liter (otomatis)',
+                labelText: 'Nominal Pembelian',
                 border: OutlineInputBorder(),
-                helperText: 'Dihitung dari nominal ÷ liter',
-                suffixText: '/L',
+                prefixText: 'Rp ',
+                helperText: 'Driver tidak perlu mengisi liter (diisi kantor/nota).',
               ),
             ),
             const SizedBox(height: 16),
@@ -539,9 +528,14 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
             ),
             const SizedBox(height: 12),
             _PhotoField(
-              label: 'Foto Nota (wajib)',
+              label: 'Foto Nota (opsional)',
               photo: _fotoNota,
               onTap: _isLoading ? null : () => _pickFoto(isOdo: false),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Nota boleh diserahkan manual ke Ketua Armada / Keuangan.',
+              style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
             ),
             const SizedBox(height: 12),
             TextField(
