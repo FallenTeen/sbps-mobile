@@ -79,9 +79,7 @@ class _RiwayatServisScreenState extends ConsumerState<RiwayatServisScreen> {
               summaryAsync: summaryAsync,
               activeFilter: state.statusFilter,
               onTapStatus: (status) {
-                ref
-                    .read(servisRiwayatProvider.notifier)
-                    .filterByStatus(status);
+                ref.read(servisRiwayatProvider.notifier).filterByStatus(status);
               },
               onRefresh: _refreshAll,
             ),
@@ -495,10 +493,11 @@ class _ServisQueueCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: (item.isEksternal
-                              ? context.colors.info
-                              : context.colors.primary)
-                          .withValues(alpha: 0.08),
+                      color:
+                          (item.isEksternal
+                                  ? context.colors.info
+                                  : context.colors.primary)
+                              .withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -556,29 +555,35 @@ class _ServisQueueCard extends StatelessWidget {
               Text(
                 item.isEksternal
                     ? (item.namaBengkel != null
-                        ? 'Bengkel: ${item.namaBengkel!} • ${item.rincianPekerjaan ?? item.keluhan}'
-                        : item.keluhan)
+                          ? 'Bengkel: ${item.namaBengkel!} • ${item.rincianPekerjaan ?? item.keluhan}'
+                          : item.keluhan)
                     : item.keluhan,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 14),
               ),
               if (item.isEksternal) ...[
-                const SizedBox(height: 4),
-                Text(
-                  item.totalBiayaResmi != null
-                      ? 'Biaya resmi: ${fmtRp(item.totalBiayaResmi!)}'
-                      : (item.totalBiayaEstimasi != null
-                          ? 'Estimasi: ${fmtRp(item.totalBiayaEstimasi!)}'
-                          : ''),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: item.totalBiayaResmi != null
-                        ? context.colors.success
-                        : context.colors.textSecondary,
+                if (!item.isSelesai && item.totalBiayaResmi != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Biaya Estimasi: ${fmtRp(item.totalBiayaResmi!)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.error,
+                    ),
                   ),
-                ),
+                ] else if (item.isSelesai && item.totalBiayaResmi != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Biaya Resmi: ${fmtRp(item.totalBiayaResmi!)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.success,
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 8),
               Row(
@@ -609,9 +614,7 @@ class _ServisQueueCard extends StatelessWidget {
                         item.diajukanOleh!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -154,10 +154,16 @@ class ServisArmada {
     final eksternalDetail = json['eksternal_detail'] is Map
         ? Map<String, dynamic>.from(json['eksternal_detail'] as Map)
         : (json['servis_eksternal_detail'] is Map
-            ? Map<String, dynamic>.from(json['servis_eksternal_detail'] as Map)
-            : null);
-    final notas = json['notas'] ?? json['foto_notas'] ?? json['servis_eksternal_notas'];
-    final hasilFotos = json['foto_hasil_kerja'] ?? json['foto_hasil'] ?? json['foto_hasil_urls'];
+              ? Map<String, dynamic>.from(
+                  json['servis_eksternal_detail'] as Map,
+                )
+              : null);
+    final notas =
+        json['notas'] ?? json['foto_notas'] ?? json['servis_eksternal_notas'];
+    final hasilFotos =
+        json['foto_hasil_kerja'] ??
+        json['foto_hasil'] ??
+        json['foto_hasil_urls'];
 
     return ServisArmada(
       id: json['id']?.toString() ?? '',
@@ -184,12 +190,12 @@ class ServisArmada {
           parseNum(json['jam_operasional']),
       diajukanOleh: json['diajukan_oleh'] is Map
           ? json['diajukan_oleh']['name']?.toString()
-          : json['diajukan_oleh']?.toString(),
+          : json['kode_pengajuan']?.toString(),
       disetujuiOleh: json['disetujui_oleh'] is Map
           ? json['disetujui_oleh']['name']?.toString()
           : json['disetujui_oleh']?.toString(),
       alasanPenolakan: json['alasan_penolakan']?.toString(),
-      catatanWorkshop: json['catatan_workshop']?.toString(),
+      catatanWorkshop: json['catatan_acc']?.toString(),
       tanggalSelesai: json['tanggal_selesai']?.toString(),
       totalBiaya: parseNum(json['total_biaya']),
       spareparts: [
@@ -199,40 +205,51 @@ class ServisArmada {
               ServisSparepartItem.fromJson(Map<String, dynamic>.from(p)),
       ],
       tipeServis: json['tipe_servis']?.toString() ?? 'internal',
-      namaBengkel: (eksternalDetail?['nama_bengkel'] ?? json['nama_bengkel'])?.toString(),
-      alamatBengkel: (eksternalDetail?['alamat_bengkel'] ?? json['alamat_bengkel'])?.toString(),
+      namaBengkel: (eksternalDetail?['nama_bengkel'] ?? json['nama_bengkel'])
+          ?.toString(),
+      alamatBengkel:
+          (eksternalDetail?['alamat_bengkel'] ?? json['alamat_bengkel'])
+              ?.toString(),
       latitude: parseNum(eksternalDetail?['latitude'] ?? json['latitude']),
       longitude: parseNum(eksternalDetail?['longitude'] ?? json['longitude']),
-      fotoBengkelUrl: (eksternalDetail?['foto_bengkel'] ??
-              eksternalDetail?['foto_bengkel_url'] ??
-              json['foto_bengkel'] ??
-              json['foto_bengkel_url'])
-          ?.toString(),
-      rincianPekerjaan: (eksternalDetail?['rincian_pekerjaan'] ??
-              json['rincian_pekerjaan'])
-          ?.toString(),
+      fotoBengkelUrl:
+          (eksternalDetail?['foto_bengkel'] ??
+                  eksternalDetail?['foto_bengkel_url'] ??
+                  json['foto_bengkel'] ??
+                  json['foto_bengkel_url'])
+              ?.toString(),
+      rincianPekerjaan:
+          (eksternalDetail?['rincian_pekerjaan'] ?? json['rincian_pekerjaan'])
+              ?.toString(),
       totalBiayaEstimasi: parseNum(
-        eksternalDetail?['total_biaya_estimasi'] ?? json['total_biaya_estimasi'],
+        eksternalDetail?['total_biaya_estimasi'] ??
+            json['total_biaya_estimasi'],
       ),
       totalBiayaResmi: parseNum(
-        eksternalDetail?['total_biaya_resmi'] ?? json['total_biaya_resmi'],
+        eksternalDetail?['total_biaya_resmi'] ?? json['total_biaya'],
       ),
-      verifikasiWorkshop: (eksternalDetail?['verifikasi_workshop'] ??
-              json['verifikasi_workshop'])
-          ?.toString(),
-      verifikasiWorkshopCatatan: (eksternalDetail?['verifikasi_workshop_catatan'] ??
-              json['verifikasi_workshop_catatan'])
-          ?.toString(),
-      verifikasiWorkshopOleh: (eksternalDetail?['verifikasi_workshop_oleh'] ??
-              json['verifikasi_workshop_oleh'])
-          ?.toString(),
-      verifikasiWorkshopPada: (eksternalDetail?['verifikasi_workshop_pada'] ??
-              json['verifikasi_workshop_pada'])
-          ?.toString(),
+      verifikasiWorkshop:
+          (eksternalDetail?['verifikasi_workshop'] ??
+                  json['verifikasi_workshop'])
+              ?.toString(),
+      verifikasiWorkshopCatatan:
+          (eksternalDetail?['catatan_pengerjaan'] ?? json['catatan_pengerjaan'])
+              ?.toString(),
+      verifikasiWorkshopOleh:
+          (eksternalDetail?['verifikasi_workshop_oleh'] ??
+                  json['verifikasi_workshop_oleh'])
+              ?.toString(),
+      verifikasiWorkshopPada:
+          (eksternalDetail?['verifikasi_workshop_pada'] ??
+                  json['verifikasi_workshop_pada'])
+              ?.toString(),
       fotoNotaUrls: [
         if (notas is List)
           for (final n in notas)
-            if (n is Map && (n['foto_nota'] != null || n['foto_nota_url'] != null || n['url'] != null))
+            if (n is Map &&
+                (n['foto_nota'] != null ||
+                    n['foto_nota_url'] != null ||
+                    n['url'] != null))
               (n['foto_nota_url'] ?? n['foto_nota'] ?? n['url']).toString()
             else if (n is String && n.isNotEmpty)
               n,
@@ -271,9 +288,8 @@ class ServisSparepartItem {
     return ServisSparepartItem(
       id: json['id']?.toString() ?? '',
       namaBarang:
-          json['nama_barang']?.toString() ?? json['nama']?.toString() ?? '',
-      jumlah:
-          parseNum(json['jumlah']) ?? parseNum(json['qty']) ?? 1.0,
+          json['nama_item']?.toString() ?? json['nama']?.toString() ?? '',
+      jumlah: parseNum(json['jumlah']) ?? parseNum(json['qty']) ?? 1.0,
       satuan: json['satuan']?.toString(),
       hargaSatuan: parseNum(json['harga_satuan']),
       totalHarga: parseNum(json['total_harga']),

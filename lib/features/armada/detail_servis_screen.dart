@@ -99,18 +99,16 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-          SnackBar(
-            content: Text(
-              friendlyErrorMessage(
-                e,
-                fallback: 'Gagal menyimpan data servis. Coba lagi.',
-              ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(
+              e,
+              fallback: 'Gagal menyimpan data servis. Coba lagi.',
             ),
           ),
-        );
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -150,18 +148,16 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-          SnackBar(
-            content: Text(
-              friendlyErrorMessage(
-                e,
-                fallback: 'Gagal menyimpan data servis. Coba lagi.',
-              ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            friendlyErrorMessage(
+              e,
+              fallback: 'Gagal menyimpan data servis. Coba lagi.',
             ),
           ),
-        );
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -246,10 +242,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
     try {
       final res = await ref
           .read(servisRepositoryProvider)
-          .submitServisFotoHasil(
-            servisId: widget.id,
-            fotoPath: photo.path,
-          );
+          .submitServisFotoHasil(servisId: widget.id, fotoPath: photo.path);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -361,10 +354,11 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: (item.isEksternal
-                                      ? context.colors.info
-                                      : context.colors.primary)
-                                  .withValues(alpha: 0.1),
+                              color:
+                                  (item.isEksternal
+                                          ? context.colors.info
+                                          : context.colors.primary)
+                                      .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -425,8 +419,9 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                           if (item.isEksternal) ...[
                             Builder(
                               builder: (context) {
-                                final (verifLabel, verifColor) = switch (
-                                    item.verifikasiWorkshop?.toLowerCase()) {
+                                final (verifLabel, verifColor) = switch (item
+                                    .verifikasiWorkshop
+                                    ?.toLowerCase()) {
                                   'terverifikasi' => (
                                     'Workshop: Terverifikasi',
                                     context.colors.success,
@@ -502,13 +497,15 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                             'Estimasi Biaya',
                             fmtRp(item.totalBiayaEstimasi!),
                           ),
-                        if (item.totalBiayaResmi != null)
+                        if (!item.isSelesai)
+                          _infoRow('Biaya Resmi', 'Menunggu input via web')
+                        else if (item.totalBiayaResmi != null)
                           _infoRow(
                             'Biaya Resmi (Nota)',
                             fmtRp(item.totalBiayaResmi!),
                           )
                         else
-                          _infoRow('Biaya Resmi', 'Menunggu input via web'),
+                          _infoRow('Biaya Resmi', 'Belum tersedia'),
                         if (item.rincianPekerjaan != null &&
                             item.rincianPekerjaan!.isNotEmpty)
                           _infoRow('Rincian Pekerjaan', item.rincianPekerjaan!),
@@ -520,7 +517,10 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                           ),
                       ],
                       if (item.kategori != null)
-                        _infoRow('Kategori', formatKategoriServis(item.kategori!)),
+                        _infoRow(
+                          'Kategori',
+                          formatKategoriServis(item.kategori!),
+                        ),
                       if (item.odometerSaatAjuan != null)
                         _infoRow(
                           'ODO Saat Ajuan',
@@ -604,7 +604,16 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             Chip(
-                              label: Text('${item.spareparts.length} item'),
+                              label: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '${item.spareparts.length} item',
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -780,7 +789,9 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             TextButton.icon(
-                              onPressed: _isProcessing ? null : _tambahFotoHasil,
+                              onPressed: _isProcessing
+                                  ? null
+                                  : _tambahFotoHasil,
                               icon: const Icon(Icons.camera_alt, size: 16),
                               label: const Text('Tambah Foto Hasil'),
                             ),
@@ -922,9 +933,8 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Flexible (bukan fixed 130px): label bisa memuat saat text scale
-          // 130% tanpa menyempitkan nilai secara paksa.
-          Flexible(
+          // Kolom label dan tanda titik dua konsisten agar nilai sejajar.
+          Expanded(
             flex: 2,
             child: Text(
               label,
@@ -933,6 +943,8 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
               ),
             ),
           ),
+          const Text(':'),
+          const SizedBox(width: 8),
           Expanded(
             flex: 3,
             child: Text(
@@ -969,12 +981,8 @@ class ServisTimelineCard extends StatelessWidget {
             ),
             const Divider(height: 20),
             for (var i = 0; i < steps.length; i++) ...[
-              _TimelineNode(
-                step: steps[i],
-                caption: _captionFor(i),
-              ),
-              if (i != steps.length - 1)
-                _StepConnector(state: steps[i].state),
+              _TimelineNode(step: steps[i], caption: _captionFor(i)),
+              if (i != steps.length - 1) _StepConnector(state: steps[i].state),
             ],
           ],
         ),
@@ -1087,11 +1095,7 @@ class _StepConnector extends StatelessWidget {
         : Theme.of(context).colorScheme.outlineVariant;
     return Padding(
       padding: const EdgeInsets.only(left: 12),
-      child: Container(
-        width: 2,
-        height: 18,
-        color: color,
-      ),
+      child: Container(width: 2, height: 18, color: color),
     );
   }
 }
