@@ -204,7 +204,7 @@ class ServisArmada {
           parseNum(json['jam_operasional']),
       diajukanOleh: json['diajukan_oleh'] is Map
           ? json['diajukan_oleh']['name']?.toString()
-          : json['kode_pengajuan']?.toString(),
+          : json['diajukan_oleh']?.toString(),
       disetujuiOleh: json['disetujui_oleh'] is Map
           ? json['disetujui_oleh']['name']?.toString()
           : json['disetujui_oleh']?.toString(),
