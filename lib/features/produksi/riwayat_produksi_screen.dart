@@ -12,10 +12,7 @@ import 'models/production_session.dart';
 import 'produksi_providers.dart';
 import 'produksi_rules.dart';
 
-/// Riwayat sesi produksi milik user dengan filter tanggal, status, & mesin,
-/// pagination tombol "Muat lagi" (Fase A2.3) - dibangun ulang Phase 13:
-/// konten diekstrak ke [RiwayatProduksiContent] supaya bisa dipakai sebagai
-/// isi tab "Riwayat" di Sesi Aktif (no redirect-only tab).
+/// Riwayat sesi produksi milik user dengan filter tanggal, status, & mesin.
 class RiwayatProduksiScreen extends StatelessWidget {
   const RiwayatProduksiScreen({super.key});
 
@@ -72,34 +69,109 @@ class _RiwayatProduksiContentState
                     (s.titikNama ?? '').toLowerCase().contains(q),
               )
               .toList();
-    // Filter status benar-benar bekerja secara client-side (Phase 13).
+
     final items = filterRiwayatByStatus(searched, _selectedStatus);
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+
+        return Column(
+          children: [
+            // Header Search & Filter Bar
+            SearchableListHeader(
+              hintText: 'Cari produk atau mesin...',
+              collapsible: false,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              child: isWide
+                  ? _buildWideFilters(filter, mesinAsync)
+                  : _buildNarrowFilters(filter, mesinAsync),
+            ),
+
+            // Main Content (List vs Grid)
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(riwayatProduksiProvider.notifier).refresh(),
+                child: _buildContent(context, ref, state, items, isWide),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Layout filter untuk Layar Lebar (Landscape / Tablet)
+  Widget _buildWideFilters(RiwayatFilter filter, AsyncValue<dynamic> mesinAsync) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 2,
+            child: _PeriodFilterSection(
+              options: _periodOptions,
+              selected: _selectedPeriod,
+              onChanged: (value) {
+                setState(() => _selectedPeriod = value);
+                _handlePeriodChange(value, ref);
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: _StatusFilterSection(
+              options: _statusOptions,
+              selected: _selectedStatus,
+              onChanged: (value) => setState(() => _selectedStatus = value),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: DropdownButtonFormField<String>(
+              initialValue: filter.mesinId,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Filter Mesin',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              hint: const Text('Semua mesin'),
+              items: [
+                for (final m in mesinAsync.value ?? const [])
+                  DropdownMenuItem(value: m.id, child: Text(m.nama)),
+              ],
+              onChanged: (v) => ref
+                  .read(riwayatFilterProvider.notifier)
+                  .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Layout filter vertikal standar untuk Layar Sempit (HP Portrait)
+  Widget _buildNarrowFilters(RiwayatFilter filter, AsyncValue<dynamic> mesinAsync) {
     return Column(
       children: [
-        // Search + Period Filter Chips (Fase 2)
-        SearchableListHeader(
-          hintText: 'Cari produk atau mesin...',
-          collapsible: false,
-          onChanged: (v) => setState(() => _searchQuery = v),
-          child: _PeriodFilterSection(
-            options: _periodOptions,
-            selected: _selectedPeriod,
-            onChanged: (value) {
-              setState(() => _selectedPeriod = value);
-              _handlePeriodChange(value, ref);
-            },
-          ),
+        _PeriodFilterSection(
+          options: _periodOptions,
+          selected: _selectedPeriod,
+          onChanged: (value) {
+            setState(() => _selectedPeriod = value);
+            _handlePeriodChange(value, ref);
+          },
         ),
-
-        // Status Filter Chips — aksi nyata (client-side filter).
         _StatusFilterSection(
           options: _statusOptions,
           selected: _selectedStatus,
           onChanged: (value) => setState(() => _selectedStatus = value),
         ),
-
-        // Machine Filter (existing)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: DropdownButtonFormField<String>(
@@ -117,15 +189,6 @@ class _RiwayatProduksiContentState
             onChanged: (v) => ref
                 .read(riwayatFilterProvider.notifier)
                 .set(RiwayatFilter(tanggal: filter.tanggal, mesinId: v)),
-          ),
-        ),
-
-        // Content
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () =>
-                ref.read(riwayatProduksiProvider.notifier).refresh(),
-            child: _buildList(context, ref, state, items),
           ),
         ),
       ],
@@ -159,14 +222,15 @@ class _RiwayatProduksiContentState
         .set(RiwayatFilter(tanggal: tanggal, mesinId: currentFilter.mesinId));
   }
 
-  Widget _buildList(
+  Widget _buildContent(
     BuildContext context,
     WidgetRef ref,
     RiwayatProduksiState state,
     List<dynamic> items,
+    bool isWide,
   ) {
     if (state.loading && state.items.isEmpty && state.error == null) {
-      return const SkeletonListView(itemCount: 5);
+      return const SkeletonListView(itemCount: 6);
     }
     if (state.error != null && state.items.isEmpty) {
       return ListView(
@@ -202,6 +266,51 @@ class _RiwayatProduksiContentState
       );
     }
 
+    // Menggunakan GridView untuk Tablet/Landscape, dan ListView untuk Phone Portrait
+    if (isWide) {
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) {
+                  return StaggeredEntrance(
+                    index: i,
+                    child: _RiwayatCard(session: items[i]),
+                  );
+                },
+                childCount: items.length,
+              ),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 450,
+                mainAxisExtent: 110,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+            ),
+          ),
+          if (state.hasMore)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Center(
+                  child: FilledButton.tonal(
+                    onPressed: state.loading
+                        ? null
+                        : () => ref
+                            .read(riwayatProduksiProvider.notifier)
+                            .loadMore(),
+                    child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
@@ -215,8 +324,9 @@ class _RiwayatProduksiContentState
               child: FilledButton.tonal(
                 onPressed: state.loading
                     ? null
-                    : () =>
-                          ref.read(riwayatProduksiProvider.notifier).loadMore(),
+                    : () => ref
+                        .read(riwayatProduksiProvider.notifier)
+                        .loadMore(),
                 child: Text(state.loading ? 'Memuat...' : 'Muat lagi'),
               ),
             ),
@@ -244,56 +354,52 @@ class _PeriodFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        border: Border(bottom: BorderSide(color: context.colors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Periode',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.colors.textTertiary,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Periode',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: context.colors.textTertiary,
           ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: options.map((option) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(option),
-                    visualDensity: const VisualDensity(
-                      horizontal: -2,
-                      vertical: -2,
-                    ),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    selected: selected == option,
-                    onSelected: (bool isSelected) {
-                      onChanged(isSelected ? option : null);
-                    },
-                    selectedColor: Colors.teal.withValues(alpha: 0.1),
-                    checkmarkColor: Colors.teal,
-                    labelStyle: TextStyle(
-                      color: selected == option ? Colors.teal : context.colors.textPrimary,
-                      fontWeight: selected == option
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
+        ),
+        const SizedBox(height: 4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: options.map((option) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: FilterChip(
+                  label: Text(option),
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
                   ),
-                );
-              }).toList(),
-            ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  selected: selected == option,
+                  onSelected: (bool isSelected) {
+                    onChanged(isSelected ? option : null);
+                  },
+                  selectedColor: Colors.teal.withValues(alpha: 0.1),
+                  checkmarkColor: Colors.teal,
+                  labelStyle: TextStyle(
+                    color: selected == option
+                        ? Colors.teal
+                        : context.colors.textPrimary,
+                    fontWeight: selected == option
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -311,56 +417,52 @@ class _StatusFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        border: Border(bottom: BorderSide(color: context.colors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Status',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.colors.textTertiary,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Status',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: context.colors.textTertiary,
           ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: options.map((option) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(option),
-                    visualDensity: const VisualDensity(
-                      horizontal: -2,
-                      vertical: -2,
-                    ),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    selected: selected == option,
-                    onSelected: (bool isSelected) {
-                      onChanged(isSelected ? option : null);
-                    },
-                    selectedColor: Colors.teal.withValues(alpha: 0.1),
-                    checkmarkColor: Colors.teal,
-                    labelStyle: TextStyle(
-                      color: selected == option ? Colors.teal : context.colors.textPrimary,
-                      fontWeight: selected == option
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
+        ),
+        const SizedBox(height: 4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: options.map((option) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: FilterChip(
+                  label: Text(option),
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
                   ),
-                );
-              }).toList(),
-            ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  selected: selected == option,
+                  onSelected: (bool isSelected) {
+                    onChanged(isSelected ? option : null);
+                  },
+                  selectedColor: Colors.teal.withValues(alpha: 0.1),
+                  checkmarkColor: Colors.teal,
+                  labelStyle: TextStyle(
+                    color: selected == option
+                        ? Colors.teal
+                        : context.colors.textPrimary,
+                    fontWeight: selected == option
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -378,16 +480,21 @@ class _RiwayatCard extends StatelessWidget {
         : context.colors.success;
 
     return Card(
+      margin: EdgeInsets.zero,
       child: ListTile(
         title: Text(
           '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${fmtTanggalWaktu(session.mulai?.toLocal())} → '
-              '${fmtTanggalWaktu(session.selesai?.toLocal())}',
+              '${fmtTanggalWaktu(session.mulai?.toLocal())} → ${fmtTanggalWaktu(session.selesai?.toLocal())}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text('Titik: ${session.titikNama ?? '-'}'),
           ],
@@ -400,9 +507,10 @@ class _RiwayatCard extends StatelessWidget {
             Text(
               '${fmtNum(session.hasilOutput)} ${session.satuanOutput ?? ''}'
                   .trim(),
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Container(
