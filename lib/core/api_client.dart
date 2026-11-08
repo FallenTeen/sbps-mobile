@@ -13,7 +13,7 @@ class ApiException implements Exception {
   final String message;
   final int? statusCode;
 
-  /// Detail error validasi Laravel 422: `{ "errors": { field: [pesan] } }`.
+  /// Detail error 422 Laravel: `{ "errors": { field: [pesan] } }`.
   final Map<String, List<String>>? errors;
 
   @override
@@ -29,53 +29,42 @@ class MultipartFileSpec {
 }
 
 /// HTTP client untuk endpoint /api/mobile/*.
-///
-/// Endpoint mobile mewajibkan header device (lihat docs/api-mobile.md bagian
-/// 1) — dikirim sebagai header default di setiap request. Interceptor auth
-/// (Bearer token, X-Active-Role) dipasang dari luar lewat [dio].
 class ApiClient {
   ApiClient({Dio? dio, this.onUnauthorized}) : _dio = dio ?? buildBaseDio();
 
-  /// Dio dasar dengan timeout, base URL, dan header default — dipakai juga
-  /// oleh provider untuk memasang interceptor auth sebelum membuat client.
+  /// Dio dasar (timeout, base URL, header default); dipakai provider untuk
+  /// memasang interceptor auth sebelum membuat client.
   static Dio buildBaseDio() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: AppConfig.apiBaseUrl,
+        baseUrl: AppConfig.requiredApiBaseUrl,
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 30),
-        // Upload multipart (foto lapangan) bisa besar & sinyal lambat — beri
-        // jendela kirim yang longgar agar tidak false-negative saat online.
         sendTimeout: const Duration(seconds: 60),
         headers: {
           'Accept': 'application/json',
-          // Backend hanya menolak jika KEDUANYA kosong (hasil audit); nilai
-          // asli perangkat ditimpa lewat interceptor (Fase A1.2).
           'X-Device-Type': 'android',
           'X-Device-Name': 'unknown',
         },
-        // 429 ditangani interceptor _RateLimitInterceptor, bukan error Dio.
+        // 429 ditangani _RateLimitInterceptor, bukan error Dio.
         validateStatus: (status) => status != null && status < 500,
       ),
     );
-    // Urutan interceptor: pertama transient network retry, kemudian rate limit.
-    // Network flutter (response==null) di-retry duluan sebelum rate limit.
+    // Retry transient dulu, baru rate limit.
     dio.interceptors.add(_TransientNetworkRetryInterceptor(dio));
     dio.interceptors.add(_RateLimitInterceptor(dio));
     return dio;
   }
 
-  /// Dipanggil saat endpoint terproteksi menjawab 401 (token invalid/kadaluarsa)
-  /// — dipakai AuthController untuk memaksa logout & redirect ke login.
+  /// Dipanggil saat 401 dari endpoint terproteksi (token invalid/kadaluarsa).
   void Function()? onUnauthorized;
 
-  /// Endpoint publik: 401 dari sini adalah error kredensial biasa,
-  /// bukan sesi berakhir — tidak boleh memicu [onUnauthorized].
+  /// 401 di sini = kredensial salah, bukan sesi berakhir.
   static const _publicPaths = ['/login', '/register', '/app-version'];
 
   final Dio _dio;
 
-  /// Akses Dio internal untuk pemasangan interceptor auth.
+  /// Akses Dio internal untuk pasang interceptor auth.
   Dio get dio => _dio;
 
   Future<ApiResponse<T>> get<T>(
@@ -104,8 +93,7 @@ class ApiClient {
     );
   }
 
-  /// POST multipart/form-data — dipakai endpoint dengan unggahan file
-  /// (presensi check-in/out: `photo`; formulir lapangan: `photos[]`).
+  /// POST multipart/form-data (unggah file: `photo`, `photos[]`).
   Future<ApiResponse<T>> postMultipart<T>(
     String path, {
     Map<String, String> fields = const {},
@@ -133,7 +121,7 @@ class ApiClient {
     );
   }
 
-  /// DELETE — dipakai endpoint hapus file upload (docs/api-mobile.md §11.2).
+  /// DELETE — hapus file upload (docs/api-mobile.md §11.2).
   Future<ApiResponse<T>> delete<T>(
     String path, {
     Map<String, dynamic>? query,
@@ -182,8 +170,7 @@ class ApiClient {
   }
 
   /// HTTP >= 400: bisa envelope `{status:"error", message, errors}` maupun
-  /// error validasi bawaan Laravel 422 `{message, errors}` tanpa wrapper.
-  /// Format pesan: 3 baris — apa terjadi → kenapa → apa bisa dilakukan.
+  /// error validasi 422 Laravel `{message, errors}` tanpa wrapper.
   ApiException _httpError(Response<dynamic> response, {String? method}) {
     final data = response.data;
     if (data is Map) {
@@ -259,16 +246,10 @@ class ApiClient {
   void close() => _dio.close();
 }
 
-/// Interceptor transient network error — menangani DioException tanpa
-/// `response` (socket error, DNS flutter, handover WiFi↔seluler sempat off
-/// 200ms). Coba retry 1x dengan delay 750ms (cukup untuk radio switch)
-/// sebelum menyerahkan ke error handler (OutboxSyncService akan mengantre).
-///
-/// Retry hanya untuk method "idempotent enough": GET (sama sekali aman),
-/// POST/PUT/DELETE yang lewat outbox sudah memiliki Idempotency-Key
-/// di header. Endpoint non-outbox POST seperti approveServis hanya
-/// mengubah status dan tidak membuat record baru — retry 1x tetap aman
-/// (server harus idempotent untuk status transition).
+/// Interceptor transient network error (DioException tanpa response):
+/// retry 1x dengan delay 750ms sebelum diteruskan ke error handler.
+/// Retry aman untuk GET dan POST/PUT/DELETE berasal dari outbox yang sudah
+/// memakai Idempotency-Key di header.
 class _TransientNetworkRetryInterceptor extends Interceptor {
   _TransientNetworkRetryInterceptor(this._dio);
 
@@ -278,7 +259,6 @@ class _TransientNetworkRetryInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Hanya menangani error tanpa response (network-level).
     if (err.response != null) {
       handler.next(err);
       return;
@@ -301,10 +281,8 @@ class _TransientNetworkRetryInterceptor extends Interceptor {
   }
 }
 
-/// Interceptor 429 Too Many Requests — per docs/api-security-policy.md:
-/// parse header `Retry-After` (detik), fallback ke exponential backoff
-/// (1s, 2s, 4s), maks 3 retry. Tracking & GPS batch TIDAK boleh di-drop,
-/// melainkan di-queue (outbox menangani itu).
+/// Interceptor 429 Too Many Requests: parse header `Retry-After` (detik),
+/// fallback backoff 1s/2s/4s, maks 3 retry.
 class _RateLimitInterceptor extends Interceptor {
   _RateLimitInterceptor(this._dio);
 
@@ -317,7 +295,6 @@ class _RateLimitInterceptor extends Interceptor {
       final retryCount =
           (response.requestOptions.extra['_rateLimitRetry'] as int?) ?? 0;
       if (retryCount >= _maxRetries) {
-        // Sudah coba berkali-kali, serahkan ke caller sebagai error.
         handler.reject(
           DioException(
             requestOptions: response.requestOptions,
@@ -338,7 +315,6 @@ class _RateLimitInterceptor extends Interceptor {
     int retryCount,
     ResponseInterceptorHandler handler,
   ) async {
-    // Parse Retry-After header (seconds); fallback exponential backoff.
     final retryAfterRaw =
         response.headers.value('Retry-After') ??
         response.headers.value('retry-after');
@@ -360,14 +336,8 @@ class _RateLimitInterceptor extends Interceptor {
   }
 }
 
-/// Salinan [RequestOptions] untuk dikirim ulang dengan aman.
-///
-/// Dio melarang pemakaian ulang `FormData` yang sudah di-finalize
-/// ("The FormData has already been finalized"). Retry endpoint multipart
-/// (transient network & rate-limit) karena itu harus memakai body hasil
-/// [FormData.clone]. Tanpa ini, hiccup jaringan singkat pada request berfoto
-/// membuat percobaan ulang gagal → outbox menandai "menunggu sinkronisasi"
-/// meski perangkat sedang online.
+/// Ulangi [RequestOptions] untuk dikirim ulang; FormData yang sudah
+/// di-finalize tidak bisa dipakai ulang, jadi harus [FormData.clone].
 RequestOptions _cloneRequestForRetry(RequestOptions opts) {
   final data = opts.data;
   return opts.copyWith(data: data is FormData ? data.clone() : data);

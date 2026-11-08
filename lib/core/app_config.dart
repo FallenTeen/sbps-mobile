@@ -4,11 +4,19 @@
 class AppConfig {
   const AppConfig._();
 
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    // defaultValue: 'http://10.0.2.2:8000/api/mobile',
-    defaultValue: 'http://192.168.18.29:8000/api/mobile',
-  );
+  /// Wajib diisi lewat --dart-define-from-file; tanpa default.
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  static String get requiredApiBaseUrl {
+    assert(apiBaseUrl.isNotEmpty, 'API_BASE_URL wajib diisi via --dart-define-from-file');
+    if (apiBaseUrl.isEmpty) {
+      throw StateError(
+        'API_BASE_URL tidak diset. Build harus memakai '
+        '--dart-define-from-file=env/<env>.json (contoh: env/staging.json).',
+      );
+    }
+    return apiBaseUrl;
+  }
 
   static const String appEnv = String.fromEnvironment(
     'APP_ENV',
