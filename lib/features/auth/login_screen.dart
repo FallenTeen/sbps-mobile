@@ -67,32 +67,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     // ── Logo ──
                     Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: context.colors.primary.withValues(
-                                alpha: 0.3,
+                      child: Theme.of(context).brightness == Brightness.dark
+                          ? ColorFiltered(
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
                               ),
-                              blurRadius: 24,
-                              offset: const Offset(0, 10),
+                              child: Image.asset(
+                                'assets/main-logo.png',
+                                width: 96,
+                                height: 96,
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/main-logo.png',
+                              width: 96,
+                              height: 96,
+                              fit: BoxFit.contain,
                             ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'S',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                     const SizedBox(height: 28),
