@@ -31,6 +31,10 @@ class BackgroundLocationService {
         onStart: _onStart,
         autoStart: false,
         isForegroundMode: true,
+        // Android 14+ (targetSdk 34+): foreground service WAJIB punya
+        // tipe. Tanpa ini startForeground melempar exception dan service
+        // mati diam-diam (tertangkap catch di TrackingScheduler._start).
+        foregroundServiceTypes: const [AndroidForegroundType.location],
         notificationChannelId: 'sbps_tracking',
         initialNotificationTitle: 'SBPS Tracking',
         initialNotificationContent: 'Merekam lokasi kerja...',
@@ -47,6 +51,13 @@ class BackgroundLocationService {
   /// Mulai background tracking.
   Future<void> startTracking() async {
     if (!_initialized) await initialize();
+    // flutter_background_service 5.x: `invoke()` hanya mengirim pesan ke
+    // service yang SUDAH berjalan. Service harus di-start eksplisit -
+    // tanpa `startService()` tracking background tidak pernah hidup
+    // (hanya foreground yang merekam).
+    if (!await _service.isRunning()) {
+      await _service.startService();
+    }
     _service.invoke('startTracking');
   }
 

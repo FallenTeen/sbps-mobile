@@ -107,7 +107,11 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(outboxSyncServiceProvider).syncNow(ignoreBackoff: true);
-      // Recek OTA saat app kembali dibuka — patch yang terunduh di
+      // Tracking: cek ulang gate (login/presensi) lalu kirim titik yang
+      // menumpuk selama app di background - timer bisa di-throttle OEM.
+      ref.read(trackingSchedulerProvider.notifier).evaluate();
+      ref.read(trackingSchedulerProvider.notifier).flush();
+      // Recek OTA saat app kembali dibuka - patch yang terunduh di
       // background selama app tidak aktif bisa langsung siap restart.
       ref.read(shorebirdUpdateProvider.notifier).refresh();
     }

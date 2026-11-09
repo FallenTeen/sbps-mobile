@@ -42,6 +42,17 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Tracking background (flutter_background_service). Plugin hanya
+             mendeklarasikan service tanpa foregroundServiceType; Android 14+
+             menolak startForeground bertipe location bila manifest service
+             tidak menyatakan tipe tersebut. -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location"
+            android:stopWithTask="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

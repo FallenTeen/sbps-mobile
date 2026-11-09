@@ -29,9 +29,9 @@ class LocationBufferService {
 
   StreamSubscription<Position>? _positionSub;
   Timer? _fallbackTimer;
-  Position? _lastSeen;
   DateTime? _lastStoredAt;
   bool _running = false;
+  bool _fallbackBusy = false;
 
   List<TrackPoint> _points = [];
 
@@ -80,16 +80,23 @@ class LocationBufferService {
     ).listen(_onPosition);
 
     // Fallback perangkat yang tidak memancarkan event tanpa gerakan:
-    // simpan posisi terakhir tiap 60 detik bila ada yang baru.
-    _fallbackTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      final last = _lastSeen;
+    // stream berbasis jarak (>=50 m) TIDAK emit apa pun saat karyawan
+    // diam, jadi ambil posisi SEGAR tiap 60 detik agar lokasi tetap
+    // ter-update walau tidak berpindah (dan timestamp tidak dobel).
+    _fallbackTimer = Timer.periodic(const Duration(seconds: 60), (_) async {
+      if (_fallbackBusy) return;
       final stored = _lastStoredAt;
-      if (last == null) return;
       if (stored != null &&
           DateTime.now().difference(stored) < const Duration(seconds: 55)) {
         return;
       }
-      _onPosition(last);
+      _fallbackBusy = true;
+      try {
+        final pos = await _location.getCurrentPosition();
+        if (pos != null) _onPosition(pos);
+      } finally {
+        _fallbackBusy = false;
+      }
     });
 
     _running = true;
@@ -106,7 +113,6 @@ class LocationBufferService {
 
   void _onPosition(Position position) {
     if (!_running) return;
-    _lastSeen = position;
     _lastStoredAt = DateTime.now();
     _addPoint(
       TrackPoint(
