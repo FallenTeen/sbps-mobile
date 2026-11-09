@@ -2,15 +2,18 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:geolocator/geolocator.dart';
 
-import '../../core/app_config.dart';
 import '../../core/location_service.dart';
+import 'location_buffer_service.dart';
 
-/// Background Location Service untuk Mandor Titik.
+/// Background Location Service untuk SEMUA karyawan ber-presensi (§24 TODO A5/A6).
 ///
-/// Menjalankan interval GPS ping (tiap 5-15 menit) walau app di-minimize,
-/// selama masih dalam window check_in–check_out. Auto-cutoff jam kerja
-/// (default 18:00) sebagai safety net.
+/// Menjalankan interval GPS ping (tiap 10 menit) walau app di-minimize,
+/// selama presensi masih terbuka. Service isolate menulis titik LANGSUNG
+/// ke buffer Hive (berulang saat process utama di-freeze) — tidak ada
+/// cutoff jam 18:00; berhenti saat proses utama memanggil stopTracking
+/// (check-out / logout).
 class BackgroundLocationService {
   static final instance = BackgroundLocationService._();
   BackgroundLocationService._();
@@ -61,18 +64,16 @@ class BackgroundLocationService {
   static void _onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
 
-    if (service is AndroidServiceInstance) {
-      service.setAsForegroundService();
+    _startGpsInterval(service);
 
-      service.on('startTracking').listen((_) {
-        _startGpsInterval(service);
-      });
+    service.on('startTracking').listen((_) {
+      _startGpsInterval(service);
+    });
 
-      service.on('stopTracking').listen((_) {
-        _stopGpsInterval(service);
-        service.stopSelf();
-      });
-    }
+    service.on('stopTracking').listen((_) {
+      _stopGpsInterval(service);
+      service.stopSelf();
+    });
   }
 
   static Timer? _gpsTimer;
@@ -82,21 +83,9 @@ class BackgroundLocationService {
     if (_isTracking) return;
     _isTracking = true;
 
-    final now = DateTime.now();
-    final cutoffHour = AppConfig.trackingCutoffHour;
-    if (now.hour >= cutoffHour) {
-      _stopGpsInterval(service);
-      return;
-    }
-
     _gpsPing(service);
 
-    _gpsTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
-      final current = DateTime.now();
-      if (current.hour >= cutoffHour) {
-        _stopGpsInterval(service);
-        return;
-      }
+    _gpsTimer = Timer.periodic(const Duration(minutes: 10), (_) {
       _gpsPing(service);
     });
   }
@@ -109,7 +98,7 @@ class BackgroundLocationService {
     if (service is AndroidServiceInstance) {
       service.invoke('update', {
         'title': 'SBPS Tracking',
-        'content': 'Tracking dihentikan (jam kerja selesai)',
+        'content': 'Tracking dihentikan',
       });
     }
   }
@@ -117,17 +106,30 @@ class BackgroundLocationService {
   static Future<void> _gpsPing(ServiceInstance service) async {
     try {
       final location = LocationService();
-      final permission = await location.ensurePermission();
-      if (!permission) return;
+      if (!await location.isServiceEnabled()) return;
+
+      // Tanpa prompt while-in-use saja: service di background butuh
+      // izin ALWAYS. Bila belum, jangan request di sini (dialog butuh
+      // UI) — ping di-skip dan proses utama yang menuntaskan izin.
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.always) return;
 
       final position = await location.getCurrentPosition();
       if (position == null) return;
+
+      // Tulis LANGSUNG ke buffer Hive agar titik tetap terkirim
+      // walau process utama sudah dibunuh oleh OEM.
+      await LocationBufferService.appendPointIsolate(
+        lat: position.latitude,
+        lng: position.longitude,
+        timestamp: position.timestamp.toLocal(),
+      );
 
       if (service is AndroidServiceInstance) {
         service.invoke('update', {
           'title': 'SBPS Tracking',
           'content':
-              'Lokasi terkirim: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
+              'Lokasi tercatat: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
         });
       }
     } catch (_) {

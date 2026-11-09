@@ -5,9 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
-import '../../core/app_config.dart';
 import '../auth/auth_providers.dart';
-import '../portal/portal_providers.dart';
+import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
 import 'background_location_service.dart';
 import 'location_buffer_service.dart';
@@ -53,16 +52,21 @@ class TrackingStatus {
   );
 }
 
-/// Scheduler Live Tracking (Fase A2.4):
-/// - aktif HANYA untuk portal proyek + role `Mandor Titik` yang login;
-/// - buffer GPS via [LocationBufferService];
+/// Scheduler Live Tracking (§24 TODO A5 — tracking untuk SEMUA karyawan):
+/// - root gate: user login + presensi TERBUKA (menunggu check-out).
+///   Tanpa cek role/portal — semua karyawan login ikut tracking.
+/// - buffer GPS via [LocationBufferService]; titik dari background
+///   service isolate di-gabung dari Hive saat flush;
 /// - kirim batch tiap 4 menit ATAU begitu online kembali;
 /// - satu batch = satu batch_id: dibuat sekali sebelum kirim pertama dan
 ///   dipakai ulang persis pada retry (tidak pernah dipecah/digabung);
-/// - titik dihapus dari buffer hanya setelah batch terkirim sukses.
+/// - titik dihapus dari buffer hanya setelah batch terkirim sukses,
+///   BUKAN titik milik hari kemarin itu dibuang otomatis.
 ///
-/// 422 "belum check-in"/"belum terhubung karyawan" TIDAK membuang data —
-/// batch dipertahankan untuk dicoba lagi nanti hari itu.
+/// 422 "belum check-in" TIDAK membuang data — batch dipertahankan untuk
+/// dicoba lagi (window presensi server kini 36 jam, shift malam aman).
+/// Titik/batch milik hari kemarin dibuang otomatis di
+/// [LocationBufferService._pruneStale] agar tidak loop retry selamanya.
 class TrackingScheduler extends Notifier<TrackingStatus> {
   static const _uuid = Uuid();
   static const _flushInterval = Duration(minutes: 4);
@@ -70,12 +74,13 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
   Timer? _flushTimer;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   bool _flushing = false;
+  bool _alwaysPrompted = false;
 
   @override
   TrackingStatus build() {
-    // Reaksi otomatis terhadap login/logout & ganti role.
+    // Reaksi otomatis terhadap login/logout & presensi buka/tutup.
     ref.listen(authControllerProvider, (_, _) => evaluate());
-    ref.listen(activeRoleProvider, (_, _) => evaluate());
+    ref.listen(hariIniProvider, (_, _) => evaluate());
     ref.onDispose(_teardown);
     Future.microtask(evaluate);
     return const TrackingStatus();
@@ -83,18 +88,22 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
   LocationBufferService get _buffer => ref.read(locationBufferProvider);
 
-  bool get _shouldRun {
-    final portal = ref.read(selectedPortalProvider).value;
-    if (portal != AppPortal.proyek) return false;
+  Future<bool> _shouldRun() async {
     if (ref.read(authControllerProvider).value == null) return false;
-    if (ref.read(activeRoleProvider) != 'Mandor Titik') return false;
-    return DateTime.now().hour < AppConfig.trackingCutoffHour;
+
+    try {
+      final presensi = await ref.read(hariIniProvider.future);
+      return presensi.status == PresensiStatus.menungguCheckOut;
+    } catch (_) {
+      // Server tak tersambung / belum ada data: jangan tracking.
+      return false;
+    }
   }
 
   /// Selaraskan status berjalan dengan kondisi saat ini. Aman dipanggil
   /// berkali-kali.
   Future<void> evaluate() async {
-    if (_shouldRun) {
+    if (await _shouldRun()) {
       await _start();
     } else {
       _stop();
@@ -110,13 +119,30 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       return;
     }
 
+    // (A7) minta izin ALWAYS sekali per sesi — dialog hanya muncul bila
+    // belum always. Bila ditolak, tracking tetap berjalan (titik hanya
+    // terkirim saat app dibuka); background service tidak dimulai.
+    final location = ref.read(locationServiceProvider);
+    if (!await location.hasAlwaysPermission() && !_alwaysPrompted) {
+      _alwaysPrompted = true;
+      final ok = await location.ensureAlwaysPermission();
+      if (!ok) {
+        state = state.copyWith(
+          message:
+              'Izin lokasi belakang belum aktif - lokasi terkirim hanya saat app dibuka.',
+        );
+      }
+    }
+
     // Start background location service untuk tracking berkelanjutan
-    // saat app di-minimize.
-    try {
-      await BackgroundLocationService.instance.initialize();
-      await BackgroundLocationService.instance.startTracking();
-    } catch (_) {
-      // Background service gagal — foreground tracking tetap jalan.
+    // saat app di-minimize (punya izin always).
+    if (await location.hasAlwaysPermission()) {
+      try {
+        await BackgroundLocationService.instance.initialize();
+        await BackgroundLocationService.instance.startTracking();
+      } catch (_) {
+        // Background service gagal — foreground tracking tetap jalan.
+      }
     }
 
     state = state.copyWith(
@@ -141,11 +167,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
     state = state.copyWith(
       running: false,
-      message:
-          message ??
-          (DateTime.now().hour >= AppConfig.trackingCutoffHour
-              ? 'Tracking berhenti — melewati jam cutoff.'
-              : 'Tracking tidak aktif.'),
+      message: message ?? 'Tracking tidak aktif.',
     );
   }
 
@@ -154,6 +176,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     if (!state.running || _flushing) return;
     _flushing = true;
     try {
+      // (A8) rollover hari baru SEBELUM membaca batch — batch pending
+      // milik kemarin dibuang, jadi tak pernah diretry percuma.
+      await _buffer.pruneStale();
       var pending = await _buffer.readPendingBatch();
       List<TrackPoint> points;
       String batchId;
@@ -163,6 +188,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
         batchId = pending.batchId;
         points = pending.points;
       } else {
+        // (A6) gabungkan titik yang ditulis service isolate langsung
+        // ke Hive — buffer in-memory tak melihatnya sendirian.
+        await _buffer.syncFromStore();
         points = _buffer.snapshot();
         if (points.isEmpty) {
           state = state.copyWith(pendingPoints: 0);

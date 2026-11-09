@@ -4,21 +4,23 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
-import '../../core/app_config.dart';
 import '../../core/location_service.dart';
 import 'models.dart';
 
-/// Buffer titik GPS untuk Live Tracking (Fase A2.4).
+/// Buffer titik GPS untuk Live Tracking (Fase A2.4, §24 TODO A6/A8).
 ///
 /// Aturan perekaman: setiap berpindah >= 50 meter ATAU tiap ~60 detik
-/// (mana yang lebih dulu). Berhenti mengumpulkan otomatis setelah jam
-/// cutoff ([AppConfig.trackingCutoffHour], default 18:00).
+/// (mana yang lebih dulu). Tracking HANYA berjalan saat presensi terbuka
+/// (root gate di [TrackingScheduler]) — tidak ada cutoff jam.
 ///
 /// Persistensi: Hive box `tracking_buffer` —
 /// - key `points`: JSON list seluruh titik belum terkirim;
 /// - key `pending_batch`: batch yang sedang menunggu keberhasilan kirim,
 ///   berisi `batch_id` + isi persis — dipakai ULANG pada retry agar
 ///   backend idempotent dan batch tidak pernah dipecah/digabung ulang.
+///
+/// Titik/batch milik hari sebelumnya dibuang otomatis (flush offline
+/// semalam tidak relevan lagi — server tidak memakainya).
 class LocationBufferService {
   static const _boxName = 'tracking_buffer';
   static const _maxPoints = 5000;
@@ -54,16 +56,13 @@ class LocationBufferService {
         _points = [];
       }
     }
-    await _pruneStale();
+    await pruneStale();
   }
 
   /// Mulai perekaman. Return pesan kesalahan bila gagal (izin/GPS mati),
   /// null bila sukses berjalan.
   Future<String?> start() async {
     if (_running) return null;
-    if (DateTime.now().hour >= AppConfig.trackingCutoffHour) {
-      return 'Tracking sudah melewati jam cutoff.';
-    }
     if (!await _location.isServiceEnabled()) return 'Layanan lokasi mati.';
     if (!await _location.ensurePermission()) {
       return 'Izin lokasi belum diberikan.';
@@ -107,7 +106,6 @@ class LocationBufferService {
 
   void _onPosition(Position position) {
     if (!_running) return;
-    if (DateTime.now().hour >= AppConfig.trackingCutoffHour) return;
     _lastSeen = position;
     _lastStoredAt = DateTime.now();
     _addPoint(
@@ -134,20 +132,104 @@ class LocationBufferService {
 
   /// Buang titik dari hari sebelumnya (sisa offline semalam) — server
   /// tidak menyimpannya lagi, jadi tidak ada gunanya dikirim ulang.
-  Future<void> _pruneStale() async {
-    final todayStart = DateTime.now();
+  /// Buang titik/batch dari hari sebelumnya. Dipanggil saat `load()`
+  /// (panggilan `start()`) DAN pada setiap flush — app yang dibiarkan
+  /// nyala melewati tengah malam tetap me-rollover (§24 A8).
+  Future<void> pruneStale() async {
     final midnight = DateTime(
-      todayStart.year,
-      todayStart.month,
-      todayStart.day,
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
     );
     final before = _points.length;
     _points.removeWhere((p) => p.timestamp.isBefore(midnight));
-    if (_points.length != before) await _persist();
+    var changed = _points.length != before;
+
+    // Batch pending yang titiknya semua kemarin tidak akan pernah
+    // diterima server (presensi lama sudah ditutup) — buang agar tidak
+    // loop retry 422 di hari baru (§24 A8).
+    final pending = await readPendingBatch();
+    if (pending != null && pending.points.isNotEmpty) {
+      final semuaKemarin = pending.points
+          .every((p) => p.timestamp.isBefore(midnight));
+      if (semuaKemarin) {
+        await clearPendingBatch();
+        changed = true;
+      }
+    }
+
+    if (changed) await _persist();
   }
 
   /// Ambil salinan titik yang belum masuk batch pending.
   List<TrackPoint> snapshot() => List.unmodifiable(_points);
+
+  /// Gabungkan titik yang ditulis oleh background service isolate
+  /// (langsung ke Hive box) ke list in-memory — dedupe by `id`.
+  Future<void> syncFromStore() async {
+    final box = await _box();
+    final raw = box.get('points');
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final list = jsonDecode(raw) as List;
+      final known = _points.map((p) => p.id).toSet();
+      for (final e in list) {
+        final p = TrackPoint.fromJson(Map<String, dynamic>.from(e as Map));
+        if (known.add(p.id)) _points.add(p);
+      }
+      if (_points.length > _maxPoints) {
+        _points.removeRange(0, _points.length - _maxPoints);
+      }
+    } catch (_) {
+      // Data korup di box — biarkan in-memory untuk dipersist ulang.
+    }
+  }
+
+  /// Append SATU titik langsung ke Hive — untuk panggilan dari
+  /// background service isolate yang punya instance/memory sendiri
+  /// (tidak bisa memakai instance LocationBufferService utama).
+  static Future<void> appendPointIsolate({
+    required double lat,
+    required double lng,
+    required DateTime timestamp,
+  }) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('points');
+    List<TrackPoint> points = const [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final list = jsonDecode(raw) as List;
+        points = [
+          for (final e in list)
+            TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+        ];
+      } catch (_) {
+        points = const [];
+      }
+    }
+
+    // Prune kemarin juga di dalam isolate (day rollover offline semalam).
+    final midnight = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    points = points.where((p) => p.timestamp.isAfter(midnight)).toList();
+
+    points.add(
+      TrackPoint(lat: lat, lng: lng, timestamp: timestamp.toLocal()),
+    );
+    if (points.length > LocationBufferService._maxPoints) {
+      points.removeRange(0, points.length - LocationBufferService._maxPoints);
+    }
+
+    await box.put(
+      'points',
+      jsonEncode(
+        [for (final p in points) p.toJson()],
+      ),
+    );
+  }
 
   /// Hapus titik tertentu (setelah batch-nya terkirim sukses).
   Future<void> removeByIds(Set<String> ids) async {
