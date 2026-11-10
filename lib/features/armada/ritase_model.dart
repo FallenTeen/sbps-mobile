@@ -3,8 +3,8 @@
 /// Satu record = satu pengiriman POST /armada/ritase/input. Record punya
 /// status per-record (draft/queued/synced/failed) supaya partial failure
 /// terlihat dan bisa di-retry secara independen. Business rule ritase
-/// tidak diubah: payload wire tetap `{armada_id, jumlah_rit, satuan_volume,
-/// catatan?, odo_per_trip?}`.
+/// tidak diubah: payload wire `{armada_id, jumlah_rit, satuan_volume,
+/// material?, jumlah_volume?, catatan?, odo_per_trip?}`.
 library;
 
 import '../../core/outbox/pending_action.dart';

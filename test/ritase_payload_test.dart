@@ -69,6 +69,27 @@ void main() {
       expect(record.toPayload().containsKey('catatan'), isFalse);
     });
 
+    test('blok muatan opsional dikirim sebagai material & jumlah_volume', () {
+      final withMuatan = RitaseRecord(
+        id: 'r-8',
+        index: 8,
+        armadaId: 'a-8',
+        jumlah: 2,
+        satuan: 'ton',
+        muatanJenis: 'Pasir',
+        muatanJumlah: 15.5,
+        muatanSatuan: 'ton',
+        createdAt: DateTime(2026),
+      );
+      final payload = withMuatan.toPayload();
+      expect(payload['material'], 'Pasir');
+      expect(payload['jumlah_volume'], 15.5);
+
+      final without = _rec(index: 9, armadaId: 'a-9');
+      expect(without.toPayload().containsKey('material'), isFalse);
+      expect(without.toPayload().containsKey('jumlah_volume'), isFalse);
+    });
+
     test('serialize/deserialize siklus utuh (status & clientUuid)', () {
       final record = _rec(
         index: 7,

@@ -335,6 +335,8 @@ class ArmadaRepository {
     String? proyekId,
     String? catatan,
     double? odoPerTrip,
+    String? muatanJenis,
+    double? muatanJumlah,
     String? clientUuid,
     String? idempotencyKey,
   }) async {
@@ -353,6 +355,9 @@ class ArmadaRepository {
           'proyek_id': proyekId.trim(),
         if (catatan != null && catatan.trim().isNotEmpty)
           'catatan': catatan.trim(),
+        if (muatanJenis != null && muatanJenis.trim().isNotEmpty)
+          'material': muatanJenis.trim(),
+        'jumlah_volume': ?muatanJumlah,
         'odo_per_trip': ?odoPerTrip,
       },
       createdAt: DateTime.now(),

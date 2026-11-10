@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:sbps_mobile/features/armada/checklist_draft_store.dart';
 import 'package:sbps_mobile/features/armada/checklist_model.dart';
 import 'package:sbps_mobile/features/armada/models/armada.dart';
 
@@ -145,6 +149,61 @@ void main() {
 
       expect(payload['baik'], isFalse);
       expect(payload['status'], 'perlu_perhatian');
+    });
+  });
+
+  group('ChecklistDraftStore', () {
+    setUpAll(() {
+      final tmp = Directory.systemTemp.createTempSync('sbps_checklist_draft');
+      Hive.init(tmp.path);
+    });
+
+    test('save / load / clear roundtrip', () async {
+      await ChecklistDraftStore.save('U1', isAkhir: false, data: {
+        'odo': '123',
+        'bagian': [
+          {'bagian': 'Ban', 'kondisi': 'baik', 'catatan': ''},
+        ],
+      });
+
+      final loaded = await ChecklistDraftStore.load('U1', isAkhir: false);
+      expect(loaded?['odo'], '123');
+      expect((loaded?['bagian'] as List).length, 1);
+
+      await ChecklistDraftStore.clear('U1', isAkhir: false);
+      expect(await ChecklistDraftStore.load('U1', isAkhir: false), isNull);
+    });
+
+    test('draft pagi dan akhir tersimpan terpisah', () async {
+      await ChecklistDraftStore.save('U2', isAkhir: false, data: {'odo': '1'});
+      await ChecklistDraftStore.save('U2', isAkhir: true, data: {'odo': '2'});
+
+      expect(
+        (await ChecklistDraftStore.load('U2', isAkhir: false))?['odo'],
+        '1',
+      );
+      expect((await ChecklistDraftStore.load('U2', isAkhir: true))?['odo'], '2');
+    });
+
+    test('armada berbeda tidak saling menimpa', () async {
+      await ChecklistDraftStore.save('A', isAkhir: false, data: {'odo': '10'});
+      await ChecklistDraftStore.save('B', isAkhir: false, data: {'odo': '20'});
+
+      expect((await ChecklistDraftStore.load('A', isAkhir: false))?['odo'], '10');
+      expect((await ChecklistDraftStore.load('B', isAkhir: false))?['odo'], '20');
+    });
+
+    test('markAkhirSubmitted menandai final tanpa menghapus data', () async {
+      await ChecklistDraftStore.save('U3', isAkhir: true, data: {'odo': '9'});
+      await ChecklistDraftStore.markAkhirSubmitted('U3');
+
+      expect(await ChecklistDraftStore.isAkhirSubmitted('U3'), isTrue);
+      expect((await ChecklistDraftStore.load('U3', isAkhir: true))?['odo'], '9');
+    });
+
+    test('load tanpa draft mengembalikan null', () async {
+      expect(await ChecklistDraftStore.load('tidak-ada', isAkhir: false), isNull);
+      expect(await ChecklistDraftStore.isAkhirSubmitted('tidak-ada'), isFalse);
     });
   });
 }

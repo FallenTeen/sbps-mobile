@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,10 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
@@ -225,7 +229,8 @@ class _ChecklistForm extends ConsumerStatefulWidget {
   ConsumerState<_ChecklistForm> createState() => _ChecklistFormState();
 }
 
-class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
+class _ChecklistFormState extends ConsumerState<_ChecklistForm>
+    with WidgetsBindingObserver {
   late List<_BagianState> _bagian;
   late List<TextEditingController> _catatanCtrl;
   final _odoCtrl = TextEditingController();
@@ -237,6 +242,13 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
   String? _fotoOdoUrl;
   int? _expanded;
   bool _busy = false;
+
+  Timer? _autosaveTimer;
+  bool _autosaveStopped = false;
+  bool _draftFound = false;
+  bool _submittedLocal = false;
+  DateTime? _draftSavedAt;
+  Map<String, dynamic>? _pendingDraft;
 
   bool get _readOnly {
     if (widget.isAkhir) return widget.item?.akhir != null;
@@ -261,6 +273,26 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
             : _bagianDefault;
     _bagian = [for (final b in bagianList) _BagianState(bagian: b)];
     _catatanCtrl = [for (final _ in _bagian) TextEditingController()];
+
+    _prefillFromItem();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkDraft());
+  }
+
+  void _prefillFromItem() {
+    for (var i = 0; i < _bagian.length; i++) {
+      _bagian[i]
+        ..level = null
+        ..catatan = ''
+        ..fotoPath = null;
+      _catatanCtrl[i].clear();
+    }
+    _stokSolar = null;
+    _fotoStok = null;
+    _fotoOdo = null;
+    _fotoStokUrl = null;
+    _fotoOdoUrl = null;
+    _odoCtrl.clear();
 
     if (widget.isAkhir) {
       final a = widget.item?.akhir;
@@ -320,11 +352,167 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _flushAutosave();
     _odoCtrl.dispose();
     for (final c in _catatanCtrl) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) _flushAutosave();
+  }
+
+  void _scheduleAutosave() {
+    if (_autosaveStopped || _submittedLocal || _readOnly) return;
+    _autosaveTimer?.cancel();
+    _autosaveTimer = Timer(const Duration(milliseconds: 800), _saveDraft);
+  }
+
+  void _flushAutosave() {
+    if (_autosaveTimer == null) return;
+    _autosaveTimer!.cancel();
+    _saveDraft();
+  }
+
+  void _saveDraft() {
+    _autosaveTimer = null;
+    if (_autosaveStopped || _submittedLocal || _readOnly) return;
+    ChecklistDraftStore.save(
+      widget.armada.id,
+      isAkhir: widget.isAkhir,
+      data: _draftSnapshot(),
+    ).ignore();
+  }
+
+  Map<String, dynamic> _draftSnapshot() => {
+    'savedAt': DateTime.now().toIso8601String(),
+    if (_stokSolar != null) 'stokSolar': _stokSolar,
+    'odo': _odoCtrl.text,
+    if (_fotoStok != null) 'fotoStok': _fotoStok!.path,
+    if (_fotoOdo != null) 'fotoOdo': _fotoOdo!.path,
+    'bagian': [
+      for (var i = 0; i < _bagian.length; i++)
+        {
+          'bagian': _bagian[i].bagian,
+          if (_bagian[i].level != null) 'kondisi': _bagian[i].level!.wireValue,
+          'catatan': _catatanCtrl[i].text,
+          if (_bagian[i].fotoPath != null) 'foto': _bagian[i].fotoPath,
+        },
+    ],
+  };
+
+  Future<void> _checkDraft() async {
+    if (!mounted || _readOnly) return;
+    Map<String, dynamic>? data;
+    try {
+      data = await ChecklistDraftStore.load(
+        widget.armada.id,
+        isAkhir: widget.isAkhir,
+      );
+    } catch (_) {
+      return;
+    }
+    if (!mounted || data == null) return;
+    if (widget.isAkhir && data['submitted'] == true) {
+      _submittedLocal = true;
+      return;
+    }
+    final savedAt = DateTime.tryParse(data['savedAt']?.toString() ?? '');
+    setState(() {
+      _pendingDraft = data;
+      _draftSavedAt = savedAt ?? DateTime.now();
+      _draftFound = true;
+    });
+  }
+
+  void _continueDraft() {
+    final data = _pendingDraft;
+    setState(() {
+      _draftFound = false;
+      _pendingDraft = null;
+    });
+    if (data != null) _restoreDraft(data);
+  }
+
+  Future<void> _discardDraft() async {
+    _autosaveTimer?.cancel();
+    _autosaveTimer = null;
+    try {
+      await ChecklistDraftStore.clear(
+        widget.armada.id,
+        isAkhir: widget.isAkhir,
+      );
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _draftFound = false;
+      _pendingDraft = null;
+      _prefillFromItem();
+    });
+  }
+
+  void _restoreDraft(Map<String, dynamic> data) {
+    setState(() {
+      final opsi =
+          widget.item?.opsiStokSolar.isNotEmpty == true
+              ? widget.item!.opsiStokSolar
+              : _stokSolarFallback;
+      final stok = data['stokSolar'];
+      if (stok is String && opsi.any((o) => o.value == stok)) _stokSolar = stok;
+      final odo = data['odo'];
+      if (odo is String) _odoCtrl.text = odo;
+      final fotoStok = data['fotoStok'];
+      if (fotoStok is String &&
+          fotoStok.isNotEmpty &&
+          File(fotoStok).existsSync()) {
+        _fotoStok = CapturedPhoto(
+          path: fotoStok,
+          gpsStatus: GpsStatus.unavailable,
+          latitude: null,
+          longitude: null,
+        );
+      }
+      final fotoOdo = data['fotoOdo'];
+      if (fotoOdo is String &&
+          fotoOdo.isNotEmpty &&
+          File(fotoOdo).existsSync()) {
+        _fotoOdo = CapturedPhoto(
+          path: fotoOdo,
+          gpsStatus: GpsStatus.unavailable,
+          latitude: null,
+          longitude: null,
+        );
+      }
+      final bagianRaw = data['bagian'];
+      if (bagianRaw is List) {
+        for (final raw in bagianRaw) {
+          if (raw is! Map) continue;
+          final m = Map<String, dynamic>.from(raw);
+          final nama = m['bagian']?.toString();
+          if (nama == null) continue;
+          final idx = _bagian.indexWhere((b) => b.bagian == nama);
+          if (idx < 0) continue;
+          final kondisi = m['kondisi']?.toString();
+          final fotoPath = m['foto']?.toString();
+          _bagian[idx]
+            ..level =
+                ChecklistItemLevel.values
+                    .where((l) => l.wireValue == kondisi)
+                    .firstOrNull
+            ..catatan = m['catatan']?.toString() ?? ''
+            ..fotoPath =
+                (fotoPath != null && File(fotoPath).existsSync())
+                ? fotoPath
+                : null;
+          _catatanCtrl[idx].text = _bagian[idx].catatan;
+        }
+      }
+      _expanded = _firstUnfilled();
+    });
   }
 
   void _setLevel(int index, ChecklistItemLevel level) {
@@ -336,6 +524,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
       AnalyticsService.checklistItemToggle(b.bagian, !level.isBermasalah);
       _expanded = _firstUnfilled();
     });
+    _scheduleAutosave();
   }
 
   Future<void> _pickFoto(_FotoSlot slot) async {
@@ -348,15 +537,30 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
         _fotoOdo = photo;
       }
     });
+    _scheduleAutosave();
   }
 
   Future<void> _pickItemFoto(int index) async {
     final photo = await takeWatermarkedPhoto(ref);
     if (photo == null || !mounted) return;
     setState(() => _bagian[index].fotoPath = photo.path);
+    _scheduleAutosave();
   }
 
   Future<void> _submit() async {
+    if (widget.isAkhir) {
+      final confirm = await ConfirmationDialog.show(
+        context,
+        severity: ConfirmSeverity.destructive,
+        title: 'Kirim Checklist Akhir?',
+        message:
+            'Checklist akhir bersifat final dan tidak dapat diedit setelah '
+            'dikirim. Koreksi ODO/HM harus diajukan melalui Ketua Armada. '
+            'Lanjutkan pengiriman?',
+        confirmLabel: 'Ya, Kirim',
+      );
+      if (!mounted || confirm?.confirmed != true) return;
+    }
     final armada = widget.armada;
     final isAlatBerat = armada.isAlatBerat;
     final odo = double.tryParse(_odoCtrl.text.trim());
@@ -440,6 +644,15 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
               fotoStokSolarPath: _fotoStok?.path,
               fotoOdoPagiPath: _fotoOdo?.path,
             );
+      _autosaveTimer?.cancel();
+      _autosaveTimer = null;
+      _autosaveStopped = true;
+      try {
+        await ChecklistDraftStore.clear(
+          armada.id,
+          isAkhir: widget.isAkhir,
+        );
+      } catch (_) {}
       if (!mounted) return;
       AnalyticsService.checklistSubmit(true);
       HapticFeedback.lightImpact();
@@ -490,6 +703,14 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_draftFound) ...[
+          DraftRestoreBanner(
+            savedAt: _draftSavedAt ?? DateTime.now(),
+            onContinue: _continueDraft,
+            onDiscard: _discardDraft,
+          ),
+          const SizedBox(height: 12),
+        ],
         if (_readOnly) _LockedBanner(isAkhir: widget.isAkhir, alasan: _lockReason),
         if (_readOnly) const SizedBox(height: 12),
         _SectionCard(
@@ -523,16 +744,13 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
                     .toList(),
                 onChanged: _readOnly
                     ? null
-                    : (v) => setState(() => _stokSolar = v),
+                    : (v) {
+                        if (v == _stokSolar) return;
+                        setState(() => _stokSolar = v);
+                        _scheduleAutosave();
+                      },
               ),
               const SizedBox(height: 10),
-              _PhotoField(
-                label: 'Foto indikator stok solar (wajib)',
-                localPath: _fotoStok?.path,
-                hasExisting: _fotoStokUrl != null,
-                enabled: !_readOnly,
-                onTap: () => _pickFoto(_FotoSlot.stokSolar),
-              ),
               _PhotoField(
                 label: 'Foto indikator stok solar (wajib)',
                 localPath: _fotoStok?.path,
@@ -544,6 +762,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
               TextField(
                 controller: _odoCtrl,
                 enabled: !_readOnly,
+                onChanged: _readOnly ? null : (_) => _scheduleAutosave(),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -620,6 +839,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm> {
             ),
             onLevelChanged: (level) => _setLevel(i, level),
             onFoto: () => _pickItemFoto(i),
+            onCatatanChanged: _scheduleAutosave,
           ),
           const SizedBox(height: 8),
         ],
@@ -714,6 +934,7 @@ class _BagianAccordion extends StatelessWidget {
     required this.onToggle,
     required this.onLevelChanged,
     required this.onFoto,
+    required this.onCatatanChanged,
   });
 
   final _BagianState state;
@@ -723,6 +944,7 @@ class _BagianAccordion extends StatelessWidget {
   final VoidCallback onToggle;
   final ValueChanged<ChecklistItemLevel> onLevelChanged;
   final VoidCallback onFoto;
+  final VoidCallback onCatatanChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -813,7 +1035,10 @@ class _BagianAccordion extends StatelessWidget {
                     TextField(
                       controller: catatanCtrl,
                       maxLines: 2,
-                      onChanged: (v) => state.catatan = v,
+                      onChanged: (v) {
+                        state.catatan = v;
+                        onCatatanChanged();
+                      },
                       decoration: InputDecoration(
                         labelText: 'Jelaskan kondisi (wajib)',
                         border: const OutlineInputBorder(),

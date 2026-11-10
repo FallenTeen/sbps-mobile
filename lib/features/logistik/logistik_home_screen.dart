@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
@@ -59,24 +61,13 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
           Expanded(
             child: antreanAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: context.colors.error),
-                      const SizedBox(height: 12),
-                      Text('Gagal memuat antrean ritase: $err', textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => ref.invalidate(antreanVerifikasiRitaseProvider),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
+              error: (err, _) => ErrorState(
+                message: friendlyErrorMessage(
+                  err,
+                  fallback: 'Gagal memuat antrean ritase.',
                 ),
+                onRetry: () =>
+                    ref.invalidate(antreanVerifikasiRitaseProvider),
               ),
               data: (items) {
                 final filtered = items.where((item) {

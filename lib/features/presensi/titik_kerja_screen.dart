@@ -9,6 +9,7 @@ import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
@@ -92,30 +93,17 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               if (user != null && !user.hasKaryawan) ...[
-                MaterialBanner(
-                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                  contentTextStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                  content: const Text(
-                    'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
-                  ),
-                  actions: [
-                    TextButton(onPressed: () {}, child: const Text('Tutup')),
-                  ],
+                const InfoBanner(
+                  icon: Icons.warning_amber_rounded,
+                  message:
+                      'Akun Anda belum terhubung ke data karyawan, hubungi admin.',
                 ),
                 const SizedBox(height: 8),
               ] else if (assignmentsAsync.value != null &&
                   assignmentsAsync.value!.isEmpty &&
                   assignmentsAsync.hasValue) ...[
-                MaterialBanner(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  content: const Text('Belum ada penugasan, hubungi admin.'),
-                  actions: [
-                    TextButton(onPressed: () {}, child: const Text('Tutup')),
-                  ],
+                const InfoBanner(
+                  message: 'Belum ada penugasan, hubungi admin.',
                 ),
                 const SizedBox(height: 8),
               ],

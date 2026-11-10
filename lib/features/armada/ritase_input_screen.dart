@@ -266,6 +266,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               proyekId: record.proyekId,
               catatan: record.catatan,
               odoPerTrip: record.odoPerTrip,
+              muatanJenis: record.muatanJenis,
+              muatanJumlah: record.muatanJumlah,
               clientUuid: record.clientUuid,
               idempotencyKey: record.idempotencyKey,
             );
@@ -370,6 +372,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                 proyekId: record.proyekId,
                 catatan: record.catatan,
                 odoPerTrip: record.odoPerTrip,
+                muatanJenis: record.muatanJenis,
+                muatanJumlah: record.muatanJumlah,
                 clientUuid: record.clientUuid,
                 idempotencyKey: record.idempotencyKey,
               );

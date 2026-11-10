@@ -103,7 +103,6 @@ class PresensiHariIniCard extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Presensi masih menunggu sinkron. coba lagi nanti.'),
-          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -116,7 +115,6 @@ class PresensiHariIniCard extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih titik kerja terlebih dahulu.'),
-          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -129,7 +127,6 @@ class PresensiHariIniCard extends ConsumerWidget {
                 ? 'Posisi GPS sudah lama. Segarkan lokasi sebelum check-in.'
                 : 'Posisi GPS belum siap. Pastikan lokasi aktif lalu coba lagi.',
           ),
-          backgroundColor: Colors.orange,
         ),
       );
       return;
