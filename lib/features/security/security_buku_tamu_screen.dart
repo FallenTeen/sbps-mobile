@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import 'models/security_models.dart';
@@ -67,7 +68,9 @@ class _SecurityBukuTamuScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menandai keluar: $e'),
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal menandai keluar. Coba lagi.'),
+          ),
           backgroundColor: context.colors.error,
         ),
       );
@@ -138,7 +141,13 @@ class _SecurityBukuTamuScreenState
                     children: [
                       Icon(Icons.error_outline, size: 48, color: context.colors.error),
                       const SizedBox(height: 12),
-                      Text('Gagal memuat buku tamu: $err', textAlign: TextAlign.center),
+                      Text(
+                        friendlyErrorMessage(
+                          err,
+                          fallback: 'Gagal memuat buku tamu. Coba lagi.',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
                         onPressed: () => ref.invalidate(bukuTamuHariIniProvider),

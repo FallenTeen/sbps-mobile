@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/analytics_service.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -93,7 +94,9 @@ class _SecurityBukuTamuFormScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menyimpan tamu: $e'),
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal menyimpan tamu. Coba lagi.'),
+          ),
           backgroundColor: context.colors.error,
         ),
       );

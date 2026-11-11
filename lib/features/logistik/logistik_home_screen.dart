@@ -151,8 +151,8 @@ class _RitaseAntreanCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: item.hasSelisih
-              ? Colors.deepOrange.withValues(alpha: 0.5)
-              : (isVerified ? Colors.blue.withValues(alpha: 0.3) : context.colors.border),
+              ? context.colors.error.withValues(alpha: 0.5)
+              : (isVerified ? context.colors.info.withValues(alpha: 0.3) : context.colors.border),
         ),
       ),
       child: InkWell(
@@ -197,14 +197,14 @@ class _RitaseAntreanCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.verified, size: 12, color: Colors.blue),
-                          SizedBox(width: 4),
+                          Icon(Icons.verified, size: 12, color: context.colors.info),
+                          const SizedBox(width: 4),
                           Text(
                             'Verified',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.blue),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.info),
                           ),
                         ],
                       ),
@@ -213,13 +213,13 @@ class _RitaseAntreanCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.12),
+                        color: context.colors.warning.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                        border: Border.all(color: context.colors.warning.withValues(alpha: 0.4)),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Butuh Verifikasi',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.orange),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.warning),
                       ),
                     ),
                 ],
@@ -246,10 +246,10 @@ class _RitaseAntreanCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Hasil Timbang Resmi: ${item.jumlahVerifikasiLogistik} ton',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Colors.blue,
+                    color: context.colors.info,
                   ),
                 ),
               ],
@@ -271,17 +271,17 @@ class _RitaseAntreanCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.deepOrange.withValues(alpha: 0.12),
+                        color: context.colors.error.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.warning_amber_rounded, size: 12, color: Colors.deepOrange),
-                          SizedBox(width: 4),
+                          Icon(Icons.warning_amber_rounded, size: 12, color: context.colors.error),
+                          const SizedBox(width: 4),
                           Text(
                             'Ada Selisih',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.deepOrange),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.error),
                           ),
                         ],
                       ),
@@ -290,12 +290,12 @@ class _RitaseAntreanCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withValues(alpha: 0.12),
+                        color: context.colors.secondary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Wajib Timbang',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.purple),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.secondary),
                       ),
                     )
                   else

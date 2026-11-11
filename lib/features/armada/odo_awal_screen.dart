@@ -6,11 +6,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics_service.dart';
 import '../../core/api_client.dart';
 import '../../core/armada_jenis.dart';
+import '../../core/draft/autosave_controller.dart';
+import '../../core/draft/draft_repository.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
@@ -36,15 +39,60 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
   ArmadaSaya? _selectedArmada;
   late final TextEditingController _odoController;
   bool _isLoading = false;
+  bool _submitted = false;
+  bool _draftFound = false;
+  DateTime? _draftSavedAt;
+  late final AutosaveController _autosave;
+
+  /// Satu slot draft (ODO = sekali isi per proyek; restore divalidasi
+  /// terhadap unit yang terpilih agar draft unit lain tidak bocor).
+  static const String _draftKey = 'odo_awal_current';
+
+  Map<String, dynamic> _snapshot() => {
+    'armadaId': _selectedArmada?.id,
+    'odo': _odoController.text,
+  };
+
+  void _restoreFromDraft(FormDraft draft) {
+    final f = draft.fieldsJson;
+    final draftArmadaId = f['armadaId']?.toString();
+    final odo = f['odo']?.toString() ?? '';
+    // Hanya tawarkan restore bila draft milik unit yang sama DAN nilainya
+    // berbeda dari prefill server (mis. hasil koreksi yang belum terkirim).
+    final meaningful =
+        draftArmadaId == _selectedArmada?.id &&
+        odo.trim().isNotEmpty &&
+        odo.trim() != _odoController.text.trim();
+    if (!meaningful) {
+      _autosave.clear();
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _odoController.text = odo;
+      _draftFound = true;
+      _draftSavedAt = draft.savedAt;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _odoController = TextEditingController();
+    _autosave = AutosaveController(
+      ref: ref,
+      draftKey: _draftKey,
+      formType: DraftFormType.odoAwal,
+      currentFields: _snapshot,
+      onRestore: _restoreFromDraft,
+    );
+    _autosave.init();
   }
 
   @override
   void dispose() {
+    if (!_submitted) _autosave.flush();
+    _autosave.dispose();
     _odoController.dispose();
     super.dispose();
   }
@@ -64,7 +112,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
       ? 'HM'
       : 'KM';
 
-  void _applyArmada(ArmadaSaya armada) {
+  Future<void> _applyArmada(ArmadaSaya armada) async {
     setState(() {
       _selectedArmada = armada;
       final last = armada.isAlatBerat
@@ -79,6 +127,9 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
         _odoController.clear();
       }
     });
+    // Cek draft setelah prefill selesai — restore hanya ditawarkan bila
+    // isinya benar-benar berbeda dari prefill (lihat _restoreFromDraft).
+    await _autosave.load();
   }
 
   Future<void> _confirmAnomaly() async {
@@ -162,6 +213,8 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
 
       ref.invalidate(armadaSayaProvider);
       ref.invalidate(odoAwalProyekProvider(armada.id));
+      _submitted = true;
+      await _autosave.clear();
 
       if (!mounted) return;
       HapticFeedback.lightImpact();
@@ -272,6 +325,28 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_draftFound) ...[
+                DraftRestoreBanner(
+                  savedAt: _draftSavedAt ?? DateTime.now(),
+                  onContinue: () => setState(() => _draftFound = false),
+                  onDiscard: () async {
+                    await _autosave.clear();
+                    if (!mounted) return;
+                    setState(() {
+                      _draftFound = false;
+                      final last = _previousValue;
+                      if (last != null) {
+                        _odoController.text = last % 1 == 0
+                            ? last.toInt().toString()
+                            : last.toStringAsFixed(1);
+                      } else {
+                        _odoController.clear();
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
               _unitDropdown(armadaList),
               const SizedBox(height: 16),
 
@@ -320,7 +395,10 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
                       ? 'Total jam mesin menyala dari Hour Meter'
                       : 'Angka pada odometer (penghitung km) kendaraan',
                 ),
-                onChanged: (_) => setState(() {}),
+                onChanged: (_) {
+                  setState(() {});
+                  _autosave.onFieldChanged();
+                },
               ),
 
               const SizedBox(height: 24),

@@ -24,12 +24,34 @@ const String kCopyConnError =
 /// [ApiException] membawa pesan dari server (bisa ditampilkan asli);
 /// error lain (SocketException, ClientException, dsb) diganti pesan umum
 /// agar detail teknis tidak bocor ke UI.
+///
+/// Untuk 422 (validasi Laravel), pesan top-level biasanya generik — detail
+/// per-field (`errors: {field: [pesan]}`, sudah berbahasa Indonesia dari
+/// backend) jauh lebih berguna bagi user, jadi itu yang ditampilkan.
 String friendlyErrorMessage(
   Object error, {
   String? fallback,
 }) {
   if (error is ApiException) {
+    final detail = _fieldErrorDetail(error.errors);
+    if (detail != null) return detail;
     return error.message;
   }
   return fallback ?? kCopyConnError;
+}
+
+/// Gabungkan error validasi 422 Laravel menjadi teks ringkas (maks 3 baris).
+String? _fieldErrorDetail(Map<String, List<String>>? errors) {
+  if (errors == null || errors.isEmpty) return null;
+  final lines = <String>[];
+  var total = 0;
+  for (final messages in errors.values) {
+    total += messages.length;
+    for (final msg in messages) {
+      if (lines.length < 3) lines.add('• $msg');
+    }
+  }
+  if (lines.isEmpty) return null;
+  if (total > lines.length) lines.add('+${total - lines.length} lainnya');
+  return lines.join('\n');
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,11 +6,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/draft/autosave_controller.dart';
+import '../../core/draft/draft_repository.dart';
 import '../../core/formatters.dart';
+import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -363,6 +368,73 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
   CapturedPhoto? _fotoOdo;
   CapturedPhoto? _fotoNota;
   bool _isLoading = false;
+  bool _submitted = false;
+  bool _draftFound = false;
+  DateTime? _draftSavedAt;
+  String? _prefilledOdo;
+  late final AutosaveController _autosave;
+
+  String get _draftKey => 'pengisian_solar_${widget.armada.id}';
+
+  Map<String, dynamic> _snapshot() => {
+    'odo': _odoCtrl.text,
+    'nominal': _nominalCtrl.text,
+    'catatan': _catatanCtrl.text,
+    'fotoOdo': _fotoOdo?.path,
+    'fotoNota': _fotoNota?.path,
+  };
+
+  void _restoreFromDraft(FormDraft draft) {
+    final f = draft.fieldsJson;
+    final odo = f['odo']?.toString() ?? '';
+    final nominal = f['nominal']?.toString() ?? '';
+    final catatan = f['catatan']?.toString() ?? '';
+    final fotoOdoPath = f['fotoOdo']?.toString();
+    final fotoNotaPath = f['fotoNota']?.toString();
+    final hasOdoFoto =
+        fotoOdoPath != null &&
+        fotoOdoPath.isNotEmpty &&
+        File(fotoOdoPath).existsSync();
+    final hasNotaFoto =
+        fotoNotaPath != null &&
+        fotoNotaPath.isNotEmpty &&
+        File(fotoNotaPath).existsSync();
+    // Draft yang hanya berisi nilai prefill (tidak ada input user) tidak
+    // perlu ditawarkan — hindari banner "Lanjutkan?" yang tidak berguna.
+    final meaningful =
+        nominal.trim().isNotEmpty ||
+        catatan.trim().isNotEmpty ||
+        hasOdoFoto ||
+        hasNotaFoto ||
+        (odo.trim().isNotEmpty && odo != (_prefilledOdo ?? ''));
+    if (!meaningful) {
+      _autosave.clear();
+      return;
+    }
+    setState(() {
+      if (odo.isNotEmpty) _odoCtrl.text = odo;
+      if (nominal.isNotEmpty) _nominalCtrl.text = nominal;
+      if (catatan.isNotEmpty) _catatanCtrl.text = catatan;
+      if (hasOdoFoto) {
+        _fotoOdo = CapturedPhoto(
+          path: fotoOdoPath,
+          gpsStatus: GpsStatus.unavailable,
+          latitude: null,
+          longitude: null,
+        );
+      }
+      if (hasNotaFoto) {
+        _fotoNota = CapturedPhoto(
+          path: fotoNotaPath,
+          gpsStatus: GpsStatus.unavailable,
+          latitude: null,
+          longitude: null,
+        );
+      }
+      _draftFound = true;
+      _draftSavedAt = draft.savedAt;
+    });
+  }
 
   @override
   void initState() {
@@ -371,10 +443,28 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
         ? widget.armada.jamOperasionalTerkini
         : widget.armada.odoTerkini;
     if (odo != null) _odoCtrl.text = _fmtNum(odo);
+    _prefilledOdo = _odoCtrl.text;
+    _autosave = AutosaveController(
+      ref: ref,
+      draftKey: _draftKey,
+      formType: DraftFormType.pengisianSolar,
+      currentFields: _snapshot,
+      currentPhotoPaths: () => [
+        if (_fotoOdo != null) _fotoOdo!.path,
+        if (_fotoNota != null) _fotoNota!.path,
+      ],
+      onRestore: _restoreFromDraft,
+    );
+    _autosave.init();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _autosave.load();
+    });
   }
 
   @override
   void dispose() {
+    if (!_submitted) _autosave.flush();
+    _autosave.dispose();
     _odoCtrl.dispose();
     _nominalCtrl.dispose();
     _catatanCtrl.dispose();
@@ -393,6 +483,7 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
         _fotoNota = photo;
       }
     });
+    _autosave.onFieldChanged();
   }
 
   Future<void> _submit() async {
@@ -429,7 +520,10 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
       if (!mounted) return;
       HapticFeedback.lightImpact();
       _snack(delivered ? 'Pengisian solar tersimpan.' : kCopyQueued);
-      Navigator.of(context).pop(true);
+      _submitted = true;
+      final navigator = Navigator.of(context);
+      await _autosave.clear();
+      navigator.pop(true);
     } on ApiException catch (e) {
       if (!mounted) return;
       _snack(e.message);
@@ -489,12 +583,32 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
               '${armada.platNomor}${armada.kodeUnit != null ? ' • ${armada.kodeUnit}' : ''}',
               style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
             ),
+            if (_draftFound) ...[
+              const SizedBox(height: 12),
+              DraftRestoreBanner(
+                savedAt: _draftSavedAt ?? DateTime.now(),
+                onContinue: () => setState(() => _draftFound = false),
+                onDiscard: () async {
+                  await _autosave.clear();
+                  if (!mounted) return;
+                  setState(() {
+                    _draftFound = false;
+                    if (_prefilledOdo != null) _odoCtrl.text = _prefilledOdo!;
+                    _nominalCtrl.clear();
+                    _catatanCtrl.clear();
+                    _fotoOdo = null;
+                    _fotoNota = null;
+                  });
+                },
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _odoCtrl,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              onChanged: (_) => _autosave.onFieldChanged(),
               decoration: InputDecoration(
                 labelText: armada.isAlatBerat
                     ? 'HM saat isi'
@@ -511,6 +625,7 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
             TextField(
               controller: _nominalCtrl,
               keyboardType: TextInputType.number,
+              onChanged: (_) => _autosave.onFieldChanged(),
               decoration: const InputDecoration(
                 labelText: 'Nominal Pembelian',
                 border: OutlineInputBorder(),
@@ -541,6 +656,7 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
             TextField(
               controller: _catatanCtrl,
               maxLines: 2,
+              onChanged: (_) => _autosave.onFieldChanged(),
               decoration: const InputDecoration(
                 labelText: 'Catatan (opsional)',
                 border: OutlineInputBorder(),

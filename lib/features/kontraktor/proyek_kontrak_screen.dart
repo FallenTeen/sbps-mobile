@@ -7,6 +7,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import 'kontraktor_providers.dart';
 
 /// Screen Portal Kontraktor: Menampilkan tab Proyek Kontrak & Invoice Klien.
@@ -36,11 +37,11 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
 
   Color _statusColor(String status) {
     return switch (status.toLowerCase()) {
-      'aktif' || 'berjalan' || 'lunas' => Colors.green,
-      'selesai' => Colors.blue,
-      'pending' || 'belum_dibayar' => Colors.orange,
-      'dibatalkan' || 'jatuh_tempo' => Colors.red,
-      _ => Colors.grey,
+      'aktif' || 'berjalan' || 'lunas' => context.colors.success,
+      'selesai' => context.colors.info,
+      'pending' || 'belum_dibayar' => context.colors.warning,
+      'dibatalkan' || 'jatuh_tempo' => context.colors.error,
+      _ => context.colors.textMuted,
     };
   }
 
@@ -72,7 +73,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
             onRefresh: () async =>
                 ref.refresh(proyekKontrakListProvider.future),
             child: proyeksAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SkeletonListView(),
               error: (err, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -103,10 +104,10 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                         color: context.colors.textMuted,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Belum ada proyek kontrak terdaftar.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: context.colors.textMuted),
                       ),
                     ],
                   );
@@ -212,7 +213,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
             onRefresh: () async =>
                 ref.refresh(invoiceKontrakListProvider.future),
             child: invoicesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SkeletonListView(),
               error: (err, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -243,10 +244,10 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                         color: context.colors.textMuted,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Belum ada invoice kontrak.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: context.colors.textMuted),
                       ),
                     ],
                   );
@@ -330,8 +331,8 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: inv.sisa > 0
-                                        ? Colors.red
-                                        : Colors.green,
+                                        ? context.colors.error
+                                        : context.colors.success,
                                   ),
                                 ),
                               ],

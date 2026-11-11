@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/analytics_service.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
@@ -66,7 +67,13 @@ class _SecurityVerifikasiRitaseScreenState
               children: [
                 Icon(Icons.error_outline, size: 48, color: context.colors.error),
                 const SizedBox(height: 12),
-                Text('Gagal memuat ritase security: $err', textAlign: TextAlign.center),
+                Text(
+                  friendlyErrorMessage(
+                    err,
+                    fallback: 'Gagal memuat ritase security. Coba lagi.',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: () => ref.invalidate(ritaseSecurityAntreanProvider),
@@ -275,7 +282,9 @@ class _SecurityVerifikasiFormSheetState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menyimpan: $e'),
+          content: Text(
+            friendlyErrorMessage(e, fallback: 'Gagal menyimpan. Coba lagi.'),
+          ),
           backgroundColor: context.colors.error,
         ),
       );

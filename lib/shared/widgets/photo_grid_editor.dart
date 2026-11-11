@@ -183,9 +183,14 @@ class _GridOverlayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
+      // Tooltip message juga menjadi label Semantics untuk screen reader.
       message: tooltip,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        // Target sentuh 48dp (audit M-21; sebelumnya 32dp) — ikon tetap kecil
+        // supaya overlay tidak menutupi thumbnail.
+        width: 48,
+        height: 48,
+        alignment: Alignment.center,
         decoration: const BoxDecoration(
           color: Colors.black54,
           shape: BoxShape.circle,

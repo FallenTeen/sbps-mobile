@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,6 +15,7 @@ import 'core/app_preferences.dart';
 import 'core/app_router.dart';
 import 'core/draft/draft_repository.dart';
 import 'core/push_token_service.dart';
+import 'features/armada/armada_providers.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/notifikasi/notifikasi_providers.dart';
 import 'features/tracking/tracking_providers.dart';
@@ -64,6 +66,9 @@ class SbpsApp extends ConsumerStatefulWidget {
 }
 
 class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
+  /// Waktu refresh visual terakhir (M-14) — throttle 5 menit supaya
+  /// bolak-balik aplikasi tidak memicu refetch beruntun.
+  DateTime? _lastVisualRefresh;
   @override
   void initState() {
     super.initState();
@@ -114,7 +119,45 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
       // Recek OTA saat app kembali dibuka - patch yang terunduh di
       // background selama app tidak aktif bisa langsung siap restart.
       ref.read(shorebirdUpdateProvider.notifier).refresh();
+      _refreshVisualDataOnResume();
     }
+  }
+
+  /// M-14: data yang tampil di layar bisa basi setelah app lama di
+  /// background (mis. checklist/ritase berubah dari perangkat lain, atau
+  /// antrian offline sudah terkirim). Refresh provider baca-saja saat
+  /// resume — VISUAL SAJA, tidak menyentuh outbox/auth.
+  ///
+  /// Dua pengaman:
+  /// - hanya saat ada jaringan (GET repository tidak punya cache fallback;
+  ///   invalidate saat offline akan mengganti isi layar dengan error state);
+  /// - throttle 5 menit agar refetch tidak beruntun.
+  void _refreshVisualDataOnResume() {
+    final now = DateTime.now();
+    final last = _lastVisualRefresh;
+    if (last != null && now.difference(last) < const Duration(minutes: 5)) {
+      return;
+    }
+    Connectivity().checkConnectivity().then((results) {
+      final online = results.any(
+        (r) =>
+            r == ConnectivityResult.wifi ||
+            r == ConnectivityResult.mobile ||
+            r == ConnectivityResult.ethernet ||
+            r == ConnectivityResult.vpn,
+      );
+      if (!online || !mounted) return;
+      _lastVisualRefresh = DateTime.now();
+      ref.invalidate(armadaSayaProvider);
+      ref.invalidate(checklistHariIniProvider);
+      ref.invalidate(helpersProvider);
+      // refresh() (bukan invalidate): pertahankan item lama saat gagal.
+      ref.read(ritaseRiwayatProvider.notifier).refresh();
+      ref.read(unreadCountProvider.notifier).reload();
+      ref.read(pendingCountProvider.notifier).reload();
+    }).catchError((_) {
+      // Connectivity check gagal — anggap offline, lewati refresh.
+    });
   }
 
   @override

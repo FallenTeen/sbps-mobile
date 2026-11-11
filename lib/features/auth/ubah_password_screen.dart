@@ -65,16 +65,19 @@ class _UbahPasswordScreenState extends ConsumerState<UbahPasswordScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       final msg = e.message.toLowerCase();
-      if (msg.contains('current_password') ||
+      final hasCurrentPasswordError =
+          msg.contains('current_password') ||
           msg.contains('password lama') ||
-          msg.contains('saat ini')) {
+          msg.contains('saat ini') ||
+          (e.errors?.containsKey('current_password') ?? false);
+      if (hasCurrentPasswordError) {
         setState(() {
           _currentPasswordError =
               'Password saat ini salah. Silakan periksa kembali.';
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+          SnackBar(content: Text(friendlyErrorMessage(e))),
         );
       }
     } catch (e) {

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../core/armada_jenis.dart';
+import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../auth/auth_providers.dart';
+import '../presensi/presensi_providers.dart';
 import 'armada_providers.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
@@ -26,6 +28,9 @@ class UnitSayaHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
+  /// Unit yang dipilih driver (hanya relevan saat penugasan > 1 unit).
+  ArmadaSaya? _selected;
+
   @override
   Widget build(BuildContext context) {
     final armadaAsync = ref.watch(armadaSayaProvider);
@@ -88,12 +93,30 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
               );
             }
 
-            final armada = items.first;
+            // M-03: driver bisa ditugaskan > 1 unit — Beranda harus bisa
+            // menampilkan & berpindah antar unit, bukan diam-diam memakai
+            // unit pertama saja.
+            ArmadaSaya armada = items.first;
+            if (items.length > 1) {
+              final sel = _selected;
+              if (sel != null && items.any((a) => a.id == sel.id)) {
+                armada = sel;
+              }
+            }
             final checklists = checklistAsync.value ?? [];
             final ritItems = ritaseAsync.items;
             final today = DateTime.now().toIso8601String().substring(0, 10);
             final todayRitItems = ritItems
                 .where((r) => r.tanggal != null && r.tanggal!.startsWith(today))
+                // Multi-unit: jangan campurkan muatan unit lain ke ringkasan
+                // unit terpilih (ritase tanpa armada_id dianggap milik
+                // driver — tetap tampil).
+                .where(
+                  (r) =>
+                      items.length == 1 ||
+                      r.armadaId == null ||
+                      r.armadaId == armada.id,
+                )
                 .toList();
             final myChecklists = checklists
                 .where((c) => c.armadaId == armada.id)
@@ -108,6 +131,16 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
               padding: const EdgeInsets.only(bottom: 32),
               children: [
                 _GreetingHeader(nama: user?.name),
+                if (items.length > 1) ...[
+                  _UnitSwitcher(
+                    items: items,
+                    selectedId: armada.id,
+                    onChanged: (a) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selected = a);
+                    },
+                  ),
+                ],
                 const SizedBox(height: 4),
                 _UnitSayaSection(armada: armada),
                 if (armada.dokumenBerkala.any((d) => d.isJatuhTempoSegera)) ...[
@@ -176,6 +209,52 @@ class _GreetingHeader extends StatelessWidget {
             style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Unit switcher (multi-unit, M-03) ─────────────────────────────────────────
+
+class _UnitSwitcher extends StatelessWidget {
+  const _UnitSwitcher({
+    required this.items,
+    required this.selectedId,
+    required this.onChanged,
+  });
+
+  final List<ArmadaSaya> items;
+  final String selectedId;
+  final ValueChanged<ArmadaSaya> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SizedBox(
+        height: 34,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          children: [
+            for (final a in items)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(a.platNomor),
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        a.id == selectedId ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                  selected: a.id == selectedId,
+                  showCheckmark: false,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => onChanged(a),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -479,13 +558,37 @@ class _PekerjaanHariIni extends ConsumerWidget {
     final myChecklists = checklists
         .where((c) => c.armadaId == armada.id)
         .toList();
-    final hasChecklist = myChecklists.any((c) => c.sudahIsi);
+
+    // M-05: submission offline (masih di outbox) tidak terlihat di data
+    // server — tanpa overlay ini driver menganggap datanya hilang dan
+    // mengisi ulang. Flag step menyala juga untuk data yang masih lokal.
+    final pending =
+        ref.watch(pendingActionsProvider).value ?? const <PendingAction>[];
+    bool hasPendingSync(PendingEndpoint endpoint) => pending.any(
+      (a) =>
+          a.endpoint == endpoint &&
+          a.payloadData['armada_id']?.toString() == armada.id,
+    );
+    final pendingChecklistAwal = hasPendingSync(
+      PendingEndpoint.armadaChecklistAwal,
+    );
+    final pendingPengisian = hasPendingSync(
+      PendingEndpoint.armadaPengisianSolar,
+    );
+    final pendingRitase = hasPendingSync(PendingEndpoint.armadaRitase);
+    final pendingChecklistAkhir = hasPendingSync(
+      PendingEndpoint.armadaChecklistAkhir,
+    );
+    final kSync = 'Tersimpan — menunggu sinkronisasi';
+
+    final hasChecklist =
+        myChecklists.any((c) => c.sudahIsi) || pendingChecklistAwal;
     final ritCount = ritItems.length;
 
     final todayChecklist = myChecklists.firstOrNull;
     final pengisianCount = todayChecklist?.pengisian.length ?? 0;
     final pengisianLiter = todayChecklist?.totalLiterPengisian ?? 0;
-    final hasPengisian = pengisianCount > 0;
+    final hasPengisian = pengisianCount > 0 || pendingPengisian;
 
     final odoAwalAsync = ref.watch(odoAwalProyekProvider(armada.id));
     final showOdoAwalProyek = odoAwalAsync.value?.isEmpty == true;
@@ -501,7 +604,11 @@ class _PekerjaanHariIni extends ConsumerWidget {
         done: hasChecklist,
         route: '/armada/checklist',
         cta: 'Isi checklist awal',
-        subtitle: hasChecklist ? 'Sudah diperiksa' : 'Menunggu diperiksa',
+        subtitle: pendingChecklistAwal
+            ? kSync
+            : hasChecklist
+            ? 'Sudah diperiksa'
+            : 'Menunggu diperiksa',
       ),
       _DayStep(
         number: 2,
@@ -509,10 +616,12 @@ class _PekerjaanHariIni extends ConsumerWidget {
         done: hasPengisian,
         route: '/armada/pengisian-solar',
         cta: 'Catat pengisian',
-        subtitle: hasPengisian
+        subtitle: pendingPengisian && !hasPengisian
+            ? kSync
+            : hasPengisian
             ? (pengisianLiter > 0
-                ? '$pengisianCount kali • ${pengisianLiter % 1 == 0 ? pengisianLiter.toInt() : pengisianLiter.toStringAsFixed(1)} L'
-                : '$pengisianCount kali dicatat')
+                  ? '$pengisianCount kali • ${pengisianLiter % 1 == 0 ? pengisianLiter.toInt() : pengisianLiter.toStringAsFixed(1)} L'
+                  : '$pengisianCount kali dicatat')
             : 'Belum ada pengisian',
         optional: true,
       ),
@@ -520,20 +629,26 @@ class _PekerjaanHariIni extends ConsumerWidget {
         _DayStep(
           number: 3,
           label: 'Muatan / Jam Kerja',
-          done: ritCount > 0,
+          done: ritCount > 0 || pendingRitase,
           route: '/armada/ritase-input',
           cta: 'Catat muatan',
-          subtitle: ritCount > 0
+          subtitle: pendingRitase && ritCount == 0
+              ? kSync
+              : ritCount > 0
               ? '$ritCount muatan tercatat'
               : 'Belum ada muatan',
         ),
       _DayStep(
         number: isOperatorAlatBerat ? 3 : 4,
         label: 'Checklist Akhir',
-        done: akhirDone,
+        done: akhirDone || pendingChecklistAkhir,
         route: '/armada/checklist-akhir',
         cta: 'Isi checklist akhir',
-        subtitle: akhirDone ? 'Sudah diisi' : 'Belum diisi',
+        subtitle: pendingChecklistAkhir && !akhirDone
+            ? kSync
+            : akhirDone
+            ? 'Sudah diisi'
+            : 'Belum diisi',
       ),
     ];
 

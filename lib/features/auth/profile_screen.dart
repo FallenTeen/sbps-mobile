@@ -76,7 +76,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(e.message)));
+        ..showSnackBar(SnackBar(content: Text(friendlyErrorMessage(e))));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -145,7 +145,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      ).showSnackBar(SnackBar(content: Text(friendlyErrorMessage(e))));
     } finally {
       if (mounted) setState(() => _loggingOutAll = false);
     }

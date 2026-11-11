@@ -24,6 +24,10 @@ class _CombinedSelectionScreenState
   AppPortal? _selectedPortal;
   String? _selectedRole;
 
+  /// M-22: auto-skip hanya boleh jalan SEKALI per instan layar. Tanpa flag,
+  /// setiap rebuild men-schedule ulang `_handleAutoSkip` (select + go berulang).
+  bool _autoSkipDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -107,10 +111,16 @@ class _CombinedSelectionScreenState
     final canProyek = canAccessProyek(user);
     final roles = app2RolesOf(user);
 
-    // Auto-skip on first build if applicable
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handleAutoSkip();
-    });
+    // Auto-skip sekali saja — retry di build berikutnya selama user belum
+    // termuat (auth masih loading), lalu berhenti selamanya.
+    if (!_autoSkipDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _autoSkipDone) return;
+        if (ref.read(authControllerProvider).value == null) return;
+        _autoSkipDone = true;
+        _handleAutoSkip();
+      });
+    }
 
     return PopScope(
       canPop: false,

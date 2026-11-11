@@ -11,6 +11,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/searchable_list_header.dart';
 import 'models.dart';
 import 'tracking_providers.dart';
@@ -112,7 +113,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(activeUsersProvider.future),
         child: users.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonListView(),
           error: (e, _) => AppEmptyState(
             icon: Icons.cloud_off_outlined,
             title: 'Gagal memuat data tracking',
