@@ -612,6 +612,8 @@ class _RoleOption extends StatelessWidget {
       case 'Owner':
         return Icons.supervisor_account;
       case 'Driver Armada':
+      case 'Driver Standby':
+      case 'Driver Kondisional':
         return Icons.local_shipping;
       case 'Kepala Divisi Armada':
       case 'Ketua Divisi Armada':
@@ -639,6 +641,8 @@ class _RoleOption extends StatelessWidget {
       case 'Admin Keuangan':
         return 'Dashboard finansial dan tracking';
       case 'Driver Armada':
+      case 'Driver Standby':
+      case 'Driver Kondisional':
         return 'Unit saya, checklist, ritase, dan servis';
       case 'Kepala Divisi Armada':
       case 'Ketua Divisi Armada':

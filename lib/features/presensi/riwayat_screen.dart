@@ -7,6 +7,7 @@ import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../shared/utils/feedback_copy.dart';
 import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -54,7 +55,12 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
         _page = res.currentPage;
       });
     } on ApiException catch (e) {
-      setState(() => _error = e.message);
+      setState(
+        () => _error = friendlyErrorMessage(
+          e,
+          fallback: 'Gagal memuat riwayat.',
+        ),
+      );
     } catch (_) {
       setState(() => _error = 'Gagal memuat riwayat.');
     } finally {
@@ -76,9 +82,13 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
       });
     } on ApiException catch (e) {
       if (mounted) {
+        final msg = friendlyErrorMessage(
+          e,
+          fallback: 'Gagal memuat halaman berikutnya.',
+        );
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {

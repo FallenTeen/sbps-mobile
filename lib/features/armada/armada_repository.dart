@@ -334,7 +334,6 @@ class ArmadaRepository {
     String? titikId,
     String? proyekId,
     String? catatan,
-    double? odoPerTrip,
     String? muatanJenis,
     double? muatanJumlah,
     String? clientUuid,
@@ -358,7 +357,6 @@ class ArmadaRepository {
         if (muatanJenis != null && muatanJenis.trim().isNotEmpty)
           'material': muatanJenis.trim(),
         'jumlah_volume': ?muatanJumlah,
-        'odo_per_trip': ?odoPerTrip,
       },
       createdAt: DateTime.now(),
       idempotencyKey: idempotencyKey ?? _uuid.v4(),

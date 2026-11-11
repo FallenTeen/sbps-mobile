@@ -22,7 +22,7 @@ import 'models/armada.dart';
 
 /// ODO/HM Harian — input sekali per hari (KM untuk kendaraan, HM/jam untuk
 /// alat berat). Source of truth ODO/HM adalah `GET /armada/saya` → [ArmadaSaya]
-/// yang juga dipakai Home, Checklist, dan Ritase (odo_per_trip).
+/// yang juga dipakai Home, Checklist, dan Ritase.
 ///
 /// Menampilkan: tipe unit + satuan, terakhir (previous), sekarang (current),
 /// pemakaian (delta), serta warning ANOMALI bila nilai sekarang lebih kecil

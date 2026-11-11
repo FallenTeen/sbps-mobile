@@ -142,6 +142,8 @@ class PendingSummary {
 
   bool _canAccessFormulir(String role) => [
     'Driver Armada',
+    'Driver Standby',
+    'Driver Kondisional',
     'Mandor Titik',
     'Owner',
     'Operator Mesin',

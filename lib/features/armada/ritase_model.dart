@@ -4,7 +4,11 @@
 /// status per-record (draft/queued/synced/failed) supaya partial failure
 /// terlihat dan bisa di-retry secara independen. Business rule ritase
 /// tidak diubah: payload wire `{armada_id, jumlah_rit, satuan_volume,
-/// material?, jumlah_volume?, catatan?, odo_per_trip?}`.
+/// material?, jumlah_volume?, catatan?}`.
+///
+/// Catatan: field `odo_per_trip` dihapus (F-03) — backend tidak menerima
+/// kolom ini maupun menyimpannya; ODO tetap lewat checklist awal/akhir
+/// (dengan deteksi anomali) dan ODO Awal proyek.
 library;
 
 import '../../core/outbox/pending_action.dart';
@@ -48,7 +52,6 @@ class RitaseRecord {
     this.titikId,
     this.proyekId,
     this.catatan,
-    this.odoPerTrip,
     this.muatanJenis,
     this.muatanJumlah,
     this.muatanSatuan = 'ton',
@@ -77,9 +80,6 @@ class RitaseRecord {
 
   final String? catatan;
 
-  /// Odometer per trip (km) — dikirim sebagai `odo_per_trip` bila diisi.
-  final double? odoPerTrip;
-
   /// TD-E1: Blok Muatan (draft, opsional) diisi driver versi driver.
   final String? muatanJenis;
   final double? muatanJumlah;
@@ -107,11 +107,9 @@ class RitaseRecord {
     _ => 'ritase',
   };
 
-  /// Payload POST /armada/ritase/input. `odo_per_trip` dikirim hanya bila
-  /// field dipakai. `catatan` kosong tidak dikirim.
+  /// Payload POST /armada/ritase/input. `catatan` kosong tidak dikirim.
   Map<String, dynamic> toPayload() {
     final cat = catatan;
-    final odo = odoPerTrip;
     final titik = titikId;
     final proyek = proyekId;
     return {
@@ -121,7 +119,6 @@ class RitaseRecord {
       if (titik != null && titik.trim().isNotEmpty) 'titik_id': titik.trim(),
       if (proyek != null && proyek.trim().isNotEmpty) 'proyek_id': proyek.trim(),
       if (cat != null && cat.trim().isNotEmpty) 'catatan': cat.trim(),
-      'odo_per_trip': ?odo,
       if (muatanJenis != null && muatanJenis!.trim().isNotEmpty) ...{
         'material': muatanJenis!.trim(),
         'muatan_jenis': muatanJenis!.trim(),
@@ -154,7 +151,6 @@ class RitaseRecord {
     jumlah: jumlah,
     satuan: satuan,
     catatan: catatan,
-    odoPerTrip: odoPerTrip,
     muatanJenis: muatanJenis ?? this.muatanJenis,
     muatanJumlah: muatanJumlah ?? this.muatanJumlah,
     muatanSatuan: muatanSatuan ?? this.muatanSatuan,
@@ -177,7 +173,6 @@ class RitaseRecord {
     'jumlah': jumlah,
     'satuan': satuan,
     'catatan': catatan,
-    'odo_per_trip': odoPerTrip,
     'muatan_jenis': muatanJenis,
     'muatan_jumlah': muatanJumlah,
     'muatan_satuan': muatanSatuan,
@@ -200,7 +195,6 @@ class RitaseRecord {
     jumlah: parseInt(json['jumlah']) ?? 0,
     satuan: json['satuan']?.toString() ?? 'rit',
     catatan: json['catatan']?.toString(),
-    odoPerTrip: parseNum(json['odo_per_trip']),
     muatanJenis: json['muatan_jenis']?.toString() ?? json['material']?.toString(),
     muatanJumlah: parseNum(json['muatan_jumlah']) ?? parseNum(json['jumlah_volume']),
     muatanSatuan: json['muatan_satuan']?.toString() ?? 'ton',

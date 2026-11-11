@@ -8,7 +8,6 @@ RitaseRecord _rec({
   int jumlah = 1,
   String satuan = 'rit',
   String? catatan,
-  double? odoPerTrip,
   RitaseRecordStatus status = RitaseRecordStatus.draft,
   String? clientUuid,
 }) {
@@ -20,7 +19,6 @@ RitaseRecord _rec({
     jumlah: jumlah,
     satuan: satuan,
     catatan: catatan,
-    odoPerTrip: odoPerTrip,
     createdAt: DateTime(2026, 9, 16, 8),
     status: status,
     clientUuid: cu,
@@ -30,14 +28,13 @@ RitaseRecord _rec({
 
 void main() {
   group('RitaseRecord payload (business rule tidak berubah)', () {
-    test('toPayload lengkap & mempertahankan odo_per_trip', () {
+    test('toPayload lengkap — tanpa odo_per_trip (F-03: backend tidak punya kolom)', () {
       final record = _rec(
         index: 1,
         armadaId: 'a-1',
         jumlah: 3,
         satuan: 'ton',
         catatan: 'Muatan pasir',
-        odoPerTrip: 12500.5,
       );
 
       final payload = record.toPayload();
@@ -46,14 +43,21 @@ void main() {
       expect(payload['jumlah_rit'], 3);
       expect(payload['satuan_volume'], 'tonase');
       expect(payload['catatan'], 'Muatan pasir');
-      expect(payload['odo_per_trip'], 12500.5);
+      expect(
+        payload.containsKey('odo_per_trip'),
+        isFalse,
+        reason: 'F-03: field dihapus — ODO tetap lewat checklist awal/akhir',
+      );
     });
 
-    test('tanpa odo_per_trip field tidak dikirim (tidak ada key null)', () {
-      final record = _rec(index: 2, armadaId: 'a-2');
+    test('draft lama dengan odo_per_trip tetap terbaca (backward compat)', () {
+      final legacy = RitaseRecord.fromJson({
+        ..._rec(index: 2, armadaId: 'a-2').toJson(),
+        'odo_per_trip': 12500.5,
+      });
 
-      expect(record.toPayload().containsKey('odo_per_trip'), isFalse);
-      expect(record.isComplete, isTrue);
+      expect(legacy.isComplete, isTrue);
+      expect(legacy.toPayload().containsKey('odo_per_trip'), isFalse);
     });
 
     test('mapping satuan_volume tetap persis versi lama', () {

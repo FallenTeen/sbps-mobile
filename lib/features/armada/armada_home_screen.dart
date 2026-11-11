@@ -24,8 +24,10 @@ class ArmadaHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final activeRole = ref.watch(activeRoleProvider);
 
-    // Driver Armada → UnitSayaHomeScreen (workflow-based)
-    if (activeRole == 'Driver Armada') {
+    // Driver (Armada/Standby/Kondisional) → UnitSayaHomeScreen (workflow-based)
+    if (activeRole == 'Driver Armada' ||
+        activeRole == 'Driver Standby' ||
+        activeRole == 'Driver Kondisional') {
       return UnitSayaHomeScreen();
     }
 
@@ -230,7 +232,9 @@ class ArmadaHomeScreen extends ConsumerWidget {
 
   String _subtitleForRole(String? role) {
     return switch (role) {
-      'Driver Armada' => 'Tugas Harian & Operasional',
+      'Driver Armada' ||
+      'Driver Standby' ||
+      'Driver Kondisional' => 'Tugas Harian & Operasional',
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
       'Ketua Armada' => 'Monitoring & Approval',
@@ -242,7 +246,9 @@ class ArmadaHomeScreen extends ConsumerWidget {
 
   IconData _iconForRole(String? role) {
     return switch (role) {
-      'Driver Armada' => Icons.local_shipping_rounded,
+      'Driver Armada' ||
+      'Driver Standby' ||
+      'Driver Kondisional' => Icons.local_shipping_rounded,
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
       'Ketua Armada' => Icons.supervisor_account_rounded,
@@ -254,7 +260,9 @@ class ArmadaHomeScreen extends ConsumerWidget {
 
   List<_MenuSection> _buildSections(String? role, bool hasHelperAktif) {
     return switch (role) {
-      'Driver Armada' => _driverSections(hasHelperAktif),
+      'Driver Armada' ||
+      'Driver Standby' ||
+      'Driver Kondisional' => _driverSections(hasHelperAktif),
       'Kepala Divisi Armada' ||
       'Ketua Divisi Armada' ||
       'Ketua Armada' => _kepalaDivisiSections(),

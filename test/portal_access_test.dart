@@ -23,6 +23,8 @@ void main() {
           'Owner',
           'Admin Keuangan',
           'Driver Armada',
+          'Driver Standby',
+          'Driver Kondisional',
           'Kepala Divisi Armada',
           'Workshop',
           'Inventory',
@@ -35,6 +37,8 @@ void main() {
     test('memuat role armada termasuk Kepala Divisi Armada (setara kApp2Roles)',
         () {
       expect(kProyekRoles, contains('Driver Armada'));
+      expect(kProyekRoles, contains('Driver Standby'));
+      expect(kProyekRoles, contains('Driver Kondisional'));
       expect(kProyekRoles, contains('Kepala Divisi Armada'));
     });
   });
@@ -53,6 +57,9 @@ void main() {
   group('canAccessProyek', () {
     test('true untuk role App 2, false untuk yang tidak relevan', () {
       expect(canAccessProyek(_user(['Driver Armada'])), isTrue);
+      // F-01: Driver Standby/Kondisional punya 'view proyek' di RoleMatrix.
+      expect(canAccessProyek(_user(['Driver Standby'])), isTrue);
+      expect(canAccessProyek(_user(['Driver Kondisional'])), isTrue);
       expect(canAccessProyek(_user(['Kepala Divisi Armada'])), isTrue);
       expect(canAccessProyek(_user(['SDM Lapangan Kondisional'])), isFalse);
     });
@@ -67,6 +74,11 @@ void main() {
     test('Kepala Divisi Armada bisa memilih 2 portal (tidak terjebak layar kosong)',
         () {
       expect(autoPortal(_user(['Kepala Divisi Armada'])), isNull);
+    });
+
+    test('Driver Standby/Kondisional bisa memilih 2 portal (F-01)', () {
+      expect(autoPortal(_user(['Driver Standby'])), isNull);
+      expect(autoPortal(_user(['Driver Kondisional'])), isNull);
     });
 
     test('role presensi-only auto-pilih portal presensi', () {
@@ -95,6 +107,37 @@ void main() {
         appHomeKindFor(role: 'Mandor Titik', presensiPortal: true),
         AppHomeKind.presensi,
       );
+    });
+  });
+
+  group('F-01/F-02 regression guards', () {
+    test('Driver Standby/Kondisional: beranda driver + modul armada', () {
+      for (final role in ['Driver Standby', 'Driver Kondisional']) {
+        expect(
+          appHomeKindFor(role: role, presensiPortal: false),
+          AppHomeKind.driver,
+          reason: 'role $role harus mendapat beranda driver',
+        );
+        expect(
+          RolePermissions.canAccess(role, 'armada'),
+          isTrue,
+          reason: 'role $role harus punya modul armada',
+        );
+      }
+    });
+
+    test('manajer armada tidak punya modul logistik (F-02: backend 403)', () {
+      for (final role in [
+        'Kepala Divisi Armada',
+        'Ketua Divisi Armada',
+        'Ketua Armada',
+      ]) {
+        expect(
+          RolePermissions.canAccess(role, 'logistik'),
+          isFalse,
+          reason: 'role $role tidak punya permission logistik di backend',
+        );
+      }
     });
   });
 }

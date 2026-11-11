@@ -320,7 +320,9 @@ IconData _iconForRole(String role) => switch (role) {
   'Kontraktor' => Icons.business_center_rounded,
   'Admin Keuangan' => Icons.account_balance_wallet_rounded,
   'Owner' => Icons.supervisor_account_rounded,
-  'Driver Armada' => Icons.local_shipping_rounded,
+  'Driver Armada' ||
+  'Driver Standby' ||
+  'Driver Kondisional' => Icons.local_shipping_rounded,
   _ => Icons.badge_rounded,
 };
 
@@ -721,6 +723,8 @@ class _QuickActions extends StatelessWidget {
   List<_QuickAction> _getActionsForRole(String? role) {
     switch (role) {
       case 'Driver Armada':
+      case 'Driver Standby':
+      case 'Driver Kondisional':
         return [
           _QuickAction(
             icon: Icons.checklist,

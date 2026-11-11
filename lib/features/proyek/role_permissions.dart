@@ -95,10 +95,14 @@ class RolePermissions {
       'kontraktor',
     },
     'Driver Armada': {'armada'},
+    'Driver Standby': {'armada'},
+    'Driver Kondisional': {'armada'},
     'Operator Alat Berat': {'armada'},
-    'Kepala Divisi Armada': {'armada', 'dashboard', 'logistik'},
-    'Ketua Divisi Armada': {'armada', 'dashboard', 'logistik'},
-    'Ketua Armada': {'armada', 'dashboard', 'logistik'},
+    // F-02: tanpa 'logistik' — role ini tidak punya permission logistik
+    // di backend (verify ritase logistik|manage timbang) → modul akan 403.
+    'Kepala Divisi Armada': {'armada', 'dashboard'},
+    'Ketua Divisi Armada': {'armada', 'dashboard'},
+    'Ketua Armada': {'armada', 'dashboard'},
     'Workshop': {'workshop'},
     'Inventory': {'inventory'},
     'Logistik': {'logistik', 'inventory'},
@@ -193,7 +197,10 @@ AppHomeKind appHomeKindFor({
 }) {
   if (presensiPortal || role == null) return AppHomeKind.presensi;
   return switch (role) {
-    'Driver Armada' || 'Operator Alat Berat' => AppHomeKind.driver,
+    'Driver Armada' ||
+    'Driver Standby' ||
+    'Driver Kondisional' ||
+    'Operator Alat Berat' => AppHomeKind.driver,
     'Workshop' => AppHomeKind.workshop,
     'Inventory' => AppHomeKind.inventory,
     'Logistik' => AppHomeKind.logistik,

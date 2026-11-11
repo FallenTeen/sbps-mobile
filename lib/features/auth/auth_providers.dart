@@ -21,6 +21,8 @@ const kApp2Roles = <String>[
   'Owner',
   'Admin Keuangan',
   'Driver Armada',
+  'Driver Standby',
+  'Driver Kondisional',
   'Operator Alat Berat',
   'Kepala Divisi Armada',
   'Ketua Divisi Armada',

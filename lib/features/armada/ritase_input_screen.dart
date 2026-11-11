@@ -99,7 +99,6 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
             jumlah: jumlah,
             satuan: (map['satuan'] as String?) ?? 'rit',
             catatan: map['catatan']?.toString(),
-            odoPerTrip: parseNum(map['odo_per_trip']),
             createdAt: DateTime.now(),
             clientUuid: _uuid.v4(),
             idempotencyKey: _uuid.v4(),
@@ -265,7 +264,6 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
               titikId: record.titikId,
               proyekId: record.proyekId,
               catatan: record.catatan,
-              odoPerTrip: record.odoPerTrip,
               muatanJenis: record.muatanJenis,
               muatanJumlah: record.muatanJumlah,
               clientUuid: record.clientUuid,
@@ -371,7 +369,6 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
                 titikId: record.titikId,
                 proyekId: record.proyekId,
                 catatan: record.catatan,
-                odoPerTrip: record.odoPerTrip,
                 muatanJenis: record.muatanJenis,
                 muatanJumlah: record.muatanJumlah,
                 clientUuid: record.clientUuid,
@@ -869,16 +866,6 @@ class _RecordCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            if (record.odoPerTrip != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'ODO/trip: ${fmtOdo(record.odoPerTrip!)}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.colors.textTertiary,
-                ),
-              ),
-            ],
             if (record.status == RitaseRecordStatus.failed &&
                 record.errorMessage != null) ...[
               const SizedBox(height: 6),
@@ -1114,9 +1101,6 @@ class _SubmitBar extends StatelessWidget {
 
 String _labelJenis(String? jenis) => labelJenisArmada(jenis, fallback: 'Unit');
 
-/// Format ODO/HM untuk tampilan (ribuan bertitik, bulat).
-String fmtOdo(double n) => fmtRibuan(n % 1 == 0 ? n.toInt() : n.round());
-
 // ---------------------------------------------------------------------------
 // Create / edit form (bottom sheet)
 // ---------------------------------------------------------------------------
@@ -1151,7 +1135,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
 
   final _jumlahCtrl = TextEditingController();
   final _catatanCtrl = TextEditingController();
-  final _odoCtrl = TextEditingController();
   final _muatanJenisCtrl = TextEditingController();
   final _muatanJumlahCtrl = TextEditingController();
   ArmadaSaya? _armada;
@@ -1170,9 +1153,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
       _jumlahCtrl.text = existing.jumlah.toString();
       _catatanCtrl.text = existing.catatan ?? '';
       _satuan = existing.satuan;
-      if (existing.odoPerTrip != null) {
-        _odoCtrl.text = existing.odoPerTrip.toString();
-      }
       _muatanJenisCtrl.text = existing.muatanJenis ?? '';
       if (existing.muatanJumlah != null) {
         _muatanJumlahCtrl.text = existing.muatanJumlah.toString();
@@ -1180,8 +1160,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
       _muatanSatuan = existing.muatanSatuan ?? 'ton';
     } else if (_isSingleUnit) {
       _armada = widget.armadaList.first;
-      final odo = widget.armadaList.first.odoTerkini;
-      if (odo != null) _odoCtrl.text = odo.toString();
     }
   }
 
@@ -1196,7 +1174,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
   void dispose() {
     _jumlahCtrl.dispose();
     _catatanCtrl.dispose();
-    _odoCtrl.dispose();
     _muatanJenisCtrl.dispose();
     _muatanJumlahCtrl.dispose();
     super.dispose();
@@ -1234,7 +1211,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
       catatan: _catatanCtrl.text.trim().isEmpty
           ? null
           : _catatanCtrl.text.trim(),
-      odoPerTrip: double.tryParse(_odoCtrl.text.trim()),
       muatanJenis: _muatanJenisCtrl.text.trim().isEmpty
           ? null
           : _muatanJenisCtrl.text.trim(),
@@ -1308,15 +1284,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
               onChanged: _isSingleUnit
                   ? null
                   : (v) {
-                      setState(() {
-                        _armada = v;
-                        if (v != null && _odoCtrl.text.isEmpty) {
-                          final odo = v.odoTerkini;
-                          if (odo != null) {
-                            _odoCtrl.text = odo.toString();
-                          }
-                        }
-                      });
+                      setState(() => _armada = v);
                     },
             ),
             const SizedBox(height: 16),
@@ -1361,19 +1329,6 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
               decoration: const InputDecoration(
                 labelText: 'Catatan (opsional)',
                 border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _odoCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'ODO per trip (opsional)',
-                border: OutlineInputBorder(),
-                helperText: 'Dikirim sebagai odo_per_trip ke server bila diisi',
               ),
             ),
             const SizedBox(height: 16),
@@ -1583,13 +1538,6 @@ class _ReviewSheet extends StatelessWidget {
                     _ReviewRow(
                       label: 'Muatan (Draft)',
                       value: '${record.muatanJumlah != null ? "${record.muatanJumlah} ${record.muatanSatuan ?? 'ton'}" : ""}${record.muatanJenis != null ? " · ${record.muatanJenis}" : ""}',
-                    ),
-                  ],
-                  if (record.odoPerTrip != null) ...[
-                    const Divider(height: 12),
-                    _ReviewRow(
-                      label: 'ODO Per Trip',
-                      value: '${fmtOdo(record.odoPerTrip!)} km',
                     ),
                   ],
                   if (record.catatan != null &&
