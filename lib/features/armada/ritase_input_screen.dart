@@ -703,12 +703,12 @@ class _SummaryHeader extends StatelessWidget {
             children: [
               _StatusDot(
                 label: '${summary.draftCount} draft',
-                color: Colors.blueGrey,
+                color: context.colors.textMuted,
                 show: summary.draftCount > 0,
               ),
               _StatusDot(
                 label: '${summary.queuedCount} menunggu sinkron',
-                color: Colors.amber,
+                color: context.colors.warning,
                 show: summary.queuedCount > 0,
               ),
               _StatusDot(
@@ -903,7 +903,7 @@ class _RecordCard extends StatelessWidget {
                   _ActionText(
                     icon: Icons.cloud_upload_outlined,
                     label: 'Terkirim otomatis',
-                    color: Colors.amber.shade800,
+                    color: context.colors.warning,
                   ),
                 if (editable &&
                     (record.status == RitaseRecordStatus.draft ||
@@ -1017,9 +1017,9 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (status) {
-      RitaseRecordStatus.draft => (Colors.blueGrey, Icons.edit_note),
+      RitaseRecordStatus.draft => (context.colors.textMuted, Icons.edit_note),
       RitaseRecordStatus.queued => (
-        Colors.amber.shade800,
+        context.colors.warning,
         Icons.cloud_upload_outlined,
       ),
       RitaseRecordStatus.synced => (context.colors.success, Icons.check_circle),
@@ -1081,7 +1081,7 @@ class _SubmitBar extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 '${summary.queuedCount} tersimpan — terkirim otomatis.',
-                style: TextStyle(fontSize: 12, color: Colors.amber.shade800),
+                style: TextStyle(fontSize: 12, color: context.colors.warning),
               ),
             ),
           SizedBox(
@@ -1501,7 +1501,7 @@ class _ReviewSheet extends StatelessWidget {
       RitaseRecordStatus.synced => context.colors.success,
       RitaseRecordStatus.queued => context.colors.warning,
       RitaseRecordStatus.failed => context.colors.error,
-      RitaseRecordStatus.draft => Colors.blueGrey,
+      RitaseRecordStatus.draft => context.colors.textMuted,
     };
 
     return Padding(

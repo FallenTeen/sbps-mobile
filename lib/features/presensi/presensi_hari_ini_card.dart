@@ -242,7 +242,7 @@ class PresensiHariIniCard extends ConsumerWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
+                      color: context.colors.textMuted,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -347,7 +347,7 @@ class PresensiHariIniCard extends ConsumerWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
+                      color: context.colors.textMuted,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -448,14 +448,14 @@ class _CheckInCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: siap
               ? AppTheme.primaryGradient.colors
-              : [Colors.grey.shade400, Colors.grey.shade500],
+              : [context.colors.textMuted, context.colors.textSecondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (siap ? context.colors.primary : Colors.grey).withValues(
+            color: (siap ? context.colors.primary : context.colors.textMuted).withValues(
               alpha: 0.25,
             ),
             blurRadius: 12,
@@ -532,7 +532,7 @@ class _CheckInCard extends StatelessWidget {
                     backgroundColor: Colors.white,
                     foregroundColor: (siap && !menungguSinkron)
                         ? context.colors.primary
-                        : Colors.grey,
+                        : context.colors.textMuted,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -776,7 +776,7 @@ class _GpsStatusStrip extends StatelessWidget {
       showRefresh = false;
     } else if (jd != null && jd > t.radiusPresensiMeter) {
       bg = onGradient
-          ? Colors.amber.shade600.withValues(alpha: 0.95)
+          ? context.colors.warning.withValues(alpha: 0.95)
           : context.colors.warning.withValues(alpha: 0.14);
       fg = onGradient ? Colors.white : context.colors.warning;
       icon = Icons.warning_amber_rounded;

@@ -13,6 +13,7 @@ import '../features/armada/ajuan_servis_screen.dart';
 import '../features/armada/armada_home_screen.dart';
 import '../features/armada/checklist_screen.dart';
 import '../features/armada/checklist_major_screen.dart';
+import '../features/armada/driver_dashboard_screen.dart';
 import '../features/armada/detail_servis_screen.dart';
 import '../features/armada/helper_presensi_screen.dart';
 import '../features/armada/monitoring_armada_screen.dart';
@@ -744,6 +745,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
               child: const UnitSayaHomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'dashboard-saya',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: const DriverDashboardScreen(),
             ),
           ),
           GoRoute(

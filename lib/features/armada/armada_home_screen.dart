@@ -11,7 +11,6 @@ import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
-import 'driver_dashboard_screen.dart';
 import 'unit_saya_home_screen.dart';
 import 'models/armada.dart';
 
@@ -274,11 +273,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
           icon: Icons.dashboard_outlined,
           title: 'Dashboard Saya',
           subtitle: 'Ringkasan kinerja & muatan hari ini',
-          onTap: (ctx) => Navigator.of(ctx).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const DriverDashboardScreen(),
-            ),
-          ),
+          onTap: (ctx) => ctx.push('/armada/dashboard-saya'),
         ),
         _MenuItem(
           icon: Icons.checklist_rtl,

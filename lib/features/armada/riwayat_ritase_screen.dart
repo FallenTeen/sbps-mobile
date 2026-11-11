@@ -296,7 +296,7 @@ class _RitaseCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.scale_outlined, size: 14, color: Colors.grey),
+                  Icon(Icons.scale_outlined, size: 14, color: context.colors.textMuted),
                   const SizedBox(width: 4),
                   Text(
                     'Muatan: ${ritase.jumlahDriver} ${ritase.satuanMuatan ?? 'ton'}',
@@ -333,33 +333,33 @@ class _RitaseCard extends StatelessWidget {
                 runSpacing: 4,
                 children: [
                   if (ritase.hasSelisih)
-                    const _VerifikasiChip(
+                    _VerifikasiChip(
                       label: 'Selisih',
-                      color: Colors.deepOrange,
+                      color: context.colors.error,
                       icon: Icons.warning_amber_rounded,
                     ),
                   if (ritase.isVerifiedSecurity)
-                    const _VerifikasiChip(
+                    _VerifikasiChip(
                       label: 'Verified (Security)',
-                      color: Colors.teal,
+                      color: context.colors.success,
                       icon: Icons.shield_outlined,
                     ),
                   if (ritase.isVerifiedLogistik)
-                    const _VerifikasiChip(
+                    _VerifikasiChip(
                       label: 'Verified (Logistik)',
-                      color: Colors.blue,
+                      color: context.colors.info,
                       icon: Icons.verified_outlined,
                     )
                   else if (ritase.isMenungguVerifikasi)
                     _VerifikasiChip(
                       label: 'Menunggu verifikasi',
-                      color: Colors.amber.shade800,
+                      color: context.colors.warning,
                       icon: Icons.hourglass_top_rounded,
                     ),
                   if (ritase.wajibJembatanTimbang == true && !ritase.isVerifiedLogistik)
-                    const _VerifikasiChip(
+                    _VerifikasiChip(
                       label: 'Wajib Timbang',
-                      color: Colors.purple,
+                      color: context.colors.secondary,
                       icon: Icons.scale_rounded,
                     ),
                 ],
@@ -421,10 +421,10 @@ class _RitaseBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'disetujui' => Colors.green,
-      'ditagih' => Colors.blue,
-      'draft' => Colors.orange,
-      _ => Colors.grey,
+      'disetujui' => context.colors.success,
+      'ditagih' => context.colors.info,
+      'draft' => context.colors.warning,
+      _ => context.colors.textMuted,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

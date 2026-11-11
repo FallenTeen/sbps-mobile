@@ -104,7 +104,7 @@ class _RiwayatServisScreenState extends ConsumerState<RiwayatServisScreen> {
                       _FilterChipLabel(
                         label: servisStatusLabel(status),
                         selected: state.statusFilter == status,
-                        color: servisStatusColor(status),
+                        color: servisStatusColor(status, context.colors),
                         onTap: () {
                           ref
                               .read(servisRiwayatProvider.notifier)
@@ -115,7 +115,7 @@ class _RiwayatServisScreenState extends ConsumerState<RiwayatServisScreen> {
                     _FilterChipLabel(
                       label: 'Ditolak',
                       selected: state.statusFilter == 'ditolak',
-                      color: servisStatusColor('ditolak'),
+                      color: servisStatusColor('ditolak', context.colors),
                       onTap: () {
                         ref
                             .read(servisRiwayatProvider.notifier)
@@ -306,7 +306,7 @@ class _QueueSummary extends StatelessWidget {
                   child: _SummaryChip(
                     label: entry.$1,
                     count: s.countFor(entry.$2),
-                    color: servisStatusColor(entry.$2),
+                    color: servisStatusColor(entry.$2, context.colors),
                     selected: activeFilter == entry.$2,
                     onTap: () => onTapStatus(entry.$2),
                   ),
@@ -426,7 +426,7 @@ class _ServisQueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = servisStatusColor(item.status);
+    final color = servisStatusColor(item.status, context.colors);
 
     return Card(
       color: isSelected

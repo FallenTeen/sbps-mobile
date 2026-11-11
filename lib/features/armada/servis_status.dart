@@ -8,6 +8,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../shared/theme/app_theme.dart';
 import 'models/servis_armada.dart';
 
 /// Urutan status work queue (tanpa 'ditolak'; ditolak jadi node terminal).
@@ -49,14 +50,15 @@ String servisStatusLabel(String status) {
 }
 
 /// Warna status servis (index, kartu, detail).
-Color servisStatusColor(String status) {
+/// Token tema (bukan Material raw) supaya ikut dark mode.
+Color servisStatusColor(String status, AppColors colors) {
   return switch (status) {
-    'diajukan' => Colors.orange,
-    'disetujui' => Colors.blue,
-    'dikerjakan' => Colors.purple,
-    'selesai' => Colors.green,
-    'ditolak' => Colors.red,
-    _ => Colors.grey,
+    'diajukan' => colors.warning,
+    'disetujui' => colors.info,
+    'dikerjakan' => colors.secondary,
+    'selesai' => colors.success,
+    'ditolak' => colors.error,
+    _ => colors.textMuted,
   };
 }
 

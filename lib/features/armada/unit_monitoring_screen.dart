@@ -334,7 +334,7 @@ class _ServisTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
-    final color = servisStatusColor(item.status);
+    final color = servisStatusColor(item.status, context.colors);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),

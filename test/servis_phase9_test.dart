@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sbps_mobile/features/armada/models/helper.dart';
 import 'package:sbps_mobile/features/armada/models/servis_armada.dart';
 import 'package:sbps_mobile/features/armada/servis_providers.dart';
 import 'package:sbps_mobile/features/armada/servis_status.dart';
+import 'package:sbps_mobile/shared/theme/app_theme.dart';
 
 ServisArmada _servis({
   String status = 'diajukan',
@@ -47,13 +47,14 @@ void main() {
   });
 
   group('servisStatusColor', () {
-    test('setiap status punya warna, status tak dikenal abu-abu', () {
-      expect(servisStatusColor('diajukan'), Colors.orange);
-      expect(servisStatusColor('disetujui'), Colors.blue);
-      expect(servisStatusColor('dikerjakan'), Colors.purple);
-      expect(servisStatusColor('selesai'), Colors.green);
-      expect(servisStatusColor('ditolak'), Colors.red);
-      expect(servisStatusColor('unknown'), Colors.grey);
+    test('setiap status punya warna token tema, status tak dikenal textMuted', () {
+      final colors = AppColors.light;
+      expect(servisStatusColor('diajukan', colors), colors.warning);
+      expect(servisStatusColor('disetujui', colors), colors.info);
+      expect(servisStatusColor('dikerjakan', colors), colors.secondary);
+      expect(servisStatusColor('selesai', colors), colors.success);
+      expect(servisStatusColor('ditolak', colors), colors.error);
+      expect(servisStatusColor('unknown', colors), colors.textMuted);
     });
   });
 

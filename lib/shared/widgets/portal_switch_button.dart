@@ -49,7 +49,34 @@ class PortalSwitchButton extends ConsumerWidget {
         IconButton(
           tooltip: 'Ganti portal',
           icon: const Icon(Icons.apps),
-          onPressed: () => ref.read(selectedPortalProvider.notifier).clear(),
+          onPressed: () async {
+            // M-10: konfirmasi dulu — ganti portal membatalkan navigasi ke
+            // layar sebelumnya, isian form yang belum dikirim bisa hilang.
+            // Draft autosave tetap aman (tersimpan terpisah).
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Ganti Portal?'),
+                content: const Text(
+                  'Jika ada isian yang belum dikirim, isian itu akan hilang. '
+                  'Draft yang tersimpan otomatis tetap aman.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Batal'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Ganti Portal'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              ref.read(selectedPortalProvider.notifier).clear();
+            }
+          },
         ),
       ],
     );

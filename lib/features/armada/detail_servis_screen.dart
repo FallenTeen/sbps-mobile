@@ -285,7 +285,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
         ),
       ),
       data: (item) {
-        final color = servisStatusColor(item.status);
+        final color = servisStatusColor(item.status, context.colors);
 
         return RefreshIndicator(
           onRefresh: () async =>

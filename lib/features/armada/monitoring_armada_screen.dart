@@ -391,25 +391,25 @@ class _PerhatianRow extends StatelessWidget {
       (
         label: 'Bermasalah',
         value: ringkasan.unitBermasalah,
-        color: Colors.red,
+        color: context.colors.error,
         icon: Icons.warning_amber_outlined,
       ),
       (
         label: 'Belum checklist',
         value: ringkasan.belumChecklistHariIni,
-        color: Colors.amber,
+        color: context.colors.warning,
         icon: Icons.checklist_rtl,
       ),
       (
         label: 'Downtime',
         value: ringkasan.downtimeAktif,
-        color: Colors.orange,
+        color: context.colors.secondary,
         icon: Icons.construction_outlined,
       ),
       (
         label: 'Servis menunggu',
         value: ringkasan.servisMenunggu,
-        color: Colors.blue,
+        color: context.colors.info,
         icon: Icons.medical_services_outlined,
       ),
     ];
