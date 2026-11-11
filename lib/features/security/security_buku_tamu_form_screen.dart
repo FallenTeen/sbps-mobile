@@ -84,9 +84,9 @@ class _SecurityBukuTamuFormScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Catatan tamu berhasil disimpan.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Catatan tamu berhasil disimpan.'),
+          backgroundColor: context.colors.success,
         ),
       );
       context.pop(true);

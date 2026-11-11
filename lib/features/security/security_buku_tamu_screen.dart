@@ -60,7 +60,7 @@ class _SecurityBukuTamuScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${tamu.nama} telah ditandai keluar.'),
-          backgroundColor: Colors.green,
+          backgroundColor: context.colors.success,
         ),
       );
       ref.invalidate(bukuTamuHariIniProvider);
@@ -225,7 +225,7 @@ class _TamuCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isKeluar ? context.colors.border : Colors.blue.withValues(alpha: 0.35),
+          color: isKeluar ? context.colors.border : context.colors.info.withValues(alpha: 0.35),
         ),
       ),
       child: Padding(
@@ -262,11 +262,11 @@ class _TamuCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: isKeluar
-                        ? Colors.grey.withValues(alpha: 0.15)
-                        : Colors.green.withValues(alpha: 0.12),
+                        ? context.colors.surfaceVariant
+                        : context.colors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isKeluar ? Colors.grey.shade400 : Colors.green.withValues(alpha: 0.4),
+                      color: isKeluar ? context.colors.border : context.colors.success.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
@@ -274,7 +274,7 @@ class _TamuCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: isKeluar ? Colors.grey.shade700 : Colors.green.shade800,
+                      color: isKeluar ? context.colors.textMuted : context.colors.success,
                     ),
                   ),
                 ),

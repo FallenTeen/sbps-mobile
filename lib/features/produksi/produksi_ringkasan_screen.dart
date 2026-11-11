@@ -198,7 +198,7 @@ class _SessionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.green.withValues(alpha: 0.1),
+          backgroundColor: context.colors.success.withValues(alpha: 0.1),
           child: Icon(Icons.play_arrow, color: context.colors.success),
         ),
         title: Text(

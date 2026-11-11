@@ -150,9 +150,9 @@ class _CappedBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: context.colors.warning.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(color: context.colors.warning.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -162,7 +162,7 @@ class _CappedBanner extends StatelessWidget {
             child: Text(
               'Server hanya menampilkan $kPoPendingLimit PO terbaru. '
               'Bisa jadi masih ada PO lain di luar daftar ini.',
-              style: TextStyle(fontSize: 12, color: Colors.orange.shade900),
+              style: TextStyle(fontSize: 12, color: context.colors.warning),
             ),
           ),
         ],

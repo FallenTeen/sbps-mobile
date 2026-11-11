@@ -384,12 +384,12 @@ class _PeriodFilterSection extends StatelessWidget {
                   onSelected: (bool isSelected) {
                     onChanged(isSelected ? option : null);
                   },
-                  selectedColor: Colors.teal.withValues(alpha: 0.1),
-                  checkmarkColor: Colors.teal,
-                  labelStyle: TextStyle(
-                    color: selected == option
-                        ? Colors.teal
-                        : context.colors.textPrimary,
+                   selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                   checkmarkColor: context.colors.primary,
+                   labelStyle: TextStyle(
+                     color: selected == option
+                         ? context.colors.primary
+                         : context.colors.textPrimary,
                     fontWeight: selected == option
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -447,12 +447,12 @@ class _StatusFilterSection extends StatelessWidget {
                   onSelected: (bool isSelected) {
                     onChanged(isSelected ? option : null);
                   },
-                  selectedColor: Colors.teal.withValues(alpha: 0.1),
-                  checkmarkColor: Colors.teal,
-                  labelStyle: TextStyle(
-                    color: selected == option
-                        ? Colors.teal
-                        : context.colors.textPrimary,
+                   selectedColor: context.colors.primary.withValues(alpha: 0.1),
+                   checkmarkColor: context.colors.primary,
+                   labelStyle: TextStyle(
+                     color: selected == option
+                         ? context.colors.primary
+                         : context.colors.textPrimary,
                     fontWeight: selected == option
                         ? FontWeight.w600
                         : FontWeight.normal,

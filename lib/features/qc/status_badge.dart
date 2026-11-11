@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/theme/app_theme.dart';
+
 /// Badge status QC dengan warna per status (Fase A2.5):
 /// menunggu_hasil = oranye, lolos = hijau, tidak_lolos = merah.
 class QcStatusBadge extends StatelessWidget {
@@ -10,10 +12,19 @@ class QcStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      'lolos' => (Colors.green.shade100, Colors.green.shade900),
-      'tidak_lolos' => (Colors.red.shade100, Colors.red.shade900),
-      'menunggu_hasil' => (Colors.orange.shade100, Colors.orange.shade900),
-      _ => (Colors.grey.shade200, Colors.grey.shade800),
+      'lolos' => (
+        context.colors.success.withValues(alpha: 0.15),
+        context.colors.success,
+      ),
+      'tidak_lolos' => (
+        context.colors.error.withValues(alpha: 0.15),
+        context.colors.error,
+      ),
+      'menunggu_hasil' => (
+        context.colors.warning.withValues(alpha: 0.15),
+        context.colors.warning,
+      ),
+      _ => (context.colors.surfaceVariant, context.colors.textSecondary),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

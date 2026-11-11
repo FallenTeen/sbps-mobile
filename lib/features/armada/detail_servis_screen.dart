@@ -609,7 +609,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                                   children: [
                                     TextSpan(
                                       text: '${item.spareparts.length} item',
-                                      style: const TextStyle(color: Colors.red),
+                                      style: TextStyle(color: context.colors.error),
                                     ),
                                   ],
                                 ),
@@ -695,7 +695,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => Container(
                                 height: 120,
-                                color: Colors.grey.shade200,
+                                color: context.colors.surfaceVariant,
                                 alignment: Alignment.center,
                                 child: const Icon(Icons.broken_image, size: 36),
                               ),
@@ -758,7 +758,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                                     errorBuilder: (_, _, _) => Container(
                                       width: 80,
                                       height: 80,
-                                      color: Colors.grey.shade200,
+                                      color: context.colors.surfaceVariant,
                                       child: const Icon(
                                         Icons.broken_image,
                                         size: 24,
@@ -825,7 +825,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                                     errorBuilder: (_, _, _) => Container(
                                       width: 80,
                                       height: 80,
-                                      color: Colors.grey.shade200,
+                                      color: context.colors.surfaceVariant,
                                       child: const Icon(
                                         Icons.broken_image,
                                         size: 24,

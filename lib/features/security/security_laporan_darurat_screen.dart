@@ -85,12 +85,12 @@ class _SecurityLaporanDaruratScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Laporan darurat terkirim & diteruskan ke Owner serta Ketua Divisi Armada.',
           ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
+          backgroundColor: context.colors.error,
+          duration: const Duration(seconds: 4),
         ),
       );
       context.pop(true);
@@ -114,7 +114,7 @@ class _SecurityLaporanDaruratScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Laporan Darurat'),
-        backgroundColor: Colors.red.shade900,
+        backgroundColor: context.colors.error,
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -126,13 +126,13 @@ class _SecurityLaporanDaruratScreenState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: context.colors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                border: Border.all(color: context.colors.error.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                  Icon(Icons.warning_amber_rounded, color: context.colors.error, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -140,7 +140,7 @@ class _SecurityLaporanDaruratScreenState
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Colors.red.shade900,
+                        color: context.colors.error,
                       ),
                     ),
                   ),
@@ -153,21 +153,21 @@ class _SecurityLaporanDaruratScreenState
             const Text('Tingkat Kedaruratan', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: 'siaga',
-                  label: Text('Siaga'),
-                  icon: Icon(Icons.info_outline, color: Colors.amber),
+                  label: const Text('Siaga'),
+                  icon: Icon(Icons.info_outline, color: context.colors.warning),
                 ),
                 ButtonSegment(
                   value: 'darurat',
-                  label: Text('Darurat'),
-                  icon: Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                  label: const Text('Darurat'),
+                  icon: Icon(Icons.warning_amber_rounded, color: context.colors.error),
                 ),
                 ButtonSegment(
                   value: 'kritis',
-                  label: Text('Kritis'),
-                  icon: Icon(Icons.crisis_alert_rounded, color: Colors.red),
+                  label: const Text('Kritis'),
+                  icon: Icon(Icons.crisis_alert_rounded, color: context.colors.error),
                 ),
               ],
               selected: {_tingkat},
@@ -286,7 +286,7 @@ class _SecurityLaporanDaruratScreenState
                 child: FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.red.shade800,
+                    backgroundColor: context.colors.error,
                   ),
                   icon: _isSubmitting
                       ? const SubmitSpinner(size: 18)

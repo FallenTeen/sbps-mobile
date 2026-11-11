@@ -92,9 +92,9 @@ class _SecurityChecklistScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Checklist pemantauan kantor berhasil disimpan.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Checklist pemantauan kantor berhasil disimpan.'),
+          backgroundColor: context.colors.success,
         ),
       );
       context.pop(true);
@@ -175,7 +175,7 @@ class _SecurityChecklistScreenState
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: item.isChecked ? Colors.green.withValues(alpha: 0.4) : context.colors.border,
+                  color: item.isChecked ? context.colors.success.withValues(alpha: 0.4) : context.colors.border,
                 ),
               ),
               child: Padding(
@@ -209,7 +209,7 @@ class _SecurityChecklistScreenState
                             IconButton(
                               icon: Icon(
                                 item.fotoPath != null ? Icons.photo_camera : Icons.add_a_photo_outlined,
-                                color: item.fotoPath != null ? Colors.green : null,
+                                color: item.fotoPath != null ? context.colors.success : null,
                                 size: 20,
                               ),
                               tooltip: 'Lampirkan Foto',

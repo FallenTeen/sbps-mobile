@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/outbox/pending_action.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
@@ -137,10 +138,10 @@ class _PendingActionTile extends StatelessWidget {
   };
 
   Color _statusColor(BuildContext context) => switch (action.status) {
-    PendingStatus.pending => Colors.orange.shade800,
-    PendingStatus.syncing => Theme.of(context).colorScheme.primary,
-    PendingStatus.failed => Theme.of(context).colorScheme.error,
-    PendingStatus.success => Colors.green.shade700,
+    PendingStatus.pending => context.colors.warning,
+    PendingStatus.syncing => context.colors.primary,
+    PendingStatus.failed => context.colors.error,
+    PendingStatus.success => context.colors.success,
   };
 
   @override
@@ -181,9 +182,9 @@ class _PendingActionTile extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   // pending = retryable (menunggu jaringan) — jangan tampil
                   // merah seperti error permanen (failed) yang butuh tindakan.
-                  color: action.status == PendingStatus.failed
-                      ? Theme.of(context).colorScheme.error
-                      : Colors.orange.shade800,
+                   color: action.status == PendingStatus.failed
+                       ? context.colors.error
+                       : context.colors.warning,
                 ),
               ),
             ],

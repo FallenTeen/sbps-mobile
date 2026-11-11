@@ -403,7 +403,7 @@ class _FilterChipLabel extends StatelessWidget {
       visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       selected: selected,
-      selectedColor: (color ?? Colors.blue).withValues(alpha: 0.14),
+      selectedColor: (color ?? context.colors.primary).withValues(alpha: 0.14),
       onSelected: (_) => onTap(),
     );
   }

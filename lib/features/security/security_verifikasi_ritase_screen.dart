@@ -117,7 +117,7 @@ class _SecurityVerifikasiRitaseScreenState
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: isSecVerified ? Colors.teal.withValues(alpha: 0.4) : context.colors.border,
+                      color: isSecVerified ? context.colors.success.withValues(alpha: 0.4) : context.colors.border,
                     ),
                   ),
                   child: Padding(
@@ -147,26 +147,26 @@ class _SecurityVerifikasiRitaseScreenState
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.teal.withValues(alpha: 0.12),
+                                  color: context.colors.success.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.teal.withValues(alpha: 0.3)),
+                                  border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Verified (Security)',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.teal),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.success),
                                 ),
                               )
                             else
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withValues(alpha: 0.12),
+                                  color: context.colors.info.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                                  border: Border.all(color: context.colors.info.withValues(alpha: 0.3)),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Verified (Logistik)',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.blue),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.info),
                                 ),
                               ),
                           ],
@@ -183,7 +183,7 @@ class _SecurityVerifikasiRitaseScreenState
                             if (item.jumlahVerifikasiLogistik != null)
                               Text(
                                 'Netto Logistik: ${item.jumlahVerifikasiLogistik} ton',
-                                style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 12, color: context.colors.info, fontWeight: FontWeight.w600),
                               ),
                           ],
                         ),
@@ -272,9 +272,9 @@ class _SecurityVerifikasiFormSheetState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verifikasi keamanan ritase berhasil disimpan.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Verifikasi keamanan ritase berhasil disimpan.'),
+          backgroundColor: context.colors.success,
         ),
       );
       Navigator.pop(context, true);
@@ -309,7 +309,7 @@ class _SecurityVerifikasiFormSheetState
           children: [
             Row(
               children: [
-                const Icon(Icons.shield_outlined, color: Colors.teal),
+                Icon(Icons.shield_outlined, color: context.colors.success),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -392,7 +392,7 @@ class _SecurityVerifikasiFormSheetState
                 child: FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: context.colors.success,
                   ),
                   icon: _isSubmitting
                       ? const SubmitSpinner(size: 18)

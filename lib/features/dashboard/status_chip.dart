@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/theme/app_theme.dart';
+
 /// Batas server: maksimal 20 item terbaru untuk PO pending /
 /// invoice belum dibayar (docs/api-mobile.md §12.7–12.8).
 const kPoPendingLimit = 20;
@@ -17,16 +19,24 @@ class StatusChip extends StatelessWidget {
       'lolos' ||
       'lunas' ||
       'aktif' ||
-      'diterima' => (Colors.green.shade100, Colors.green.shade900),
+      'diterima' => (
+        context.colors.success.withValues(alpha: 0.15),
+        context.colors.success,
+      ),
       'draft' ||
       'diajukan' ||
       'terkirim' ||
       'menunggu_approval_finance' ||
       'menunggu_approval_owner' ||
-      'lunas_sebagian' => (Colors.orange.shade100, Colors.orange.shade900),
-      'tidak_lolos' ||
-      'jatuh_tempo' => (Colors.red.shade100, Colors.red.shade900),
-      _ => (Colors.grey.shade200, Colors.grey.shade800),
+      'lunas_sebagian' => (
+        context.colors.warning.withValues(alpha: 0.15),
+        context.colors.warning,
+      ),
+      'tidak_lolos' || 'jatuh_tempo' => (
+        context.colors.error.withValues(alpha: 0.15),
+        context.colors.error,
+      ),
+      _ => (context.colors.surfaceVariant, context.colors.textSecondary),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

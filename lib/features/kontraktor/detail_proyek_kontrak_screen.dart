@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/formatters.dart';
+import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
@@ -256,12 +257,12 @@ class _DetailProyekKontrakScreenState
                       ),
                       const Divider(height: 16),
                       if (data.komunikasiLogs.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Center(
                             child: Text(
                               'Belum ada riwayat percakapan.',
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: context.colors.textMuted),
                             ),
                           ),
                         )
@@ -272,8 +273,8 @@ class _DetailProyekKontrakScreenState
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: msg.pengirimRole == 'kontraktor'
-                                  ? Colors.blue.withValues(alpha: 0.08)
-                                  : Colors.green.withValues(alpha: 0.08),
+          ? context.colors.info.withValues(alpha: 0.08)
+          : context.colors.success.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(

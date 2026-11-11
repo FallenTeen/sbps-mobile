@@ -506,7 +506,7 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final surfaceVariant =
         Theme.of(context).extension<AppColors>()?.surfaceVariant ??
-        Colors.grey.shade100;
+        context.colors.surfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

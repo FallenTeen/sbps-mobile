@@ -164,9 +164,9 @@ class _LogistikVerifikasiScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verifikasi muatan & timbang berhasil disimpan.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Verifikasi muatan & timbang berhasil disimpan.'),
+          backgroundColor: context.colors.success,
         ),
       );
       context.pop(true);
@@ -224,15 +224,15 @@ class _LogistikVerifikasiScreenState
                         if (r?.wajibJembatanTimbang == true)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.purple.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
-                            ),
-                            child: const Text(
-                              'Wajib Timbang',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.purple),
-                            ),
+                             decoration: BoxDecoration(
+                               color: context.colors.secondary.withValues(alpha: 0.12),
+                               borderRadius: BorderRadius.circular(12),
+                               border: Border.all(color: context.colors.secondary.withValues(alpha: 0.3)),
+                             ),
+                             child: Text(
+                               'Wajib Timbang',
+                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.secondary),
+                             ),
                           ),
                       ],
                     ),

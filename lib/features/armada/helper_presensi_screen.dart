@@ -308,9 +308,9 @@ class _HelperCard extends StatelessWidget {
                 child: Text(actionLabel),
               )
             else
-              const Icon(
+              Icon(
                 Icons.check_circle_outline,
-                color: Colors.green,
+                color: context.colors.success,
               ),
           ],
         ),

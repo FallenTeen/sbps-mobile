@@ -310,7 +310,7 @@ class _EksternalCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
                     height: 80,
-                    color: Colors.grey.shade200,
+                     color: context.colors.surfaceVariant,
                     alignment: Alignment.center,
                     child: const Icon(Icons.broken_image, size: 28),
                   ),
