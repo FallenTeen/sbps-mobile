@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:uuid/uuid.dart';
 
@@ -391,10 +392,14 @@ class ArmadaRepository {
   /// Ubah daftar item checklist menjadi form field bracket-notation
   /// (`items[0][bagian]`, dst.) agar Laravel mem-parse sebagai array.
   ///
-  /// Foto item bermasalah TIDAK dikirim sebagai string: hasil kedua berisi
-  /// mapping field `items[i][foto]` ke path lokal yang harus diunggah
-  /// sebagai multipart FILE. Item baik tidak mengirim catatan/foto
-  /// (dokumentasi lama difilter dari payload).
+  /// Foto item bermasalah berisi path lokal baru: hasil kedua memetakan
+  /// field `items[i][foto]` ke path file yang diunggah sebagai multipart.
+  ///
+  /// Path yang SUDAH tersimpan di server (relatif, berawalan `armada/`)
+  /// dikirim ulang sebagai string agar foto tidak hilang saat re-submit.
+  /// Path lokal yang filenya sudah tidak ada (mis. draft lama / foto lama
+  /// dari perangkat lain) dilewati agar outbox tidak gagal permanen.
+  /// Item baik tidak mengirim catatan/foto (dokumentasi lama difilter).
   static (Map<String, String>, Map<String, String>) checklistItemFields(
     List<Map<String, dynamic>> items,
   ) {
@@ -412,7 +417,11 @@ class ArmadaRepository {
       }
       final foto = it['foto']?.toString() ?? '';
       if (bermasalah && foto.isNotEmpty) {
-        itemPhotos['items[$i][foto]'] = foto;
+        if (foto.startsWith('armada/')) {
+          fields['items[$i][foto]'] = foto;
+        } else if (File(foto).existsSync()) {
+          itemPhotos['items[$i][foto]'] = foto;
+        }
       }
     }
     return (fields, itemPhotos);

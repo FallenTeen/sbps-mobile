@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sbps_mobile/core/api_client.dart';
@@ -38,6 +40,25 @@ ArmadaRepository _repo(OutboxRepository outbox) => ArmadaRepository(
 );
 
 void main() {
+  late Directory tmpDir;
+  late String fotoRemPath;
+  late String fotoLamaPath;
+
+  setUpAll(() {
+    tmpDir = Directory.systemTemp.createTempSync('chk_test_');
+    String p(String name) =>
+        '${tmpDir.path}${Platform.pathSeparator}$name';
+    fotoRemPath = p('foto-rem.jpg');
+    fotoLamaPath = p('foto-lama.jpg');
+    for (final f in [fotoRemPath, fotoLamaPath]) {
+      File(f).writeAsBytesSync(const [0, 1, 2]);
+    }
+  });
+
+  tearDownAll(() {
+    if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
+  });
+
   group('checklistBagianGap (validasi dokumentasi submit)', () {
     test('perlu perhatian tanpa foto diblokir (foto kini wajib)', () {
       expect(
@@ -207,7 +228,7 @@ void main() {
           'bagian': 'Rem',
           'kondisi': 'rusak',
           'catatan': 'Rem tidak pakem',
-          'foto': '/tmp/foto-rem.jpg',
+          'foto': fotoRemPath,
         },
       ]);
 
@@ -216,7 +237,7 @@ void main() {
       expect(fields['items[0][catatan]'], 'Rem tidak pakem');
       expect(
         photos['items[0][foto]'],
-        '/tmp/foto-rem.jpg',
+        fotoRemPath,
         reason: 'foto item dikirim sebagai file multipart items[i][foto]',
       );
       expect(
@@ -224,6 +245,38 @@ void main() {
         isFalse,
         reason: 'foto TIDAK dikirim sebagai string field',
       );
+    });
+
+    test('path foto server (armada/...) dikirim ulang sebagai string', () {
+      final (fields, photos) = ArmadaRepository.checklistItemFields([
+        {
+          'bagian': 'Rem',
+          'kondisi': 'rusak',
+          'catatan': 'Rem tidak pakem',
+          'foto': 'armada/checklist/2026/11/abc.jpg',
+        },
+      ]);
+
+      expect(fields['items[0][foto]'], 'armada/checklist/2026/11/abc.jpg');
+      expect(
+        photos.containsKey('items[0][foto]'),
+        isFalse,
+        reason: 'foto server tidak diunggah ulang sebagai file',
+      );
+    });
+
+    test('path foto lokal yang filenya hilang tidak dikirim (outbox aman)', () {
+      final (fields, photos) = ArmadaRepository.checklistItemFields([
+        {
+          'bagian': 'Rem',
+          'kondisi': 'rusak',
+          'catatan': 'Rem tidak pakem',
+          'foto': '/tidak/ada/foto.jpg',
+        },
+      ]);
+
+      expect(photos, isEmpty);
+      expect(fields.containsKey('items[0][foto]'), isFalse);
     });
 
     test('item baik tidak membawa catatan/foto ke payload', () {
@@ -270,7 +323,7 @@ void main() {
             'bagian': 'Rem',
             'kondisi': 'rusak',
             'catatan': 'Rem tidak pakem',
-            'foto': '/tmp/foto-rem.jpg',
+            'foto': fotoRemPath,
           },
         ],
         stokSolar: 'penuh',
@@ -286,7 +339,7 @@ void main() {
       expect(action.endpoint, PendingEndpoint.armadaChecklistAwal);
 
       // Foto item bermasalah jadi FILE multipart items[1][foto].
-      expect(action.photoFields['items[1][foto]'], '/tmp/foto-rem.jpg');
+      expect(action.photoFields['items[1][foto]'], fotoRemPath);
       expect(action.photoFields['foto_stok_solar'], '/tmp/foto-stok.jpg');
       expect(action.photoFields['foto_odo_pagi'], '/tmp/foto-odo.jpg');
 
@@ -320,7 +373,7 @@ void main() {
             'bagian': 'Lampu',
             'kondisi': 'perlu_perhatian',
             'catatan': 'Lampu senja mati',
-            'foto': '/tmp/foto-lampu.jpg',
+            'foto': fotoRemPath,
           },
         ],
         stokSolar: 'setengah',
@@ -329,7 +382,7 @@ void main() {
 
       final action = outbox.enqueued.single;
       expect(action.endpoint, PendingEndpoint.armadaChecklistAkhir);
-      expect(action.photoFields['items[0][foto]'], '/tmp/foto-lampu.jpg');
+      expect(action.photoFields['items[0][foto]'], fotoRemPath);
       expect(action.photoFields.containsKey('foto_odo_akhir'), isFalse);
       expect(action.payloadJson['items[0][kondisi]'], 'perlu_perhatian');
       expect(action.payloadJson.containsKey('items[0][foto]'), isFalse);
