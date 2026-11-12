@@ -1,19 +1,16 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../../core/location_service.dart';
 import 'location_buffer_service.dart';
+import 'tracking_isolate_upload.dart';
 
-/// Background Location Service untuk SEMUA karyawan ber-presensi (§24 TODO A5/A6).
-///
-/// Menjalankan interval GPS ping (tiap 10 menit) walau app di-minimize,
-/// selama presensi masih terbuka. Service isolate menulis titik LANGSUNG
-/// ke buffer Hive (berulang saat process utama di-freeze) — tidak ada
-/// cutoff jam 18:00; berhenti saat proses utama memanggil stopTracking
-/// (check-out / logout).
 class BackgroundLocationService {
   static final instance = BackgroundLocationService._();
   BackgroundLocationService._();
@@ -21,7 +18,6 @@ class BackgroundLocationService {
   final _service = FlutterBackgroundService();
   bool _initialized = false;
 
-  /// Inisialisasi background service.
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
@@ -31,9 +27,6 @@ class BackgroundLocationService {
         onStart: _onStart,
         autoStart: false,
         isForegroundMode: true,
-        // Android 14+ (targetSdk 34+): foreground service WAJIB punya
-        // tipe. Tanpa ini startForeground melempar exception dan service
-        // mati diam-diam (tertangkap catch di TrackingScheduler._start).
         foregroundServiceTypes: const [AndroidForegroundType.location],
         notificationChannelId: 'sbps_tracking',
         initialNotificationTitle: 'SBPS Tracking',
@@ -48,25 +41,18 @@ class BackgroundLocationService {
     );
   }
 
-  /// Mulai background tracking.
   Future<void> startTracking() async {
     if (!_initialized) await initialize();
-    // flutter_background_service 5.x: `invoke()` hanya mengirim pesan ke
-    // service yang SUDAH berjalan. Service harus di-start eksplisit -
-    // tanpa `startService()` tracking background tidak pernah hidup
-    // (hanya foreground yang merekam).
     if (!await _service.isRunning()) {
       await _service.startService();
     }
     _service.invoke('startTracking');
   }
 
-  /// Hentikan background tracking.
   Future<void> stopTracking() async {
     _service.invoke('stopTracking');
   }
 
-  /// Cek apakah service sedang berjalan.
   Future<bool> isRunning() async {
     return await _service.isRunning();
   }
@@ -74,30 +60,39 @@ class BackgroundLocationService {
   @pragma('vm:entry-point')
   static void _onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
+    WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
 
     _startGpsInterval(service);
+    _startFlushTimer(service);
+    _startConnectivityListener();
 
     service.on('startTracking').listen((_) {
       _startGpsInterval(service);
+      _startFlushTimer(service);
     });
 
     service.on('stopTracking').listen((_) {
       _stopGpsInterval(service);
+      _stopFlushTimer();
+      _stopConnectivityListener();
       service.stopSelf();
     });
   }
 
   static Timer? _gpsTimer;
+  static Timer? _flushTimer;
+  static StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   static bool _isTracking = false;
 
   static void _startGpsInterval(ServiceInstance service) {
     if (_isTracking) return;
     _isTracking = true;
 
-    _gpsPing(service);
+    unawaited(_gpsPing(service));
 
     _gpsTimer = Timer.periodic(const Duration(minutes: 10), (_) {
-      _gpsPing(service);
+      unawaited(_gpsPing(service));
     });
   }
 
@@ -114,22 +109,44 @@ class BackgroundLocationService {
     }
   }
 
+  static void _startFlushTimer(ServiceInstance service) {
+    _flushTimer?.cancel();
+    _flushTimer = Timer.periodic(const Duration(minutes: 4), (_) {
+      unawaited(TrackingIsolateUpload.flush());
+    });
+    unawaited(TrackingIsolateUpload.flush());
+  }
+
+  static void _stopFlushTimer() {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+  }
+
+  static void _startConnectivityListener() {
+    _connectivitySub?.cancel();
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      if (results.any((r) => r != ConnectivityResult.none)) {
+        unawaited(TrackingIsolateUpload.flush());
+      }
+    });
+  }
+
+  static void _stopConnectivityListener() {
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
+  }
+
   static Future<void> _gpsPing(ServiceInstance service) async {
     try {
       final location = LocationService();
       if (!await location.isServiceEnabled()) return;
 
-      // Tanpa prompt while-in-use saja: service di background butuh
-      // izin ALWAYS. Bila belum, jangan request di sini (dialog butuh
-      // UI) — ping di-skip dan proses utama yang menuntaskan izin.
       final permission = await Geolocator.checkPermission();
       if (permission != LocationPermission.always) return;
 
       final position = await location.getCurrentPosition();
       if (position == null) return;
 
-      // Tulis LANGSUNG ke buffer Hive agar titik tetap terkirim
-      // walau process utama sudah dibunuh oleh OEM.
       await LocationBufferService.appendPointIsolate(
         lat: position.latitude,
         lng: position.longitude,
@@ -143,9 +160,9 @@ class BackgroundLocationService {
               'Lokasi tercatat: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
         });
       }
-    } catch (_) {
-      // GPS ping gagal — diam saja, coba lagi di interval berikutnya.
-    }
+
+      unawaited(TrackingIsolateUpload.flush());
+    } catch (_) {}
   }
 
   @pragma('vm:entry-point')

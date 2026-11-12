@@ -237,6 +237,163 @@ class LocationBufferService {
     );
   }
 
+  /// Buang titik/batch dari hari sebelumnya - versi isolate (tanpa in-memory).
+  static Future<void> pruneStaleIsolate() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('points');
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final list = jsonDecode(raw) as List;
+        final midnight = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
+        final kept = [
+          for (final e in list)
+            TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+        ].where((p) => !p.timestamp.isBefore(midnight)).toList();
+        await box.put(
+          'points',
+          jsonEncode([for (final p in kept) p.toJson()]),
+        );
+      } catch (_) {
+        // Data korup - biarkan.
+      }
+    }
+
+    // Batch pending yang titiknya semua kemarin dibuang.
+    final pendingRaw = box.get('pending_batch');
+    if (pendingRaw != null && pendingRaw.isNotEmpty) {
+      try {
+        final map = Map<String, dynamic>.from(jsonDecode(pendingRaw) as Map);
+        final locs = map['locations'] as List? ?? const [];
+        final pts = [
+          for (final e in locs)
+            TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+        ];
+        final midnight = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
+        if (pts.isNotEmpty && pts.every((p) => p.timestamp.isBefore(midnight))) {
+          await box.delete('pending_batch');
+        }
+      } catch (_) {
+        await box.delete('pending_batch');
+      }
+    }
+  }
+
+  /// Ambil semua titik belum terkirim langsung dari Hive - versi isolate.
+  static Future<List<TrackPoint>> snapshotIsolate() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('points');
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = jsonDecode(raw) as List;
+      return [
+        for (final e in list)
+          TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Baca batch pending langsung dari Hive - versi isolate.
+  static Future<({String batchId, List<TrackPoint> points})?>
+  readPendingBatchIsolate() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('pending_batch');
+    if (raw == null) return null;
+    try {
+      final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      final locs = map['locations'] as List? ?? const [];
+      return (
+        batchId: map['batch_id'] as String,
+        points: [
+          for (final e in locs)
+            TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+        ],
+      );
+    } catch (_) {
+      await box.delete('pending_batch');
+      return null;
+    }
+  }
+
+  /// Simpan batch pending langsung ke Hive - versi isolate.
+  static Future<void> savePendingBatchIsolate(
+    String batchId,
+    List<TrackPoint> points,
+  ) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.put(
+      'pending_batch',
+      jsonEncode({
+        'batch_id': batchId,
+        'locations': [for (final p in points) p.toJson()],
+      }),
+    );
+  }
+
+  /// Hapus batch pending langsung dari Hive - versi isolate.
+  static Future<void> clearPendingBatchIsolate() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.delete('pending_batch');
+  }
+
+  /// Hapus titik terkirim dari buffer - versi isolate.
+  static Future<void> removeByIdsIsolate(Set<String> ids) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('points');
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final list = jsonDecode(raw) as List;
+      final kept = [
+        for (final e in list)
+          TrackPoint.fromJson(Map<String, dynamic>.from(e as Map)),
+      ].where((p) => !ids.contains(p.id)).toList();
+      await box.put(
+        'points',
+        jsonEncode([for (final p in kept) p.toJson()]),
+      );
+    } catch (_) {
+      // Abaikan.
+    }
+  }
+
+  /// Lock lintas-isolat agar dua flush (proses utama + service isolate)
+  /// tidak berjalan bersamaan dan saling menimpa `pending_batch`.
+  static Future<bool> tryAcquireFlushLock() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('flush_lock');
+    final now = DateTime.now();
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final held = DateTime.parse(raw);
+        if (now.difference(held) < const Duration(seconds: 30)) {
+          return false;
+        }
+      } catch (_) {
+        // Lock korup - timpa.
+      }
+    }
+    await box.put('flush_lock', now.toIso8601String());
+    return true;
+  }
+
+  static Future<void> releaseFlushLock() async {
+    try {
+      final box = await Hive.openBox<String>(LocationBufferService._boxName);
+      await box.delete('flush_lock');
+    } catch (_) {
+      // Abaikan.
+    }
+  }
+
   /// Hapus titik tertentu (setelah batch-nya terkirim sukses).
   Future<void> removeByIds(Set<String> ids) async {
     _points.removeWhere((p) => ids.contains(p.id));

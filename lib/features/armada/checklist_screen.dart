@@ -43,7 +43,7 @@ const _stokSolarFallback = <OpsiStokSolar>[
   OpsiStokSolar(value: 'penuh', label: 'Penuh'),
 ];
 
-/// Checklist awal / akhir armada — pilih unit, isi data operasional, dan
+/// Checklist awal / akhir armada - pilih unit, isi data operasional, dan
 /// periksa tiap bagian dalam accordion.
 ///
 /// [isAkhir] = true untuk checklist akhir (final setelah dikirim).
@@ -120,9 +120,9 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                       .map(
                         (a) => DropdownMenuItem(
                           value: a.id,
-                          child: Text(
-                            '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ''}',
-                          ),
+                    child: Text(
+                      '${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ''}',
+                    ),
                         ),
                       )
                       .toList(),
@@ -208,6 +208,9 @@ class _BagianState {
   ChecklistItemLevel? level;
   String catatan = '';
   String? fotoPath;
+
+  /// URL publik foto item yang sudah tersimpan di server (foto_url).
+  String? fotoUrl;
 }
 
 /// Nama field foto checklist awal/akhir.
@@ -284,7 +287,8 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
       _bagian[i]
         ..level = null
         ..catatan = ''
-        ..fotoPath = null;
+        ..fotoPath = null
+        ..fotoUrl = null;
       _catatanCtrl[i].clear();
     }
     _stokSolar = null;
@@ -338,7 +342,8 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
             .where((l) => l.wireValue == kondisi)
             .firstOrNull
         ..catatan = raw['catatan']?.toString() ?? ''
-        ..fotoPath = raw['foto']?.toString();
+        ..fotoPath = raw['foto']?.toString()
+        ..fotoUrl = raw['foto_url']?.toString();
       _catatanCtrl[idx].text = _bagian[idx].catatan;
     }
   }
@@ -416,6 +421,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
           if (_bagian[i].level != null) 'kondisi': _bagian[i].level!.wireValue,
           'catatan': _catatanCtrl[i].text,
           if (_bagian[i].fotoPath != null) 'foto': _bagian[i].fotoPath,
+          if (_bagian[i].fotoUrl != null) 'fotoUrl': _bagian[i].fotoUrl,
         },
     ],
   };
@@ -513,6 +519,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
           if (idx < 0) continue;
           final kondisi = m['kondisi']?.toString();
           final fotoPath = m['foto']?.toString();
+          final fotoUrl = m['fotoUrl']?.toString();
           _bagian[idx]
             ..level =
                 ChecklistItemLevel.values
@@ -522,7 +529,9 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
             ..fotoPath =
                 (fotoPath != null && File(fotoPath).existsSync())
                 ? fotoPath
-                : null;
+                : null
+            ..fotoUrl =
+                (fotoUrl != null && fotoUrl.isNotEmpty) ? fotoUrl : null;
           _catatanCtrl[idx].text = _bagian[idx].catatan;
         }
       }
@@ -985,7 +994,9 @@ class _BagianAccordion extends StatelessWidget {
     if (readOnly) return false;
     final level = state.level;
     if (level == null || !level.isBermasalah) return false;
-    final hasFoto = state.fotoPath != null && state.fotoPath!.isNotEmpty;
+    final hasFoto =
+        (state.fotoPath != null && state.fotoPath!.isNotEmpty) ||
+        (state.fotoUrl != null && state.fotoUrl!.isNotEmpty);
     return catatanCtrl.text.trim().isEmpty || !hasFoto;
   }
 
@@ -1001,7 +1012,9 @@ class _BagianAccordion extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: readOnly ? null : onToggle,
+            // Bisa dibuka juga dalam mode readOnly supaya dokumentasi foto
+            // yang tersimpan di server tetap bisa dilihat saat buka ulang.
+            onTap: onToggle,
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1044,16 +1057,14 @@ class _BagianAccordion extends StatelessWidget {
                     ),
                   ),
                   _LevelChip(level: state.level),
-                  if (!readOnly) ...[
-                    const SizedBox(width: 6),
-                    Icon(
-                      expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: context.colors.textMuted,
-                      size: 20,
-                    ),
-                  ],
+                  const SizedBox(width: 6),
+                  Icon(
+                    expanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    color: context.colors.textMuted,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -1104,6 +1115,7 @@ class _BagianAccordion extends StatelessWidget {
                     TextField(
                       controller: catatanCtrl,
                       maxLines: 2,
+                      enabled: !readOnly,
                       onChanged: (v) {
                         state.catatan = v;
                         onCatatanChanged();
@@ -1122,8 +1134,9 @@ class _BagianAccordion extends StatelessWidget {
                           ? 'Foto kerusakan (wajib)'
                           : 'Foto kondisi (wajib)',
                       localPath: state.fotoPath,
-                      hasExisting: false,
-                      enabled: true,
+                      fotoUrl: state.fotoUrl,
+                      hasExisting: state.fotoUrl != null,
+                      enabled: !readOnly,
                       onTap: onFoto,
                     ),
                   ],
@@ -1178,6 +1191,7 @@ class _PhotoField extends StatelessWidget {
     required this.hasExisting,
     required this.enabled,
     required this.onTap,
+    this.fotoUrl,
   });
 
   final String label;
@@ -1186,7 +1200,13 @@ class _PhotoField extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
 
+  /// URL foto yang sudah tersimpan di server (per item checklist). Bila ada,
+  /// tampilkan thumbnail network sebagai pratinjau (dipakai saat buka ulang
+  /// checklist yang sudah dikirim).
+  final String? fotoUrl;
+
   bool get _hasLocal => localPath != null && localPath!.isNotEmpty;
+  bool get _hasRemote => fotoUrl != null && fotoUrl!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -1223,6 +1243,24 @@ class _PhotoField extends StatelessWidget {
                   ),
                 ),
               )
+            else if (_hasRemote)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  fotoUrl!,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: context.colors.textTertiary,
+                    ),
+                  ),
+                ),
+              )
             else
               Container(
                 width: 52,
@@ -1243,7 +1281,7 @@ class _PhotoField extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                tersedia ? '$label — foto tersedia' : '$label — ketuk untuk ambil',
+                tersedia ? '$label - foto tersedia' : '$label - ketuk untuk ambil',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

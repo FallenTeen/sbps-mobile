@@ -70,6 +70,7 @@ class TrackingStatus {
 class TrackingScheduler extends Notifier<TrackingStatus> {
   static const _uuid = Uuid();
   static const _flushInterval = Duration(minutes: 4);
+  static const _maxBatch = 450;
 
   Timer? _flushTimer;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -95,8 +96,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       final presensi = await ref.read(hariIniProvider.future);
       return presensi.status == PresensiStatus.menungguCheckOut;
     } catch (_) {
-      // Server tak tersambung / belum ada data: jangan tracking.
-      return false;
+      return state.running;
     }
   }
 
@@ -174,6 +174,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
   /// Kirim isi buffer sebagai SATU batch idempotent.
   Future<void> flush() async {
     if (!state.running || _flushing) return;
+    final gotLock = await LocationBufferService.tryAcquireFlushLock();
+    if (!gotLock) return;
     _flushing = true;
     try {
       // (A8) rollover hari baru SEBELUM membaca batch — batch pending
@@ -185,19 +187,33 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
       if (pending != null) {
         // Retry batch yang sama PERSIS — batch_id & isi jangan diubah.
-        batchId = pending.batchId;
-        points = pending.points;
+        // Batasi ukuran agar tidak melebihi max_batch backend.
+        if (pending.points.length > _maxBatch) {
+          final chunk = pending.points.take(_maxBatch).toList();
+          await _buffer.savePendingBatch(pending.batchId, chunk);
+          batchId = pending.batchId;
+          points = chunk;
+        } else {
+          batchId = pending.batchId;
+          points = pending.points;
+        }
       } else {
         // (A6) gabungkan titik yang ditulis service isolate langsung
         // ke Hive — buffer in-memory tak melihatnya sendirian.
         await _buffer.syncFromStore();
-        points = _buffer.snapshot();
-        if (points.isEmpty) {
+        final all = _buffer.snapshot();
+        if (all.isEmpty) {
           state = state.copyWith(pendingPoints: 0);
           return;
         }
+        points = all.take(_maxBatch).toList();
         batchId = _uuid.v4();
         await _buffer.savePendingBatch(batchId, points);
+      }
+      if (points.isEmpty) {
+        await _buffer.clearPendingBatch();
+        state = state.copyWith(pendingPoints: _buffer.count);
+        return;
       }
 
       try {
@@ -221,6 +237,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       state = state.copyWith(message: 'Gagal mengirim lokasi.');
     } finally {
       _flushing = false;
+      await LocationBufferService.releaseFlushLock();
     }
   }
 
