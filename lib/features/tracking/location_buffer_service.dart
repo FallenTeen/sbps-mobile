@@ -405,6 +405,40 @@ class LocationBufferService {
     return box.get('tracking_desired') == 'true';
   }
 
+  // Cache token/role di Hive agar background isolate bisa membaca tanpa
+  // platform channel (flutter_secure_storage sering gagal di isolate).
+  static Future<void> cacheAuthToken(String? token) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    if (token == null || token.isEmpty) {
+      await box.delete('cached_auth_token');
+    } else {
+      await box.put('cached_auth_token', token);
+    }
+  }
+
+  static Future<String?> getCachedAuthToken() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final v = box.get('cached_auth_token');
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
+  static Future<void> cacheActiveRole(String? role) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    if (role == null || role.isEmpty) {
+      await box.delete('cached_active_role');
+    } else {
+      await box.put('cached_active_role', role);
+    }
+  }
+
+  static Future<String?> getCachedActiveRole() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final v = box.get('cached_active_role');
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
   static Future<void> setPresensiOpen(bool value) async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     await box.put('presensi_open', value ? 'true' : 'false');

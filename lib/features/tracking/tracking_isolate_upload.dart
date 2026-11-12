@@ -25,10 +25,14 @@ class TrackingIsolateUpload {
     if (!gotLock) return;
     _flushing = true;
     try {
-      final resolvedToken = token ?? await _storage.read(key: 'auth_token');
+      final resolvedToken = token ??
+          await LocationBufferService.getCachedAuthToken() ??
+          await _storage.read(key: 'auth_token');
       if (resolvedToken == null || resolvedToken.isEmpty) return;
 
-      final resolvedRole = role ?? await _storage.read(key: 'active_role');
+      final resolvedRole = role ??
+          await LocationBufferService.getCachedActiveRole() ??
+          await _storage.read(key: 'active_role');
 
       await LocationBufferService.pruneStaleIsolate();
 

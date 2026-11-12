@@ -163,6 +163,12 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     );
 
     unawaited(LocationBufferService.setTrackingDesired(true));
+    unawaited(LocationBufferService.cacheAuthToken(
+      await ref.read(tokenStorageProvider).readToken(),
+    ));
+    unawaited(LocationBufferService.cacheActiveRole(
+      await ref.read(tokenStorageProvider).readActiveRole(),
+    ));
 
     _connectivitySub ??= Connectivity().onConnectivityChanged.listen((results) {
       if (results.any((r) => r != ConnectivityResult.none)) flush();
@@ -193,6 +199,12 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     if (!gotLock) return;
     _flushing = true;
     try {
+      // Cache token/role ke Hive agar background isolate bisa upload
+      // tanpa platform channel (flutter_secure_storage sering gagal di isolate).
+      final t = await ref.read(tokenStorageProvider).readToken();
+      final r = await ref.read(tokenStorageProvider).readActiveRole();
+      await LocationBufferService.cacheAuthToken(t);
+      await LocationBufferService.cacheActiveRole(r);
       // (A8) rollover hari baru SEBELUM membaca batch — batch pending
       // milik kemarin dibuang, jadi tak pernah diretry percuma.
       await _buffer.pruneStale();
