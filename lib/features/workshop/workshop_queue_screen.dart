@@ -332,7 +332,9 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     return AppEmptyState(
       icon: Icons.build_circle_outlined,
       title: title,
-      subtitle: subtitle,
+      subtitle:
+          '$subtitle\nAntrean berisi pengajuan servis milikmu sendiri atau '
+          'unit yang kamu pegang.',
     );
   }
 

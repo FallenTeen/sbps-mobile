@@ -102,7 +102,8 @@ class ArmadaRepository {
   // ---------------------------------------------------------------------------
 
   /// POST /armada/checklist/awal (multipart) — checklist awal hari ini.
-  /// [items] berisi `{bagian, kondisi, catatan?, foto?}`.
+  /// [items] berisi `{bagian, kondisi, catatan?, foto?}`. Foto item
+  /// bermasalah dikirim sebagai multipart FILE `items[i][foto]`.
   /// [fotoStokSolarPath]/[fotoOdoPagiPath] wajib saat pembuatan pertama.
   Future<bool> submitChecklistAwal({
     required String armadaId,
@@ -115,13 +116,14 @@ class ArmadaRepository {
     String? fotoOdoPagiPath,
     String? clientUuid,
   }) async {
+    final (itemFields, itemPhotos) = checklistItemFields(items);
     final action = PendingAction(
       id: _uuid.v4(),
       clientUuid: clientUuid ?? _uuid.v4(),
       endpoint: PendingEndpoint.armadaChecklistAwal,
       payloadJson: {
         'armada_id': armadaId,
-        ..._itemFields(items),
+        ...itemFields,
         'stok_solar': stokSolar,
         if (odoPagi != null) 'odo_pagi': _numStr(odoPagi),
         if (hmOdo != null) 'hm_odo': _numStr(hmOdo),
@@ -129,6 +131,7 @@ class ArmadaRepository {
           'jam_mulai_operasi': jamMulaiOperasi,
       },
       photoFields: {
+        ...itemPhotos,
         if (fotoStokSolarPath != null && fotoStokSolarPath.isNotEmpty)
           'foto_stok_solar': fotoStokSolarPath,
         if (fotoOdoPagiPath != null && fotoOdoPagiPath.isNotEmpty)
@@ -159,13 +162,14 @@ class ArmadaRepository {
     String? fotoOdoAkhirPath,
     String? clientUuid,
   }) async {
+    final (itemFields, itemPhotos) = checklistItemFields(items);
     final action = PendingAction(
       id: _uuid.v4(),
       clientUuid: clientUuid ?? _uuid.v4(),
       endpoint: PendingEndpoint.armadaChecklistAkhir,
       payloadJson: {
         'armada_id': armadaId,
-        ..._itemFields(items),
+        ...itemFields,
         'stok_solar': stokSolar,
         if (odoAkhir != null) 'odo_akhir': _numStr(odoAkhir),
         if (hmAkhir != null) 'hm_akhir': _numStr(hmAkhir),
@@ -173,6 +177,7 @@ class ArmadaRepository {
           'jam_selesai_operasi': jamSelesaiOperasi,
       },
       photoFields: {
+        ...itemPhotos,
         if (fotoStokSolarPath != null && fotoStokSolarPath.isNotEmpty)
           'foto_stok_solar': fotoStokSolarPath,
         if (fotoOdoAkhirPath != null && fotoOdoAkhirPath.isNotEmpty)
@@ -385,20 +390,32 @@ class ArmadaRepository {
 
   /// Ubah daftar item checklist menjadi form field bracket-notation
   /// (`items[0][bagian]`, dst.) agar Laravel mem-parse sebagai array.
-  static Map<String, String> _itemFields(
+  ///
+  /// Foto item bermasalah TIDAK dikirim sebagai string: hasil kedua berisi
+  /// mapping field `items[i][foto]` ke path lokal yang harus diunggah
+  /// sebagai multipart FILE. Item baik tidak mengirim catatan/foto
+  /// (dokumentasi lama difilter dari payload).
+  static (Map<String, String>, Map<String, String>) checklistItemFields(
     List<Map<String, dynamic>> items,
   ) {
     final fields = <String, String>{};
+    final itemPhotos = <String, String>{};
     for (var i = 0; i < items.length; i++) {
       final it = items[i];
+      final kondisi = it['kondisi']?.toString() ?? 'baik';
+      final bermasalah = kondisi != 'baik';
       fields['items[$i][bagian]'] = it['bagian']?.toString() ?? '';
-      fields['items[$i][kondisi]'] = it['kondisi']?.toString() ?? 'baik';
+      fields['items[$i][kondisi]'] = kondisi;
       final catatan = it['catatan']?.toString() ?? '';
-      if (catatan.isNotEmpty) fields['items[$i][catatan]'] = catatan;
+      if (bermasalah && catatan.isNotEmpty) {
+        fields['items[$i][catatan]'] = catatan;
+      }
       final foto = it['foto']?.toString() ?? '';
-      if (foto.isNotEmpty) fields['items[$i][foto]'] = foto;
+      if (bermasalah && foto.isNotEmpty) {
+        itemPhotos['items[$i][foto]'] = foto;
+      }
     }
-    return fields;
+    return (fields, itemPhotos);
   }
 
   /// Format angka untuk field multipart (bulat tanpa desimal).

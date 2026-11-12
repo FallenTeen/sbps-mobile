@@ -88,7 +88,10 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                     child: AppEmptyState(
                       icon: Icons.no_crash_outlined,
                       title: 'Belum ada unit yang ditugaskan',
-                      subtitle: 'Hubungi admin untuk penugasan unit.',
+                      subtitle:
+                          'Checklist muncul setelah unit ditugaskan ke kamu '
+                          'oleh admin atau Ketua Armada.\nSudah ditugaskan '
+                          'tapi belum muncul? Hubungi Ketua Armada kamu.',
                     ),
                   ),
                 ],

@@ -64,6 +64,80 @@ class ChecklistItemDraft {
   };
 }
 
+/// Kekurangan dokumentasi satu bagian saat validasi submit.
+enum ChecklistDocGap {
+  /// Lengkap atau tidak relevan (kondisi baik).
+  none,
+
+  /// Level belum dipilih.
+  belumDiperiksa,
+
+  /// Bermasalah tapi catatan kosong.
+  catatanKosong,
+
+  /// Rusak tanpa foto kerusakan (wajib).
+  rusakTanpaFoto,
+
+  /// Perlu perhatian tanpa foto kondisi (wajib).
+  perluPerhatianTanpaFoto,
+}
+
+/// Gap dokumentasi satu bagian checklist untuk validasi submit.
+///
+/// Urutan prioritas cek di sisi pemanggil: belum diperiksa, catatan kosong,
+/// rusak tanpa foto, perlu perhatian tanpa foto. Foto wajib untuk SEMUA
+/// kondisi bermasalah (perlu perhatian dan rusak).
+ChecklistDocGap checklistBagianGap(
+  ChecklistItemLevel? level,
+  String catatan,
+  String? fotoPath,
+) {
+  if (level == null) return ChecklistDocGap.belumDiperiksa;
+  if (!level.isBermasalah) return ChecklistDocGap.none;
+  if (catatan.trim().isEmpty) return ChecklistDocGap.catatanKosong;
+  if (fotoPath == null || fotoPath.isEmpty) {
+    return level == ChecklistItemLevel.rusak
+        ? ChecklistDocGap.rusakTanpaFoto
+        : ChecklistDocGap.perluPerhatianTanpaFoto;
+  }
+  return ChecklistDocGap.none;
+}
+
+/// Indeks pertama dengan level null, atau null bila semua sudah diisi.
+int? firstUnfilledLevelIndex(List<ChecklistItemLevel?> levels) {
+  for (var i = 0; i < levels.length; i++) {
+    if (levels[i] == null) return i;
+  }
+  return null;
+}
+
+/// Index accordion yang terbuka setelah user memilih [level] pada bagian
+/// [index]. Item bermasalah TIDAK lanjut otomatis: form dokumentasi
+/// (catatan + foto) harus langsung terlihat di item tersebut. Item baik
+/// lanjut ke bagian berikutnya yang belum diperiksa.
+int? nextExpandedIndexAfterLevel({
+  required int index,
+  required ChecklistItemLevel level,
+  required List<ChecklistItemLevel?> levels,
+}) => level.isBermasalah ? index : firstUnfilledLevelIndex(levels);
+
+/// Payload satu item checklist untuk submit: `catatan`/`foto` hanya ikut
+/// bila kondisi bermasalah. Item baik tidak mengirim dokumentasi lama
+/// (nilai tetap tersimpan di form/draft, hanya difilter dari payload).
+Map<String, dynamic> checklistItemPayload({
+  required String bagian,
+  required ChecklistItemLevel level,
+  String catatan = '',
+  String? fotoPath,
+}) => {
+  'bagian': bagian,
+  'kondisi': level.wireValue,
+  if (level.isBermasalah && catatan.trim().isNotEmpty)
+    'catatan': catatan.trim(),
+  if (level.isBermasalah && fotoPath != null && fotoPath.isNotEmpty)
+    'foto': fotoPath,
+};
+
 /// Status agregat satu unit pada index checklist (task queue).
 enum ChecklistUnitStatus { menunggu, selesai, bermasalah }
 

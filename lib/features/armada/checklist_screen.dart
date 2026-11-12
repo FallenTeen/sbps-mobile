@@ -350,6 +350,21 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
     return null;
   }
 
+  /// Indeks bagian pertama dengan [gap] dokumentasi, atau null.
+  int? _firstGap(ChecklistDocGap gap) {
+    for (var i = 0; i < _bagian.length; i++) {
+      final b = _bagian[i];
+      if (checklistBagianGap(b.level, b.catatan, b.fotoPath) == gap) return i;
+    }
+    return null;
+  }
+
+  /// Nama bagian yang punya [gap] (untuk pesan snackbar).
+  List<String> _namesWithGap(ChecklistDocGap gap) => [
+    for (final b in _bagian)
+      if (checklistBagianGap(b.level, b.catatan, b.fotoPath) == gap) b.bagian,
+  ];
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -522,7 +537,14 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
       final b = _bagian[index];
       b.level = level;
       AnalyticsService.checklistItemToggle(b.bagian, !level.isBermasalah);
-      _expanded = _firstUnfilled();
+      // Item bermasalah: accordion tetap terbuka di item ini supaya form
+      // dokumentasi (catatan + foto) langsung terlihat. Item baik: lanjut
+      // ke bagian berikutnya yang belum diperiksa.
+      _expanded = nextExpandedIndexAfterLevel(
+        index: index,
+        level: level,
+        levels: [for (final x in _bagian) x.level],
+      );
     });
     _scheduleAutosave();
   }
@@ -585,40 +607,51 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
       );
       return;
     }
-    final belum = _bagian.where((b) => b.level == null).map((b) => b.bagian);
-    if (belum.isNotEmpty) {
-      _snack('Masih ada bagian yang belum diperiksa: ${belum.join(', ')}');
+    final belumIdx = _firstGap(ChecklistDocGap.belumDiperiksa);
+    if (belumIdx != null) {
+      setState(() => _expanded = belumIdx);
+      _snack(
+        'Masih ada bagian yang belum diperiksa: '
+        '${_namesWithGap(ChecklistDocGap.belumDiperiksa).join(', ')}',
+      );
       return;
     }
-    final catatanKosong = _bagian
-        .where((b) => b.level!.isBermasalah && b.catatan.trim().isEmpty)
-        .map((b) => b.bagian)
-        .toList();
-    if (catatanKosong.isNotEmpty) {
-      _snack('Jelaskan kondisi: ${catatanKosong.join(', ')}');
+    final catatanIdx = _firstGap(ChecklistDocGap.catatanKosong);
+    if (catatanIdx != null) {
+      setState(() => _expanded = catatanIdx);
+      _snack(
+        'Jelaskan kondisi: '
+        '${_namesWithGap(ChecklistDocGap.catatanKosong).join(', ')}',
+      );
       return;
     }
-    final rusakTanpaFoto = _bagian
-        .where(
-          (b) =>
-              b.level == ChecklistItemLevel.rusak &&
-              (b.fotoPath == null || b.fotoPath!.isEmpty),
-        )
-        .map((b) => b.bagian)
-        .toList();
-    if (rusakTanpaFoto.isNotEmpty) {
-      _snack('Ambil foto kerusakan: ${rusakTanpaFoto.join(', ')}');
+    final rusakFotoIdx = _firstGap(ChecklistDocGap.rusakTanpaFoto);
+    if (rusakFotoIdx != null) {
+      setState(() => _expanded = rusakFotoIdx);
+      _snack(
+        'Ambil foto kerusakan: '
+        '${_namesWithGap(ChecklistDocGap.rusakTanpaFoto).join(', ')}',
+      );
+      return;
+    }
+    final perluFotoIdx = _firstGap(ChecklistDocGap.perluPerhatianTanpaFoto);
+    if (perluFotoIdx != null) {
+      setState(() => _expanded = perluFotoIdx);
+      _snack(
+        'Ambil foto kondisi: '
+        '${_namesWithGap(ChecklistDocGap.perluPerhatianTanpaFoto).join(', ')}',
+      );
       return;
     }
 
     final items = [
       for (final b in _bagian)
-        {
-          'bagian': b.bagian,
-          'kondisi': b.level!.wireValue,
-          if (b.catatan.trim().isNotEmpty) 'catatan': b.catatan.trim(),
-          if (b.fotoPath != null && b.fotoPath!.isNotEmpty) 'foto': b.fotoPath!,
-        },
+        checklistItemPayload(
+          bagian: b.bagian,
+          level: b.level!,
+          catatan: b.catatan,
+          fotoPath: b.fotoPath,
+        ),
     ];
 
     HapticFeedback.mediumImpact();
@@ -946,6 +979,16 @@ class _BagianAccordion extends StatelessWidget {
   final VoidCallback onFoto;
   final VoidCallback onCatatanChanged;
 
+  /// True bila kondisi bermasalah tapi dokumentasi (catatan/foto) belum
+  /// lengkap - dipakai untuk indikator peringatan di header accordion.
+  bool get _docIncomplete {
+    if (readOnly) return false;
+    final level = state.level;
+    if (level == null || !level.isBermasalah) return false;
+    final hasFoto = state.fotoPath != null && state.fotoPath!.isNotEmpty;
+    return catatanCtrl.text.trim().isEmpty || !hasFoto;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -965,13 +1008,39 @@ class _BagianAccordion extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      state.bagian,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.colors.textPrimary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          state.bagian,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                        if (_docIncomplete) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 12,
+                                color: context.colors.warning,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Dokumentasi belum lengkap',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.colors.warning,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   _LevelChip(level: state.level),
@@ -1051,7 +1120,7 @@ class _BagianAccordion extends StatelessWidget {
                     _PhotoField(
                       label: state.level == ChecklistItemLevel.rusak
                           ? 'Foto kerusakan (wajib)'
-                          : 'Foto kondisi (opsional)',
+                          : 'Foto kondisi (wajib)',
                       localPath: state.fotoPath,
                       hasExisting: false,
                       enabled: true,

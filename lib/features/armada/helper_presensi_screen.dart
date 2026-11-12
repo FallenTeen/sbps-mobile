@@ -116,8 +116,39 @@ class _HelperPresensiScreenState extends ConsumerState<HelperPresensiScreen> {
         ),
         data: (helpers) {
           if (helpers.isEmpty) {
-            return const Center(
-              child: Text('Tidak ada helper yang ditugaskan.'),
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.badge_outlined,
+                      size: 44,
+                      color: context.colors.textMuted,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Belum ada helper pada unit yang kamu pegang',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Helper yang ditugaskan ke unitmu akan tampil di sini.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
