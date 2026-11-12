@@ -722,26 +722,6 @@ class _QuickActions extends StatelessWidget {
 
   List<_QuickAction> _getActionsForRole(String? role) {
     switch (role) {
-      case 'Driver Armada':
-      case 'Driver Standby':
-      case 'Driver Kondisional':
-        return [
-          _QuickAction(
-            icon: Icons.checklist,
-            label: 'Checklist',
-            route: '/armada/checklist',
-          ),
-          _QuickAction(
-            icon: Icons.add_road,
-            label: 'Ritase',
-            route: '/armada/ritase-input',
-          ),
-          _QuickAction(
-            icon: Icons.build,
-            label: 'Servis',
-            route: '/armada/servis/ajuan',
-          ),
-        ];
       case 'Mandor Titik':
         return [
           _QuickAction(
@@ -791,14 +771,6 @@ class _QuickActions extends StatelessWidget {
             icon: Icons.route,
             label: 'Riwayat Muatan',
             route: '/armada/ritase',
-          ),
-        ];
-      case 'Workshop':
-        return [
-          _QuickAction(
-            icon: Icons.build_circle,
-            label: 'Antrian',
-            route: '/workshop',
           ),
         ];
       default:

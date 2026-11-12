@@ -8,6 +8,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/queue_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -32,6 +33,7 @@ class QcHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quality Control'),
+        bottom: const BrandStrip(),
         actions: [
           AppTopBarActions(
             extraLeadingActions: [

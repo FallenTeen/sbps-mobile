@@ -11,6 +11,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/status_pill.dart';
 import '../auth/auth_providers.dart';
 import '../qc/qc_providers.dart';
@@ -126,13 +127,23 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
             ],
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Sesi Aktif'),
-            Tab(text: 'Progress'),
-            Tab(text: 'Riwayat'),
-          ],
+        bottom: PreferredSize(
+          // BrandStrip (3) + TabBar Material 3 (48).
+          preferredSize: const Size.fromHeight(51),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BrandStrip(),
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Sesi Aktif'),
+                  Tab(text: 'Progress'),
+                  Tab(text: 'Riwayat'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

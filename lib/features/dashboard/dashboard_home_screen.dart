@@ -21,6 +21,7 @@ import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
@@ -43,6 +44,7 @@ class DashboardHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Operasional'),
+        bottom: const BrandStrip(),
         actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(

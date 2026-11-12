@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
+import '../../shared/widgets/brand_strip.dart';
 import 'security_repository.dart';
 
 /// Modul /security Home Shell (Section 27, TD-F1).
@@ -23,16 +25,8 @@ class SecurityHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Security & Keamanan'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
-            onPressed: () {
-              ref.invalidate(bukuTamuHariIniProvider);
-              ref.invalidate(ritaseSecurityAntreanProvider);
-            },
-          ),
-        ],
+        bottom: const BrandStrip(),
+        actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -40,6 +34,7 @@ class SecurityHomeScreen extends ConsumerWidget {
           ref.invalidate(ritaseSecurityAntreanProvider);
         },
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
             // Status Ringkasan Hari Ini

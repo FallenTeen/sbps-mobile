@@ -157,8 +157,7 @@ const kPresensiBranchIndex = 10;
 const kNotifikasiBranchIndex = 11;
 
 /// Modul yang menjadi isi tab "Tugas / Operasional" per role multi-modul.
-/// Field role (Driver/Workshop/Inventory) tidak ada di sini: Beranda mereka
-/// sudah langsung pekerjaan hari ini, jadi tab Tugas tidak perlu dirender.
+/// Field role (Driver/Workshop/Inventory/Logistik/Security) tidak ada di sini: Beranda mereka sudah pekerjaan hari ini.
 const _tugasModuleByRole = <String, String>{
   'Mandor Titik': 'produksi',
   'Mandor Proyek': 'produksi',
@@ -172,8 +171,6 @@ const _tugasModuleByRole = <String, String>{
   'Ketua Divisi Armada': 'armada',
   'Ketua Armada': 'armada',
   'Kontraktor': 'kontraktor',
-  'Logistik': 'logistik',
-  'Security': 'security',
   'Operator Mesin': 'produksi',
 };
 

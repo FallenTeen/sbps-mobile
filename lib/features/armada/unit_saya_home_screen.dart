@@ -10,6 +10,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'armada_providers.dart';
@@ -45,6 +46,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
           'Unit Saya',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
+        bottom: const BrandStrip(),
         actions: const [AppTopBarActions()],
       ),
       body: RefreshIndicator(
@@ -1146,7 +1148,7 @@ class _ShortcutSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Akses Cepat',
+            'Aksi Cepat',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

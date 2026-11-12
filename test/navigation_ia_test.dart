@@ -79,6 +79,54 @@ void main() {
       }
     });
 
+    test('Logistik -> Beranda + Presensi + Notifikasi (Beranda = antrean kerja)',
+        () {
+      expect(_keysOf('Logistik'), ['home', 'presensi', 'notifikasi']);
+      expect(tugasModuleFor('Logistik'), isNull);
+    });
+
+    test('Security -> Beranda + Presensi + Notifikasi (Beranda = modul security)',
+        () {
+      expect(_keysOf('Security'), ['home', 'presensi', 'notifikasi']);
+      expect(tugasModuleFor('Security'), isNull);
+    });
+
+    test('semua destinasi role mana pun dipetakan ke branch yang unik', () {
+      // Daftar role mencakup setiap nilai berbeda di _tugasModuleByRole
+      // (produksi, dashboard, keuangan, armada, kontraktor) plus semua
+      // field role tanpa tab Tugas.
+      for (final role in [
+        'Owner',
+        'Admin Keuangan',
+        'Mandor Titik',
+        'Mandor Proyek',
+        'Koordinator CBP',
+        'Koordinator AMP',
+        'Ketua Divisi Produksi CBP',
+        'Ketua Divisi Produksi AMP',
+        'Kepala Divisi Armada',
+        'Ketua Divisi Armada',
+        'Ketua Armada',
+        'Kontraktor',
+        'Driver Armada',
+        'Driver Standby',
+        'Driver Kondisional',
+        'Operator Alat Berat',
+        'Operator Mesin',
+        'Workshop',
+        'Inventory',
+        'Logistik',
+        'Security',
+      ]) {
+        final destinations = buildNavDestinations(role);
+        final branches = destinations
+            .map((d) => navBranchFor(d.key, role, _moduleBranchByKey))
+            .toSet();
+        expect(branches.length, destinations.length,
+            reason: 'role $role punya destinasi yang menunjuk branch sama');
+      }
+    });
+
     test('role baru/tidak dikenal → Beranda + Notifikasi saja', () {
       expect(_keysOf('Role Masa Depan'), ['home', 'notifikasi']);
       expect(_keysOf(null), ['home', 'notifikasi']);

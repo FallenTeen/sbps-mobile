@@ -7,7 +7,9 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_error_state.dart';
+import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/brand_strip.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
 
@@ -29,13 +31,8 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Logistik & Timbang'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
-            onPressed: () => ref.invalidate(antreanVerifikasiRitaseProvider),
-          ),
-        ],
+        bottom: const BrandStrip(),
+        actions: const [AppTopBarActions()],
       ),
       body: Column(
         children: [
@@ -97,6 +94,7 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(antreanVerifikasiRitaseProvider),
                   child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 12),
