@@ -365,8 +365,55 @@ class LocationBufferService {
     }
   }
 
-  /// Lock lintas-isolat agar dua flush (proses utama + service isolate)
-  /// tidak berjalan bersamaan dan saling menimpa `pending_batch`.
+  static Future<bool> isAuthBlocked() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    final raw = box.get('auth_blocked_until');
+    if (raw == null || raw.isEmpty) return false;
+    try {
+      final until = DateTime.parse(raw);
+      if (DateTime.now().isBefore(until)) return true;
+      await box.delete('auth_blocked_until');
+      return false;
+    } catch (_) {
+      await box.delete('auth_blocked_until');
+      return false;
+    }
+  }
+
+  static Future<void> setAuthBlocked(Duration duration) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.put(
+      'auth_blocked_until',
+      DateTime.now().add(duration).toIso8601String(),
+    );
+  }
+
+  static Future<void> clearAuthBlocked() async {
+    try {
+      final box = await Hive.openBox<String>(LocationBufferService._boxName);
+      await box.delete('auth_blocked_until');
+    } catch (_) {}
+  }
+
+  static Future<void> setTrackingDesired(bool value) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.put('tracking_desired', value ? 'true' : 'false');
+  }
+
+  static Future<bool> isTrackingDesired() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    return box.get('tracking_desired') == 'true';
+  }
+
+  static Future<void> setPresensiOpen(bool value) async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.put('presensi_open', value ? 'true' : 'false');
+  }
+
+  static Future<bool> getPresensiOpenCached() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    return box.get('presensi_open') == 'true';
+  }
   static Future<bool> tryAcquireFlushLock() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     final raw = box.get('flush_lock');

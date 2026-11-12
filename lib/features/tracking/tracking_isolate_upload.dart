@@ -20,6 +20,7 @@ class TrackingIsolateUpload {
 
   static Future<void> flush({Dio? client, String? token, String? role}) async {
     if (_flushing) return;
+    if (await LocationBufferService.isAuthBlocked()) return;
     final gotLock = await LocationBufferService.tryAcquireFlushLock();
     if (!gotLock) return;
     _flushing = true;
@@ -88,11 +89,16 @@ class TrackingIsolateUpload {
           },
         );
         final status = res.statusCode ?? 0;
+        if (status == 401) {
+          await LocationBufferService.setAuthBlocked(const Duration(hours: 1));
+          return;
+        }
         if (status >= 200 && status < 300) {
           await LocationBufferService.removeByIdsIsolate(
             points.map((p) => p.id).toSet(),
           );
           await LocationBufferService.clearPendingBatchIsolate();
+          await LocationBufferService.clearAuthBlocked();
         }
       } on DioException {
         // Jaringan gagal: batch dipertahankan untuk retry.

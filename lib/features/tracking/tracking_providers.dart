@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
+import '../../core/outbox/pending_action.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
@@ -94,8 +95,18 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
     try {
       final presensi = await ref.read(hariIniProvider.future);
-      return presensi.status == PresensiStatus.menungguCheckOut;
+      final open = presensi.status == PresensiStatus.menungguCheckOut;
+      await LocationBufferService.setPresensiOpen(open);
+      return open;
     } catch (_) {
+      if (await LocationBufferService.getPresensiOpenCached()) return true;
+      try {
+        final pending = await ref.read(outboxRepositoryProvider).pendingActions();
+        if (pending.any((a) => a.endpoint == PendingEndpoint.presensiCheckIn)) {
+          await LocationBufferService.setPresensiOpen(true);
+          return true;
+        }
+      } catch (_) {}
       return state.running;
     }
   }
@@ -151,6 +162,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       pendingPoints: _buffer.count,
     );
 
+    unawaited(LocationBufferService.setTrackingDesired(true));
+
     _connectivitySub ??= Connectivity().onConnectivityChanged.listen((results) {
       if (results.any((r) => r != ConnectivityResult.none)) flush();
     });
@@ -164,6 +177,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
     // Stop background location service.
     BackgroundLocationService.instance.stopTracking();
+    unawaited(LocationBufferService.setTrackingDesired(false));
 
     state = state.copyWith(
       running: false,
@@ -174,6 +188,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
   /// Kirim isi buffer sebagai SATU batch idempotent.
   Future<void> flush() async {
     if (!state.running || _flushing) return;
+    if (await LocationBufferService.isAuthBlocked()) return;
     final gotLock = await LocationBufferService.tryAcquireFlushLock();
     if (!gotLock) return;
     _flushing = true;
@@ -223,14 +238,16 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
         // Sukses (termasuk duplicate:true): aman hapus dari perangkat.
         await _buffer.removeByIds(points.map((p) => p.id).toSet());
         await _buffer.clearPendingBatch();
+        await LocationBufferService.clearAuthBlocked();
         state = state.copyWith(
           lastSentAt: DateTime.now(),
           pendingPoints: _buffer.count,
           message: null,
         );
       } on ApiException catch (e) {
-        // 422 belum check-in/karyawan, 429 rate limit, dsb: pertahankan
-        // batch (batch_id sama) untuk percobaan berikutnya.
+        if (e.statusCode == 401) {
+          await LocationBufferService.setAuthBlocked(const Duration(hours: 1));
+        }
         state = state.copyWith(message: e.message);
       }
     } catch (_) {
