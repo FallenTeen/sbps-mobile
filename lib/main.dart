@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -18,6 +19,7 @@ import 'core/push_token_service.dart';
 import 'features/armada/armada_providers.dart';
 import 'features/presensi/presensi_providers.dart';
 import 'features/notifikasi/notifikasi_providers.dart';
+import 'features/tracking/location_buffer_service.dart';
 import 'features/tracking/tracking_providers.dart';
 import 'features/update/shorebird_update_banner.dart';
 import 'features/version/version_gate.dart';
@@ -120,7 +122,34 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
       // background selama app tidak aktif bisa langsung siap restart.
       ref.read(shorebirdUpdateProvider.notifier).refresh();
       _refreshVisualDataOnResume();
+      // Beri tahu karyawan bila tracking sempat terhenti (mis. karena OEM
+      // mematikan background) agar mereka tahu perlu buka app lebih sering.
+      unawaited(_notifyTrackingInterrupted());
     }
+  }
+
+  Future<void> _notifyTrackingInterrupted() async {
+    try {
+      final desired = await LocationBufferService.isTrackingDesired();
+      if (!desired) return;
+      // Beri waktu evaluate() selesai.
+      await Future<void>.delayed(const Duration(seconds: 2));
+      final running = ref.read(trackingSchedulerProvider).running;
+      if (running) return;
+      final blocked = await LocationBufferService.isAuthBlocked();
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 6),
+          content: Text(
+            blocked
+                ? 'Sesi login berakhir. Buka aplikasi dan login ulang agar tracking aktif.'
+                : 'Tracking GPS sempat berhenti. Buka aplikasi lebih sering agar tracking aktif.',
+          ),
+        ),
+      );
+    } catch (_) {}
   }
 
   /// M-14: data yang tampil di layar bisa basi setelah app lama di

@@ -41,6 +41,10 @@ class LocationService {
   Future<bool> hasAlwaysPermission() async =>
       await Geolocator.checkPermission() == LocationPermission.always;
 
+  /// Izin lokasi saat ini tanpa memicu dialog.
+  Future<LocationPermission> currentPermission() =>
+      Geolocator.checkPermission();
+
   /// Buka settings inbox (fallback bila deniedForever).
   Future<void> openAppSettings() => Geolocator.openAppSettings();
 

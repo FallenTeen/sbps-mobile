@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart' show LocationPermission;
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../core/app_preferences.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
@@ -16,11 +18,14 @@ import '../auth/auth_providers.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../titik/titik_selector.dart';
+import '../tracking/battery_guide_sheet.dart';
+import '../tracking/tracking_providers.dart';
+import 'models/presensi_hari_ini.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
 
-/// Fase A1.3 — daftar titik kerja aktif dengan jarak GPS ke tiap titik,
+/// Fase A1.3 - daftar titik kerja aktif dengan jarak GPS ke tiap titik,
 /// penanda titik terdekat, dan pemilihan titik untuk alur check-in (A1.4).
 class TitikKerjaScreen extends ConsumerStatefulWidget {
   const TitikKerjaScreen({super.key});
@@ -30,6 +35,8 @@ class TitikKerjaScreen extends ConsumerStatefulWidget {
 }
 
 class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
+  bool _batteryGuideAutoChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +44,36 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
       if (!mounted) return;
       ref.read(locationProvider.notifier).refresh();
       ref.read(unreadCountProvider.notifier).reload();
+    });
+  }
+
+  void _maybeAutoShowBatteryGuide(bool presensiOpen) {
+    if (_batteryGuideAutoChecked || !presensiOpen) return;
+    _batteryGuideAutoChecked = true;
+    Future(() async {
+      final shown = await AppPreferences.getFlag(kBatteryGuideShownKey);
+      if (shown) return;
+      bool whileInUse = false;
+      bool running = false;
+      try {
+        whileInUse =
+            await ref.read(locationServiceProvider).currentPermission() ==
+            LocationPermission.whileInUse;
+      } catch (_) {}
+      running = ref.read(trackingSchedulerProvider).running;
+      if (!shouldAutoShowBatteryGuide(
+        alreadyShown: shown,
+        presensiOpen: presensiOpen,
+        whileInUse: whileInUse,
+        trackingRunning: running,
+      )) {
+        return;
+      }
+      // Tandai sudah tampil sebelum memunculkan supaya tidak pernah
+      // muncul otomatis lagi.
+      await AppPreferences.setFlag(kBatteryGuideShownKey, true);
+      if (!mounted) return;
+      await showBatteryGuideSheet(context);
     });
   }
 
@@ -68,6 +105,12 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     final position = location.position;
     final selectedTitik = ref.watch(selectedTitikProvider);
     final selectedId = selectedTitik?.id;
+    final pending = ref.watch(pendingPresensiProvider);
+    final presensiStatus = ref.watch(hariIniProvider).value?.status;
+    final presensiOpen =
+        presensiStatus == PresensiStatus.menungguCheckOut ||
+        pending.checkInPending;
+    _maybeAutoShowBatteryGuide(presensiOpen);
 
     return Scaffold(
       appBar: AppBar(
@@ -109,6 +152,20 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
               ],
 
               const PresensiHariIniCard(),
+              if (pending.checkInPending) ...[
+                const SizedBox(height: 8),
+                const InfoBanner(
+                  icon: Icons.cloud_off_outlined,
+                  message:
+                      'Presensi Anda menunggu koneksi internet, akan terkirim otomatis.',
+                ),
+              ],
+              if (presensiOpen) ...[
+                const SizedBox(height: 8),
+                const _TrackingStatusStrip(),
+                const SizedBox(height: 8),
+                const _AlwaysPermissionBanner(),
+              ],
               const _FormulirEntryPoint(),
               _LocationCard(
                 location: location,
@@ -250,7 +307,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
   }
 }
 
-/// Pintu masuk Formulir Lapangan (Fase A1.5) — navigasi tetap dibuka,
+/// Pintu masuk Formulir Lapangan (Fase A1.5) - navigasi tetap dibuka,
 /// layar formulir sendiri yang memblokir bila belum check-in.
 class _FormulirEntryPoint extends ConsumerWidget {
   const _FormulirEntryPoint();
@@ -557,13 +614,213 @@ class _TitikTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ],
-                  ],
+                     ],
+                   ],
+                 ),
+               ],
+             ),
+           ),
+         ),
+       ),
+     );
+   }
+}
+
+/// Detail pesan untuk strip status pemantauan. Pesan generik stop scheduler
+/// disembunyikan agar tidak dobel dengan teks utama strip.
+String? trackingStripDetail(String? schedulerMessage) {
+  if (schedulerMessage == null || schedulerMessage.isEmpty) return null;
+  if (schedulerMessage == 'Tracking tidak aktif.') return null;
+  return schedulerMessage;
+}
+
+/// Strip status pemantauan lokasi (Fase karyawan home) - tampil hanya saat
+/// presensi terbuka. Meniru gaya [_GpsStatusStrip] pada kartu presensi.
+class _TrackingStatusStrip extends ConsumerWidget {
+  const _TrackingStatusStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(trackingSchedulerProvider);
+    final colors = context.colors;
+    final running = status.running;
+
+    final pesan = running
+        ? (status.pendingPoints > 0
+              ? 'Pemantauan lokasi aktif, menunggu kirim: ${status.pendingPoints} titik.'
+              : 'Pemantauan lokasi aktif.')
+        : 'Pemantauan lokasi tidak aktif.';
+    final detail = running ? null : trackingStripDetail(status.message);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: running
+            ? colors.success.withValues(alpha: 0.1)
+            : colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            running ? Icons.my_location : Icons.location_off_outlined,
+            size: 18,
+            color: running ? colors.success : colors.textTertiary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  pesan,
+                  style: TextStyle(
+                    color: running ? colors.success : colors.textSecondary,
+                    fontSize: 12.5,
+                    height: 1.3,
+                  ),
                 ),
+                if (detail != null)
+                  Text(
+                    detail,
+                    style: TextStyle(
+                      color: colors.error,
+                      fontSize: 11.5,
+                      height: 1.3,
+                    ),
+                  ),
+                if (!running)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      onPressed: () => showBatteryGuideSheet(context),
+                      child: Text(
+                        'Panduan baterai',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Panduan izin lokasi Sepanjang Waktu - tampil saat presensi terbuka tapi
+/// izin masih while-in-use atau ditolak permanen. Tanpa persistensi:
+/// cukup cek sekali saat layar dibuka dan saat kembali dari pengaturan.
+enum _AlwaysPromptState { none, upgrade, deniedForever }
+
+class _AlwaysPermissionBanner extends ConsumerStatefulWidget {
+  const _AlwaysPermissionBanner();
+
+  @override
+  ConsumerState<_AlwaysPermissionBanner> createState() =>
+      _AlwaysPermissionBannerState();
+}
+
+class _AlwaysPermissionBannerState
+    extends ConsumerState<_AlwaysPermissionBanner>
+    with WidgetsBindingObserver {
+  _AlwaysPromptState _prompt = _AlwaysPromptState.none;
+  bool _dismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _check();
+  }
+
+  Future<void> _check() async {
+    final service = ref.read(locationServiceProvider);
+    LocationPermission permission;
+    try {
+      permission = await service.currentPermission();
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _prompt = switch (permission) {
+        LocationPermission.whileInUse => _AlwaysPromptState.upgrade,
+        LocationPermission.deniedForever => _AlwaysPromptState.deniedForever,
+        _ => _AlwaysPromptState.none,
+      };
+    });
+  }
+
+  void _openSettings() {
+    ref.read(locationServiceProvider).openAppSettings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_dismissed || _prompt == _AlwaysPromptState.none) {
+      return const SizedBox.shrink();
+    }
+
+    final pesan = _prompt == _AlwaysPromptState.upgrade
+        ? 'Aktifkan izin lokasi Sepanjang Waktu agar lokasi tetap terkirim saat aplikasi ditutup.'
+        : 'Izin lokasi ditolak permanen. Buka Pengaturan untuk mengaktifkan.';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.location_searching,
+            size: 18,
+            color: context.colors.textTertiary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              pesan,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _openSettings,
+            child: const Text('Buka Pengaturan'),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Tutup',
+            icon: Icon(Icons.close, size: 18, color: context.colors.textTertiary),
+            onPressed: () => setState(() => _dismissed = true),
+          ),
+        ],
       ),
     );
   }

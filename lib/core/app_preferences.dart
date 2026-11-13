@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 /// Preferensi aplikasi yang disimpan lokal di Hive box `app_preferences`
-/// (Rencana Pengembangan UX §Bagian 2 — D5).
+/// (Rencana Pengembangan UX §Bagian 2 - D5).
 class AppPreferences {
   AppPreferences._();
 
@@ -28,6 +28,26 @@ class AppPreferences {
   static Future<void> saveThemeMode(ThemeMode mode) async {
     final box = await _openBox();
     await box.put(_kThemeMode, mode.name);
+  }
+
+  static Future<bool> getFlag(String key) async {
+    final box = await _openBox();
+    return box.get(key) == 'true';
+  }
+
+  static Future<void> setFlag(String key, bool value) async {
+    final box = await _openBox();
+    await box.put(key, value ? 'true' : 'false');
+  }
+
+  static Future<String?> getString(String key) async {
+    final box = await _openBox();
+    return box.get(key);
+  }
+
+  static Future<void> setString(String key, String value) async {
+    final box = await _openBox();
+    await box.put(key, value);
   }
 }
 

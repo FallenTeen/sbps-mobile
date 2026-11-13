@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart' show LocationPermission;
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_preferences.dart';
 import '../../core/outbox/pending_action.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/models/presensi_hari_ini.dart';
@@ -17,6 +19,50 @@ import 'tracking_repository.dart';
 final trackingRepositoryProvider = Provider<TrackingRepository>(
   (ref) => TrackingRepository(api: ref.watch(apiClientProvider)),
 );
+
+const _kAlwaysPromptLastKey = 'always_prompt_last_ms';
+
+/// Ubah pesan teknis (server/ApiException/jaringan) menjadi bahasa sehari-hari
+/// sebelum ditampilkan ke pengguna. Pesan yang sudah sederhana diteruskan.
+String? mapTrackingMessage(String? raw) {
+  if (raw == null) return null;
+  final msg = raw.trim();
+  if (msg.isEmpty) return null;
+  final lower = msg.toLowerCase();
+  if (lower.contains('unauthenticated') ||
+      lower.contains('tidak terautentikasi') ||
+      lower.contains('401')) {
+    return 'Sesi berakhir, silakan login ulang.';
+  }
+  if (lower.contains('internal server error') ||
+      lower.contains('server error') ||
+      lower.contains('500')) {
+    return 'Server sedang bermasalah, lokasi tetap disimpan di HP.';
+  }
+  if (lower.contains('connection') ||
+      lower.contains('timeout') ||
+      lower.contains('dioexception') ||
+      lower.contains('socket') ||
+      lower.contains('network') ||
+      lower.contains('internet') ||
+      lower.contains('host') ||
+      lower.contains('gagal mengirim')) {
+    return 'Koneksi internet bermasalah, lokasi tetap disimpan di HP.';
+  }
+  return msg;
+}
+
+/// Kapan boleh memunculkan dialog izin Sepanjang Waktu lagi:
+/// maksimal sekali per 7 hari (dan sekali per sesi).
+bool shouldPromptAlwaysPermission({
+  required bool promptedThisSession,
+  required DateTime? lastPromptAt,
+  required DateTime now,
+}) {
+  if (promptedThisSession) return false;
+  if (lastPromptAt == null) return true;
+  return now.difference(lastPromptAt) >= const Duration(days: 7);
+}
 
 final locationBufferProvider = Provider<LocationBufferService>((ref) {
   final service = LocationBufferService(ref.watch(locationServiceProvider));
@@ -53,9 +99,9 @@ class TrackingStatus {
   );
 }
 
-/// Scheduler Live Tracking (§24 TODO A5 — tracking untuk SEMUA karyawan):
+/// Scheduler Live Tracking (§24 TODO A5 - tracking untuk SEMUA karyawan):
 /// - root gate: user login + presensi TERBUKA (menunggu check-out).
-///   Tanpa cek role/portal — semua karyawan login ikut tracking.
+///   Tanpa cek role/portal - semua karyawan login ikut tracking.
 /// - buffer GPS via [LocationBufferService]; titik dari background
 ///   service isolate di-gabung dari Hive saat flush;
 /// - kirim batch tiap 4 menit ATAU begitu online kembali;
@@ -64,7 +110,7 @@ class TrackingStatus {
 /// - titik dihapus dari buffer hanya setelah batch terkirim sukses,
 ///   BUKAN titik milik hari kemarin itu dibuang otomatis.
 ///
-/// 422 "belum check-in" TIDAK membuang data — batch dipertahankan untuk
+/// 422 "belum check-in" TIDAK membuang data - batch dipertahankan untuk
 /// dicoba lagi (window presensi server kini 36 jam, shift malam aman).
 /// Titik/batch milik hari kemarin dibuang otomatis di
 /// [LocationBufferService._pruneStale] agar tidak loop retry selamanya.
@@ -89,6 +135,13 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
   }
 
   LocationBufferService get _buffer => ref.read(locationBufferProvider);
+
+  Future<DateTime?> _lastAlwaysPromptAt() async {
+    final raw = await AppPreferences.getString(_kAlwaysPromptLastKey);
+    final ms = int.tryParse(raw ?? '');
+    if (ms == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms);
+  }
 
   Future<bool> _shouldRun() async {
     if (ref.read(authControllerProvider).value == null) return false;
@@ -126,22 +179,45 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
 
     final error = await _buffer.start();
     if (error != null) {
-      state = state.copyWith(running: false, message: error);
+      state = state.copyWith(running: false, message: mapTrackingMessage(error));
       return;
     }
 
-    // (A7) minta izin ALWAYS sekali per sesi — dialog hanya muncul bila
-    // belum always. Bila ditolak, tracking tetap berjalan (titik hanya
-    // terkirim saat app dibuka); background service tidak dimulai.
+    // (A7) minta izin ALWAYS - maksimal sekali per sesi dan sekali per
+    // 7 hari (tanggal terakhir prompt disimpan di app_preferences).
+    // Bila izin ditolak permanen, JANGAN tampilkan dialog OS: biarkan
+    // banner di titik kerja yang mengarahkan ke Pengaturan. Bila ditolak,
+    // tracking tetap berjalan (titik hanya terkirim saat aplikasi dibuka).
     final location = ref.read(locationServiceProvider);
-    if (!await location.hasAlwaysPermission() && !_alwaysPrompted) {
-      _alwaysPrompted = true;
-      final ok = await location.ensureAlwaysPermission();
-      if (!ok) {
-        state = state.copyWith(
-          message:
-              'Izin lokasi belakang belum aktif - lokasi terkirim hanya saat app dibuka.',
+    LocationPermission permission;
+    try {
+      permission = await location.currentPermission();
+    } catch (_) {
+      permission = LocationPermission.unableToDetermine;
+    }
+    if (permission == LocationPermission.deniedForever) {
+      // Jalur banner (_AlwaysPermissionBanner) yang menangani, tanpa dialog OS.
+    } else if (permission != LocationPermission.always) {
+      final lastAt = await _lastAlwaysPromptAt();
+      if (shouldPromptAlwaysPermission(
+        promptedThisSession: _alwaysPrompted,
+        lastPromptAt: lastAt,
+        now: DateTime.now(),
+      )) {
+        _alwaysPrompted = true;
+        unawaited(
+          AppPreferences.setString(
+            _kAlwaysPromptLastKey,
+            DateTime.now().millisecondsSinceEpoch.toString(),
+          ),
         );
+        final ok = await location.ensureAlwaysPermission();
+        if (!ok) {
+          state = state.copyWith(
+            message:
+                'Izin lokasi belakang belum aktif - lokasi terkirim hanya saat aplikasi dibuka.',
+          );
+        }
       }
     }
 
@@ -152,7 +228,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
         await BackgroundLocationService.instance.initialize();
         await BackgroundLocationService.instance.startTracking();
       } catch (_) {
-        // Background service gagal — foreground tracking tetap jalan.
+        // Background service gagal - foreground tracking tetap jalan.
       }
     }
 
@@ -205,7 +281,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       final r = await ref.read(tokenStorageProvider).readActiveRole();
       await LocationBufferService.cacheAuthToken(t);
       await LocationBufferService.cacheActiveRole(r);
-      // (A8) rollover hari baru SEBELUM membaca batch — batch pending
+      // (A8) rollover hari baru SEBELUM membaca batch - batch pending
       // milik kemarin dibuang, jadi tak pernah diretry percuma.
       await _buffer.pruneStale();
       var pending = await _buffer.readPendingBatch();
@@ -213,7 +289,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       String batchId;
 
       if (pending != null) {
-        // Retry batch yang sama PERSIS — batch_id & isi jangan diubah.
+        // Retry batch yang sama PERSIS - batch_id & isi jangan diubah.
         // Batasi ukuran agar tidak melebihi max_batch backend.
         if (pending.points.length > _maxBatch) {
           final chunk = pending.points.take(_maxBatch).toList();
@@ -226,7 +302,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
         }
       } else {
         // (A6) gabungkan titik yang ditulis service isolate langsung
-        // ke Hive — buffer in-memory tak melihatnya sendirian.
+        // ke Hive - buffer in-memory tak melihatnya sendirian.
         await _buffer.syncFromStore();
         final all = _buffer.snapshot();
         if (all.isEmpty) {
@@ -260,10 +336,12 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
         if (e.statusCode == 401) {
           await LocationBufferService.setAuthBlocked(const Duration(hours: 1));
         }
-        state = state.copyWith(message: e.message);
+        state = state.copyWith(message: mapTrackingMessage(e.message));
       }
     } catch (_) {
-      state = state.copyWith(message: 'Gagal mengirim lokasi.');
+      state = state.copyWith(
+        message: mapTrackingMessage('Gagal mengirim lokasi.'),
+      );
     } finally {
       _flushing = false;
       await LocationBufferService.releaseFlushLock();
