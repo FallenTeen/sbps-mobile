@@ -25,8 +25,8 @@ import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
 import 'presensi_providers.dart';
 
-/// Fase A1.3 - daftar titik kerja aktif dengan jarak GPS ke tiap titik,
-/// penanda titik terdekat, dan pemilihan titik untuk alur check-in (A1.4).
+/// Daftar titik kerja aktif dengan jarak GPS ke tiap titik,
+/// penanda titik terdekat, dan pemilihan titik untuk alur check-in.
 class TitikKerjaScreen extends ConsumerStatefulWidget {
   const TitikKerjaScreen({super.key});
 
@@ -307,7 +307,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
   }
 }
 
-/// Pintu masuk Formulir Lapangan (Fase A1.5) - navigasi tetap dibuka,
+/// Pintu masuk Formulir Lapangan - navigasi tetap dibuka,
 /// layar formulir sendiri yang memblokir bila belum check-in.
 class _FormulirEntryPoint extends ConsumerWidget {
   const _FormulirEntryPoint();
@@ -634,7 +634,7 @@ String? trackingStripDetail(String? schedulerMessage) {
   return schedulerMessage;
 }
 
-/// Strip status pemantauan lokasi (Fase karyawan home) - tampil hanya saat
+  /// Strip status pemantauan lokasi - tampil hanya saat
 /// presensi terbuka. Meniru gaya [_GpsStatusStrip] pada kartu presensi.
 class _TrackingStatusStrip extends ConsumerWidget {
   const _TrackingStatusStrip();

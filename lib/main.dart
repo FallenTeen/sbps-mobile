@@ -26,8 +26,7 @@ import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/notification_handler.dart';
 import 'shared/widgets/sync_action_button.dart';
-/// Top-level handler untuk pesan yang diterima di background/terminated.
-/// Harus top-level function (bukan closure) menurut Firebase docs.
+/// Handler FCM background/terminated: wajib top-level function (ketentuan Firebase).
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -40,9 +39,7 @@ Future<void> main() async {
   Intl.defaultLocale = 'id_ID';
   await Hive.initFlutter();
 
-  // Inisialisasi Firebase — google-services.json / GoogleService-Info.plist
-  // wajib ada di android/app/src/main/ (unified). Jika file tidak ada,
-  // Firebase akan throw dan token dikembalikan null (graceful degradation).
+  // Firebase init: tanpa google-services.json, token push = null (degradasi halus).
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -68,8 +65,7 @@ class SbpsApp extends ConsumerStatefulWidget {
 }
 
 class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
-  /// Waktu refresh visual terakhir (M-14) — throttle 5 menit supaya
-  /// bolak-balik aplikasi tidak memicu refetch beruntun.
+  /// Throttle refresh visual saat resume: 5 menit.
   DateTime? _lastVisualRefresh;
   @override
   void initState() {
@@ -105,25 +101,16 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Auto-sync saat app kembali ke foreground. Network bisa pulih selama app
-  /// di background tanpa memicu event connectivity (mis. perpindahan jaringan
-  /// seluler), sehingga antrean tidak boleh menunggu user menekan Sync manual.
-  /// Force-flush (melewati backoff & batas retry) karena ini sinyal konteks
-  /// jaringan segar; kegagalan tetap diklasifikasi ulang oleh respons request.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(outboxSyncServiceProvider).syncNow(ignoreBackoff: true);
-      // Tracking: cek ulang gate (login/presensi) lalu kirim titik yang
-      // menumpuk selama app di background - timer bisa di-throttle OEM.
+      // Cek ulang gate tracking + kirim titik yang menumpuk (timer bisa
+      // di-throttle OEM di background).
       ref.read(trackingSchedulerProvider.notifier).evaluate();
       ref.read(trackingSchedulerProvider.notifier).flush();
-      // Recek OTA saat app kembali dibuka - patch yang terunduh di
-      // background selama app tidak aktif bisa langsung siap restart.
       ref.read(shorebirdUpdateProvider.notifier).refresh();
       _refreshVisualDataOnResume();
-      // Beri tahu karyawan bila tracking sempat terhenti (mis. karena OEM
-      // mematikan background) agar mereka tahu perlu buka app lebih sering.
       unawaited(_notifyTrackingInterrupted());
     }
   }
@@ -152,15 +139,8 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
     } catch (_) {}
   }
 
-  /// M-14: data yang tampil di layar bisa basi setelah app lama di
-  /// background (mis. checklist/ritase berubah dari perangkat lain, atau
-  /// antrian offline sudah terkirim). Refresh provider baca-saja saat
-  /// resume — VISUAL SAJA, tidak menyentuh outbox/auth.
-  ///
-  /// Dua pengaman:
-  /// - hanya saat ada jaringan (GET repository tidak punya cache fallback;
-  ///   invalidate saat offline akan mengganti isi layar dengan error state);
-  /// - throttle 5 menit agar refetch tidak beruntun.
+  /// Refresh provider baca-saja saat resume (VISUAL SAJA, tidak
+  /// menyentuh outbox/auth). Hanya saat online; throttle 5 menit.
   void _refreshVisualDataOnResume() {
     final now = DateTime.now();
     final last = _lastVisualRefresh;

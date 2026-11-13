@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
-/// Preferensi aplikasi yang disimpan lokal di Hive box `app_preferences`
-/// (Rencana Pengembangan UX §Bagian 2 - D5).
+/// Preferensi aplikasi (Hive box `app_preferences`).
 class AppPreferences {
   AppPreferences._();
 

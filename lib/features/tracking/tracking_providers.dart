@@ -99,21 +99,15 @@ class TrackingStatus {
   );
 }
 
-/// Scheduler Live Tracking (§24 TODO A5 - tracking untuk SEMUA karyawan):
-/// - root gate: user login + presensi TERBUKA (menunggu check-out).
-///   Tanpa cek role/portal - semua karyawan login ikut tracking.
-/// - buffer GPS via [LocationBufferService]; titik dari background
-///   service isolate di-gabung dari Hive saat flush;
+/// Scheduler tracking GPS untuk semua karyawan login:
+/// - gate: user login + presensi terbuka (menunggu check-out);
+/// - buffer GPS via [LocationBufferService]; titik dari background service
+///   isolate digabung dari Hive saat flush;
 /// - kirim batch tiap 4 menit ATAU begitu online kembali;
-/// - satu batch = satu batch_id: dibuat sekali sebelum kirim pertama dan
-///   dipakai ulang persis pada retry (tidak pernah dipecah/digabung);
-/// - titik dihapus dari buffer hanya setelah batch terkirim sukses,
-///   BUKAN titik milik hari kemarin itu dibuang otomatis.
-///
-/// 422 "belum check-in" TIDAK membuang data - batch dipertahankan untuk
-/// dicoba lagi (window presensi server kini 36 jam, shift malam aman).
-/// Titik/batch milik hari kemarin dibuang otomatis di
-/// [LocationBufferService._pruneStale] agar tidak loop retry selamanya.
+/// - satu batch = satu batch_id, dipakai ulang persis pada retry
+///   (idempotent, tidak pernah dipecah/digabung);
+/// - 422 "belum check-in" tidak membuang data (window server 36 jam);
+///   titik/batch kemarin dibuang otomatis di [LocationBufferService._pruneStale].
 class TrackingScheduler extends Notifier<TrackingStatus> {
   static const _uuid = Uuid();
   static const _flushInterval = Duration(minutes: 4);
@@ -183,11 +177,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       return;
     }
 
-    // (A7) minta izin ALWAYS - maksimal sekali per sesi dan sekali per
-    // 7 hari (tanggal terakhir prompt disimpan di app_preferences).
-    // Bila izin ditolak permanen, JANGAN tampilkan dialog OS: biarkan
-    // banner di titik kerja yang mengarahkan ke Pengaturan. Bila ditolak,
-    // tracking tetap berjalan (titik hanya terkirim saat aplikasi dibuka).
+    // Minta izin ALWAYS maksimal sekali per sesi dan sekali per 7 hari.
+    // Bila ditolak permanen, JANGAN tampilkan dialog OS: biarkan banner di
+    // titik kerja mengarahkan ke Pengaturan. Tracking tetap berjalan.
     final location = ref.read(locationServiceProvider);
     LocationPermission permission;
     try {
@@ -239,6 +231,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     );
 
     unawaited(LocationBufferService.setTrackingDesired(true));
+    unawaited(_scheduleOemRestart());
+
     unawaited(LocationBufferService.cacheAuthToken(
       await ref.read(tokenStorageProvider).readToken(),
     ));
@@ -252,6 +246,26 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     _flushTimer ??= Timer.periodic(_flushInterval, (_) => flush());
 
     unawaited(flush());
+  }
+
+  /// FASE SELANJUTNYA (WorkManager): pemanggilan ini adalah titik pasang
+  /// WorkManager untuk auto-restart tracking saat OEM mematikan proses dan
+  /// aplikasi tidak pernah dibuka lagi. Saat ini no-op - alternatif yang
+  /// berjalan: flag tracking_desired + restart saat app dibuka/resume,
+  /// plus push FCM dari backend (command tracking:stale-reminder) yang
+  /// mengingatkan karyawan membuka aplikasi.
+  ///
+  /// Cara pasang nanti:
+  /// 1. flutter pub add workmanager
+  /// 2. Registrasi callback di main.dart:
+  ///    Workmanager().initialize(...); Workmanager().registerPeriodicTask(
+  ///      'tracking-restart', 'trackingRestart', frequency: Duration(minutes: 15));
+  /// 3. Di callback DispatcherTask: jika LocationBufferService.isTrackingDesired()
+  ///    dan service tidak berjalan, panggil ulang mekanisme start tracking.
+  /// 4. AndroidManifest perlu izin dari plugin (tambah di Info.plist untuk iOS
+  ///    tidak wajib karena iOS menangani sendiri).
+  Future<void> _scheduleOemRestart() async {
+    // No-op sampai WorkManager dipasang di fase selanjutnya.
   }
 
   void _stop({String? message}) {
@@ -281,7 +295,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       final r = await ref.read(tokenStorageProvider).readActiveRole();
       await LocationBufferService.cacheAuthToken(t);
       await LocationBufferService.cacheActiveRole(r);
-      // (A8) rollover hari baru SEBELUM membaca batch - batch pending
+      // Rollover hari baru SEBELUM membaca batch - batch pending
       // milik kemarin dibuang, jadi tak pernah diretry percuma.
       await _buffer.pruneStale();
       var pending = await _buffer.readPendingBatch();
@@ -301,7 +315,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
           points = pending.points;
         }
       } else {
-        // (A6) gabungkan titik yang ditulis service isolate langsung
+        // Gabungkan titik yang ditulis service isolate langsung
         // ke Hive - buffer in-memory tak melihatnya sendirian.
         await _buffer.syncFromStore();
         final all = _buffer.snapshot();

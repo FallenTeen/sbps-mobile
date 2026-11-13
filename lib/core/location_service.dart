@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
 /// Wrapper geolocator: izin lokasi + posisi saat ini.
-/// Dipakai Fase A1.3 (jarak ke titik), A1.4 (payload check-in/out),
-/// dan §24 TODO A7 (izin ALWAYS untuk tracking di background).
 class LocationService {
   /// True bila izin when-in-use (atau always) sudah diberikan.
   Future<bool> ensurePermission() async {
@@ -16,11 +14,8 @@ class LocationService {
         permission == LocationPermission.always;
   }
 
-  /// Minta izin ALWAYS (lokasi di background) untuk tracking.
-  ///
-  /// Merupakan UPGRADE dari while-in-use: Android menampilkan dialog
-  /// "Allow all the time". Return false bila user menolak / masih
-  /// while-in-use.
+  /// Minta upgrade izin ke ALWAYS (dialog "Allow all the time").
+  /// Return false bila user menolak / masih while-in-use.
   Future<bool> ensureAlwaysPermission() async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
@@ -52,8 +47,7 @@ class LocationService {
 
   Future<void> openSettings() => Geolocator.openLocationSettings();
 
-  /// Null berarti GPS mati / izin ditolak — caller menampilkan state
-  /// penjelasan, bukan error generik.
+  /// Null = GPS mati / izin ditolak (caller menampilkan state penjelasan).
   Future<Position?> getCurrentPosition() async {
     if (!await isServiceEnabled()) return null;
     if (!await ensurePermission()) return null;

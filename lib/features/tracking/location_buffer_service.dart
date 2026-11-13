@@ -7,20 +7,16 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../../core/location_service.dart';
 import 'models.dart';
 
-/// Buffer titik GPS untuk Live Tracking (Fase A2.4, §24 TODO A6/A8).
+/// Buffer titik GPS untuk tracking.
 ///
-/// Aturan perekaman: setiap berpindah >= 50 meter ATAU tiap ~60 detik
-/// (mana yang lebih dulu). Tracking HANYA berjalan saat presensi terbuka
-/// (root gate di [TrackingScheduler]) — tidak ada cutoff jam.
+/// Perekam titik: pindah >= 50 meter ATAU tiap ~60 detik; tracking hanya
+/// berjalan saat presensi terbuka (gate di [TrackingScheduler]).
 ///
-/// Persistensi: Hive box `tracking_buffer` —
-/// - key `points`: JSON list seluruh titik belum terkirim;
-/// - key `pending_batch`: batch yang sedang menunggu keberhasilan kirim,
-///   berisi `batch_id` + isi persis — dipakai ULANG pada retry agar
-///   backend idempotent dan batch tidak pernah dipecah/digabung ulang.
-///
-/// Titik/batch milik hari sebelumnya dibuang otomatis (flush offline
-/// semalam tidak relevan lagi — server tidak memakainya).
+/// Persistensi Hive box `tracking_buffer`:
+/// - `points`: JSON list titik belum terkirim;
+/// - `pending_batch`: batch yang menunggu keberhasilan kirim (batch_id +
+///   isi persis) agar retry tetap idempotent;
+/// - titik/batch kemarin dibuang otomatis (server tidak memakainya).
 class LocationBufferService {
   static const _boxName = 'tracking_buffer';
   static const _maxPoints = 5000;
@@ -136,11 +132,8 @@ class LocationBufferService {
     await box.put('points', jsonEncode([for (final p in _points) p.toJson()]));
   }
 
-  /// Buang titik dari hari sebelumnya (sisa offline semalam) — server
-  /// tidak menyimpannya lagi, jadi tidak ada gunanya dikirim ulang.
-  /// Buang titik/batch dari hari sebelumnya. Dipanggil saat `load()`
-  /// (panggilan `start()`) DAN pada setiap flush — app yang dibiarkan
-  /// nyala melewati tengah malam tetap me-rollover (§24 A8).
+  /// Buang titik/batch dari hari sebelumnya. Dipanggil saat `load()` dan
+  /// setiap flush agar app yang menyala melewati tengah malam tetap rollover.
   Future<void> pruneStale() async {
     final midnight = DateTime(
       DateTime.now().year,
@@ -152,8 +145,8 @@ class LocationBufferService {
     var changed = _points.length != before;
 
     // Batch pending yang titiknya semua kemarin tidak akan pernah
-    // diterima server (presensi lama sudah ditutup) — buang agar tidak
-    // loop retry 422 di hari baru (§24 A8).
+    // diterima server (presensi lama sudah ditutup) - buang agar tidak
+    // loop retry 422 di hari baru.
     final pending = await readPendingBatch();
     if (pending != null && pending.points.isNotEmpty) {
       final semuaKemarin = pending.points

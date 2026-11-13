@@ -1,18 +1,15 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-/// Sumber device token push (FCM) untuk field `device_token` pada
-/// login/register.
-///
-/// Membutuhkan file konfigurasi Firebase unified:
-/// - Android: `android/app/src/main/google-services.json`
-/// - iOS: `ios/Runner/GoogleService-Info.plist`
-///
-/// Jika Firebase belum dikonfigurasi, token dikembalikan null — backend
-/// menerima login tanpa `device_token` karena field tersebut opsional.
+import 'app_config.dart';
+import 'storage/token_storage.dart';
+
+/// Sumber device token FCM untuk field `device_token` pada login/register.
+/// Firebase belum dikonfigurasi -> token null (backend menerima karena opsional).
 class PushTokenService {
   PushTokenService({FirebaseMessaging? messaging}) : _messaging = messaging;
 
@@ -27,11 +24,9 @@ class PushTokenService {
     if (Firebase.apps.isEmpty) return null;
 
     try {
-      // Jangan mengakses FirebaseMessaging.instance sebelum Firebase siap.
-      // Ini penting untuk Web/local development tanpa Firebase Web config.
+      // Jangan akses FirebaseMessaging.instance sebelum Firebase siap.
       final messaging = _fm ?? FirebaseMessaging.instance;
 
-      // Minta permission (Android 13+ / iOS wajib).
       final settings = await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -52,6 +47,8 @@ class PushTokenService {
         debugPrint(
           '[PushToken] Token refreshed: ${newToken.substring(0, 20)}...',
         );
+        // Kirim token baru ke server agar push tidak jatuh ke token usang.
+        unawaited(syncTokenToServer(newToken));
       });
 
       if (token != null) {
@@ -65,12 +62,37 @@ class PushTokenService {
       return null;
     }
   }
+  /// Kirim token FCM terbaru ke backend agar push tidak jatuh ke token usang.
+  Future<void> syncTokenToServer(String token) async {
+    try {
+      final storage = TokenStorage();
+      final authToken = await storage.readToken();
+      if (authToken == null || authToken.isEmpty) return;
+      final activeRole = await storage.readActiveRole();
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: AppConfig.requiredApiBaseUrl,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+            if (activeRole != null && activeRole.isNotEmpty)
+              'X-Active-Role': activeRole,
+          },
+        ),
+      );
+      await dio.post('/push-token', data: {'device_token': token});
+      debugPrint('[PushToken] Token synced to server.');
+    } catch (e) {
+      debugPrint('[PushToken] Sync token to server failed: $e');
+    }
+  }
 }
 
 final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-/// Handler untuk pesan yang diterima saat app di foreground.
-/// Dipanggil dari main.dart setelah Firebase.initializeApp().
+/// Handler pesan FCM saat app di foreground (dipanggil dari main.dart).
 Future<void> firebaseMessagingForegroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Foreground message: ${message.messageId}');
   final notification = message.notification;
