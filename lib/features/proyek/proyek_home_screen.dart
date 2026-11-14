@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
@@ -415,7 +416,6 @@ class _TrackingStatusCard extends ConsumerWidget {
 
 // ── No Active Role ────────────────────────────────────────────────────────────
 
-
 // ── Pekerjaan Menunggu Anda Card (Fase 2) ───────────────────────────────────────
 
 class _PendingWorkCard extends ConsumerWidget {
@@ -529,19 +529,16 @@ class _PendingItemsList extends StatelessWidget {
       items.add(_PendingItem(label: 'Workshop', count: counts.workshop));
     }
     if (counts.inventory > 0) {
-      items.add(
-          _PendingItem(label: 'Inventory', count: counts.inventory));
+      items.add(_PendingItem(label: 'Inventory', count: counts.inventory));
     }
     if (counts.formulir > 0) {
-      items
-          .add(_PendingItem(label: 'Formulir', count: counts.formulir));
+      items.add(_PendingItem(label: 'Formulir', count: counts.formulir));
     }
     if (counts.upload > 0) {
       items.add(_PendingItem(label: 'Unggah', count: counts.upload));
     }
     if (counts.presensi > 0) {
-      items
-          .add(_PendingItem(label: 'Presensi', count: counts.presensi));
+      items.add(_PendingItem(label: 'Presensi', count: counts.presensi));
     }
 
     return Wrap(spacing: 8, runSpacing: 8, children: items);
@@ -698,11 +695,7 @@ class _QuickActions extends StatelessWidget {
             label: 'Mulai Sesi',
             route: '/produksi/mulai',
           ),
-          _QuickAction(
-            icon: Icons.science,
-            label: 'QC Test',
-            route: '/qc',
-          ),
+          _QuickAction(icon: Icons.science, label: 'QC Test', route: '/qc'),
         ];
       case 'Operator Mesin':
         return [
@@ -716,11 +709,7 @@ class _QuickActions extends StatelessWidget {
             label: 'Sesi Aktif',
             route: '/produksi/sesi-aktif',
           ),
-          _QuickAction(
-            icon: Icons.science,
-            label: 'QC Test',
-            route: '/qc',
-          ),
+          _QuickAction(icon: Icons.science, label: 'QC Test', route: '/qc'),
         ];
       case 'Kepala Divisi Armada':
       case 'Ketua Divisi Armada':
