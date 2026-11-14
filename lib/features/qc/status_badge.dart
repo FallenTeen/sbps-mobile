@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/status_labels.dart';
+import '../../shared/widgets/status_pill.dart';
 
-/// Badge status QC dengan warna per status (Fase A2.5):
-/// menunggu_hasil = oranye, lolos = hijau, tidak_lolos = merah.
+/// Label status QC (Fase A2.5).
+String qcStatusLabel(String status) => switch (status) {
+  'menunggu_hasil' => 'Menunggu hasil',
+  'lolos' => 'Lolos',
+  'tidak_lolos' => 'Tidak lolos',
+  _ => status,
+};
+
+/// Badge status QC: wrapper [StatusPill] + `statusColor` supaya konsisten
+/// dengan badge status modul lain (menunggu_hasil = warning, lolos = success,
+/// tidak_lolos = error).
 class QcStatusBadge extends StatelessWidget {
   const QcStatusBadge({super.key, required this.status});
 
@@ -11,38 +21,10 @@ class QcStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = switch (status) {
-      'lolos' => (
-        context.colors.success.withValues(alpha: 0.15),
-        context.colors.success,
-      ),
-      'tidak_lolos' => (
-        context.colors.error.withValues(alpha: 0.15),
-        context.colors.error,
-      ),
-      'menunggu_hasil' => (
-        context.colors.warning.withValues(alpha: 0.15),
-        context.colors.warning,
-      ),
-      _ => (context.colors.surfaceVariant, context.colors.textSecondary),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        qcStatusLabel(status),
-        style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600),
-      ),
+    return StatusPill(
+      label: qcStatusLabel(status),
+      color: statusColor(status, context),
+      borderRadius: 999,
     );
   }
 }
-
-String qcStatusLabel(String status) => switch (status) {
-  'menunggu_hasil' => 'Menunggu hasil',
-  'lolos' => 'Lolos',
-  'tidak_lolos' => 'Tidak lolos',
-  _ => status,
-};

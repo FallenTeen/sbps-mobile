@@ -591,13 +591,13 @@ class _UserMapMarker extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Text(
                 user.nama,
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   height: 1.0,
                 ),

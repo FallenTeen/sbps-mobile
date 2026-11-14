@@ -11,9 +11,11 @@ import '../../core/photo_compression_service.dart';
 import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'models/presensi_hari_ini.dart';
 import 'models/titik.dart';
 import 'presensi_providers.dart';
@@ -55,9 +57,12 @@ class PresensiHariIniCard extends ConsumerWidget {
 
     return hariIniAsync.when(
       loading: () => SkeletonCard(height: 120),
-      error: (error, _) => _ErrorCard(
-        message: friendlyErrorMessage(error),
-        onRetry: () => ref.invalidate(hariIniProvider),
+      error: (error, _) => AppEmptyState(
+        icon: Icons.error_outline,
+        title: 'Gagal memuat status presensi',
+        subtitle: friendlyErrorMessage(error),
+        actionLabel: 'Coba lagi',
+        onAction: () => ref.invalidate(hariIniProvider),
       ),
       data: (presensi) => switch (presensi.status) {
         PresensiStatus.belumCheckIn => _CheckInCard(
@@ -542,7 +547,7 @@ class _CheckInCard extends StatelessWidget {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: const SubmitSpinner(),
                         )
                       : const Icon(Icons.camera_alt_rounded),
                   label: Text(switch (busyPhase) {
@@ -894,52 +899,3 @@ class _CompletedCard extends StatelessWidget {
   }
 }
 
-// ── Error Card ────────────────────────────────────────────────────────────────
-
-class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.error.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.error.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.error_outline, color: context.colors.error, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Gagal memuat status presensi',
-                style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            message,
-            style: TextStyle(color: context.colors.textTertiary, fontSize: 12),
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh, size: 16),
-            label: const Text('Coba lagi'),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
 import 'models/helper.dart';
 
@@ -329,7 +330,7 @@ class _HelperCard extends StatelessWidget {
               const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: const SubmitSpinner(),
               )
             else if (actionLabel != null)
               FilledButton.tonal(

@@ -33,7 +33,11 @@ class ProyekHomeScreen extends ConsumerWidget {
         actions: const [AppTopBarActions()],
       ),
       body: role == null
-          ? const _NoActiveRoleView()
+          ? const AppEmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'Peran aktif tidak tersedia',
+              subtitle: 'Peran aktif tidak tersedia untuk App Proyek.',
+            )
           : ResponsiveCenter(
               maxWidth: AppBreakpoints.maxContentWidth,
               child: ListView(
@@ -411,41 +415,6 @@ class _TrackingStatusCard extends ConsumerWidget {
 
 // ── No Active Role ────────────────────────────────────────────────────────────
 
-class _NoActiveRoleView extends StatelessWidget {
-  const _NoActiveRoleView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.colors.surfaceVariant,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.person_off_outlined,
-                size: 40,
-                color: context.colors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Peran aktif tidak tersedia untuk App Proyek.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textTertiary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Pekerjaan Menunggu Anda Card (Fase 2) ───────────────────────────────────────
 

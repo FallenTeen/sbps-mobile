@@ -8,6 +8,7 @@ import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/searchable_list_header.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../auth/auth_providers.dart';
 import 'detail_servis_screen.dart';
 import 'models/servis_armada.dart';
@@ -264,7 +265,7 @@ class _QueueSummary extends StatelessWidget {
             child: SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: const SubmitSpinner(),
             ),
           ),
         ),

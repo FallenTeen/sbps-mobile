@@ -296,7 +296,7 @@ class _DetailProyekKontrakScreenState
                                         msg.pengirimRole,
                                       ),
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.onSurfaceVariant,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
@@ -39,7 +40,9 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
         bottom: const BrandStrip(),
         actions: const [AppTopBarActions()],
       ),
-      body: RefreshIndicator(
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(inventorySummaryProvider);
           ref.invalidate(inventoryRequestsProvider);
@@ -54,6 +57,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
             const Divider(height: 32),
             _buildShortcutSection(),
           ],
+        ),
         ),
       ),
     );

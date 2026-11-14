@@ -9,6 +9,7 @@ import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/status_pill.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
@@ -316,7 +317,7 @@ Flexible(
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: const SubmitSpinner(),
                             )
                           : const Text('Proses Request'),
                     ),

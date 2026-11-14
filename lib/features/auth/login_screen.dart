@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../update/stale_app_dialog.dart';
@@ -56,7 +57,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Scaffold(
         backgroundColor: context.colors.background,
         body: SafeArea(
-          child: Center(
+          child: ResponsiveCenter(
+            maxWidth: 480,
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 28),
               child: Form(
@@ -93,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'Selamat Datang',
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: context.colors.textPrimary,
                         letterSpacing: -0.5,

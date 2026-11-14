@@ -8,6 +8,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'armada_monitoring.dart';
 import 'armada_providers.dart';
 import 'models/servis_armada.dart';
@@ -254,7 +255,7 @@ class UnitMonitoringScreen extends ConsumerWidget {
                 const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: const SubmitSpinner(),
                 ),
             ],
           ),

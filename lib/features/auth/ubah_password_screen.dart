@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
@@ -101,7 +102,7 @@ class _UbahPasswordScreenState extends ConsumerState<UbahPasswordScreen> {
       appBar: AppBar(
         title: const Text('Ubah Password'),
       ),
-      body: SingleChildScrollView(
+      body: ResponsiveCenter(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,

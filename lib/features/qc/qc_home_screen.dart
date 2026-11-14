@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
@@ -164,7 +165,7 @@ class _HomeBody extends ConsumerWidget {
                   '${s.titikNama ?? '-'} • '
                   'Sesi ${fmtTanggalWaktu(s.sesiMulai ?? s.createdAt)}',
               statusLabel: qcStatusLabel(s.status),
-              statusColor: context.colors.warning,
+              statusColor: statusColor(s.status, context),
               badgeLabel: 'Menunggu Uji Tekan',
               badgeColor: context.colors.warning,
               onTap: () => _openInspection(context, s),

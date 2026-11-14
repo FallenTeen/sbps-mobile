@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
@@ -45,13 +46,8 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     };
   }
 
-  Color _statusColor(WorkshopJobStatus status) {
-    return switch (status) {
-      WorkshopJobStatus.menunggu => context.colors.warning,
-      WorkshopJobStatus.dikerjakan => context.colors.info,
-      WorkshopJobStatus.selesai => context.colors.success,
-    };
-  }
+  Color _statusColor(WorkshopJobStatus status) =>
+      statusColor(status.name, context);
 
   String _statusLabel(WorkshopJobStatus status) {
     return switch (status) {

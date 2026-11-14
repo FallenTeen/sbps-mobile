@@ -35,16 +35,6 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
     super.dispose();
   }
 
-  Color _statusColor(String status) {
-    return switch (status.toLowerCase()) {
-      'aktif' || 'berjalan' || 'lunas' => context.colors.success,
-      'selesai' => context.colors.info,
-      'pending' || 'belum_dibayar' => context.colors.warning,
-      'dibatalkan' || 'jatuh_tempo' => context.colors.error,
-      _ => context.colors.textMuted,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final proyeksAsync = ref.watch(proyekKontrakListProvider);
@@ -119,7 +109,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    final color = _statusColor(item.status);
+                    final color = statusColor(item.status, context);
 
                     return Card(
                       child: InkWell(
@@ -259,7 +249,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final inv = invoices[index];
-                    final color = _statusColor(inv.status);
+                    final color = statusColor(inv.status, context);
 
                     return Card(
                       child: Padding(

@@ -8,6 +8,7 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../../features/presensi/models/titik.dart';
 import '../presensi/presensi_providers.dart';
 import 'inventory_models.dart';
@@ -330,7 +331,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                       ? SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: const SubmitSpinner(),
                         )
                       : Text(
                           'Review & Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
@@ -669,7 +670,7 @@ class _OpnameItemCard extends StatelessWidget {
                   Text(
                     'Sistem',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       color: context.colors.textMuted,
                     ),
                   ),

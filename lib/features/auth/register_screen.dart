@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'auth_providers.dart';
 
 /// Role yang boleh dipilih saat registrasi (sesuai config/mobile.php).
@@ -70,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar')),
       body: SafeArea(
-        child: Center(
+        child: ResponsiveCenter(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Form(
@@ -191,7 +193,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: const SubmitSpinner(),
                           )
                         : const Text('Daftar'),
                   ),

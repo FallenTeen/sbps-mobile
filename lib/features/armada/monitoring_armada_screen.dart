@@ -475,7 +475,7 @@ class _PerhatianTile extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: e.color),
+            style: TextStyle(fontSize: 11, color: e.color),
           ),
         ],
       ),
@@ -755,7 +755,7 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -799,7 +799,7 @@ class _Metric extends StatelessWidget {
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 9, color: colors.textTertiary),
+            style: TextStyle(fontSize: 11, color: colors.textTertiary),
           ),
         ],
       ),
@@ -872,7 +872,7 @@ class _RekapTable extends StatelessWidget {
                     Text(
                       'Geser untuk lihat semua kolom →',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: colors.textTertiary,
                       ),
                     ),
@@ -905,7 +905,7 @@ class _RekapHeader extends StatelessWidget {
         text,
         textAlign: align,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
           color:
               colors.textTertiary, // dulu hardcode Colors.grey (bug dark mode)

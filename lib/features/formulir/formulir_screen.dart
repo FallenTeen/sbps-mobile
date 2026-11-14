@@ -19,6 +19,7 @@ import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/sticky_action_bar.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../presensi/models/presensi_hari_ini.dart';
 import '../presensi/presensi_providers.dart';
 import 'formulir_providers.dart';
@@ -203,7 +204,7 @@ class _LaporanIndexCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                _StatusBadge(label: badgeLabel, color: badgeColor),
+                StatusPill(label: badgeLabel, color: badgeColor),
               ],
             ),
             const SizedBox(height: 6),
@@ -239,31 +240,6 @@ class _LaporanIndexCard extends StatelessWidget {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -397,7 +373,7 @@ class _NetworkPhotoGrid extends StatelessWidget {
           child: Hero(
             tag: tag,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 urls[i],
                 fit: BoxFit.cover,

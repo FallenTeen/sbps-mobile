@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/status_pill.dart';
 import 'security_repository.dart';
 
 /// Modul /security Home Shell (Section 27, TD-F1).
@@ -28,7 +30,9 @@ class SecurityHomeScreen extends ConsumerWidget {
         bottom: const BrandStrip(),
         actions: const [AppTopBarActions()],
       ),
-      body: RefreshIndicator(
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(bukuTamuHariIniProvider);
           ref.invalidate(ritaseSecurityAntreanProvider);
@@ -182,6 +186,7 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -248,20 +253,9 @@ class _SecurityMenuTile extends StatelessWidget {
                         ),
                         if (badgeText != null) ...[
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: (badgeColor ?? color).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              badgeText!,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: badgeColor ?? color,
-                              ),
-                            ),
+                          StatusPill(
+                            label: badgeText!,
+                            color: badgeColor ?? color,
                           ),
                         ],
                       ],

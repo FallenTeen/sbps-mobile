@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../core/formatters.dart';
 import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_pill.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 
@@ -23,7 +26,9 @@ class DriverDashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(title: null, actions: [PortalSwitchButton()]),
-      body: RefreshIndicator(
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(armadaSayaProvider);
           ref.invalidate(checklistHariIniProvider);
@@ -41,6 +46,7 @@ class DriverDashboardScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _RecentRitaseSection(ritaseAsync: ritaseAsync),
           ],
+        ),
         ),
       ),
     );
@@ -713,26 +719,11 @@ class _RitaseStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      'disetujui' => context.colors.success,
-      'draft' => context.colors.warning,
-      'ditagih' => context.colors.info,
-      _ => context.colors.textMuted,
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status ?? '-',
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-      ),
+    final s = status ?? '';
+    return StatusPill(
+      label: s.isEmpty ? '-' : statusLabel(s),
+      color: statusColor(s, context),
+      borderRadius: 999,
     );
   }
 }

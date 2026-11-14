@@ -39,6 +39,14 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  /// Gradien aksen portal proyek (pemilihan peran): indigo sekunder,
+  /// dipakai di portal selection agar berbeda dari portal presensi.
+  static const LinearGradient secondaryGradient = LinearGradient(
+    colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   // ── Elevation & Depth (Fase C1) ────────────────────────────────────────────
   // Tingkat shadow bertingkat untuk membedakan kedalaman visual:
   // Lv1 = kartu list biasa (flat), Lv2 = kartu penting/interaktif,
@@ -51,6 +59,11 @@ class AppTheme {
   ];
   static const List<BoxShadow> shadowLv3 = [
     BoxShadow(color: Color(0x1A0F172A), blurRadius: 16, offset: Offset(0, 4)),
+  ];
+
+  /// Bayangan Lv2 arah ke atas untuk sticky bar di bawah layar.
+  static const List<BoxShadow> shadowUpLv2 = [
+    BoxShadow(color: Color(0x140F172A), blurRadius: 8, offset: Offset(0, -2)),
   ];
 
   // ── Light Color Scheme ─────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import '../auth/auth_providers.dart';
 import '../update/stale_app_dialog.dart';
 import 'portal_providers.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 
 /// Combined portal + role selection screen (Fase 2).
@@ -143,7 +144,9 @@ class _CombinedSelectionScreenState
 
               // Selection content
               Expanded(
-                child: ListView(
+                child: ResponsiveCenter(
+                  maxWidth: AppBreakpoints.maxFormWidth,
+                  child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
                     // Portal selection
@@ -224,6 +227,7 @@ class _CombinedSelectionScreenState
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ],
@@ -348,11 +352,7 @@ class _PortalSelection extends StatelessWidget {
           subtitle: 'Operasional & proyek',
           description:
               'Kelola armada, produksi, dashboard, dan modul operasional lainnya.',
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppTheme.secondaryGradient,
           isSelected: selected == AppPortal.proyek,
           onTap: () => onSelected(AppPortal.proyek),
         ),

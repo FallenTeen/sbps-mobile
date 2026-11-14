@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../presensi/presensi_providers.dart';
@@ -137,12 +138,8 @@ class _PendingActionTile extends StatelessWidget {
     PendingStatus.success => 'Terkirim',
   };
 
-  Color _statusColor(BuildContext context) => switch (action.status) {
-    PendingStatus.pending => context.colors.warning,
-    PendingStatus.syncing => context.colors.primary,
-    PendingStatus.failed => context.colors.error,
-    PendingStatus.success => context.colors.success,
-  };
+  Color _statusColor(BuildContext context) =>
+      statusColor(action.status.name, context);
 
   @override
   Widget build(BuildContext context) {

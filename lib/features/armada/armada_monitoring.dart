@@ -7,7 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/status_labels.dart';
 import 'models/servis_armada.dart';
 
 /// Satu peringatan untuk sebuah unit armada pada layar monitoring.
@@ -115,16 +115,7 @@ bool unitNeedsAttention({
   ).isNotEmpty;
 }
 
-/// Warna status unit: aktif/beroperasi hijau, standby biru, servis orange,
-/// rusak/nonaktif merah, lainnya abu-abu. Dipakai bersama di overview &
-/// drill-down (rapi & konsisten).
-Color armadaStatusColor(BuildContext context, String? status) {
-  final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
-  return switch (status?.toLowerCase()) {
-    'aktif' || 'beroperasi' => colors.success,
-    'standby' || 'siaga' => colors.info,
-    'servis' || 'perbaikan' || 'maintenance' => colors.warning,
-    'rusak' || 'nonaktif' => colors.error,
-    _ => colors.textMuted,
-  };
-}
+/// Warna status unit: delegasi ke `statusColor` (sumber kebenaran warna
+/// status aplikasi) supaya overview & drill-down konsisten dengan modul lain.
+Color armadaStatusColor(BuildContext context, String? status) =>
+    statusColor(status ?? '', context);

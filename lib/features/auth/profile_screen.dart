@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/app_preferences.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../portal/portal_providers.dart';
 import '../presensi/presensi_providers.dart';
@@ -402,7 +403,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: const SubmitSpinner(),
                         )
                       : const Icon(Icons.save),
                   label: const Text('Simpan Profil'),
@@ -442,7 +443,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: const SubmitSpinner(),
                   )
                 : const Icon(Icons.logout, size: 20),
             label: const Text('Logout'),
@@ -454,7 +455,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: const SubmitSpinner(),
                   )
                 : const Icon(Icons.devices),
             label: const Text('Logout dari Semua Perangkat'),

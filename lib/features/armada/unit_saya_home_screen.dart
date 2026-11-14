@@ -414,7 +414,7 @@ class _UnitSayaSection extends StatelessWidget {
                         armada.isAlatBerat ? 'Alat Berat' : 'Kendaraan',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -789,7 +789,7 @@ class _ProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 8,

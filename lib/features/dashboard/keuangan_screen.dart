@@ -297,7 +297,7 @@ class _DetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = TextStyle(
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: FontWeight.w700,
       color: colors.textTertiary,
     );

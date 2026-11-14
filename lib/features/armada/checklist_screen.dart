@@ -1045,7 +1045,7 @@ class _BagianAccordion extends StatelessWidget {
                               Text(
                                 'Dokumentasi belum lengkap',
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: context.colors.warning,
                                 ),

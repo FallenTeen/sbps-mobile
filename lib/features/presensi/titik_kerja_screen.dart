@@ -14,6 +14,7 @@ import '../../shared/widgets/brand_strip.dart';import '../../shared/widgets/entr
 import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/info_tooltip.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import '../auth/auth_providers.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
@@ -354,7 +355,7 @@ class _LocationCard extends StatelessWidget {
           leading: const SizedBox(
             width: 22,
             height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: const SubmitSpinner(),
           ),
           title: const Text('Mengambil lokasi…'),
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
@@ -553,7 +554,7 @@ class _TitikTile extends StatelessWidget {
                           'Terpilih',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -572,7 +573,7 @@ class _TitikTile extends StatelessWidget {
                           'Terdekat',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -605,7 +606,7 @@ class _TitikTile extends StatelessWidget {
                           child: Text(
                             isLuarRadius! ? 'Luar radius' : 'Dalam radius',
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: isLuarRadius!
                                   ? context.colors.warning

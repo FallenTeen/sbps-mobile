@@ -11,6 +11,7 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/rich_list_tile.dart';
 import '../../shared/widgets/searchable_list_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/submit_spinner.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
@@ -333,7 +334,7 @@ class _InventoryRiwayatScreenState
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: const SubmitSpinner(),
               )
             : Text(
                 'Menampilkan ${state.items.length} dari ${state.total}',

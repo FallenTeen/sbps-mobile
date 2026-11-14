@@ -10,6 +10,7 @@ import '../../core/api_client.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
@@ -76,13 +77,8 @@ class _WorkshopJobDetailContentState
     extends ConsumerState<WorkshopJobDetailContent> {
   bool _isSubmitting = false;
 
-  Color _statusColor(WorkshopJobStatus status) {
-    return switch (status) {
-      WorkshopJobStatus.menunggu => context.colors.warning,
-      WorkshopJobStatus.dikerjakan => context.colors.info,
-      WorkshopJobStatus.selesai => context.colors.success,
-    };
-  }
+  Color _statusColor(WorkshopJobStatus status) =>
+      statusColor(status.name, context);
 
   String _statusLabel(WorkshopJobStatus status) {
     return switch (status) {

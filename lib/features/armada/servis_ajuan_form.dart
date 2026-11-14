@@ -626,7 +626,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                                   color: context.colors.primary.withValues(
                                     alpha: 0.08,
                                   ),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -762,7 +762,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                                     Stack(
                                       children: [
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(8),
                                           child: Image.file(
                                             File(_fotoNotaPaths[i]),
                                             width: 72,

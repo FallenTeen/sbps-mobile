@@ -14,9 +14,11 @@ import '../../core/json_num.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../presensi/presensi_providers.dart';
 import 'armada_providers.dart';
@@ -818,7 +820,7 @@ class _RecordCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.colors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '#${record.index}',
@@ -949,7 +951,7 @@ class _TextAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: Text(
@@ -1003,29 +1005,17 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, icon) = switch (status) {
-      RitaseRecordStatus.draft => (context.colors.textMuted, Icons.edit_note),
-      RitaseRecordStatus.queued => (
-        context.colors.warning,
-        Icons.cloud_upload_outlined,
-      ),
-      RitaseRecordStatus.synced => (context.colors.success, Icons.check_circle),
-      RitaseRecordStatus.failed => (context.colors.error, Icons.error_outline),
+    final icon = switch (status) {
+      RitaseRecordStatus.draft => Icons.edit_note,
+      RitaseRecordStatus.queued => Icons.cloud_upload_outlined,
+      RitaseRecordStatus.synced => Icons.check_circle,
+      RitaseRecordStatus.failed => Icons.error_outline,
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status.label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
+    return StatusPill(
+      label: status.label,
+      color: statusColor(status.name, context),
+      icon: icon,
+      borderRadius: 999,
     );
   }
 }
@@ -1052,13 +1042,7 @@ class _SubmitBar extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.card,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        boxShadow: AppTheme.shadowUpLv2,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

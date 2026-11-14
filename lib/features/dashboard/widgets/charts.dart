@@ -260,7 +260,7 @@ class ProduksiBarChart extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         fmtMingguLabel(items[i].minggu),
-                        style: const TextStyle(fontSize: 10),
+                        style: const TextStyle(fontSize: 11),
                       ),
                     );
                   },
@@ -414,7 +414,7 @@ class KeuanganBarChart extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
                             fmtMingguLabel(items[i].minggu),
-                            style: const TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 11),
                           ),
                         );
                       },

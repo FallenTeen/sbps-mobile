@@ -5,10 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/armada_jenis.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../auth/auth_providers.dart';
 import 'armada_providers.dart';
 import 'unit_saya_home_screen.dart';
@@ -62,7 +65,9 @@ class ArmadaHomeScreen extends ConsumerWidget {
         bottom: const BrandStrip(),
         actions: const [AppTopBarActions()],
       ),
-      body: RefreshIndicator(
+      body: ResponsiveCenter(
+        maxWidth: AppBreakpoints.maxContentWidth,
+        child: RefreshIndicator(
         onRefresh: () async {
           HapticFeedback.lightImpact();
           ref.invalidate(armadaSayaProvider);
@@ -168,6 +173,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
             ],
           ],
         ),
+        ),
       ),
     );
   }
@@ -205,7 +211,13 @@ class ArmadaHomeScreen extends ConsumerWidget {
     return switch (armada) {
       AsyncData(value: final items) =>
         items.isEmpty
-            ? const [_EmptyArmada()]
+            ? const [
+                AppEmptyState(
+                  icon: Icons.no_crash_outlined,
+                  title: 'Belum ada armada',
+                  subtitle: 'Belum ada armada yang ditugaskan ke Anda.',
+                ),
+              ]
             : [for (final a in items) _ArmadaCard(armada: a)],
       AsyncError() => [
         Padding(
@@ -522,8 +534,6 @@ class _ArmadaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final aktif = armada.status == 'aktif' || armada.status == 'beroperasi';
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(16),
@@ -561,24 +571,10 @@ class _ArmadaCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: aktif
-                      ? context.colors.success.withValues(alpha: 0.1)
-                      : context.colors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  armada.status ?? '-',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: aktif
-                        ? context.colors.success
-                        : context.colors.warning,
-                  ),
-                ),
+              StatusPill(
+                label: statusLabel(armada.status ?? '-'),
+                color: statusColor(armada.status ?? '-', context),
+                borderRadius: 999,
               ),
             ],
           ),
@@ -629,37 +625,6 @@ class _InfoChip extends StatelessWidget {
               fontSize: 12,
               color: context.colors.textPrimary,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyArmada extends StatelessWidget {
-  const _EmptyArmada();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.no_crash_outlined,
-            size: 40,
-            color: context.colors.textMuted,
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Belum ada armada yang ditugaskan ke Anda.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.colors.textTertiary),
           ),
         ],
       ),

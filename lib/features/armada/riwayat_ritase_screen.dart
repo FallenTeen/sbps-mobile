@@ -6,8 +6,10 @@ import 'armada_providers.dart';
 import 'models/armada.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_pill.dart';
 import '../../core/formatters.dart';
 
 /// Riwayat ritase dengan tab "Hari Ini" dan "Riwayat".
@@ -284,7 +286,12 @@ class _RitaseCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (ritase.status != null) _RitaseBadge(status: ritase.status!),
+                if (ritase.status != null)
+                  StatusPill(
+                    label: _labelStatus(ritase.status!),
+                    color: statusColor(ritase.status!, context),
+                    borderRadius: 999,
+                  ),
               ],
             ),
             const SizedBox(height: 6),
@@ -408,33 +415,6 @@ class _VerifikasiChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RitaseBadge extends StatelessWidget {
-  const _RitaseBadge({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (status) {
-      'disetujui' => context.colors.success,
-      'ditagih' => context.colors.info,
-      'draft' => context.colors.warning,
-      _ => context.colors.textMuted,
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        _labelStatus(status),
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }

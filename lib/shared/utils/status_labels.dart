@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
+
 // Label status & peran yang ramah user (PERBAIKAN PHASE 18).
 //
 // Istilah resmi mengikuti docs/api-mobile.md backend; wire-value dari
@@ -39,6 +43,67 @@ String kontraktorParticipantLabel(String role) {
     'owner' => 'Owner',
     'admin keuangan' => 'Admin Keuangan',
     _ => lower.isEmpty ? '-' : titleCase(lower),
+  };
+}
+
+/// Warna semantik untuk status apa pun (wire-value maupun nama enum).
+///
+/// Sumber kebenaran tunggal warna status: menggantikan salinan privat
+/// `_statusColor` di berbagai layar. Semantik tetap:
+/// success = selesai/terverifikasi, info = berjalan, warning = menunggu
+/// tindakan, error = gagal/ditolak, textMuted = tak dikenal.
+/// Jangan tambahkan hue baru; tambahkan key baru ke tabel bila perlu.
+Color statusColor(String status, BuildContext context) {
+  final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+  return switch (status.trim().toLowerCase()) {
+    'aktif' ||
+    'berjalan' ||
+    'lunas' ||
+    'selesai' ||
+    'dibayar' ||
+    'diterima' ||
+    'lolos' ||
+    'beroperasi' ||
+    'tersedia' ||
+    'terkirim' ||
+    'disetujui' ||
+    'synced' ||
+    'success' =>
+      colors.success,
+    'dikerjakan' ||
+    'diproses' ||
+    'standby' ||
+    'siaga' ||
+    'syncing' ||
+    'ditagih' =>
+      colors.info,
+    'pending' ||
+    'menunggu' ||
+    'menunggu_hasil' ||
+    'belum_dibayar' ||
+    'diajukan' ||
+    'draft' ||
+    'servis' ||
+    'perbaikan' ||
+    'maintenance' ||
+    'kurang' ||
+    'lunas_sebagian' ||
+    'menunggu_approval_finance' ||
+    'menunggu_approval_owner' ||
+    'ditunda' ||
+    'queued' =>
+      colors.warning,
+    'ditolak' ||
+    'dibatalkan' ||
+    'jatuh_tempo' ||
+    'rusak' ||
+    'nonaktif' ||
+    'tidak_lolos' ||
+    'tidak_tersedia' ||
+    'failed' ||
+    'gagal' =>
+      colors.error,
+    _ => colors.textMuted,
   };
 }
 
