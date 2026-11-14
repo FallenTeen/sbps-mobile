@@ -39,22 +39,6 @@ const List<BatteryGuideEntry> kBatteryGuideEntries = [
   ]),
 ];
 
-/// Kunci tanda "sudah pernah tampil otomatis" di app_preferences.
-const String kBatteryGuideShownKey = 'battery_guide_shown_v1';
-
-/// Syarat tampil otomatis (tampil sekali saja): presensi terbuka DAN
-/// (izin masih while-in-use ATAU pemantauan belum berjalan).
-bool shouldAutoShowBatteryGuide({
-  required bool alreadyShown,
-  required bool presensiOpen,
-  required bool whileInUse,
-  required bool trackingRunning,
-}) {
-  if (alreadyShown) return false;
-  if (!presensiOpen) return false;
-  return whileInUse || !trackingRunning;
-}
-
 Future<void> showBatteryGuideSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,

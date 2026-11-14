@@ -4,7 +4,6 @@ import 'package:geolocator/geolocator.dart' show LocationPermission;
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../core/app_preferences.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
@@ -36,8 +35,6 @@ class TitikKerjaScreen extends ConsumerStatefulWidget {
 }
 
 class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
-  bool _batteryGuideAutoChecked = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,36 +42,6 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
       if (!mounted) return;
       ref.read(locationProvider.notifier).refresh();
       ref.read(unreadCountProvider.notifier).reload();
-    });
-  }
-
-  void _maybeAutoShowBatteryGuide(bool presensiOpen) {
-    if (_batteryGuideAutoChecked || !presensiOpen) return;
-    _batteryGuideAutoChecked = true;
-    Future(() async {
-      final shown = await AppPreferences.getFlag(kBatteryGuideShownKey);
-      if (shown) return;
-      bool whileInUse = false;
-      bool running = false;
-      try {
-        whileInUse =
-            await ref.read(locationServiceProvider).currentPermission() ==
-            LocationPermission.whileInUse;
-      } catch (_) {}
-      running = ref.read(trackingSchedulerProvider).running;
-      if (!shouldAutoShowBatteryGuide(
-        alreadyShown: shown,
-        presensiOpen: presensiOpen,
-        whileInUse: whileInUse,
-        trackingRunning: running,
-      )) {
-        return;
-      }
-      // Tandai sudah tampil sebelum memunculkan supaya tidak pernah
-      // muncul otomatis lagi.
-      await AppPreferences.setFlag(kBatteryGuideShownKey, true);
-      if (!mounted) return;
-      await showBatteryGuideSheet(context);
     });
   }
 
@@ -111,7 +78,6 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
     final presensiOpen =
         presensiStatus == PresensiStatus.menungguCheckOut ||
         pending.checkInPending;
-    _maybeAutoShowBatteryGuide(presensiOpen);
 
     return Scaffold(
       appBar: AppBar(
@@ -355,7 +321,7 @@ class _LocationCard extends StatelessWidget {
           leading: const SizedBox(
             width: 22,
             height: 22,
-            child: const SubmitSpinner(),
+            child: SubmitSpinner(),
           ),
           title: const Text('Mengambil lokasi…'),
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
