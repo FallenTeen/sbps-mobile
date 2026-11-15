@@ -53,9 +53,15 @@ class AutosaveController extends WidgetsBindingObserver {
     this.currentPhotoPaths,
     this.onRestore,
     this.duration = const Duration(milliseconds: 800),
-  });
+  }) : // Repository ditangkap sekali di sini (dipanggil dari initState, ref
+       // masih valid): beberapa form memanggil flush() di dalam dispose(),
+       // dan saat itu WidgetRef sudah tidak boleh dipakai (Riverpod 3
+       // melempar "Bad state: Using ref ...") — crash Crashlytics issue
+       // AutosaveController._save.
+       _repo = ref.read(draftRepositoryProvider);
 
   final WidgetRef ref;
+  final DraftRepository _repo;
   final String draftKey;
   final DraftFormType formType;
   final FieldSnapshot currentFields;
@@ -104,9 +110,8 @@ class AutosaveController extends WidgetsBindingObserver {
 
   Future<void> _save() async {
     if (!_initialized) return;
-    final repo = ref.read(draftRepositoryProvider);
     final fields = currentFields();
-    await repo.save(
+    await _repo.save(
       draftKey: draftKey,
       formType: formType,
       fieldsJson: fields,
@@ -116,8 +121,7 @@ class AutosaveController extends WidgetsBindingObserver {
 
   /// Load draft dan panggil [onRestore] jika ditemukan.
   Future<bool> load() async {
-    final repo = ref.read(draftRepositoryProvider);
-    final draft = await repo.load(draftKey);
+    final draft = await _repo.load(draftKey);
     if (draft != null && onRestore != null) {
       onRestore!(draft);
       return true;
@@ -129,8 +133,7 @@ class AutosaveController extends WidgetsBindingObserver {
   /// "Mulai Baru").
   Future<void> clear() async {
     _timer?.cancel();
-    final repo = ref.read(draftRepositoryProvider);
-    await repo.delete(draftKey);
+    await _repo.delete(draftKey);
   }
 
   @override
