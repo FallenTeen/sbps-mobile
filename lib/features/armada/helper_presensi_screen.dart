@@ -330,7 +330,7 @@ class _HelperCard extends StatelessWidget {
               const SizedBox(
                 width: 24,
                 height: 24,
-                child: const SubmitSpinner(),
+                child: SubmitSpinner(),
               )
             else if (actionLabel != null)
               FilledButton.tonal(

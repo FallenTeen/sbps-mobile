@@ -334,7 +334,7 @@ class _InventoryRiwayatScreenState
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: const SubmitSpinner(),
+                child: SubmitSpinner(),
               )
             : Text(
                 'Menampilkan ${state.items.length} dari ${state.total}',

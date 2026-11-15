@@ -85,14 +85,17 @@ class BackgroundLocationService {
   static StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   static bool _isTracking = false;
 
+  /// Sama dengan konfigurasi server (interval_seconds=300).
+  static const _gpsInterval = Duration(minutes: 5);
+
   static void _startGpsInterval(ServiceInstance service) {
     if (_isTracking) return;
     _isTracking = true;
 
-    unawaited(_gpsPing(service));
+    unawaited(pingOnce(service));
 
-    _gpsTimer = Timer.periodic(const Duration(minutes: 10), (_) {
-      unawaited(_gpsPing(service));
+    _gpsTimer = Timer.periodic(_gpsInterval, (_) {
+      unawaited(pingOnce(service));
     });
   }
 
@@ -136,13 +139,19 @@ class BackgroundLocationService {
     _connectivitySub = null;
   }
 
-  static Future<void> _gpsPing(ServiceInstance service) async {
+  /// Ambil satu titik GPS + append ke buffer Hive (timer service dan
+  /// watchdog WorkManager).
+  static Future<void> pingOnce(ServiceInstance? service) async {
     try {
       final location = LocationService();
       if (!await location.isServiceEnabled()) return;
 
+      // While-in-use cukup: FGS tipe location di-start saat app foreground.
       final permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.always) return;
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return;
+      }
 
       final position = await location.getCurrentPosition();
       if (position == null) return;
@@ -161,7 +170,8 @@ class BackgroundLocationService {
         });
       }
 
-      unawaited(TrackingIsolateUpload.flush());
+      // Await: isolate watchdog bisa mati sebelum upload selesai.
+      await TrackingIsolateUpload.flush();
     } catch (_) {}
   }
 

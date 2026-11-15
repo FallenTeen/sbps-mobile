@@ -547,7 +547,7 @@ class _CheckInCard extends StatelessWidget {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: const SubmitSpinner(),
+                          child: SubmitSpinner(),
                         )
                       : const Icon(Icons.camera_alt_rounded),
                   label: Text(switch (busyPhase) {

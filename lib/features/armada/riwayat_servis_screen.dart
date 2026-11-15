@@ -265,7 +265,7 @@ class _QueueSummary extends StatelessWidget {
             child: SizedBox(
               width: 20,
               height: 20,
-              child: const SubmitSpinner(),
+              child: SubmitSpinner(),
             ),
           ),
         ),

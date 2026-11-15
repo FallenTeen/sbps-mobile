@@ -317,7 +317,7 @@ Flexible(
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: const SubmitSpinner(),
+                              child: SubmitSpinner(),
                             )
                           : const Text('Proses Request'),
                     ),

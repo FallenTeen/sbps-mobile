@@ -51,6 +51,41 @@ void main() {
       expect(snap.first.lat, 10.0);
       expect(snap.first.lng, 20.0);
     });
+
+    test('anti-dobel: menolak titik < 60 detik dari titik terakhir', () async {
+      final now = DateTime.now();
+      await LocationBufferService.appendPointIsolate(
+        lat: 10.0,
+        lng: 20.0,
+        timestamp: now,
+      );
+      // Race stream vs fallback: titik 1 detik berikutnya dibuang.
+      await LocationBufferService.appendPointIsolate(
+        lat: 11.0,
+        lng: 21.0,
+        timestamp: now.add(const Duration(seconds: 1)),
+      );
+      final snap = await LocationBufferService.snapshotIsolate();
+      expect(snap, hasLength(1));
+      expect(snap.first.lat, 10.0);
+    });
+
+    test('menerima titik >= 60 detik dari titik terakhir', () async {
+      final now = DateTime.now();
+      await LocationBufferService.appendPointIsolate(
+        lat: 10.0,
+        lng: 20.0,
+        timestamp: now,
+      );
+      await LocationBufferService.appendPointIsolate(
+        lat: 11.0,
+        lng: 21.0,
+        timestamp: now.add(const Duration(seconds: 60)),
+      );
+      final snap = await LocationBufferService.snapshotIsolate();
+      expect(snap, hasLength(2));
+      expect(snap.last.lat, 11.0);
+    });
   });
 
   group('pending batch isolate', () {
@@ -87,7 +122,7 @@ void main() {
       await LocationBufferService.appendPointIsolate(
         lat: 3.0,
         lng: 4.0,
-        timestamp: DateTime.now().add(const Duration(seconds: 1)),
+        timestamp: DateTime.now().add(const Duration(seconds: 61)),
       );
       final snap = await LocationBufferService.snapshotIsolate();
       expect(snap, hasLength(2));

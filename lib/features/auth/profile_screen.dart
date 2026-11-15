@@ -403,7 +403,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: const SubmitSpinner(),
+                          child: SubmitSpinner(),
                         )
                       : const Icon(Icons.save),
                   label: const Text('Simpan Profil'),
@@ -443,7 +443,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: const SubmitSpinner(),
+                    child: SubmitSpinner(),
                   )
                 : const Icon(Icons.logout, size: 20),
             label: const Text('Logout'),
@@ -455,7 +455,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: const SubmitSpinner(),
+                    child: SubmitSpinner(),
                   )
                 : const Icon(Icons.devices),
             label: const Text('Logout dari Semua Perangkat'),

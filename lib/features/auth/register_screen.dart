@@ -193,7 +193,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: const SubmitSpinner(),
+                            child: SubmitSpinner(),
                           )
                         : const Text('Daftar'),
                   ),

@@ -21,6 +21,9 @@ class LocationBufferService {
   static const _boxName = 'tracking_buffer';
   static const _maxPoints = 5000;
 
+  /// Server min_interval_seconds=60.
+  static const _minPointGap = Duration(seconds: 60);
+
   final LocationService _location;
 
   StreamSubscription<Position>? _positionSub;
@@ -109,14 +112,22 @@ class LocationBufferService {
 
   void _onPosition(Position position) {
     if (!_running) return;
+    final ts = position.timestamp.toLocal();
+    if (!_farEnoughFromLast(_points, ts)) return;
     _lastStoredAt = DateTime.now();
     _addPoint(
       TrackPoint(
         lat: position.latitude,
         lng: position.longitude,
-        timestamp: position.timestamp.toLocal(),
+        timestamp: ts,
       ),
     );
+  }
+
+  /// Titik baru hanya disimpan bila >= [minPointGap] dari titik terakhir.
+  static bool _farEnoughFromLast(List<TrackPoint> points, DateTime ts) {
+    if (points.isEmpty) return true;
+    return ts.difference(points.last.timestamp) >= _minPointGap;
   }
 
   Future<void> _addPoint(TrackPoint point) async {
@@ -215,8 +226,11 @@ class LocationBufferService {
     );
     points = points.where((p) => p.timestamp.isAfter(midnight)).toList();
 
+    final ts = timestamp.toLocal();
+    if (!_farEnoughFromLast(points, ts)) return;
+
     points.add(
-      TrackPoint(lat: lat, lng: lng, timestamp: timestamp.toLocal()),
+      TrackPoint(lat: lat, lng: lng, timestamp: ts),
     );
     if (points.length > LocationBufferService._maxPoints) {
       points.removeRange(0, points.length - LocationBufferService._maxPoints);

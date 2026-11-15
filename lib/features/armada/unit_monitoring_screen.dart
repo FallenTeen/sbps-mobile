@@ -255,7 +255,7 @@ class UnitMonitoringScreen extends ConsumerWidget {
                 const SizedBox(
                   width: 16,
                   height: 16,
-                  child: const SubmitSpinner(),
+                  child: SubmitSpinner(),
                 ),
             ],
           ),

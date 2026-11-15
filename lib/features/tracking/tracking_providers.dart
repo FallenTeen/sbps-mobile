@@ -15,6 +15,7 @@ import 'background_location_service.dart';
 import 'location_buffer_service.dart';
 import 'models.dart';
 import 'tracking_repository.dart';
+import 'workmanager_watchdog.dart';
 
 final trackingRepositoryProvider = Provider<TrackingRepository>(
   (ref) => TrackingRepository(api: ref.watch(apiClientProvider)),
@@ -213,15 +214,13 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       }
     }
 
-    // Start background location service untuk tracking berkelanjutan
-    // saat app di-minimize (punya izin always).
-    if (await location.hasAlwaysPermission()) {
-      try {
-        await BackgroundLocationService.instance.initialize();
-        await BackgroundLocationService.instance.startTracking();
-      } catch (_) {
-        // Background service gagal - foreground tracking tetap jalan.
-      }
+    // While-in-use cukup: FGS tipe location di-start saat app foreground.
+    // Bila izin ditolak permanen, banner di titik kerja yang menangani.
+    try {
+      await BackgroundLocationService.instance.initialize();
+      await BackgroundLocationService.instance.startTracking();
+    } catch (_) {
+      // Background service gagal - foreground tracking tetap jalan.
     }
 
     state = state.copyWith(
@@ -248,24 +247,10 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     unawaited(flush());
   }
 
-  /// FASE SELANJUTNYA (WorkManager): pemanggilan ini adalah titik pasang
-  /// WorkManager untuk auto-restart tracking saat OEM mematikan proses dan
-  /// aplikasi tidak pernah dibuka lagi. Saat ini no-op - alternatif yang
-  /// berjalan: flag tracking_desired + restart saat app dibuka/resume,
-  /// plus push FCM dari backend (command tracking:stale-reminder) yang
-  /// mengingatkan karyawan membuka aplikasi.
-  ///
-  /// Cara pasang nanti:
-  /// 1. flutter pub add workmanager
-  /// 2. Registrasi callback di main.dart:
-  ///    Workmanager().initialize(...); Workmanager().registerPeriodicTask(
-  ///      'tracking-restart', 'trackingRestart', frequency: Duration(minutes: 15));
-  /// 3. Di callback DispatcherTask: jika LocationBufferService.isTrackingDesired()
-  ///    dan service tidak berjalan, panggil ulang mekanisme start tracking.
-  /// 4. AndroidManifest perlu izin dari plugin (tambah di Info.plist untuk iOS
-  ///    tidak wajib karena iOS menangani sendiri).
+  /// Watchdog OEM (Android): task periodik WorkManager menghidupkan ulang
+  /// perekaman saat proses dibunuh, selama presensi masih terbuka.
   Future<void> _scheduleOemRestart() async {
-    // No-op sampai WorkManager dipasang di fase selanjutnya.
+    await TrackingWatchdog.ensureRegistered();
   }
 
   void _stop({String? message}) {

@@ -21,6 +21,7 @@ import 'features/presensi/presensi_providers.dart';
 import 'features/notifikasi/notifikasi_providers.dart';
 import 'features/tracking/location_buffer_service.dart';
 import 'features/tracking/tracking_providers.dart';
+import 'features/tracking/workmanager_watchdog.dart';
 import 'features/update/shorebird_update_banner.dart';
 import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
@@ -38,6 +39,9 @@ Future<void> main() async {
   await initializeDateFormatting('id_ID');
   Intl.defaultLocale = 'id_ID';
   await Hive.initFlutter();
+
+  // Watchdog tracking: hidupkan ulang perekaman GPS saat proses dibunuh.
+  await TrackingWatchdog.ensureRegistered();
 
   // Firebase init: tanpa google-services.json, token push = null (degradasi halus).
   try {
