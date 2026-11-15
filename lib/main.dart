@@ -127,6 +127,9 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
       await Future<void>.delayed(const Duration(seconds: 2));
       final running = ref.read(trackingSchedulerProvider).running;
       if (running) return;
+      // Maksimal 1x per episode masalah — jangan berulang tiap resume.
+      if (await LocationBufferService.isInterruptedNotified()) return;
+      await LocationBufferService.setInterruptedNotified();
       final blocked = await LocationBufferService.isAuthBlocked();
       rootScaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(

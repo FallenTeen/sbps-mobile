@@ -455,6 +455,26 @@ class LocationBufferService {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     return box.get('presensi_open') == 'true';
   }
+
+  /// Penanda sudah menampilkan pesan "tracking terputus" untuk episode
+  /// masalah yang sama — agar pengguna tidak dibanjiri pesan berulang.
+  static Future<void> setInterruptedNotified() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    await box.put('interrupted_notified', 'true');
+  }
+
+  static Future<bool> isInterruptedNotified() async {
+    final box = await Hive.openBox<String>(LocationBufferService._boxName);
+    return box.get('interrupted_notified') == 'true';
+  }
+
+  /// Reset penanda: tracking kembali berjalan, atau sesi tracking berakhir.
+  static Future<void> clearInterruptedNotified() async {
+    try {
+      final box = await Hive.openBox<String>(LocationBufferService._boxName);
+      await box.delete('interrupted_notified');
+    } catch (_) {}
+  }
   static Future<bool> tryAcquireFlushLock() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     final raw = box.get('flush_lock');

@@ -228,6 +228,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       message: null,
       pendingPoints: _buffer.count,
     );
+    // Tracking kembali sehat — izinkan pesan "tracking terputus"
+    // berikutnya jika benar-benar bermasalah lagi.
+    unawaited(LocationBufferService.clearInterruptedNotified());
 
     unawaited(LocationBufferService.setTrackingDesired(true));
     unawaited(_scheduleOemRestart());
@@ -259,6 +262,8 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     // Stop background location service.
     BackgroundLocationService.instance.stopTracking();
     unawaited(LocationBufferService.setTrackingDesired(false));
+    // Sesi tracking berakhir — pesan "terputus" berikutnya boleh muncul lagi.
+    unawaited(LocationBufferService.clearInterruptedNotified());
 
     state = state.copyWith(
       running: false,

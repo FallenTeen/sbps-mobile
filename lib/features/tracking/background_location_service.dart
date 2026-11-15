@@ -15,7 +15,14 @@ import 'tracking_isolate_upload.dart';
 /// Channel notifikasi FGS tracking. WAJIB dibuat sebelum service start:
 /// startForeground dengan channel yang tidak ada melempar
 /// RemoteServiceException (Bad notification) dan Android membunuh app.
-const kTrackingNotificationChannelId = 'sbps_tracking';
+///
+/// Versi 2: id channel diganti karena setting channel Android tidak bisa
+/// diubah setelah dibuat — di sebagian perangkat, channel lama
+/// `sbps_tracking` terlanjur terbentuk dengan importance default (bunyi +
+/// heads-up tiap notifikasi di-post ulang). Channel baru dijamin silent,
+/// channel lama dihapus.
+const kTrackingNotificationChannelId = 'sbps_tracking_v2';
+const _kOldTrackingChannelId = 'sbps_tracking';
 
 class BackgroundLocationService {
   static final instance = BackgroundLocationService._();
@@ -36,7 +43,7 @@ class BackgroundLocationService {
         autoStart: false,
         isForegroundMode: true,
         foregroundServiceTypes: const [AndroidForegroundType.location],
-        notificationChannelId: 'sbps_tracking',
+        notificationChannelId: kTrackingNotificationChannelId,
         initialNotificationTitle: 'SBPS Tracking',
         initialNotificationContent: 'Merekam lokasi kerja...',
         foregroundServiceNotificationId: 888,
@@ -82,14 +89,26 @@ class BackgroundLocationService {
       // Android 13+: minta izin POST_NOTIFICATIONS agar notifikasi FGS
       // pasti bisa tampil (best-effort, dialog OS hanya muncul sekali).
       await impl.requestNotificationsPermission();
+      // Importance.min + tanpa suara/getar: notifikasi FGS wajib ada
+      // (ketentuan Android) tapi harus diam total — tracking bukan
+      // peristiwa yang perlu mengganggu pengguna.
       await impl.createNotificationChannel(
         const AndroidNotificationChannel(
           kTrackingNotificationChannelId,
           'SBPS Tracking',
           description: 'Perekaman lokasi kerja saat presensi terbuka.',
-          importance: Importance.low,
+          importance: Importance.min,
+          playSound: false,
+          enableVibration: false,
+          enableLights: false,
+          showBadge: false,
         ),
       );
+      // Hapus channel lama yang mungkin terbentuk dengan importance
+      // default di perangkat yang sudah pernah menjalankan build lama.
+      try {
+        await impl.deleteNotificationChannel(channelId: _kOldTrackingChannelId);
+      } catch (_) {}
     } catch (_) {
       // Best-effort — guard di startTracking menangani sisanya.
     }
@@ -165,12 +184,9 @@ class BackgroundLocationService {
     _gpsTimer = null;
     _isTracking = false;
 
-    if (service is AndroidServiceInstance) {
-      service.invoke('update', {
-        'title': 'SBPS Tracking',
-        'content': 'Tracking dihentikan',
-      });
-    }
+    // Tidak memperbarui konten notifikasi di sini: invoke('update')
+    // memicu posting ulang notifikasi FGS. Saat service berhenti,
+    // notifikasinya hilang sendiri (stopSelf).
   }
 
   static void _startFlushTimer(ServiceInstance service) {
@@ -223,13 +239,10 @@ class BackgroundLocationService {
         timestamp: position.timestamp.toLocal(),
       );
 
-      if (service is AndroidServiceInstance) {
-        service.invoke('update', {
-          'title': 'SBPS Tracking',
-          'content':
-              'Lokasi tercatat: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
-        });
-      }
+      // Tidak memperbarui konten notifikasi tiap ping: invoke('update')
+      // memicu posting ulang notifikasi FGS yang di sebagian perangkat
+      // tampil sebagai notifikasi baru (heads-up + bunyi). Konten FGS
+      // tetap statis "Merekam lokasi kerja...".
 
       // Await: isolate watchdog bisa mati sebelum upload selesai.
       await TrackingIsolateUpload.flush();
