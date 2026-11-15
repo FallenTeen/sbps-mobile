@@ -126,19 +126,6 @@ class _TitikMapViewState extends State<TitikMapView> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
                 // Header info
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,19 +206,19 @@ class _TitikMapViewState extends State<TitikMapView> {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                         color:
-                             (_distanceFromUser(titik) ?? 0) >
-                                     titik.radiusPresensiMeter
-                                 ? context.colors.warning.withValues(alpha: 0.12)
-                                 : context.colors.success.withValues(alpha: 0.12),
-                         borderRadius: BorderRadius.circular(10),
-                         border: Border.all(
-                           color:
-                               (_distanceFromUser(titik) ?? 0) >
-                                       titik.radiusPresensiMeter
-                                   ? context.colors.warning.withValues(alpha: 0.35)
-                                   : context.colors.success.withValues(alpha: 0.35),
-                         ),
+                        color:
+                            (_distanceFromUser(titik) ?? 0) >
+                                titik.radiusPresensiMeter
+                            ? context.colors.warning.withValues(alpha: 0.12)
+                            : context.colors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color:
+                              (_distanceFromUser(titik) ?? 0) >
+                                  titik.radiusPresensiMeter
+                              ? context.colors.warning.withValues(alpha: 0.35)
+                              : context.colors.success.withValues(alpha: 0.35),
+                        ),
                       ),
                       child: Text(
                         (_distanceFromUser(titik) ?? 0) >
@@ -240,11 +227,11 @@ class _TitikMapViewState extends State<TitikMapView> {
                             : 'Anda berada dalam radius presensi titik ini.',
                         style: Theme.of(sheetContext).textTheme.bodySmall
                             ?.copyWith(
-                               color:
-                                   (_distanceFromUser(titik) ?? 0) >
-                                           titik.radiusPresensiMeter
-                                       ? context.colors.warning
-                                       : context.colors.success,
+                              color:
+                                  (_distanceFromUser(titik) ?? 0) >
+                                      titik.radiusPresensiMeter
+                                  ? context.colors.warning
+                                  : context.colors.success,
                             ),
                       ),
                     ),
@@ -325,7 +312,9 @@ class _TitikMapViewState extends State<TitikMapView> {
             Text(
               widget.emptyMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -442,10 +431,7 @@ class _TitikMapViewState extends State<TitikMapView> {
                   shape: const CircleBorder(),
                   child: IconButton(
                     tooltip: 'Lokasi Anda',
-                    icon: Icon(
-                      Icons.my_location,
-                      color: context.colors.info,
-                    ),
+                    icon: Icon(Icons.my_location, color: context.colors.info),
                     onPressed: _locateUser,
                   ),
                 ),
@@ -523,9 +509,9 @@ class _TitikMapMarker extends StatelessWidget {
             Icon(
               Icons.location_on,
               size: isSelected ? 48 : 38,
-               color: isSelected
-                   ? theme.colorScheme.primary
-                   : context.colors.error,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : context.colors.error,
             ),
             Positioned(
               top: isSelected ? 8 : 6,
@@ -539,9 +525,9 @@ class _TitikMapMarker extends StatelessWidget {
                 child: Icon(
                   isSelected ? Icons.check : Icons.business,
                   size: 10,
-                   color: isSelected
-                       ? theme.colorScheme.primary
-                       : context.colors.textPrimary,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.colors.textPrimary,
                 ),
               ),
             ),
@@ -569,7 +555,11 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Icon(
+            icon,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
           Text(
             '$label: ',

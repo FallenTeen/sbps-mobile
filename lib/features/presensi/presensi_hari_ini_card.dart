@@ -118,9 +118,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     final lokasi = ref.read(locationProvider);
     if (titik == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih titik kerja terlebih dahulu.'),
-        ),
+        const SnackBar(content: Text('Pilih titik kerja terlebih dahulu.')),
       );
       return;
     }
@@ -201,7 +199,7 @@ class PresensiHariIniCard extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     while (context.mounted) {
-      final photo = await takeWatermarkedPhoto(ref);
+      final photo = await takeWatermarkedPhoto(ref, processingContext: context);
       if (photo == null || !context.mounted) return null;
 
       final choice = await _showPreviewSheet(context, photo);
@@ -231,92 +229,99 @@ class PresensiHariIniCard extends ConsumerWidget {
       ),
       builder: (sheetContext) {
         final theme = Theme.of(sheetContext);
-        final adaLokasi = photo.gpsStatus == GpsStatus.available &&
+        final adaLokasi =
+            photo.gpsStatus == GpsStatus.available &&
             photo.latitude != null &&
             photo.longitude != null;
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.colors.textMuted,
-                      borderRadius: BorderRadius.circular(2),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pratinjau Foto Presensi',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Pratinjau Foto Presensi',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(File(photo.path)),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      adaLokasi
-                          ? Icons.location_on
-                          : Icons.location_off_outlined,
-                      size: 16,
-                      color: adaLokasi
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 12),
+                  // Konstrain tinggi: foto portrait jangan mendorong tombol
+                  // keluar layar (sheet boleh memanjang penuh saat
+                  // isScrollControlled).
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.45,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        adaLokasi
-                            ? 'Foto dilengkapi data lokasi (watermark).'
-                            : 'Foto tanpa data lokasi — koordinat GPS atmosferik dipakai.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(photo.path),
+                        width: double.infinity,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // OverflowBar: deretan tombol turun ke baris baru saat
-                // sempit / text scale 130%, bukan memicu overflow.
-                OverflowBar(
-                  alignment: MainAxisAlignment.end,
-                  spacing: 8,
-                  overflowSpacing: 8,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.of(sheetContext).pop(_PreviewChoice.batal),
-                      child: const Text('Batal'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.of(
-                        sheetContext,
-                      ).pop(_PreviewChoice.ambilUlang),
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Ambil Ulang'),
-                    ),
-                    FilledButton.icon(
-                      onPressed: () =>
-                          Navigator.of(sheetContext).pop(_PreviewChoice.kirim),
-                      icon: const Icon(Icons.send_outlined),
-                      label: const Text('Kirim'),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        adaLokasi
+                            ? Icons.location_on
+                            : Icons.location_off_outlined,
+                        size: 16,
+                        color: adaLokasi
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          adaLokasi
+                              ? 'Foto dilengkapi data lokasi (watermark).'
+                              : 'Foto tanpa data lokasi — koordinat GPS atmosferik dipakai.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // OverflowBar: deretan tombol turun ke baris baru saat
+                  // sempit / text scale 130%, bukan memicu overflow.
+                  OverflowBar(
+                    alignment: MainAxisAlignment.end,
+                    spacing: 8,
+                    overflowSpacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(
+                          sheetContext,
+                        ).pop(_PreviewChoice.batal),
+                        child: const Text('Batal'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.of(
+                          sheetContext,
+                        ).pop(_PreviewChoice.ambilUlang),
+                        icon: const Icon(Icons.camera_alt_outlined),
+                        label: const Text('Ambil Ulang'),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.of(
+                          sheetContext,
+                        ).pop(_PreviewChoice.kirim),
+                        icon: const Icon(Icons.send_outlined),
+                        label: const Text('Kirim'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -342,71 +347,63 @@ class PresensiHariIniCard extends ConsumerWidget {
         final theme = Theme.of(sheetContext);
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.colors.textMuted,
-                      borderRadius: BorderRadius.circular(2),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: theme.colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Di luar radius ${titik.nama}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Posisi Anda saat ini berjarak ${_fmtDistance(jarak)} dari titik "${titik.nama}" — melebihi radius presensi ${titik.radiusPresensiMeter.round()} m yang ditetapkan.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Anda tetap bisa melanjutkan; presensi akan ditandai "di luar area kerja" untuk ditinjau atasan. Untuk presensi normal, mendekatlah ke titik kerja dalam radius ${titik.radiusPresensiMeter.round()} m lalu coba lagi.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Di luar radius ${titik.nama}',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () =>
+                              Navigator.of(sheetContext).pop(false),
+                          child: const Text('Tutup'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Posisi Anda saat ini berjarak ${_fmtDistance(jarak)} dari titik "${titik.nama}" — melebihi radius presensi ${titik.radiusPresensiMeter.round()} m yang ditetapkan.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Anda tetap bisa melanjutkan; presensi akan ditandai "di luar area kerja" untuk ditinjau atasan. Untuk presensi normal, mendekatlah ke titik kerja dalam radius ${titik.radiusPresensiMeter.round()} m lalu coba lagi.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => Navigator.of(sheetContext).pop(true),
+                          icon: const Icon(Icons.send_outlined),
+                          label: const Text('Lanjutkan Presensi'),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () =>
-                            Navigator.of(sheetContext).pop(false),
-                        child: const Text('Tutup'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => Navigator.of(sheetContext).pop(true),
-                        icon: const Icon(Icons.send_outlined),
-                        label: const Text('Lanjutkan Presensi'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -460,9 +457,8 @@ class _CheckInCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (siap ? context.colors.primary : context.colors.textMuted).withValues(
-              alpha: 0.25,
-            ),
+            color: (siap ? context.colors.primary : context.colors.textMuted)
+                .withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -553,7 +549,10 @@ class _CheckInCard extends StatelessWidget {
                   label: Text(switch (busyPhase) {
                     UploadPhase.compressing => 'Mengompres foto...',
                     UploadPhase.sending => 'Mengirim...',
-                    _ => menungguSinkron ? 'Menunggu Sinkron...' : 'Check-In Sekarang',
+                    _ =>
+                      menungguSinkron
+                          ? 'Menunggu Sinkron...'
+                          : 'Check-In Sekarang',
                   }),
                 ),
               ),
@@ -794,8 +793,7 @@ class _GpsStatusStrip extends StatelessWidget {
           : context.colors.success.withValues(alpha: 0.1);
       fg = onGradient ? Colors.white : context.colors.success;
       icon = Icons.check_circle_outline;
-      pesan =
-          'Dalam radius — ${_fmtDistance(jd)} dari "${t.nama}".';
+      pesan = 'Dalam radius — ${_fmtDistance(jd)} dari "${t.nama}".';
       showRefresh = false;
     } else {
       bg = Colors.black.withValues(alpha: 0.25);
@@ -898,4 +896,3 @@ class _CompletedCard extends StatelessWidget {
     );
   }
 }
-

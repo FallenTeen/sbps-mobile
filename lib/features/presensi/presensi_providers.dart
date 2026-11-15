@@ -167,8 +167,8 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
     unawaited(ref.read(pendingCountProvider.notifier).reload());
     // Presensi bisa saja baru terkirim di latar belakang.
     ref.invalidate(hariIniProvider);
-    // Antrean berubah setelah percobaan kirim — daftar aksi ikut ter-update.
-    ref.invalidate(pendingActionsProvider);
+    // Daftar aksi pending ter-update otomatis lewat StreamProvider
+    // (OutboxRepository.changes) — tidak perlu invalidate manual.
   };
   ref.onDispose(service.dispose);
   return service;
@@ -186,14 +186,10 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
 // }
 
 void _onOutboxChanged(Ref ref) {
-  // Perbarui jumlah antrean.
+  // Perbarui jumlah antrean. Daftar aksi pending ter-update otomatis
+  // lewat StreamProvider (OutboxRepository.changes) — invalidate manual
+  // di sini memicu CircularDependencyError saat provider di-build.
   unawaited(ref.read(pendingCountProvider.notifier).reload());
-
-  // Jangan menginvalidasi provider secara sinkron di dalam
-  // callback perubahan Outbox.
-  scheduleMicrotask(() {
-    ref.invalidate(pendingActionsProvider);
-  });
 }
 
 /// Badge jumlah aksi outbox yang belum tersinkron.
@@ -211,9 +207,20 @@ final pendingCountProvider = NotifierProvider<PendingCountNotifier, int>(
 );
 
 /// Daftar data lokal yang belum berhasil dikirim ke server.
-final pendingActionsProvider = FutureProvider<List<PendingAction>>(
-  (ref) => ref.watch(outboxRepositoryProvider).pendingActions(),
-);
+///
+/// StreamProvider: otomatis ter-update setiap isi outbox berubah
+/// (OutboxRepository.changes) — TANPA invalidasi manual. Pola lama
+/// (`onChanged → ref.invalidate(pendingActionsProvider)`) memicu
+/// CircularDependencyError di Riverpod 3 saat provider sedang di-build.
+final pendingActionsProvider = StreamProvider<List<PendingAction>>((
+  ref,
+) async* {
+  final repo = ref.watch(outboxRepositoryProvider);
+  yield await repo.pendingActions();
+  await for (final _ in repo.changes) {
+    yield await repo.pendingActions();
+  }
+});
 
 /// Status pending check-in/out ringan untuk UI kartu presensi.
 class PendingPresensiInfo {

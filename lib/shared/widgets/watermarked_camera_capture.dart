@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,8 +26,13 @@ class CapturedPhoto {
 }
 
 /// Ambil foto ber-watermark dari kamera.
+///
+/// Bila [processingContext] diberikan, tampilkan overlay "Menyiapkan foto…"
+/// selama watermark + kompresi berjalan (setelah kamera tertutup, sebelum
+/// pratinjau muncul) — tanpa itu user tidak tahu app sedang memproses.
 Future<CapturedPhoto?> takeWatermarkedPhoto(
   WidgetRef ref, {
+  BuildContext? processingContext,
   double maxWidth = 1600,
   int imageQuality = 85,
 }) async {
@@ -44,6 +51,46 @@ Future<CapturedPhoto?> takeWatermarkedPhoto(
     return null;
   }
   if (picked == null) return null;
+
+  // Overlay proses: muncul saat watermark+kompresi, ditutup saat selesai.
+  // Simpan navigator SEBELUM await pertama agar aman dipakai lintas async.
+  NavigatorState? overlayNavigator;
+  if (processingContext != null && processingContext.mounted) {
+    overlayNavigator = Navigator.of(processingContext, rootNavigator: true);
+    unawaited(
+      showDialog<void>(
+        context: processingContext,
+        barrierDismissible: false,
+        barrierColor: Colors.black54,
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                    SizedBox(width: 14),
+                    Text('Menyiapkan foto…'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  void hideOverlay() {
+    final nav = overlayNavigator;
+    if (nav != null && nav.canPop()) nav.pop();
+  }
 
   try {
     String? employeeName;
@@ -74,13 +121,14 @@ Future<CapturedPhoto?> takeWatermarkedPhoto(
   } catch (_) {
     _showCameraFeedback('process_failed');
     return null;
+  } finally {
+    hideOverlay();
   }
 }
 
 void _showCameraFeedback(String? code) {
   final message = switch (code) {
-    'camera_access_denied' ||
-    'camera_access_restricted' =>
+    'camera_access_denied' || 'camera_access_restricted' =>
       'Izin kamera ditolak. Aktifkan izin kamera di Pengaturan lalu coba lagi.',
     'process_failed' => 'Gagal memproses foto. Coba ambil ulang.',
     _ => 'Tidak dapat membuka kamera. Periksa izin kamera lalu coba lagi.',

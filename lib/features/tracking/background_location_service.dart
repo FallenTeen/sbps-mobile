@@ -4,12 +4,18 @@ import 'dart:ui';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../../core/location_service.dart';
 import 'location_buffer_service.dart';
 import 'tracking_isolate_upload.dart';
+
+/// Channel notifikasi FGS tracking. WAJIB dibuat sebelum service start:
+/// startForeground dengan channel yang tidak ada melempar
+/// RemoteServiceException (Bad notification) dan Android membunuh app.
+const kTrackingNotificationChannelId = 'sbps_tracking';
 
 class BackgroundLocationService {
   static final instance = BackgroundLocationService._();
@@ -21,6 +27,8 @@ class BackgroundLocationService {
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
+
+    await _ensureTrackingChannel();
 
     await _service.configure(
       androidConfiguration: AndroidConfiguration(
@@ -43,6 +51,11 @@ class BackgroundLocationService {
 
   Future<void> startTracking() async {
     if (!_initialized) await initialize();
+    // Guard anti-crash: startForeground tanpa notifikasi yang bisa
+    // diposting (channel hilang/diblokir/notifikasi dimatikan) membuat
+    // Android 12+ membunuh proses (RemoteServiceException). Tracking
+    // foreground-only tetap jalan tanpa FGS.
+    if (!await _fgsNotificationsOk()) return;
     if (!await _service.isRunning()) {
       await _service.startService();
     }
@@ -55,6 +68,54 @@ class BackgroundLocationService {
 
   Future<bool> isRunning() async {
     return await _service.isRunning();
+  }
+
+  /// Pastikan channel notifikasi FGS ada (flutter_background_service TIDAK
+  /// membuat channel custom — hanya channel default bila channelId null).
+  static Future<void> _ensureTrackingChannel() async {
+    try {
+      final impl = FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (impl == null) return;
+      // Android 13+: minta izin POST_NOTIFICATIONS agar notifikasi FGS
+      // pasti bisa tampil (best-effort, dialog OS hanya muncul sekali).
+      await impl.requestNotificationsPermission();
+      await impl.createNotificationChannel(
+        const AndroidNotificationChannel(
+          kTrackingNotificationChannelId,
+          'SBPS Tracking',
+          description: 'Perekaman lokasi kerja saat presensi terbuka.',
+          importance: Importance.low,
+        ),
+      );
+    } catch (_) {
+      // Best-effort — guard di startTracking menangani sisanya.
+    }
+  }
+
+  /// true bila notifikasi FGS berpeluang sukses diposting: izin notifikasi
+  /// aktif dan channel tracking ada & tidak diblokir user. Gagal verifikasi
+  /// (isolate tanpa plugin) → true agar FGS tidak mati total.
+  static Future<bool> _fgsNotificationsOk() async {
+    try {
+      final impl = FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (impl == null) return true;
+      if (await impl.areNotificationsEnabled() == false) return false;
+      final channels = await impl.getNotificationChannels();
+      final channel = channels
+          ?.where((c) => c.id == kTrackingNotificationChannelId)
+          .toList();
+      if (channel == null || channel.isEmpty) return false;
+      if (channel.first.importance == Importance.none) return false;
+      return true;
+    } catch (_) {
+      return true;
+    }
   }
 
   @pragma('vm:entry-point')

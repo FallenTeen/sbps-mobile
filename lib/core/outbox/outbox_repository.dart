@@ -36,6 +36,16 @@ class OutboxRepository {
   /// Callback perubahan isi outbox - diisi oleh layer provider.
   void Function()? onChanged;
 
+  /// Stream perubahan isi outbox (broadcast). Source of truth untuk UI
+  /// daftar aksi pending — menggantikan pola `onChanged → ref.invalidate`
+  /// yang memicu CircularDependencyError saat provider sedang di-build.
+  final StreamController<void> _changeController =
+      StreamController<void>.broadcast();
+
+  /// Stream perubahan isi outbox. Tidak pernah close selama app hidup;
+  /// dipakai [pendingActionsProvider] untuk memancarkan daftar terbaru.
+  Stream<void> get changes => _changeController.stream;
+
   /// true bila [id] sedang dalam proses enqueue (belum selesai put→send→
   /// update). Caller (mis. syncNow worker) sebaiknya melewati ID ini dan
   /// biarkan pemilik enqueue yang menyelesaikan.
@@ -50,7 +60,10 @@ class OutboxRepository {
     });
   }
 
-  void _notify() => onChanged?.call();
+  void _notify() {
+    if (!_changeController.isClosed) _changeController.add(null);
+    onChanged?.call();
+  }
 
   /// Menjalankan [op] secara mutual-exclusion (FIFO serial). Operasi
   /// bersamaan menunggu giliran lewat chain [_gate]. Operasi hanya untuk
@@ -106,10 +119,10 @@ class OutboxRepository {
         if (result.delivered) {
           await _removeLocked(action.id);
         } else if (result.permanentlyFailed) {
-            await _markFailedLocked(action.id, result.errorMessage);
-          } else {
-            await _markRetryableLocked(action.id, result.errorMessage);
-          }
+          await _markFailedLocked(action.id, result.errorMessage);
+        } else {
+          await _markRetryableLocked(action.id, result.errorMessage);
+        }
       });
       return result;
     } finally {
@@ -184,14 +197,15 @@ class OutboxRepository {
   Future<void> _markSyncingLocked(String id) =>
       _updateLocked(id, (a) => a..status = PendingStatus.syncing);
 
-  Future<void> _markRetryableLocked(String id, String? message) => _updateLocked(
-    id,
-    (a) => a
-      ..status = PendingStatus.pending
-      ..lastAttemptAt = DateTime.now()
-      ..retryCount = a.retryCount + 1
-      ..errorMessage = message,
-  );
+  Future<void> _markRetryableLocked(String id, String? message) =>
+      _updateLocked(
+        id,
+        (a) => a
+          ..status = PendingStatus.pending
+          ..lastAttemptAt = DateTime.now()
+          ..retryCount = a.retryCount + 1
+          ..errorMessage = message,
+      );
 
   Future<void> _markFailedLocked(String id, String? message) => _updateLocked(
     id,
@@ -239,8 +253,7 @@ class OutboxRepository {
   Future<void> markFailed(String id, String? message) =>
       _serialized(() => _markFailedLocked(id, message));
 
-  Future<void> remove(String id) =>
-      _serialized(() => _removeLocked(id));
+  Future<void> remove(String id) => _serialized(() => _removeLocked(id));
 }
 
 /// Hasil satu percobaan pengiriman outbox.
