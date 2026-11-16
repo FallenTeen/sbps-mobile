@@ -52,6 +52,11 @@ class TrackingWatchdog {
       WidgetsFlutterBinding.ensureInitialized();
       await Hive.initFlutter();
 
+      // Dua guard privasi sebelum merestart FGS:
+      // 1. tracking_desired = false → user sudah checkout atau belum checkin.
+      // 2. getPresensiOpenCached() memvalidasi tanggal — cache dari hari
+      //    sebelumnya ditolak sehingga watchdog tidak merestart tracking
+      //    di luar jam kerja meskipun app tidak dibuka semalaman.
       if (!await LocationBufferService.isTrackingDesired()) return;
       if (!await LocationBufferService.getPresensiOpenCached()) return;
 

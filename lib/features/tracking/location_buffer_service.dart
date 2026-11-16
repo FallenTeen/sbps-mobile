@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 
 import 'package:geolocator/geolocator.dart';
@@ -175,7 +175,7 @@ class LocationBufferService {
   List<TrackPoint> snapshot() => List.unmodifiable(_points);
 
   /// Gabungkan titik yang ditulis oleh background service isolate
-  /// (langsung ke Hive box) ke list in-memory — dedupe by `id`.
+  /// (langsung ke Hive box) ke list in-memory â€” dedupe by `id`.
   Future<void> syncFromStore() async {
     final box = await _box();
     final raw = box.get('points');
@@ -191,11 +191,11 @@ class LocationBufferService {
         _points.removeRange(0, _points.length - _maxPoints);
       }
     } catch (_) {
-      // Data korup di box — biarkan in-memory untuk dipersist ulang.
+      // Data korup di box â€” biarkan in-memory untuk dipersist ulang.
     }
   }
 
-  /// Append SATU titik langsung ke Hive — untuk panggilan dari
+  /// Append SATU titik langsung ke Hive â€” untuk panggilan dari
   /// background service isolate yang punya instance/memory sendiri
   /// (tidak bisa memakai instance LocationBufferService utama).
   static Future<void> appendPointIsolate({
@@ -449,15 +449,27 @@ class LocationBufferService {
   static Future<void> setPresensiOpen(bool value) async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     await box.put('presensi_open', value ? 'true' : 'false');
+    // Simpan tanggal agar watchdog menolak cache basi dari hari sebelumnya.
+    if (value) {
+      await box.put('presensi_open_date', DateTime.now().toIso8601String().substring(0, 10));
+    } else {
+      await box.delete('presensi_open_date');
+    }
   }
 
   static Future<bool> getPresensiOpenCached() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
-    return box.get('presensi_open') == 'true';
+    if (box.get('presensi_open') != 'true') return false;
+    // Cache hanya berlaku hari ini — tolak sisa cache dari kemarin
+    // agar tracking tidak bocor ke sesi non-kerja.
+    final savedDate = box.get('presensi_open_date');
+    if (savedDate == null) return false;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return savedDate == today;
   }
 
   /// Penanda sudah menampilkan pesan "tracking terputus" untuk episode
-  /// masalah yang sama — agar pengguna tidak dibanjiri pesan berulang.
+  /// masalah yang sama â€” agar pengguna tidak dibanjiri pesan berulang.
   static Future<void> setInterruptedNotified() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     await box.put('interrupted_notified', 'true');
@@ -549,6 +561,6 @@ class LocationBufferService {
 
   Future<void> dispose() async {
     stop();
-    // Box dibiarkan terbuka — Hive menangani lifecycle global.
+    // Box dibiarkan terbuka â€” Hive menangani lifecycle global.
   }
 }

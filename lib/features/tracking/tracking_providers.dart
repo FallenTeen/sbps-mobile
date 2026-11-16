@@ -147,7 +147,10 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       await LocationBufferService.setPresensiOpen(open);
       return open;
     } catch (_) {
-      if (await LocationBufferService.getPresensiOpenCached()) return true;
+      // Fallback konservatif: jika API tidak bisa dijangkau, satu-satunya
+      // bukti sesi aktif yang valid adalah antrian check-in di outbox
+      // (artinya user check-in offline dan belum checkout). Semua kasus lain
+      // dianggap "tidak aktif" agar tracking tidak bocor di luar jam kerja.
       try {
         final pending = await ref.read(outboxRepositoryProvider).pendingActions();
         if (pending.any((a) => a.endpoint == PendingEndpoint.presensiCheckIn)) {
@@ -155,7 +158,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
           return true;
         }
       } catch (_) {}
-      return state.running;
+      // Tidak ada bukti sesi aktif — matikan tracking, jaga privasi.
+      await LocationBufferService.setPresensiOpen(false);
+      return false;
     }
   }
 
@@ -262,6 +267,9 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     // Stop background location service.
     BackgroundLocationService.instance.stopTracking();
     unawaited(LocationBufferService.setTrackingDesired(false));
+    // Reset flag presensi di cache Hive agar watchdog dan evaluate() berikutnya
+    // tidak salah membaca sisa cache dan merestart tracking di luar jam kerja.
+    unawaited(LocationBufferService.setPresensiOpen(false));
     // Sesi tracking berakhir — pesan "terputus" berikutnya boleh muncul lagi.
     unawaited(LocationBufferService.clearInterruptedNotified());
 

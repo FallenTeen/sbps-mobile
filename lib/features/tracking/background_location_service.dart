@@ -16,13 +16,14 @@ import 'tracking_isolate_upload.dart';
 /// startForeground dengan channel yang tidak ada melempar
 /// RemoteServiceException (Bad notification) dan Android membunuh app.
 ///
-/// Versi 2: id channel diganti karena setting channel Android tidak bisa
-/// diubah setelah dibuat — di sebagian perangkat, channel lama
-/// `sbps_tracking` terlanjur terbentuk dengan importance default (bunyi +
-/// heads-up tiap notifikasi di-post ulang). Channel baru dijamin silent,
-/// channel lama dihapus.
-const kTrackingNotificationChannelId = 'sbps_tracking_v2';
-const _kOldTrackingChannelId = 'sbps_tracking';
+/// Channel `sbps_location` dibuat dengan Importance.min sehingga notifikasi
+/// FGS wajib ada (ketentuan Android) namun tidak mengeluarkan suara, getaran,
+/// atau heads-up pop-up sama sekali. Channel lama (sbps_tracking,
+/// sbps_tracking_v2) dihapus saat runtime agar perangkat yang sudah install
+/// tidak mendapatkan importance lama yang mengganggu.
+const kTrackingNotificationChannelId = 'sbps_location';
+// Channel-channel lama yang perlu dibersihkan dari perangkat user.
+const _kLegacyChannelIds = ['sbps_tracking', 'sbps_tracking_v2'];
 
 class BackgroundLocationService {
   static final instance = BackgroundLocationService._();
@@ -79,6 +80,8 @@ class BackgroundLocationService {
 
   /// Pastikan channel notifikasi FGS ada (flutter_background_service TIDAK
   /// membuat channel custom — hanya channel default bila channelId null).
+  /// Sekaligus membersihkan channel lama yang mungkin masih ada di perangkat
+  /// (sbps_tracking, sbps_tracking_v2) dengan importance yang mengganggu.
   static Future<void> _ensureTrackingChannel() async {
     try {
       final impl = FlutterLocalNotificationsPlugin()
@@ -95,7 +98,7 @@ class BackgroundLocationService {
       await impl.createNotificationChannel(
         const AndroidNotificationChannel(
           kTrackingNotificationChannelId,
-          'SBPS Tracking',
+          'Lokasi Kerja',
           description: 'Perekaman lokasi kerja saat presensi terbuka.',
           importance: Importance.min,
           playSound: false,
@@ -104,11 +107,14 @@ class BackgroundLocationService {
           showBadge: false,
         ),
       );
-      // Hapus channel lama yang mungkin terbentuk dengan importance
-      // default di perangkat yang sudah pernah menjalankan build lama.
-      try {
-        await impl.deleteNotificationChannel(channelId: _kOldTrackingChannelId);
-      } catch (_) {}
+      // Hapus channel-channel lama yang terbentuk dengan importance default
+      // di perangkat yang sudah pernah menjalankan build sebelumnya.
+      // Ini aman via Shorebird patch tanpa perlu reinstall.
+      for (final oldId in _kLegacyChannelIds) {
+        try {
+          await impl.deleteNotificationChannel(channelId: oldId);
+        } catch (_) {}
+      }
     } catch (_) {
       // Best-effort — guard di startTracking menangani sisanya.
     }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show LocationPermission;
 import 'package:go_router/go_router.dart';
@@ -18,8 +18,6 @@ import '../auth/auth_providers.dart';
 import '../home/home_shell.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../titik/titik_selector.dart';
-import '../tracking/battery_guide_sheet.dart';
-import '../tracking/tracking_providers.dart';
 import 'models/presensi_hari_ini.dart';
 import 'models/titik.dart';
 import 'presensi_hari_ini_card.dart';
@@ -128,8 +126,6 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
                 ),
               ],
               if (presensiOpen) ...[
-                const SizedBox(height: 8),
-                const _TrackingStatusStrip(),
                 const SizedBox(height: 8),
                 const _AlwaysPermissionBanner(),
               ],
@@ -323,7 +319,7 @@ class _LocationCard extends StatelessWidget {
             height: 22,
             child: SubmitSpinner(),
           ),
-          title: const Text('Mengambil lokasi…'),
+          title: const Text('Mengambil lokasiâ€¦'),
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
           trailing: IconButton(
             icon: const Icon(Icons.refresh),
@@ -357,7 +353,7 @@ class _LocationCard extends StatelessWidget {
       );
     }
 
-    // Ada posisi tapi sudah basi → minta segarkan sebelum check-in.
+    // Ada posisi tapi sudah basi â†’ minta segarkan sebelum check-in.
     if (location.hasPosition && location.isStale) {
       return Card(
         color: theme.colorScheme.surfaceContainerHighest,
@@ -384,7 +380,7 @@ class _LocationCard extends StatelessWidget {
         title: const Text('Lokasi siap'),
         subtitle: Text(
           location.loading
-              ? 'Memperbarui lokasi…'
+              ? 'Memperbarui lokasiâ€¦'
               : 'Pilih titik kerja untuk check-in.',
         ),
         trailing: IconButton(
@@ -595,97 +591,6 @@ class _TitikTile extends StatelessWidget {
 
 /// Detail pesan untuk strip status pemantauan. Pesan generik stop scheduler
 /// disembunyikan agar tidak dobel dengan teks utama strip.
-String? trackingStripDetail(String? schedulerMessage) {
-  if (schedulerMessage == null || schedulerMessage.isEmpty) return null;
-  if (schedulerMessage == 'Tracking tidak aktif.') return null;
-  return schedulerMessage;
-}
-
-  /// Strip status pemantauan lokasi - tampil hanya saat
-/// presensi terbuka. Meniru gaya [_GpsStatusStrip] pada kartu presensi.
-class _TrackingStatusStrip extends ConsumerWidget {
-  const _TrackingStatusStrip();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(trackingSchedulerProvider);
-    final colors = context.colors;
-    final running = status.running;
-
-    final pesan = running
-        ? (status.pendingPoints > 0
-              ? 'Pemantauan lokasi aktif, menunggu kirim: ${status.pendingPoints} titik.'
-              : 'Pemantauan lokasi aktif.')
-        : 'Pemantauan lokasi tidak aktif.';
-    final detail = running ? null : trackingStripDetail(status.message);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: running
-            ? colors.success.withValues(alpha: 0.1)
-            : colors.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            running ? Icons.my_location : Icons.location_off_outlined,
-            size: 18,
-            color: running ? colors.success : colors.textTertiary,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pesan,
-                  style: TextStyle(
-                    color: running ? colors.success : colors.textSecondary,
-                    fontSize: 12.5,
-                    height: 1.3,
-                  ),
-                ),
-                if (detail != null)
-                  Text(
-                    detail,
-                    style: TextStyle(
-                      color: colors.error,
-                      fontSize: 11.5,
-                      height: 1.3,
-                    ),
-                  ),
-                if (!running)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                      ),
-                      onPressed: () => showBatteryGuideSheet(context),
-                      child: Text(
-                        'Panduan baterai',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Panduan izin lokasi Sepanjang Waktu - tampil saat presensi terbuka tapi
 /// izin masih while-in-use atau ditolak permanen. Tanpa persistensi:
 /// cukup cek sekali saat layar dibuka dan saat kembali dari pengaturan.
