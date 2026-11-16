@@ -26,7 +26,7 @@ import 'models/armada.dart';
 import 'ritase_draft_store.dart';
 import 'ritase_model.dart';
 
-/// Muatan Hari Ini — hub multi-record ritase (Section 21.4) versi Phase 08.
+/// Muatan Hari Ini — hub multi-record ritase (Section 21.4).
 ///
 /// Index menjawab: berapa record, berapa total rit (per satuan, tidak
 /// dijumlah menggabungkan satuan yang berbeda), unit terkait, dan status
@@ -1317,7 +1317,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
             ),
             const SizedBox(height: 16),
 
-            // TD-E1: Blok Muatan (draft, opsional)
+            // Blok Muatan (draft, opsional)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(

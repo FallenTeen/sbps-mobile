@@ -198,7 +198,6 @@ class ArmadaRepository {
   }
 
   /// POST /armada/pengisian-solar (multipart) — catat satu pengisian solar.
-  /// Catat pengisian solar baru (TD-A).
   ///
   /// [fotoOdoPath] wajib; [fotoNotaPath] opsional; [liter] opsional.
   Future<bool> submitPengisianSolar({

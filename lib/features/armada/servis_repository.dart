@@ -139,7 +139,7 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// POST /servis-armada/eksternal — Pengajuan servis eksternal (TD-B1, TD-B2, TD-B5).
+  /// POST /servis-armada/eksternal — Pengajuan servis eksternal.
   Future<OutboxSendResult> submitServisEksternal({
     required String armadaId,
     required String namaBengkel,
@@ -186,7 +186,7 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/eksternal/nota — Tambah foto nota servis eksternal (TD-B4, TD-B5).
+  /// POST /servis-armada/{id}/eksternal/nota — Tambah foto nota servis eksternal.
   Future<OutboxSendResult> submitServisEksternalNota({
     required String servisId,
     required List<String> fotoNotaPaths,
@@ -210,7 +210,7 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/foto-hasil — Tambah foto hasil pengerjaan (TD-B4, TD-B5).
+  /// POST /servis-armada/{id}/foto-hasil — Tambah foto hasil pengerjaan.
   Future<OutboxSendResult> submitServisFotoHasil({
     required String servisId,
     required String fotoPath,
@@ -234,13 +234,13 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/selesai — Driver atau workshop menandai servis selesai (TD-B3).
+  /// POST /servis-armada/{id}/selesai — Driver atau workshop menandai servis selesai.
   Future<void> selesaiServis({required String servisId}) async {
     final res = await _api.post<Object?>('/servis-armada/$servisId/selesai');
     _ensureSuccess(res);
   }
 
-  /// POST /workshop/servis-eksternal/{id}/verifikasi — Verifikasi Workshop (TD-B7).
+  /// POST /workshop/servis-eksternal/{id}/verifikasi — Verifikasi Workshop.
   Future<void> verifikasiServisEksternal({
     required String servisId,
     required String status,
@@ -257,7 +257,7 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// GET /servis-armada?tipe_servis=eksternal — Daftar servis eksternal untuk verifikasi workshop (TD-B7).
+  /// GET /servis-armada?tipe_servis=eksternal — Daftar servis eksternal untuk verifikasi workshop.
   Future<List<ServisArmada>> getServisEksternalList() async {
     final res = await _api.get<List<ServisArmada>>(
       '/servis-armada',

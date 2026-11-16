@@ -13,7 +13,7 @@ import 'status_badge.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Detail QC sample: info sample + info sesi produksi terkait
-/// (produk, mesin, titik, operator, waktu mulai/selesai) — Fase A2.5.
+/// (produk, mesin, titik, operator, waktu mulai/selesai).
 class DetailQcScreen extends ConsumerWidget {
   const DetailQcScreen({super.key, required this.sampleId});
 

@@ -1,6 +1,6 @@
 import '../../../core/json_num.dart';
 
-/// Kategori notifikasi (Phase 16 action center). Dikirim server via field
+/// Kategori notifikasi (action center). Dikirim server via field
 /// `category`; nilai tak dikenal di-parse sebagai [NotificationCategory.sistem].
 ///
 /// Murni Dart (tanpa import Flutter) supaya bisa diuji sebagai unit test.
@@ -54,7 +54,7 @@ class AppNotification {
   /// URL/target aksi saat notifikasi di-tap (opsional).
   final String? actionUrl;
 
-  /// Kategori action center (Phase 16).
+  /// Kategori action center.
   final NotificationCategory category;
 
   /// Nama class notifikasi backend (informasi; mis. `MobileNotification`).

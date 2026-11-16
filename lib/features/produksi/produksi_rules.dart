@@ -1,6 +1,6 @@
 import 'models/production_session.dart';
 
-/// Logika bisnis murni modul Produksi (Phase 13).
+/// Logika bisnis murni modul Produksi.
 /// Tidak mengubah formula/validasi backend — hanya membungkus aturan
 /// yang sudah ada menjadi fungsi teruji supaya bisa dipakai ulang UI.
 
@@ -76,7 +76,7 @@ List<ProductionSession> filterRiwayatByStatus(
 }
 
 /// Validasi inline hasil output — satu-satunya aturan: angka valid &
-/// tidak negatif (sama dengan validasi `_SelesaikanSheet` Fase 2).
+/// tidak negatif (sama dengan validasi `_SelesaikanSheet`).
 String? validateHasilOutput(String raw) {
   final text = raw.trim().replaceAll(',', '.');
   if (text.isEmpty) return 'Hasil output wajib diisi.';

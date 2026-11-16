@@ -17,7 +17,7 @@ class VersionGateState {
   static const ok = VersionGateState(blocked: false);
 }
 
-/// Cek versi saat start (Fase A1.7):
+/// Cek versi saat start:
 /// force_update=true dan versi terpasang < min_version → layar blocking.
 ///
 /// Gagal jaringan saat cek TIDAK memblokir aplikasi (fail-open) —

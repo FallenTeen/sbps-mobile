@@ -12,7 +12,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 
-/// KM Harian Sheet (Fase 2) - Converted from full screen to sheet
+/// KM Harian Sheet
 /// Form sederhana: pilih kendaraan, lihat KM terakhir, update KM sekarang.
 /// ≤3 fields → use sheet pattern instead of route.
 class OdoAwalSheet extends ConsumerStatefulWidget {

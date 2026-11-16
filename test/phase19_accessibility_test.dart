@@ -11,7 +11,7 @@ import 'package:sbps_mobile/shared/widgets/status_pill.dart';
 import 'package:sbps_mobile/shared/widgets/sticky_action_bar.dart';
 import 'package:sbps_mobile/shared/widgets/submit_spinner.dart';
 
-/// PHASE 19 — ACCESSIBILITY + PERFORMANCE + RESPONSIVE.
+/// ACCESSIBILITY + PERFORMANCE + RESPONSIVE.
 ///
 /// Fokus pengujian perilaku yang dapat direproduksi di lingkungan test:
 /// - warna teks yang kontras (StatusPill filled amber → teks gelap),

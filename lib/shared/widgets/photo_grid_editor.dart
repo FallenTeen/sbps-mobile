@@ -8,7 +8,7 @@ import 'confirmation_dialog.dart';
 import 'photo_viewer_dialog.dart';
 import 'watermarked_camera_capture.dart';
 
-/// Grid foto editor — pola "Dokumentasi" (PHASE 06).
+/// Grid foto editor — pola "Dokumentasi".
 ///
 /// Satu komponen untuk menambah, preview, menghapus, dan mengambil ulang
 /// foto form. Dipakai Formulir Lapangan & Dokumentasi Produksi sehingga
@@ -186,7 +186,7 @@ class _GridOverlayButton extends StatelessWidget {
       // Tooltip message juga menjadi label Semantics untuk screen reader.
       message: tooltip,
       child: Container(
-        // Target sentuh 48dp (audit M-21; sebelumnya 32dp) — ikon tetap kecil
+        // Target sentuh 48dp (sebelumnya 32dp) — ikon tetap kecil
         // supaya overlay tidak menutupi thumbnail.
         width: 48,
         height: 48,

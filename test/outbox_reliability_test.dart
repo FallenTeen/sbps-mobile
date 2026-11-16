@@ -10,9 +10,9 @@ import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
 import 'package:sbps_mobile/core/outbox/outbox_sync_service.dart';
 import 'package:sbps_mobile/core/outbox/pending_action.dart';
 
-/// AUDIT ONLINE/OFFLINE — reliability mutation.
+/// ONLINE/OFFLINE — reliability mutation.
 ///
-/// Mengunci perbaikan pola "error saat kirim form, beberapa detik kemudian
+/// Pola "error saat kirim form, beberapa detik kemudian
 /// item muncul di halaman sinkronisasi, lalu butuh Sync manual":
 ///
 /// 1. `send()` tidak boleh melempar. `enqueue()` memanggilnya SETELAH item

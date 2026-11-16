@@ -12,7 +12,7 @@ import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'models/security_models.dart';
 
-/// Repository modul Security (Section 27, TD-F).
+/// Repository modul Security (Section 27).
 /// Mengelola Buku Tamu, Checklist Kantor, Laporan Darurat, dan Verifikasi Ritase Security.
 class SecurityRepository {
   SecurityRepository({
@@ -29,7 +29,7 @@ class SecurityRepository {
   static const _uuid = Uuid();
 
   // ---------------------------------------------------------------------------
-  // Buku Tamu (TD-F2)
+  // Buku Tamu
   // ---------------------------------------------------------------------------
 
   /// GET /security/buku-tamu/hari-ini
@@ -54,7 +54,6 @@ class SecurityRepository {
     }
   }
 
-  /// Submit Tamu Baru (TD-F2).
   Future<void> submitBukuTamu({
     required String nama,
     required int jumlahOrang,
@@ -95,7 +94,6 @@ class SecurityRepository {
     await _outbox.enqueue(action, _sync.send);
   }
 
-  /// Tandai Tamu Keluar (TD-F2).
   Future<void> tandaiKeluarBukuTamu(String tamuId) async {
     final clientUuid = _uuid.v4();
     final idempotencyKey = _uuid.v4();
@@ -120,10 +118,9 @@ class SecurityRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // Checklist Kantor (TD-F3)
+  // Checklist Kantor
   // ---------------------------------------------------------------------------
 
-  /// Submit Checklist Pemantauan Kantor (TD-F3).
   Future<void> submitChecklistKantor({
     required String periode, // 'harian_siang' | 'malam' | 'custom'
     required String jamPantau,
@@ -156,10 +153,10 @@ class SecurityRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // Laporan Darurat (TD-F4)
+  // Laporan Darurat
   // ---------------------------------------------------------------------------
 
-  /// Submit Laporan Darurat (TD-F4) — offline-first & kirim cepat.
+  /// Submit Laporan Darurat — offline-first & kirim cepat.
   Future<void> submitLaporanDarurat({
     required String kategori,
     required String judul,
@@ -195,7 +192,7 @@ class SecurityRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // Verifikasi Ritase Security (TD-E4 & TD-F5)
+  // Verifikasi Ritase Security
   // ---------------------------------------------------------------------------
 
   /// Mengambil daftar ritase yang sudah diverifikasi Logistik dan siap konfirmasi Security.
@@ -239,7 +236,7 @@ class SecurityRepository {
     }
   }
 
-  /// Verifikasi Keamanan Ritase oleh Security (TD-E4).
+  /// Verifikasi Keamanan Ritase oleh Security.
   Future<void> submitVerifikasiRitaseSecurity({
     required String ritaseId,
     required bool unitSesuai,

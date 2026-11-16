@@ -7,13 +7,13 @@ export 'app_colors.dart';
 /// Custom theme for SBPS Mobile Apps.
 ///
 /// Provides a polished, professional look with consistent design tokens
-/// across all screens. Uses a brick-red primary palette (Fase C0 UX plan)
+/// across all screens. Uses a brick-red primary palette
 /// with indigo & amber accents.
 class AppTheme {
   AppTheme._();
 
   // ── Color Palette ──────────────────────────────────────────────────────────
-  // Rencana Pengembangan UX Fase C0: primer teal → "brick red" (#DC2626).
+  // Primer "brick red" (#DC2626).
   // Secondary tetap indigo & tertiary tetap amber (kontras cukup dengan merah).
   // Error digeser ke merah tua (#B91C1C) agar tidak "sama" dengan primary
   // (dikombinasikan ikon ⚠ untuk status error, bukan hanya warna).
@@ -30,7 +30,7 @@ class AppTheme {
   static const Color _warning = Color(0xFFF59E0B);
 
   // ── Brand Gradient ─────────────────────────────────────────────────────────
-  /// Gradien identitas SBPS (Fase C0/C5): dipakai di splash, header ringkasan,
+  /// Gradien identitas SBPS: dipakai di splash, header ringkasan,
   /// AppBar modul utama, portal, dan badge "terdekat". Ganti di sini cukup
   /// untuk mengubah semua header gradient sekaligus.
   static const LinearGradient primaryGradient = LinearGradient(
@@ -47,7 +47,7 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
-  // ── Elevation & Depth (Fase C1) ────────────────────────────────────────────
+  // ── Elevation & Depth ──────────────────────────────────────────────────────
   // Tingkat shadow bertingkat untuk membedakan kedalaman visual:
   // Lv1 = kartu list biasa (flat), Lv2 = kartu penting/interaktif,
   // Lv3 = header/ringkasan & element mengambang.
@@ -234,7 +234,7 @@ class AppTheme {
     );
   }
 
-  /// Dark mode (Rencana Pengembangan UX §Bagian 2 — D1/D2).
+  /// Dark mode.
   static ThemeData get darkTheme {
     return _baseTheme(
       colorScheme: _darkColorScheme,

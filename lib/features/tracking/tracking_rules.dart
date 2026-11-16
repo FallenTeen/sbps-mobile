@@ -1,4 +1,4 @@
-/// Logika murni freshness tracking (Phase 15).
+/// Logika murni freshness tracking.
 ///
 /// Semua perhitungan bersumber dari timestamp AKTUAL server (`last_seen`,
 /// `aktif_sejak`). Tidak ada asumsi realtime: bila datanya lama, UI WAJIB

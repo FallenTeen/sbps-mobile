@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 /// lewat `context.colors.*` (ekstensi `AppThemeContext`).
 ///
 /// Dua instansi: `AppColors.light` (identik dengan konstanta lama) dan
-/// `AppColors.dark` (palet gelap — Rencana Pengembangan UX §Bagian 2).
+/// `AppColors.dark` (palet gelap).
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -85,7 +85,7 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Palet gelap (M3 dark): surface mendekati hitam, teks terang.
   /// Primary/gelap dicerahkan (tone 80) agar kontras AA di atas surface
-  /// gelap (Rencana §2.2 D1).
+  /// gelap.
   static const dark = AppColors(
     background: Color(0xFF0F1115),
     surface: Color(0xFF1A1D23),

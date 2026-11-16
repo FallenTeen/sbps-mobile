@@ -1,4 +1,4 @@
-/// Logika murni komposisi Attention dashbboard (Phase 15).
+/// Logika murni komposisi Attention dashbboard.
 ///
 /// Dashboard adalah attention-first: angka hanya tampil bila ADA tindakan /
 /// drill-down. Item dengan count 0 TIDAK dimunculkan. Role menentukan item

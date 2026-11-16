@@ -13,7 +13,7 @@ import '../../shared/widgets/portal_switch_button.dart';
 import '../armada/models/servis_armada.dart';
 import '../armada/servis_providers.dart';
 
-/// Layar Verifikasi Servis Eksternal untuk tim Workshop (TD-B7).
+/// Layar Verifikasi Servis Eksternal untuk tim Workshop.
 /// Workshop dapat melihat daftar servis eksternal dan menandainya
 /// "Terverifikasi" atau "Bermasalah" disertai catatan.
 class WorkshopVerifikasiEksternalScreen extends ConsumerStatefulWidget {

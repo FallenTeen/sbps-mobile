@@ -15,7 +15,7 @@ import 'package:sbps_mobile/shared/utils/feedback_copy.dart';
 import 'package:sbps_mobile/shared/utils/status_labels.dart';
 import 'package:sbps_mobile/shared/widgets/adaptive_nav_shell.dart';
 
-/// PHASE 18 — PROFILE + ROLE + SETTINGS + COPY.
+/// PROFILE + ROLE + SETTINGS + COPY.
 ///
 /// Fokus: copy ramah user (raw exception/enum wire tidak bocor), label
 /// status/peran resmi, role aktif selalu terlihat ("Bekerja sebagai: …"),

@@ -15,7 +15,7 @@ typedef PhotoPathsSnapshot = List<String> Function();
 /// Callback untuk restore isi form dari draft.
 typedef DraftRestorer = void Function(FormDraft draft);
 
-/// Controller autosave draft form (Rencana §1.3).
+/// Controller autosave draft form.
 ///
 /// Menangani:
 /// - **Debounced on-change** — tunggu jeda ±800ms tanpa perubahan baru simpan.

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-// Label status & peran yang ramah user (PERBAIKAN PHASE 18).
+// Label status & peran yang ramah user.
 //
 // Istilah resmi mengikuti docs/api-mobile.md backend; wire-value dari
 // server (snake_case/underscore/uppercase) tidak boleh ditampilkan

@@ -57,7 +57,7 @@ class AdaptiveNavShell extends StatelessWidget {
   final List<AdaptiveNavDestination> destinations;
 
   /// Role aktif — bila diisi, strip "Bekerja sebagai: …" ditampilkan
-  /// persisten di atas konten (perbaikan Phase 18). Nilai null (mis. layar
+  /// persisten di atas konten. Nilai null (mis. layar
   /// presensi-only) tidak menampilkan strip.
   final String? activeRole;
 
@@ -150,7 +150,7 @@ class AdaptiveNavShell extends StatelessWidget {
 }
 
 /// Strip tipis yang menampilkan role aktif ("Bekerja sebagai: …") secara
-/// persisten di atas konten — perbaikan Phase 18.
+/// persisten di atas konten.
 class _ActiveRoleBar extends StatelessWidget {
   const _ActiveRoleBar({required this.role});
 

@@ -26,7 +26,7 @@ import 'servis_status.dart';
 ///
 /// Menangani:
 /// - pilih armada (master) + konteks unit dari `GET /armada/saya`
-///   (tipe unit menentukan satuan ODO/HM yang relevan, sesuai Phase 08);
+///   (tipe unit menentukan satuan ODO/HM yang relevan);
 /// - prefill ODO/HM terkini dari unit;
 /// - kategori + keluhan;
 /// - autosave draft (server belum diketahui → isi tidak hilang);
@@ -58,7 +58,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
   final _odoController = TextEditingController();
   final _jamController = TextEditingController();
 
-  // Field Servis Eksternal (TD-B1, TD-B2)
+  // Field Servis Eksternal
   String _tipeServis = 'internal';
   final _namaBengkelController = TextEditingController();
   final _alamatBengkelController = TextEditingController();
@@ -581,7 +581,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
                               : null,
                     ),
                   ] else ...[
-                    // ── Form Eksternal (TD-B2) ─────────────────────────────
+                    // ── Form Eksternal ───────────────────────────────────
                     // Foto Bengkel (wajib, watermark + GPS)
                     Card(
                       margin: EdgeInsets.zero,
@@ -854,7 +854,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
 }
 
 /// Banner tipe unit — dipakai form servis supaya konteks ODO/HM jelas,
-/// konsisten dengan pola OdoAwalScreen (Phase 08).
+/// konsisten dengan pola OdoAwalScreen.
 class _UnitTypeBanner extends StatelessWidget {
   const _UnitTypeBanner({required this.isAlatBerat});
 

@@ -232,7 +232,7 @@ int navBranchFor(
   }
 }
 
-/// Destinasi nav shell role-aware (maksimal 4, sesuai rencana §5: Beranda,
+/// Destinasi nav shell role-aware (maksimal 4: Beranda,
 /// Tugas/Operasional, Presensi, Notifikasi). Field single-modul hanya
 /// Beranda + Presensi + Notifikasi (Beranda mereka sudah merupakan pekerjaan).
 /// Role tanpa akses modul (presensi-only) → Beranda + Notifikasi.

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/status_pill.dart';
 
-/// Label status QC (Fase A2.5).
+/// Label status QC.
 String qcStatusLabel(String status) => switch (status) {
   'menunggu_hasil' => 'Menunggu hasil',
   'lolos' => 'Lolos',

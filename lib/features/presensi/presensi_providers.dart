@@ -38,7 +38,7 @@ final assignmentsProvider = FutureProvider.autoDispose(
   (ref) => ref.watch(presensiRepositoryProvider).getAssignments(),
 );
 
-/// Titik yang dipilih user untuk alur check-in (Fase A1.4).
+/// Titik yang dipilih user untuk alur check-in.
 class SelectedTitikNotifier extends Notifier<Titik?> {
   @override
   Titik? build() => null;
@@ -148,7 +148,7 @@ final selectedTitikDistanceProvider = Provider<double?>((ref) {
 });
 
 // ---------------------------------------------------------------------------
-// Fase A1.4 — Check-in/out via outbox
+// Check-in/out via outbox
 // ---------------------------------------------------------------------------
 
 final outboxRepositoryProvider = Provider<OutboxRepository>((ref) {
@@ -177,14 +177,6 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
 /// Dipanggil dari [OutboxRepository.onChanged] — antrean berubah.
 /// Dipecah ke fungsi biasa supaya tidak menimbulkan siklus inferensi tipe
 /// antara `outboxRepositoryProvider` dan `pendingActionsProvider`.
-// void _onOutboxChanged(Ref ref) {
-//   ref.read(pendingCountProvider.notifier).reload();
-//   // Pending presensi berubah (check-in/out queued) — daftar aksi harus
-//   // ikut ter-update supaya mis. kartu bisa menampilkan "menunggu sinkron"
-//   // dan memblokir duplicate check-in.
-//   ref.invalidate(pendingActionsProvider);
-// }
-
 void _onOutboxChanged(Ref ref) {
   // Perbarui jumlah antrean. Daftar aksi pending ter-update otomatis
   // lewat StreamProvider (OutboxRepository.changes) — invalidate manual
@@ -330,7 +322,7 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
       AnalyticsService.presensiCheckinTap(
         endpoint == PendingEndpoint.presensiCheckIn ? 'check_in' : 'check_out',
       );
-      // Fase A1.6: kompres dulu (maks ~500KB, sisi 1600px) — path hasil
+      // kompres dulu (maks ~500KB, sisi 1600px) — path hasil
       // kompresi yang masuk outbox, bukan file asli kamera.
       final compressed = await ref
           .read(photoCompressionProvider)

@@ -182,7 +182,7 @@ class _ReviewRow extends StatelessWidget {
   }
 }
 
-/// Bottom sheet "Catat Slump Test" (Fase A2.5 + Phase 14):
+/// Bottom sheet "Catat Slump Test":
 /// Context → Actual → Catatan → Result → Review → Submit.
 class SlumpTestSheet extends ConsumerStatefulWidget {
   const SlumpTestSheet({
@@ -398,7 +398,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
 }
 
 /// Bottom sheet "Catat Uji Tekan" — sesi harus punya sample slump yang
-/// masih menunggu hasil. Phase 14 flow:
+/// masih menunggu hasil. Flow:
 /// Context → Target → Actual → Catatan → Result → Review → Submit.
 class UjiTekanSheet extends ConsumerStatefulWidget {
   const UjiTekanSheet({

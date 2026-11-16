@@ -26,7 +26,7 @@ class ProgressHariIniScreen extends StatelessWidget {
 }
 
 /// Konten progress per titik — dipakai mandiri (halaman penuh) maupun
-/// sebagai isi tab "Progress" di [sesi_aktif_screen.dart] (Phase 13:
+/// sebagai isi tab "Progress" di [sesi_aktif_screen.dart] (tab tidak boleh
 /// tab tidak boleh hanya redirect ke halaman lain).
 class ProgressHariIniContent extends ConsumerWidget {
   const ProgressHariIniContent({super.key});

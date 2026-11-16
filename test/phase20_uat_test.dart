@@ -28,7 +28,7 @@ import 'package:sbps_mobile/shared/widgets/status_pill.dart';
 import 'package:sbps_mobile/shared/widgets/sticky_action_bar.dart';
 import 'package:sbps_mobile/shared/widgets/submit_spinner.dart';
 
-/// PHASE 20 — UAT + REGRESSION + RELEASE CANDIDATE.
+/// UAT + REGRESSION + RELEASE CANDIDATE.
 ///
 /// Skenario UAT yang dapat direproduksi headless. Verifikasi perangkat fisik
 /// (kamera, GPS asli, FCM, background service, perangkat low-end) TIDAK di

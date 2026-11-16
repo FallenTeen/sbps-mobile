@@ -32,7 +32,7 @@ class UploadResult {
   final String? error;
 }
 
-/// Controller dokumentasi produksi/QC via outbox — Fase A2.7.
+/// Controller dokumentasi produksi/QC via outbox.
 ///
 /// Foto dikompres dulu ([PhotoCompressionService]), lalu dibuat SATU
 /// PendingAction `uploadMedia` berisi semua file: client_uuid dibuat

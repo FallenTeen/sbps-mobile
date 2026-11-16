@@ -1,4 +1,4 @@
-/// Logika murni pemantauan armada (Phase 10 — Armada Monitoring).
+/// Logika murni pemantauan armada.
 ///
 /// Semua peringatan diturunkan dari data yang benar-benar diambil dari API
 /// (`/master/armada`, `/armada/checklist-hari-ini`, `/servis-armada`);

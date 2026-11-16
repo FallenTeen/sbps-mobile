@@ -54,7 +54,7 @@ class ProyekHomeScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                   ],
 
-                  // Pekerjaan Menunggu Anda card (Fase 2)
+                  // Pekerjaan Menunggu Anda card
                   _PendingWorkCard(role: role),
                   const SizedBox(height: 16),
 
@@ -252,7 +252,7 @@ class _ModuleCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                // Pending badge (Fase 2)
+                // Pending badge
                 _PendingBadge(moduleKey: module.key, role: role),
                 const SizedBox(width: 8),
                 Icon(
@@ -416,7 +416,7 @@ class _TrackingStatusCard extends ConsumerWidget {
 
 // ── No Active Role ────────────────────────────────────────────────────────────
 
-// ── Pekerjaan Menunggu Anda Card (Fase 2) ───────────────────────────────────────
+// ── Pekerjaan Menunggu Anda Card ───────────────────────────────────────
 
 class _PendingWorkCard extends ConsumerWidget {
   const _PendingWorkCard({required this.role});
@@ -571,7 +571,7 @@ class _PendingItem extends StatelessWidget {
   }
 }
 
-// ── Pending Badge (Fase 2) ─────────────────────────────────────────────────────
+// ── Pending Badge ─────────────────────────────────────────────────────
 
 class _PendingBadge extends ConsumerWidget {
   const _PendingBadge({required this.moduleKey, required this.role});
@@ -636,7 +636,7 @@ class _PendingBadge extends ConsumerWidget {
   }
 }
 
-// ── Quick Actions per Role (Fase 2) ───────────────────────────────────────────────
+// ── Quick Actions per Role ─────────────────────────────────────────────
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.role});

@@ -15,7 +15,7 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../armada/models/armada.dart';
 import 'security_repository.dart';
 
-/// Layar Verifikasi Keamanan Ritase oleh Security (Section 27, TD-E4 & TD-F5).
+/// Layar Verifikasi Keamanan Ritase oleh Security (Section 27).
 class SecurityVerifikasiRitaseScreen extends ConsumerStatefulWidget {
   const SecurityVerifikasiRitaseScreen({super.key});
 

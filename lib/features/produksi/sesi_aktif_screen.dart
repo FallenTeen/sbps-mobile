@@ -26,7 +26,7 @@ import 'progress_hari_ini_screen.dart';
 import 'riwayat_produksi_screen.dart';
 
 /// Daftar sesi berstatus `berjalan` milik user + pintu ke Mulai/Riwayat/
-/// Progress. Phase 13: setiap tab memiliki konten nyata (tidak ada tab yang
+/// Progress. Setiap tab memiliki konten nyata (tidak ada tab yang
 /// hanya mengantar ke halaman lain), home menampilkan ringkasan
 /// "Produksi Hari Ini", dan kartu sesi menampilkan next action.
 class SesiAktifScreen extends ConsumerStatefulWidget {

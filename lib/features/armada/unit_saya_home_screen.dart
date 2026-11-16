@@ -17,7 +17,7 @@ import 'armada_providers.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
 
-/// Driver Home — pusat pekerjaan harian driver (dr docs §PHASE 07).
+/// Driver Home — pusat pekerjaan harian driver.
 ///
 /// Menjawab: unit saya apa, lokasi saya di mana, apa yang selesai, apa yang
 /// berikutnya, dan apa yang bermasalah hari ini.
@@ -98,7 +98,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
               );
             }
 
-            // M-03: driver bisa ditugaskan > 1 unit — Beranda harus bisa
+            // driver bisa ditugaskan > 1 unit — Beranda harus bisa
             // menampilkan & berpindah antar unit, bukan diam-diam memakai
             // unit pertama saja.
             ArmadaSaya armada = items.first;
@@ -219,7 +219,7 @@ class _GreetingHeader extends StatelessWidget {
   }
 }
 
-// ── Unit switcher (multi-unit, M-03) ─────────────────────────────────────────
+// ── Unit switcher (multi-unit) ────────────────────────────────────────────
 
 class _UnitSwitcher extends StatelessWidget {
   const _UnitSwitcher({
@@ -564,7 +564,7 @@ class _PekerjaanHariIni extends ConsumerWidget {
         .where((c) => c.armadaId == armada.id)
         .toList();
 
-    // M-05: submission offline (masih di outbox) tidak terlihat di data
+    // submission offline (masih di outbox) tidak terlihat di data
     // server — tanpa overlay ini driver menganggap datanya hilang dan
     // mengisi ulang. Flag step menyala juga untuk data yang masih lokal.
     final pending =
@@ -1271,7 +1271,7 @@ class _ShortcutTile extends StatelessWidget {
 
 String _labelJenis(String jenis) => labelJenisArmada(jenis);
 
-// ── Banner Dokumen Berkala (TD-C2) ──────────────────────────────────────────
+// ── Banner Dokumen Berkala ──────────────────────────────────────────────────
 
 class _DokumenBerkalaBanner extends StatelessWidget {
   const _DokumenBerkalaBanner({required this.dokumenList});

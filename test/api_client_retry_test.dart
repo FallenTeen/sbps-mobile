@@ -5,9 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sbps_mobile/core/api_client.dart';
 
-/// Mengunci perbaikan retry multipart: Dio melarang memakai ulang `FormData`
+/// Retry multipart: Dio melarang memakai ulang `FormData`
 /// yang sudah di-finalize, sehingga percobaan ulang WAJIB memakai
-/// `FormData.clone()`. Sebelum perbaikan, hiccup jaringan singkat pada request
+/// `FormData.clone()`. Hiccup jaringan singkat pada request
 /// berfoto membuat retry melempar `StateError` → outbox menandai
 /// "menunggu sinkronisasi" padahal perangkat sedang online.
 void main() {

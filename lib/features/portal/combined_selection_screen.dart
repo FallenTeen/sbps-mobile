@@ -10,7 +10,7 @@ import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/section_header.dart';
 
-/// Combined portal + role selection screen (Fase 2).
+/// Combined portal + role selection screen.
 /// Replaces separate /portal and /pilih-role screens.
 /// Shows both portal and role selection in one flow with smart defaults.
 class CombinedSelectionScreen extends ConsumerStatefulWidget {
@@ -26,7 +26,7 @@ class _CombinedSelectionScreenState
   AppPortal? _selectedPortal;
   String? _selectedRole;
 
-  /// M-22: auto-skip hanya boleh jalan SEKALI per instan layar. Tanpa flag,
+  /// Auto-skip hanya boleh jalan SEKALI per instan layar. Tanpa flag,
   /// setiap rebuild men-schedule ulang `_handleAutoSkip` (select + go berulang).
   bool _autoSkipDone = false;
 

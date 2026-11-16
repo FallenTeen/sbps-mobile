@@ -1,8 +1,7 @@
 import '../../core/api_client.dart';
 
-/// Copy standar PHASE 04 untuk umpan balik sinkronisasi outbox.
+/// Copy standar untuk umpan balik sinkronisasi outbox.
 ///
-/// Rujukan: docs/SBPS_MOBILE_TOTAL_REDEVELOPMENT_PLAN.md fase 4.
 /// JANGAN menampilkan "berhasil disimpan" bila server belum menerima data.
 
 /// Data tersimpan lokal, belum diterima server.

@@ -83,7 +83,7 @@ class FormulirController extends Notifier<FormulirSubmitState> {
       phase: UploadPhase.compressing,
     );
     try {
-      // Fase A1.6: kompres tiap foto sebelum masuk outbox.
+      // kompres tiap foto sebelum masuk outbox.
       final compressor = ref.read(photoCompressionProvider);
       final compressed = <String>[];
       for (final path in photoPaths) {

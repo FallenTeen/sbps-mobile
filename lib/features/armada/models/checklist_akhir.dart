@@ -1,4 +1,4 @@
-/// checklist akhir armada (Armada Driver → step ④) — MODEL SAJA, persiapan.
+/// Model checklist akhir armada (Armada Driver, step 4).
 library;
 
 /// Persiapan struktur data tanpa menunggu backend.

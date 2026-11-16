@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Banner ringan yang ditampilkan di atas form saat draft ditemukan
-/// (Rencana §1.3 — trigger pemulihan).
+/// Banner ringan yang ditampilkan di atas form saat draft ditemukan.
 ///
 /// Menawarkan dua opsi:
 /// - "Lanjutkan Draft" → mengisi form dari draft yang tersimpan.

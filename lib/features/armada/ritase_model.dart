@@ -80,7 +80,7 @@ class RitaseRecord {
 
   final String? catatan;
 
-  /// TD-E1: Blok Muatan (draft, opsional) diisi driver versi driver.
+  /// Blok Muatan (draft, opsional) diisi driver versi driver.
   final String? muatanJenis;
   final double? muatanJumlah;
   final String? muatanSatuan;

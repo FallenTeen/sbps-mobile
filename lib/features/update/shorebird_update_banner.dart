@@ -23,7 +23,7 @@ class ShorebirdUpdateState {
   final bool promptShown;
 }
 
-/// Kontroler update OTA (fase S4.3): cek patch di background, unduh otomatis
+/// Kontroler update OTA: cek patch di background, unduh otomatis
 /// saat ada patch baru, dan prompt restart hanya SETELAH unduhan berhasil.
 /// Prompt 1x per sesi — tidak menggate startup.
 class ShorebirdUpdateNotifier extends Notifier<ShorebirdUpdateState> {

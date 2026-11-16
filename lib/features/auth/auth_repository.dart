@@ -46,7 +46,7 @@ class AuthRepository {
 
   /// Registrasi akun baru. Role default backend: `SDM Lapangan Kondisional`.
   /// [passwordConfirmation] wajib diisi user; bila null dipakai [password]
-  /// sebagai kompatibilitas panggilan internal (Phase 18: UI selalu mengirim
+  /// sebagai kompatibilitas panggilan internal (UI selalu mengirim
   /// konfirmasi eksplisit).
   Future<User> register({
     required String name,
@@ -131,7 +131,7 @@ class AuthRepository {
     return User.fromJson(res.data!);
   }
 
-  /// Ubah password user (TD-G2) — POST /change-password
+  /// Ubah password user — POST /change-password
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,

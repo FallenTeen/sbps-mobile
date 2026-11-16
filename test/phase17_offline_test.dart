@@ -14,7 +14,7 @@ import 'package:sbps_mobile/features/outbox/data_belum_terkirim_screen.dart';
 import 'package:sbps_mobile/features/presensi/presensi_providers.dart';
 import 'package:sbps_mobile/features/proyek/pending_summary_provider.dart';
 
-/// PHASE 17 — OFFLINE / OUTBOX / DRAFT HARDENING.
+/// Offline / outbox / draft hardening.
 ///
 /// Fokus: status yang jujur (Queued != Synced), retry/backoff yang tidak
 /// mengubah "menunggu" jadi "gagal", endpoint baru via outbox (ajuan servis,

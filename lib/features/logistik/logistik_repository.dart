@@ -11,7 +11,7 @@ import '../armada/models/armada.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/presensi_providers.dart';
 
-/// Repository modul Logistik & Timbang (Section 27, TD-E).
+/// Repository modul Logistik & Timbang (Section 27).
 /// Mengelola antrean verifikasi ritase, data timbang, dan verifikasi muatan resmi.
 class LogistikRepository {
   LogistikRepository({
@@ -72,7 +72,7 @@ class LogistikRepository {
     }
   }
 
-  /// Submit Verifikasi Ritase oleh Logistik (TD-E3).
+  /// Submit Verifikasi Ritase oleh Logistik.
   Future<void> submitVerifikasiRitase({
     required String ritaseId,
     required double jumlahVerifikasi,

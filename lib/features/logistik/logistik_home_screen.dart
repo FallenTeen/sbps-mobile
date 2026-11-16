@@ -15,7 +15,7 @@ import '../../shared/widgets/status_pill.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
 
-/// Layar Antrean Verifikasi Ritase & Timbang untuk Role Logistik (Section 27, TD-E3).
+/// Layar Antrean Verifikasi Ritase & Timbang untuk Role Logistik (Section 27).
 class LogistikHomeScreen extends ConsumerStatefulWidget {
   const LogistikHomeScreen({super.key});
 

@@ -13,7 +13,7 @@ import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'security_repository.dart';
 
-/// Form Laporan Darurat Security (Section 27, TD-F4).
+/// Form Laporan Darurat Security (Section 27).
 class SecurityLaporanDaruratScreen extends ConsumerStatefulWidget {
   const SecurityLaporanDaruratScreen({super.key});
 

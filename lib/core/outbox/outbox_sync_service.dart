@@ -223,7 +223,7 @@ class OutboxSyncService {
           for (final path in action.photoLocalPaths)
             MultipartFileSpec('photos[]', path),
         ],
-        // Upload media generik (Fase A2.7): field `files[]`, 1-10 file.
+        // Upload media generik: field `files[]`, 1-10 file.
         PendingEndpoint.uploadMedia => [
           for (final path in action.photoLocalPaths)
             MultipartFileSpec('files[]', path),

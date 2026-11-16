@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Judul kontekstual (Rencana Pengembangan UX Fase A3) untuk AppBar layar
+/// Judul kontekstual untuk AppBar layar
 /// detail. Menampilkan "crumb" induk di baris kecil (mis. nama modul / item
 /// utama) plus judul utama, sehingga pengguna selalu tahu konteks mereka.
 /// Mengikuti konvensi light AppBar (foreground gelap di atas surface terang).

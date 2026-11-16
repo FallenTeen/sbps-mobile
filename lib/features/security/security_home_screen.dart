@@ -9,13 +9,13 @@ import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/status_pill.dart';
 import 'security_repository.dart';
 
-/// Modul /security Home Shell (Section 27, TD-F1).
+/// Modul /security Home Shell.
 ///
 /// Menampilkan pintasan utama:
-/// 1. Buku Tamu (TD-F2)
-/// 2. Checklist Pemantauan Kantor (TD-F3)
-/// 3. Laporan Darurat (TD-F4)
-/// 4. Verifikasi Ritase (TD-E4 & TD-F5)
+/// 1. Buku Tamu
+/// 2. Checklist Pemantauan Kantor
+/// 3. Laporan Darurat
+/// 4. Verifikasi Ritase
 class SecurityHomeScreen extends ConsumerWidget {
   const SecurityHomeScreen({super.key});
 
@@ -133,7 +133,7 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Pintasan Utama (TD-F1)
+            // Pintasan Utama
             Text(
               'Menu Operasional Security',
               style: TextStyle(
@@ -144,7 +144,6 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // 1. Buku Tamu (TD-F2)
             _SecurityMenuTile(
               title: 'Buku Tamu',
               subtitle: 'Catat tamu masuk, plat kendaraan & tandai keluar',
@@ -154,7 +153,6 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
-            // 2. Checklist Pemantauan Kantor (TD-F3)
             _SecurityMenuTile(
               title: 'Checklist Pemantauan Kantor',
               subtitle: 'Patroli & checklist keamanan fasilitas (siang / malam)',
@@ -164,7 +162,6 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
-            // 3. Laporan Darurat (TD-F4)
             _SecurityMenuTile(
               title: 'Laporan Darurat',
               subtitle: 'Lapor cepat insiden/bahaya ke Owner & Pimpinan',
@@ -176,7 +173,6 @@ class SecurityHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
-            // 4. Verifikasi Ritase (TD-E4 & TD-F5)
             _SecurityMenuTile(
               title: 'Verifikasi Keamanan Ritase',
               subtitle: 'Konfirmasi unit & fisik muatan armada yang verified logistik',

@@ -16,7 +16,7 @@ import 'qc_providers.dart';
 import 'status_badge.dart';
 
 /// Riwayat QC: search + filter status, badge warna per status, pagination
-/// tombol "Muat lagi" (Fase A2.5).
+/// tombol "Muat lagi".
 class RiwayatQcScreen extends ConsumerStatefulWidget {
   const RiwayatQcScreen({super.key, this.initialSelectedId});
 

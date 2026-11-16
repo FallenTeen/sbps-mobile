@@ -111,10 +111,10 @@ class ServisArmada {
   final double? totalBiaya;
   final List<ServisSparepartItem> spareparts;
 
-  /// Tipe servis: 'internal' atau 'eksternal' (TD-B1). Default 'internal'.
+  /// Tipe servis: 'internal' atau 'eksternal'. Default 'internal'.
   final String tipeServis;
 
-  // ── Servis Eksternal Detail (TD-B2..B7) ───────────────────────────────────
+  // ── Servis Eksternal Detail ───────────────────────────────────────────────
   final String? namaBengkel;
   final String? alamatBengkel;
   final double? latitude;
@@ -130,10 +130,10 @@ class ServisArmada {
   final String? verifikasiWorkshopOleh;
   final String? verifikasiWorkshopPada;
 
-  /// Foto nota bengkel (TD-B3, B4)
+  /// Foto nota bengkel
   final List<String> fotoNotaUrls;
 
-  /// Foto hasil pengerjaan (TD-B4, B5)
+  /// Foto hasil pengerjaan
   final List<String> fotoHasilUrls;
 
   bool get isEksternal => tipeServis.toLowerCase() == 'eksternal';

@@ -14,7 +14,7 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
 
-/// Form Input Buku Tamu Baru (Section 27, TD-F2).
+/// Form Input Buku Tamu Baru (Section 27).
 class SecurityBukuTamuFormScreen extends ConsumerStatefulWidget {
   const SecurityBukuTamuFormScreen({super.key});
 

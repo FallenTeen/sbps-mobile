@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/api_client.dart';
 import 'models/uploaded_file.dart';
 
-/// Repository upload generik (docs/api-mobile.md §11) — Fase A2.7.
+/// Repository upload generik (docs/api-mobile.md §11).
 /// Reuse pipeline kompresi [PhotoCompressionService] dilakukan di layer
 /// controller sebelum path file masuk sini / ke outbox.
 class UploadRepository {

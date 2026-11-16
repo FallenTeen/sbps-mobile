@@ -14,7 +14,7 @@ import 'models/master.dart';
 import 'produksi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// Halaman "Mulai Sesi" — wizard bertahap (Phase 13):
+/// Halaman "Mulai Sesi" — wizard bertahap:
 /// 1. Mesin (wajib)
 /// 2. Produk (wajib, auto-prefill bila hanya satu produk tersedia atau
 ///    mesin punya produk_default)

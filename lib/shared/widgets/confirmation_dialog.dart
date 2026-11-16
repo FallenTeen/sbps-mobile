@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Tingkatan severity dialog konfirmasi (docs/Rencana_Pengembangan_UX_Dialog_Konfirmasi.md §3):
+/// Tingkatan severity dialog konfirmasi:
 /// - [warning]: aksi reversibel/ringan (keluar form dengan draft, hapus foto draft) —
 ///   tombol confirm netral (bukan merah).
 /// - [destructive]: aksi permanen/final (logout, reject, hapus permanen, selesaikan job) —
@@ -24,7 +24,7 @@ class ConfirmationResult {
 }
 
 /// Komponen terpusat dialog konfirmasi — dipakai semua layar supaya pola
-/// warna/ikon/eksekusi tombol konsisten (lihat dokumen rencana UX §4).
+/// warna/ikon/eksekusi tombol konsisten.
 ///
 /// Penggunaan standar:
 /// ```dart
@@ -37,7 +37,7 @@ class ConfirmationResult {
 /// );
 /// if (result?.confirmed == true) { ... }
 /// ```
-/// Konfirmasi logout standar di semua layar (copy per rencana §3 Level 2).
+/// Konfirmasi logout standar di semua layar.
 Future<ConfirmationResult?> confirmLogout(BuildContext context) =>
     ConfirmationDialog.show(
       context,

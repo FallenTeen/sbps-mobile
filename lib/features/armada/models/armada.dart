@@ -49,13 +49,13 @@ class ArmadaSaya {
   final double? odoTerkini;
   final double? jamOperasionalTerkini;
 
-  /// Ringkasan dokumen berkala mendekati jatuh tempo (TD-C2).
+  /// Ringkasan dokumen berkala mendekati jatuh tempo.
   final List<DokumenBerkalaItem> dokumenBerkala;
 
   /// Jumlah helper yang aktif hari ini pada unit ini (endpoint armada/saya).
   final int helperAktifCount;
 
-  /// URL foto/thumbnail unit dari server (TD-C1).
+  /// URL foto/thumbnail unit dari server.
   final String? fotoUrl;
 
   /// True jika unit ini alat berat stasioner (pakai Jam Operasional, bukan ODO).
@@ -100,7 +100,7 @@ class ArmadaSaya {
   }
 }
 
-/// Item dokumen berkala (Pajak, STNK, KIR, dll) pada unit armada (TD-C2).
+/// Item dokumen berkala (Pajak, STNK, KIR, dll) pada unit armada.
 class DokumenBerkalaItem {
   const DokumenBerkalaItem({
     required this.jenis,
@@ -185,7 +185,7 @@ class RitaseItem {
   final String? proyek;
   final String? titik;
 
-  // TD-E1..E5: Verifikasi muatan & timbang
+  // Verifikasi muatan & timbang
   final bool? wajibJembatanTimbang;
   final String? statusVerifikasiLogistik;
   final String? statusVerifikasiSecurity;
@@ -623,7 +623,7 @@ class PengisianSolarItem {
   final String? catatan;
   final String? driver;
 
-  /// True jika foto nota tersedia (TD-A2).
+  /// True jika foto nota tersedia.
   final bool? notaLengkap;
 
   factory PengisianSolarItem.fromJson(Map<String, dynamic> json) =>

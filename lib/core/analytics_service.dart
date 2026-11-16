@@ -41,7 +41,7 @@ class AnalyticsService {
     } catch (_) {}
   }
 
-  // — Event standar Fase 0 —
+  // — Event standar —
 
   // Presensi
   static Future<void> presensiCheckinTap(String radiusStatus) =>
@@ -70,7 +70,7 @@ class AnalyticsService {
   // Servis
   static Future<void> servisAjuanSubmit() => log('servis_ajuan_submit');
 
-  // Workshop (updated Fase 2 - proper workshop module)
+  // Workshop
   static Future<void> workshopJobComplete() => log('workshop_job_complete');
 
   // Produksi

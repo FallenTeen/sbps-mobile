@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Skala ukuran ikon standar (Rencana §3.3 I4).
+/// Skala ukuran ikon standar.
 ///
 /// Skala resmi aplikasi: 16 (tooltip/inline), 20 (leading field), 32
 /// (prominent/leading lokasi), 64 (empty state). Dipakai agar tidak ada
@@ -19,7 +19,7 @@ abstract final class AppIconSize {
   static const double emptyState = 64;
 }
 
-/// Mapping ikon semantik ke [IconData] aktual (Rencana §3.3 I5).
+/// Mapping ikon semantik ke [IconData] aktual.
 ///
 /// Kalau nanti ingin mengganti satu ikon secara global (atau ikon set yang
 /// berbeda per dark/light/outdoor mode), cukup ubah di file ini — bukan

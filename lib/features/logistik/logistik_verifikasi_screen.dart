@@ -14,7 +14,7 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
 
-/// Form Verifikasi Ritase & Timbang oleh Logistik (Section 27, TD-E3).
+/// Form Verifikasi Ritase & Timbang oleh Logistik (Section 27).
 class LogistikVerifikasiScreen extends ConsumerStatefulWidget {
   const LogistikVerifikasiScreen({
     super.key,

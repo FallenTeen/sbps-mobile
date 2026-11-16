@@ -26,7 +26,7 @@ import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
-/// Dashboard operasional per role (Phase 15 — attention-first):
+/// Dashboard operasional per role (attention-first):
 ///
 /// 1. Perlu Perhatian   — item actionable (servis, PO, invoice, stok kritis,
 ///                        produksi menunggu QC). Angka hanya tampil bila ADA

@@ -1,6 +1,6 @@
 import 'models/qc_sample.dart';
 
-/// Logika bisnis murni modul QC (Phase 14) — queue-first inspection.
+/// Logika bisnis murni modul QC — queue-first inspection.
 /// Tidak mengubah formula atau validasi backend; hanya membungkus aturan
 /// yang sudah ada menjadi fungsi teruji supaya bisa dipakai ulang UI.
 

@@ -12,7 +12,7 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
 
-/// Layar Checklist Pemantauan Kantor (Section 27, TD-F3).
+/// Layar Checklist Pemantauan Kantor (Section 27).
 class SecurityChecklistScreen extends ConsumerStatefulWidget {
   const SecurityChecklistScreen({super.key});
 

@@ -1,9 +1,9 @@
-/// Model-model modul Security & Keamanan (Section 27, TD-F).
+/// Model-model modul Security & Keamanan (Section 27).
 library;
 
 import '../../../core/json_num.dart';
 
-/// Jenis kendaraan tamu (TD-F2).
+/// Jenis kendaraan tamu.
 enum KendaraanTamu {
   tanpaKendaraan('Tanpa Kendaraan'),
   motor('Motor'),
@@ -22,7 +22,7 @@ enum KendaraanTamu {
   }
 }
 
-/// Catatan Buku Tamu (TD-F2).
+/// Catatan Buku Tamu.
 class BukuTamuRecord {
   const BukuTamuRecord({
     required this.id,
@@ -104,7 +104,7 @@ class BukuTamuRecord {
   };
 }
 
-/// Item checklist kantor (TD-F3).
+/// Item checklist kantor.
 class ChecklistKantorItem {
   ChecklistKantorItem({
     required this.id,
@@ -137,7 +137,7 @@ class ChecklistKantorItem {
   );
 }
 
-/// Laporan Darurat (TD-F4).
+/// Laporan Darurat.
 class LaporanDaruratRecord {
   const LaporanDaruratRecord({
     required this.id,

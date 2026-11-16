@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Penyimpanan token Sanctum & role aktif via flutter_secure_storage
-/// (bukan SharedPreferences — sesuai keputusan Fase A1.2).
+/// (bukan SharedPreferences).
 class TokenStorage {
   TokenStorage({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();

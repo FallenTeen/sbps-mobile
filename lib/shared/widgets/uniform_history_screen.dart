@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../theme/app_theme.dart';
 
-/// Uniform History Screen Component (Fase 2)
+/// Uniform History Screen Component
 /// Provides consistent period chips, status filters, and pagination across history screens.
 ///
 /// Usage: Wrap your history screen content with this widget to get consistent UI.
@@ -55,7 +55,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
       appBar: AppBar(title: Text(widget.title), actions: []),
       body: Column(
         children: [
-          // Period Filter Chips (Fase 2)
+          // Period Filter Chips
           if (widget.showPeriodChips)
             _PeriodFilterSection(
               options: widget.periodOptions,
@@ -66,7 +66,7 @@ class _UniformHistoryScreenState extends ConsumerState<UniformHistoryScreen> {
               },
             ),
 
-          // Status Filter Chips (Fase 2)
+          // Status Filter Chips
           if (widget.showStatusChips)
             _StatusFilterSection(
               options: widget.statusOptions,
@@ -227,7 +227,7 @@ class _StatusFilterSection extends StatelessWidget {
   }
 }
 
-/// Pagination Widget (Fase 2)
+/// Pagination Widget
 /// Provides consistent "Load More" functionality for paginated lists.
 class PaginationWidget extends StatelessWidget {
   const PaginationWidget({

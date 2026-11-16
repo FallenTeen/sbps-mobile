@@ -102,7 +102,7 @@ final authRepositoryProvider = Provider<AuthRepository>(
 );
 
 /// Role aktif yang dikirim via header X-Active-Role di SETIAP request
-/// (stateless, ganti kapan saja tanpa re-login — Fase A2.2).
+/// (stateless, ganti kapan saja tanpa re-login).
 class ActiveRoleNotifier extends Notifier<String?> {
   @override
   String? build() => null;
@@ -155,8 +155,8 @@ List<String> app2RolesOf(User user) =>
 /// hanya di portal proyek dan user punya lebih dari satu role App 2.
 bool needsRoleChoice(User user) => app2RolesOf(user).length > 1;
 
-/// Flag sesi: tampilkan halaman pemilih role sebelum masuk home
-/// (Fase A2.2). Tidak diset saat restore sesi — role tersimpan langsung
+/// Flag sesi: tampilkan halaman pemilih role sebelum masuk home.
+/// Tidak diset saat restore sesi — role tersimpan langsung
 /// dipakai agar tidak mengganggu tiap kali app dibuka.
 class RoleChoicePendingNotifier extends Notifier<bool> {
   @override
@@ -232,7 +232,7 @@ class AuthController extends AsyncNotifier<User?> {
         portal: portal?.name ?? 'unknown',
       );
       // Login baru selalu mulai dari kondisi netral: pilihan portal dari sesi
-      // sebelumnya tidak boleh dibawa ke akun/sesi baru (lihat Rencana Dev. P2).
+      // sebelumnya tidak boleh dibawa ke akun/sesi baru.
       await ref.read(selectedPortalProvider.notifier).clear();
       return user;
     });
@@ -279,8 +279,8 @@ class AuthController extends AsyncNotifier<User?> {
     } finally {
       ref.read(roleChoicePendingProvider.notifier).set(false);
       await ref.read(activeRoleProvider.notifier).clear();
-      // Bersihkan pilihan portal agar login berikutnya selalu netral
-      // (lihat Rencana Dev. P1 — tidak boleh ada kebocoran antar akun).
+      // Bersihkan pilihan portal agar login berikutnya selalu netral.
+      // Tidak boleh ada kebocoran antar akun.
       await ref.read(selectedPortalProvider.notifier).clear();
       state = const AsyncData(null);
     }

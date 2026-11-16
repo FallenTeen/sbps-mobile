@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
-/// Jenis form yang mendukung autosave draft (Rencana §1.2).
+/// Jenis form yang mendukung autosave draft.
 ///
 /// Dipakai sebagai bagian dari `draftKey` + meta draft supaya restore
 /// bisa meneruskan ke instan form yang benar.

@@ -18,7 +18,7 @@ import '../produksi/models/production_session.dart';
 import '../produksi/produksi_providers.dart';
 import 'upload_providers.dart';
 
-/// Lampirkan dokumentasi foto produksi/QC (Fase A2.7): pilih 1-10 foto,
+/// Lampirkan dokumentasi foto produksi/QC: pilih 1-10 foto,
 /// opsional kaitkan ke sesi produksi (subject_type "ProductionSession"),
 /// kirim via outbox — offline = antrean otomatis.
 class DokumentasiScreen extends ConsumerStatefulWidget {

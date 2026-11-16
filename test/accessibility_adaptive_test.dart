@@ -334,7 +334,6 @@ void main() {
         child: ProduksiBarChart(items: _produksiItems),
       );
 
-      // fmtMingguLabel('2025-01-06') → '6/1'; fmtNum(120) → '120'
       expect(
         find.bySemanticsLabel(RegExp('Produksi minggu 6/1.*120 unit')),
         findsWidgets,

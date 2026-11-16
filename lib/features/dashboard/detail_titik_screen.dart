@@ -13,7 +13,7 @@ import 'fmt.dart';
 import 'models.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// Detail satu titik kerja (Fase A2.6): koordinat, ringkasan SDM &
+/// Detail satu titik kerja: koordinat, ringkasan SDM &
 /// armada aktif, RAB titik (jika role berhak), dan riwayat produksi
 /// hari ini.
 class DetailTitikScreen extends ConsumerWidget {

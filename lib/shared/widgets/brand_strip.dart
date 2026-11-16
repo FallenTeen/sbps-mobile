@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Strip gradien identitas SBPS (Fase C5) untuk diletakkan di `bottom`
+/// Strip gradien identitas SBPS untuk diletakkan di `bottom`
 /// AppBar modul utama. Memberi "kain merah" tipis pada header modul agar
 /// identitas visual konsisten dengan header gradien ringkasan.
 class BrandStrip extends StatelessWidget implements PreferredSizeWidget {

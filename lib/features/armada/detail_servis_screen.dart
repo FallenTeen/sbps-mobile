@@ -710,7 +710,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                   const SizedBox(height: 12),
                 ],
 
-                // Foto Nota Card (TD-B4)
+                // Foto Nota Card
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -776,7 +776,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                 ),
                 const SizedBox(height: 12),
 
-                // Foto Hasil Pengerjaan Card (TD-B4, TD-B5)
+                // Foto Hasil Pengerjaan Card
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -843,7 +843,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                 ),
                 const SizedBox(height: 12),
 
-                // Action Selesai untuk Driver (TD-B3)
+                // Action Selesai untuk Driver
                 if (item.isDikerjakan) ...[
                   SizedBox(
                     width: double.infinity,

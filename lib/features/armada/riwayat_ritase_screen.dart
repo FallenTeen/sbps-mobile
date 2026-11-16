@@ -332,7 +332,7 @@ class _RitaseCard extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
-            // TD-E2: Badge verifikasi ritase (Menunggu, Verified Logistik, Verified Security, Selisih)
+            // Badge verifikasi ritase (Menunggu, Verified Logistik, Verified Security, Selisih)
             if (ritase.hasVerifikasiData) ...[
               const SizedBox(height: 8),
               Wrap(

@@ -10,7 +10,7 @@ import '../../shared/widgets/bouncing_button.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
 
-/// Layar Daftar Buku Tamu Hari Ini (Section 27, TD-F2).
+/// Layar Daftar Buku Tamu Hari Ini (Section 27).
 class SecurityBukuTamuScreen extends ConsumerStatefulWidget {
   const SecurityBukuTamuScreen({super.key});
 

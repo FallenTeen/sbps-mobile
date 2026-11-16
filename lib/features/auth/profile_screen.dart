@@ -17,7 +17,7 @@ import 'auth_providers.dart';
 /// & data pending), keamanan (ganti password), dan logout
 /// (docs/api-mobile.md §5.5, §5.8).
 ///
-/// Perbaikan Phase 18: role aktif selalu terlihat ("Bekerja sebagai: …"),
+/// Role aktif selalu terlihat ("Bekerja sebagai: …"),
 /// ganti role melewati dialog konfirmasi, dan validasi ganti password
 /// mewajibkan kedua field (baru + konfirmasi) diisi bersamaan.
 class ProfileScreen extends ConsumerStatefulWidget {

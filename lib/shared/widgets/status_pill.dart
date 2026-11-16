@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Badge status terstandarisasi (Rencana Pengembangan UX Fase C3).
+/// Badge status terstandarisasi.
 ///
 /// Menggantikan pola `Container` manual yang berulang (bg warna α10% +
 /// teks 11px w700). Punya dua mode: [filled=false] = tinted (bg warna α12%

@@ -70,7 +70,7 @@ import '../features/formulir/formulir_screen.dart';
 import '../features/presensi/riwayat_screen.dart';
 
 /// Router dengan auth guard: tanpa token → /login, sudah login → /home.
-/// Portal selection ditambahkan setelah login.
+/// Portal selection setelah login.
 
 /// Daftar lengkap path route app (pola go_router tanpa query).
 ///

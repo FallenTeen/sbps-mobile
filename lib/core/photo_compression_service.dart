@@ -7,8 +7,7 @@ import 'package:path_provider/path_provider.dart';
 /// Fase unggahan yang bisa ditampilkan di UI thumbnail.
 enum UploadPhase { compressing, sending }
 
-/// Pipeline kompresi foto bersama untuk check-in, check-out, dan formulir
-/// (Fase A1.6).
+/// Pipeline kompresi foto bersama untuk check-in, check-out, dan formulir.
 ///
 /// - Target ukuran maksimum ~500 KB.
 /// - Sisi terpanjang di-resize maks [maxDim] px bila perlu.

@@ -50,7 +50,7 @@ class PortalSwitchButton extends ConsumerWidget {
           tooltip: 'Ganti portal',
           icon: const Icon(Icons.apps),
           onPressed: () async {
-            // M-10: konfirmasi dulu — ganti portal membatalkan navigasi ke
+            // Konfirmasi dulu — ganti portal membatalkan navigasi ke
             // layar sebelumnya, isian form yang belum dikirim bisa hilang.
             // Draft autosave tetap aman (tersimpan terpisah).
             final confirmed = await showDialog<bool>(
