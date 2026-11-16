@@ -270,7 +270,7 @@ class _SummaryHeader extends StatelessWidget {
               stat(
                 'Selesai Hari Ini',
                 '${summary.selesaiHariIni}',
-                color: const Color(0xFFB9F6CA),
+                color: context.colors.success,
               ),
             ],
           ),

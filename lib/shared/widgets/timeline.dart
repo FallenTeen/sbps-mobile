@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Status titik timeline.
-enum TimelineStatus { done, current, pending }
+enum TimelineStatus { done, current, pending, rejected }
 
 /// Model item garis waktu — pola "Timeline".
 class TimelineItem {
@@ -61,6 +61,7 @@ class _TimelineRow extends StatelessWidget {
       TimelineStatus.done => context.colors.success,
       TimelineStatus.current => context.colors.primary,
       TimelineStatus.pending => context.colors.textMuted,
+      TimelineStatus.rejected => context.colors.error,
     };
   }
 
@@ -69,6 +70,7 @@ class _TimelineRow extends StatelessWidget {
       TimelineStatus.done => Icons.check_circle_rounded,
       TimelineStatus.current => Icons.radio_button_checked_rounded,
       TimelineStatus.pending => Icons.radio_button_unchecked_rounded,
+      TimelineStatus.rejected => Icons.block_rounded,
     };
   }
 

@@ -197,7 +197,7 @@ class _StatusFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
 
     return statusAsync.when(
       loading: () => const SkeletonListView(itemCount: 1, padding: EdgeInsets.zero),
@@ -339,7 +339,7 @@ class _MonitorArmadaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     final color = armadaStatusColor(context, unit.status);
     final warnings = unitWarnings(
       status: unit.status,
@@ -504,9 +504,7 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceVariant =
-        Theme.of(context).extension<AppColors>()?.surfaceVariant ??
-        context.colors.surfaceVariant;
+    final surfaceVariant = context.colors.surfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

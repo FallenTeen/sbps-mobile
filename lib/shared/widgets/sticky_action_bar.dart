@@ -16,6 +16,8 @@ class StickyActionBar extends StatelessWidget {
     this.secondaryLabel,
     this.onSecondary,
     this.primaryIcon,
+    this.secondaryIcon,
+    this.note,
     this.showPrimaryLoading = false,
     this.secondaryDisabled = false,
     this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -30,6 +32,12 @@ class StickyActionBar extends StatelessWidget {
 
   /// Ikon di tombol utama (opsional).
   final IconData? primaryIcon;
+
+  /// Ikon di tombol sekunder (opsional, default chevron kiri).
+  final IconData? secondaryIcon;
+
+  /// Catatan di atas tombol (mis. peringatan sebelum submit).
+  final String? note;
 
   /// Jika `true`, tombol utama menampilkan spinner (submit in-flight).
   final bool showPrimaryLoading;
@@ -68,22 +76,34 @@ class StickyActionBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: padding,
-          child: hasSecondary
-              ? Row(
-                  children: [
-                    if (onSecondary != null) ...[
-                      Expanded(child: secondaryBtn(context)),
-                      const SizedBox(width: 12),
-                    ],
-                    Expanded(child: primaryBtn),
-                  ],
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(width: double.infinity, child: primaryBtn),
-                  ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (note != null && note!.isNotEmpty) ...[
+                Text(
+                  note!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.warning,
+                  ),
                 ),
+                const SizedBox(height: 8),
+              ],
+              hasSecondary
+                  ? Row(
+                      children: [
+                        if (onSecondary != null) ...[
+                          Expanded(child: secondaryBtn(context)),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(child: primaryBtn),
+                      ],
+                    )
+                  : SizedBox(width: double.infinity, child: primaryBtn),
+            ],
+          ),
         ),
       ),
     );
@@ -93,7 +113,7 @@ class StickyActionBar extends StatelessWidget {
     return OutlinedButton.icon(
       style: OutlinedButton.styleFrom(minimumSize: const Size(64, 48)),
       onPressed: secondaryDisabled ? null : onSecondary,
-      icon: const Icon(Icons.chevron_left_rounded, size: 18),
+      icon: Icon(secondaryIcon ?? Icons.chevron_left_rounded, size: 18),
       label: Text(secondaryLabel ?? 'Kembali'),
     );
   }

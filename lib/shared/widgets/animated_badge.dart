@@ -35,8 +35,8 @@ class AnimatedCountBadge extends StatelessWidget {
             '$count',
             key: ValueKey<int>(count),
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: fg,
             ),
           ),

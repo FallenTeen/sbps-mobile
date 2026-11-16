@@ -8,8 +8,8 @@ import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/status_pill.dart';
-import '../../shared/widgets/submit_spinner.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
@@ -181,7 +181,7 @@ Flexible(
                     width: double.infinity,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        minimumSize: const Size(64, 48),
                       ),
                       onPressed: checked.isEmpty
                           ? null
@@ -306,22 +306,10 @@ Flexible(
                 ),
               ),
               if (canProses)
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: FilledButton(
-                      onPressed: prosesState.busy
-                          ? null
-                          : () => _proses(request),
-                      child: prosesState.busy
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: SubmitSpinner(),
-                            )
-                          : const Text('Proses Request'),
-                    ),
-                  ),
+                StickyActionBar(
+                  primaryLabel: 'Proses Request',
+                  onPrimary: () => _proses(request),
+                  showPrimaryLoading: prosesState.busy,
                 ),
             ],
           );

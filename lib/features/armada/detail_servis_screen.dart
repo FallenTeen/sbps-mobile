@@ -12,6 +12,8 @@ import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/timeline.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../auth/auth_providers.dart';
 import 'models/servis_armada.dart';
@@ -851,14 +853,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                       child: FilledButton.icon(
                         onPressed: _isProcessing ? null : _selesaiServis,
                         icon: _isProcessing
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
+                            ? const SubmitSpinner(size: 18)
                             : const Icon(Icons.check_circle_outline),
                         label: const Text('Tandai Pengerjaan Selesai'),
                         style: FilledButton.styleFrom(
@@ -905,13 +900,7 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: _isProcessing
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
+                              ? const SubmitSpinner(size: 18)
                               : const Icon(Icons.check),
                           label: const Text('Setujui'),
                         ),
@@ -979,11 +968,25 @@ class ServisTimelineCard extends StatelessWidget {
               'Timeline Servis',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const Divider(height: 20),
-            for (var i = 0; i < steps.length; i++) ...[
-              _TimelineNode(step: steps[i], caption: _captionFor(i)),
-              if (i != steps.length - 1) _StepConnector(state: steps[i].state),
-            ],
+            const SizedBox(height: 12),
+            Timeline(
+              padding: EdgeInsets.zero,
+              items: [
+                for (var i = 0; i < steps.length; i++)
+                  TimelineItem(
+                    title: steps[i].label,
+                    subtitle: steps[i].state == ServisTimelineState.rejected
+                        ? item.alasanPenolakan
+                        : _captionFor(i),
+                    status: switch (steps[i].state) {
+                      ServisTimelineState.done => TimelineStatus.done,
+                      ServisTimelineState.current => TimelineStatus.current,
+                      ServisTimelineState.pending => TimelineStatus.pending,
+                      ServisTimelineState.rejected => TimelineStatus.rejected,
+                    },
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1005,97 +1008,6 @@ class ServisTimelineCard extends StatelessWidget {
           ? null
           : fmtTanggal(item.tanggalSelesai);
     }
-    // Node terminal "Ditolak": alasan penolakan sebagai caption.
-    return item.alasanPenolakan;
-  }
-}
-
-class _TimelineNode extends StatelessWidget {
-  const _TimelineNode({required this.step, this.caption});
-
-  final ServisTimelineStep step;
-  final String? caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (step.state) {
-      ServisTimelineState.done => context.colors.success,
-      ServisTimelineState.current => context.colors.primary,
-      ServisTimelineState.pending => Theme.of(
-        context,
-      ).colorScheme.outlineVariant,
-      ServisTimelineState.rejected => context.colors.error,
-    };
-    final icon = switch (step.state) {
-      ServisTimelineState.done => Icons.check_rounded,
-      ServisTimelineState.current => Icons.circle,
-      ServisTimelineState.pending => Icons.circle_outlined,
-      ServisTimelineState.rejected => Icons.block_rounded,
-    };
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  step.label,
-                  style: TextStyle(
-                    fontWeight: step.state == ServisTimelineState.current
-                        ? FontWeight.w700
-                        : FontWeight.w600,
-                    color: step.state == ServisTimelineState.pending
-                        ? Theme.of(context).colorScheme.onSurfaceVariant
-                        : color,
-                  ),
-                ),
-                if (caption != null && caption!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    caption!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StepConnector extends StatelessWidget {
-  const _StepConnector({required this.state});
-
-  final ServisTimelineState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final done = state == ServisTimelineState.done;
-    final color = done
-        ? context.colors.success
-        : Theme.of(context).colorScheme.outlineVariant;
-    return Padding(
-      padding: const EdgeInsets.only(left: 12),
-      child: Container(width: 2, height: 18, color: color),
-    );
+    return null;
   }
 }

@@ -86,7 +86,7 @@ class _MonitoringArmadaScreenState
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(armadaMonitoringProvider(_filter));
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
 
     return Scaffold(
       appBar: AppBar(
@@ -208,7 +208,7 @@ class _RangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final is7 = filter.dari != null;
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
 
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -536,7 +536,7 @@ class _UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     final statusColor = armadaStatusColor(context, unit.status);
 
     return Card(
@@ -778,7 +778,7 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       child: Column(
@@ -823,7 +823,7 @@ class _RekapTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
 
     return Card(
       child: Padding(

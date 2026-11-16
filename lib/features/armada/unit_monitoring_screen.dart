@@ -27,7 +27,7 @@ class UnitMonitoringScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     final color = armadaStatusColor(context, unit.status);
 
     final sayaAsync = ref.watch(armadaSayaProvider);
@@ -304,7 +304,7 @@ class _UnitInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -334,7 +334,7 @@ class _ServisTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final colors = context.colors;
     final color = servisStatusColor(item.status, context.colors);
 
     return Card(

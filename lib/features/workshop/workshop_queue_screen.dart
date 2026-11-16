@@ -218,7 +218,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                 stat(
                   'Selesai Hari Ini',
                   '${state.selesaiHariIniCount}',
-                  color: const Color(0xFFB9F6CA),
+                  color: context.colors.success,
                 ),
             ],
           ),

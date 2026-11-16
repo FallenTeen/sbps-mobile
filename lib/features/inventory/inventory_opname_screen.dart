@@ -8,7 +8,7 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
-import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../features/presensi/models/titik.dart';
 import '../presensi/presensi_providers.dart';
 import 'inventory_models.dart';
@@ -311,33 +311,20 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
         ],
       ),
       bottomNavigationBar: _hasChanges && _selectedTitikId != null
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: FilledButton(
-                  onPressed: opnameState.busy
-                      ? null
-                      : () {
-                          final titikId = _selectedTitikId!;
-                          final items = materialsAsync.value ?? [];
-                          final titiks = titikAsync.value ?? [];
-                          _onBottomAction(
-                            titiks: titiks,
-                            items: items,
-                            titikId: titikId,
-                          );
-                        },
-                  child: opnameState.busy
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: const SubmitSpinner(),
-                        )
-                      : Text(
-                          'Review & Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
-                        ),
-                ),
-              ),
+          ? StickyActionBar(
+              showPrimaryLoading: opnameState.busy,
+              onPrimary: () {
+                final titikId = _selectedTitikId!;
+                final items = materialsAsync.value ?? [];
+                final titiks = titikAsync.value ?? [];
+                _onBottomAction(
+                  titiks: titiks,
+                  items: items,
+                  titikId: titikId,
+                );
+              },
+              primaryLabel:
+                  'Review & Simpan Opname${_selisihCount(materialsAsync.value ?? []) > 0 ? ' (${_selisihCount(materialsAsync.value ?? const [])} selisih)' : ''}',
             )
           : null,
     );

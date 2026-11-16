@@ -23,6 +23,7 @@ import 'widgets/charts.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/notification_routes.dart';
+import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard operasional per role (Phase 15 — attention-first):
@@ -74,7 +75,7 @@ class DashboardHomeScreen extends ConsumerWidget {
             children: [
               const _SectionAttention(),
               const SizedBox(height: 20),
-              const _SectionLabel(text: 'Operasional Hari Ini'),
+              SectionHeader(title: 'Operasional Hari Ini', padding: const EdgeInsets.only(bottom: 8)),
               if (sections.showOverview) ...[
                 const _SectionOverview(),
                 const SizedBox(height: 20),
@@ -92,7 +93,7 @@ class DashboardHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
               if (sections.showFinancial) ...[
-                const _SectionLabel(text: 'Ringkasan Finansial'),
+                SectionHeader(title: 'Ringkasan Finansial', padding: const EdgeInsets.only(bottom: 8)),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.payments_outlined),
@@ -110,7 +111,7 @@ class DashboardHomeScreen extends ConsumerWidget {
                 const _InvoiceCard(),
                 const SizedBox(height: 20),
               ],
-              const _SectionLabel(text: 'Aktivitas Terbaru'),
+              SectionHeader(title: 'Aktivitas Terbaru', padding: const EdgeInsets.only(bottom: 8)),
               const _SectionRecentActivity(),
             ],
           ),
@@ -123,23 +124,6 @@ class DashboardHomeScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 // Judul section
 // ---------------------------------------------------------------------------
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: context.colors.textPrimary,
-      ),
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Section 1: Perlu Perhatian (attention-first, actionable)

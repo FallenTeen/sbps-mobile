@@ -16,8 +16,8 @@ import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/status_pill.dart';
-import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../armada/servis_status.dart';
 import '../armada/models/servis_armada.dart';
@@ -373,7 +373,7 @@ class _WorkshopJobDetailContentState
                 ),
               ),
             ),
-            SafeArea(child: _buildBottomBar(job, items, waitingSparepart)),
+            _buildBottomBar(job, items, waitingSparepart),
           ],
         );
       },
@@ -430,65 +430,24 @@ class _WorkshopJobDetailContentState
       );
     }
     if (job.status == WorkshopJobStatus.menunggu) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: FilledButton.icon(
-            onPressed: _isSubmitting ? null : _startWork,
-            icon: _isSubmitting
-                ? const SubmitSpinner(size: 18)
-                : const Icon(Icons.play_arrow, size: 20),
-            label: Text('Mulai Pengerjaan'),
-          ),
-        ),
+      return StickyActionBar(
+        primaryLabel: 'Mulai Pengerjaan',
+        primaryIcon: Icons.play_arrow,
+        showPrimaryLoading: _isSubmitting,
+        onPrimary: _startWork,
       );
     }
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (waitingSparepart)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Masih menunggu sparepart dari inventori — '
-                'pastikan request sudah beres sebelum Tandai Selesai.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: context.colors.warning,
-                ),
-              ),
-            ),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _isSubmitting ? null : _requestSparepart,
-                  icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                  label: const Text('Request Sparepart'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => _markComplete(items),
-                  icon: _isSubmitting
-                      ? const SubmitSpinner(size: 18)
-                      : const Icon(Icons.check, size: 18),
-                  label: Text('Tandai Selesai'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return StickyActionBar(
+      secondaryLabel: 'Request Sparepart',
+      onSecondary: _isSubmitting ? null : _requestSparepart,
+      primaryLabel: 'Tandai Selesai',
+      primaryIcon: Icons.check,
+      showPrimaryLoading: _isSubmitting,
+      onPrimary: () => _markComplete(items),
+      note: waitingSparepart
+          ? 'Masih menunggu sparepart dari inventori. '
+                'Pastikan request sudah beres sebelum Tandai Selesai.'
+          : null,
     );
   }
 

@@ -11,6 +11,8 @@ class SectionHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.trailing,
+    this.leadingIcon,
+    this.helper,
     this.padding = const EdgeInsets.only(left: 16, right: 16, bottom: 8),
   });
 
@@ -20,6 +22,12 @@ class SectionHeader extends StatelessWidget {
   /// Widget trailing opsional (mis. `TextButton` "Lihat Semua").
   final Widget? trailing;
 
+  /// Ikon kecil di depan judul (opsional, untuk form/profile section).
+  final IconData? leadingIcon;
+
+  /// Teks bantuan di bawah judul (opsional).
+  final String? helper;
+
   final EdgeInsetsGeometry padding;
 
   @override
@@ -28,16 +36,34 @@ class SectionHeader extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (leadingIcon != null) ...[
+            Icon(leadingIcon, size: 18, color: context.colors.primary),
+            const SizedBox(width: 8),
+          ],
           Expanded(
-            child: Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: context.colors.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                if (helper != null && helper!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    helper!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: context.colors.textTertiary,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           if (trailing != null) ...[

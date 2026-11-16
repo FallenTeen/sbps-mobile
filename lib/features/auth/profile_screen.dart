@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/app_preferences.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../notifikasi/notifikasi_providers.dart';
 import '../portal/portal_providers.dart';
@@ -198,10 +199,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 20),
 
           // ── Role Aktif ──────────────────────────────────────────────────────
-          _SectionHeader(
-            icon: Icons.badge_outlined,
-            label: 'Role Aktif',
+          SectionHeader(
+            leadingIcon: Icons.badge_outlined,
+            title: 'Role Aktif',
             helper: 'Menentukan menu dan data yang Anda lihat.',
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 8),
           Container(
@@ -267,10 +269,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 24),
 
           // ── Portal ──────────────────────────────────────────────────────────
-          _SectionHeader(
-            icon: Icons.apps_outlined,
-            label: 'Portal',
+          SectionHeader(
+            leadingIcon: Icons.apps_outlined,
+            title: 'Portal',
             helper: 'Aplikasi yang sedang Anda pakai.',
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 8),
           Card(
@@ -293,10 +296,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 24),
 
           // ── Aktivitas ───────────────────────────────────────────────────────
-          _SectionHeader(
-            icon: Icons.notifications_active_outlined,
-            label: 'Aktivitas',
+          SectionHeader(
+            leadingIcon: Icons.notifications_active_outlined,
+            title: 'Aktivitas',
             helper: 'Lacak notifikasi dan data offline.',
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 8),
           Card(
@@ -329,9 +333,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 24),
 
           // ── Preferensi (tampilan) ───────────────────────────────────────────
-          _SectionHeader(
-            icon: Icons.palette_outlined,
-            label: 'Preferensi',
+          SectionHeader(
+            leadingIcon: Icons.palette_outlined,
+            title: 'Preferensi',
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 8),
           SegmentedButton<ThemeMode>(
@@ -373,7 +378,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SectionHeader(icon: Icons.person_outline, label: 'Data Diri'),
+                SectionHeader(leadingIcon: Icons.person_outline, title: 'Data Diri', padding: EdgeInsets.zero),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameCtrl,
@@ -415,10 +420,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 24),
 
           // ── Keamanan ────────────────────────────────────────────────────────
-          _SectionHeader(
-            icon: Icons.lock_outline,
-            label: 'Keamanan',
+          SectionHeader(
+            leadingIcon: Icons.lock_outline,
+            title: 'Keamanan',
             helper: 'Kelola password akun Anda.',
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 8),
           Card(
@@ -466,47 +472,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.label, this.helper});
-
-  final IconData icon;
-  final String label;
-  final String? helper;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (helper != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  helper!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

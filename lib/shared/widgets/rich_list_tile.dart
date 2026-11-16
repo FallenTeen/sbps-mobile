@@ -115,8 +115,8 @@ class RichListTile extends StatelessWidget {
                                 child: Text(
                                   meta!,
                                   style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
                                     color:
                                         metaColor ??
                                         context.colors.textTertiary,

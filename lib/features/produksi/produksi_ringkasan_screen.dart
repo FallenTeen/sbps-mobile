@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/action_card.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../auth/auth_providers.dart';
 import 'models/production_session.dart';
@@ -401,7 +402,7 @@ class _QuickActions extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _ActionCard(
+              child: ActionCard(
                 icon: Icons.add_circle_outline,
                 title: 'Mulai Sesi',
                 subtitle: 'Produksi baru',
@@ -410,7 +411,7 @@ class _QuickActions extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _ActionCard(
+              child: ActionCard(
                 icon: Icons.list_alt_outlined,
                 title: 'Sesi Aktif',
                 subtitle: 'Lihat & selesaikan',
@@ -423,7 +424,7 @@ class _QuickActions extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _ActionCard(
+              child: ActionCard(
                 icon: Icons.history,
                 title: 'Riwayat',
                 subtitle: 'Riwayat produksi',
@@ -432,7 +433,7 @@ class _QuickActions extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _ActionCard(
+              child: ActionCard(
                 icon: Icons.trending_up,
                 title: 'Progress',
                 subtitle: 'Output hari ini',
@@ -442,47 +443,6 @@ class _QuickActions extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, size: 28, color: theme.colorScheme.primary),
-              const SizedBox(height: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

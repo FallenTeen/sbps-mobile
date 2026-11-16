@@ -455,7 +455,7 @@ class _UnitSayaSection extends StatelessWidget {
                         height: 8,
                         decoration: BoxDecoration(
                           color: aktif
-                              ? const Color(0xFF4ADE80)
+                              ? context.colors.success
                               : context.colors.warning,
                           shape: BoxShape.circle,
                         ),

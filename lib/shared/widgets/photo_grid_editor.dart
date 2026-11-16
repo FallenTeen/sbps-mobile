@@ -125,7 +125,7 @@ class PhotoGridEditor extends ConsumerWidget {
                     child: Hero(
                       tag: tag,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
                         child: Image.file(
                           File(paths[index]),
                           fit: BoxFit.cover,

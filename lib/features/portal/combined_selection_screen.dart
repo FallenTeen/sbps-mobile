@@ -8,6 +8,7 @@ import 'portal_providers.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
+import '../../shared/widgets/section_header.dart';
 
 /// Combined portal + role selection screen (Fase 2).
 /// Replaces separate /portal and /pilih-role screens.
@@ -151,13 +152,9 @@ class _CombinedSelectionScreenState
                   children: [
                     // Portal selection
                     if (canPresensi && canProyek) ...[
-                      Text(
-                        'Pilih Portal',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
+                      SectionHeader(
+                        title: 'Pilih Portal',
+                        padding: EdgeInsets.zero,
                       ),
                       const SizedBox(height: 12),
                       _PortalSelection(
@@ -174,13 +171,9 @@ class _CombinedSelectionScreenState
                     // Role selection (only for Proyek portal)
                     if ((canProyek && !canPresensi) ||
                         _selectedPortal == AppPortal.proyek) ...[
-                      Text(
-                        'Pilih Peran',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
+                      SectionHeader(
+                        title: 'Pilih Peran',
+                        padding: EdgeInsets.zero,
                       ),
                       const SizedBox(height: 12),
                       _RoleSelection(
@@ -198,21 +191,9 @@ class _CombinedSelectionScreenState
                     // Submit button
                     SizedBox(
                       width: double.infinity,
-                      height: 54,
                       child: FilledButton(
                         onPressed: _canSubmit() ? _submit : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: context.colors.primary,
-                          disabledBackgroundColor: context.colors.primary
-                              .withValues(alpha: 0.3),
-                        ),
-                        child: const Text(
-                          'Lanjut',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: const Text('Lanjut'),
                       ),
                     ),
                     SizedBox(height: 32),
@@ -382,106 +363,86 @@ class _PortalOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      child: Material(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(20),
-        elevation: isSelected ? 2 : 1,
-        shadowColor: (gradient as LinearGradient).colors.first.withValues(
-          alpha: 0.15,
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isSelected
-                    ? (gradient as LinearGradient).colors.first
-                    : context.colors.border,
-                width: isSelected ? 2 : 1,
+    final accent = (gradient as LinearGradient).colors.first;
+    return Material(
+      color: context.colors.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? accent : context.colors.border,
+              width: isSelected ? 2 : 1,
+            ),
+            color: isSelected ? accent.withValues(alpha: 0.04) : null,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: Colors.white),
               ),
-            ),
-            child: Row(
-              children: [
-                // Icon with gradient background
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (gradient as LinearGradient).colors.first
-                            .withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: context.colors.textPrimary,
                       ),
-                    ],
-                  ),
-                  child: Icon(icon, size: 28, color: Colors.white),
-                ),
-                const SizedBox(width: 16),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: (gradient as LinearGradient).colors.first,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.colors.textTertiary,
-                          height: 1.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Selection indicator
-                if (isSelected)
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: (gradient as LinearGradient).colors.first
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      Icons.check_circle,
-                      size: 20,
-                      color: (gradient as LinearGradient).colors.first,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: context.colors.textSecondary,
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    const SizedBox(height: 6),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textTertiary,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  size: 20,
+                  color: accent,
+                )
+              else
+                Icon(
+                  Icons.circle_outlined,
+                  size: 20,
+                  color: context.colors.border,
+                ),
+            ],
           ),
         ),
       ),
@@ -534,12 +495,11 @@ class _RoleOption extends StatelessWidget {
     return Material(
       color: context.colors.card,
       borderRadius: BorderRadius.circular(16),
-      elevation: isSelected ? 2 : 1,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Container(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -548,6 +508,9 @@ class _RoleOption extends StatelessWidget {
                   : context.colors.border,
               width: isSelected ? 2 : 1,
             ),
+            color: isSelected
+                ? context.colors.primary.withValues(alpha: 0.04)
+                : null,
           ),
           child: Row(
             children: [
@@ -577,14 +540,16 @@ class _RoleOption extends StatelessWidget {
                         color: context.colors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _descriptionForRole(role),
-                      style: TextStyle(
-                        color: context.colors.textTertiary,
-                        fontSize: 12,
+                    if (_descriptionForRole(role).isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        _descriptionForRole(role),
+                        style: TextStyle(
+                          color: context.colors.textTertiary,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -592,7 +557,7 @@ class _RoleOption extends StatelessWidget {
                 Icon(
                   Icons.check_circle,
                   color: context.colors.primary,
-                  size: 24,
+                  size: 22,
                 ),
             ],
           ),

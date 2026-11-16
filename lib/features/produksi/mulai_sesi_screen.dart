@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../presensi/models/titik.dart';
 import '../presensi/presensi_providers.dart';
 import '../titik/titik_selector.dart';
@@ -516,53 +517,18 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
   }
 
   Widget _buildBottomNav(List<ProdukMaster> produkList, bool busy) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).dividerColor,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            if (_currentStep > 0)
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _prevStep,
-                  icon: const Icon(Icons.arrow_back, size: 18),
-                  label: const Text('Kembali'),
-                ),
-              ),
-            if (_currentStep > 0) const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: FilledButton.icon(
-                onPressed: busy
-                    ? null
-                    : _isLastStep
-                        ? _submit
-                        : () => _nextStep(produkList),
-                icon: Icon(
-                  _isLastStep ? Icons.play_arrow : Icons.arrow_forward,
-                  size: 18,
-                ),
-                label: Text(
-                  busy
-                      ? 'Memulai...'
-                      : _isLastStep
-                          ? 'Mulai Sesi'
-                          : 'Lanjut',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return StickyActionBar(
+      primaryLabel: busy
+          ? 'Memulai...'
+          : _isLastStep
+              ? 'Mulai Sesi'
+              : 'Lanjut',
+      primaryIcon: _isLastStep ? Icons.play_arrow : Icons.arrow_forward,
+      onPrimary: _isLastStep ? _submit : () => _nextStep(produkList),
+      showPrimaryLoading: busy,
+      secondaryLabel: _currentStep > 0 ? 'Kembali' : null,
+      onSecondary: _prevStep,
+      secondaryIcon: Icons.arrow_back,
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
+import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/queue_card.dart';
@@ -99,9 +100,10 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
               ],
             ),
           ),
-          error: (error, _) => _ErrorCard(
+          error: (error, _) => ErrorState(
             message: 'Gagal memuat ringkasan.',
             onRetry: () => ref.invalidate(inventorySummaryProvider),
+            padding: const EdgeInsets.symmetric(vertical: 24),
           ),
           data: (summary) {
             final pendingCount = summary.requestPendingCount;
@@ -412,46 +414,6 @@ class _AttentionTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.cloud_off_rounded,
-            color: context.colors.error,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.colors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
-        ],
       ),
     );
   }

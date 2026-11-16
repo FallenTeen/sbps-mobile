@@ -698,14 +698,7 @@ class _WorkingCard extends StatelessWidget {
                   ),
                 ),
                 icon: busy
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.colors.error,
-                        ),
-                      )
+                    ? const SubmitSpinner(size: 18)
                     : Icon(Icons.logout_rounded),
                 label: Text(switch (busyPhase) {
                   UploadPhase.compressing => 'Mengompres foto...',
