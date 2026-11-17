@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:workmanager/workmanager.dart';
@@ -30,7 +31,7 @@ class TrackingWatchdog {
 
   /// Idempotent, Android only. Gagal registrasi tidak memblokir tracking.
   static Future<void> ensureRegistered() async {
-    if (!Platform.isAndroid) return;
+    if (kIsWeb || !Platform.isAndroid) return;
     try {
       if (!_initialized) {
         await Workmanager().initialize(callbackDispatcher);
