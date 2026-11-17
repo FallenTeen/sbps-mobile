@@ -224,7 +224,7 @@ void main() {
     });
   });
 
-  group('OutboxSyncService.send — path & autentikasi per endpoint', () {
+  group('OutboxSyncService.send - path & autentikasi per endpoint', () {
     late _FakeApiClient api;
     late OutboxRepository repo;
     late OutboxSyncService service;
@@ -337,7 +337,7 @@ void main() {
     });
   });
 
-  group('syncNow — backoff & override manual', () {
+  group('syncNow - backoff & override manual', () {
     late _FakeApiClient api;
     late OutboxRepository repo;
     late OutboxSyncService service;
@@ -428,7 +428,7 @@ void main() {
     });
   });
 
-  group('DraftRepository — siklus hidup & pembersihan file', () {
+  group('DraftRepository - siklus hidup & pembersihan file', () {
     late DraftRepository repo;
 
     setUp(() async {
@@ -499,7 +499,7 @@ void main() {
     });
   });
 
-  group('Data Belum Terkirim — status yang jujur', () {
+  group('Data Belum Terkirim - status yang jujur', () {
     Widget wrap(OutboxRepository repo) => ProviderScope(
       overrides: [
         outboxRepositoryProvider.overrideWithValue(repo),

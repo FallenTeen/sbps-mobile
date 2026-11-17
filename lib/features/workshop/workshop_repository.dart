@@ -8,7 +8,7 @@ import '../../core/outbox/pending_action.dart';
 import '../armada/models/servis_armada.dart';
 import 'workshop_models.dart';
 
-/// Repository modul Workshop — Antrian Kerja (Section 14c).
+/// Repository modul Workshop - Antrian Kerja (Section 14c).
 /// Mengelola antrian servis, detail job, checklist, foto bukti, dan
 /// request sparepart.
 class WorkshopRepository {
@@ -25,7 +25,7 @@ class WorkshopRepository {
   final OutboxSyncService _sync;
   static const _uuid = Uuid();
 
-  /// GET /servis-armada — Antrian workshop (servis yang disetujui/dikerjakan).
+  /// GET /servis-armada - Antrian workshop (servis yang disetujui/dikerjakan).
   /// Filter status: 'disetujui' (menunggu), 'dikerjakan', 'selesai'.
   Future<List<WorkshopJob>> getAntrianServis({String? status}) async {
     final res = await _api.get<List<WorkshopJob>>(
@@ -40,7 +40,7 @@ class WorkshopRepository {
   ///
   /// HANYA pekerjaan yang benar-benar masuk antrian: `disetujui` (menunggu),
   /// `dikerjakan`, atau `selesai`. `diajukan` & `ditolak` BUKAN pekerjaan
-  /// workshop — ditolak TIDAK boleh tampil sebagai pending.
+  /// workshop - ditolak TIDAK boleh tampil sebagai pending.
   static List<WorkshopJob> antrianFromRaw(Object? raw) {
     final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
     final items =
@@ -58,7 +58,7 @@ class WorkshopRepository {
     ];
   }
 
-  /// GET /servis-armada/{id} — Detail job servis beserta todo items.
+  /// GET /servis-armada/{id} - Detail job servis beserta todo items.
   Future<WorkshopJobDetail> getDetailJob(String id) async {
     final res = await _api.get<WorkshopJobDetail>(
       '/servis-armada/$id',
@@ -69,13 +69,13 @@ class WorkshopRepository {
     return res.data!;
   }
 
-  /// POST /servis-armada/{id}/mulai — Mulai mengerjakan servis.
+  /// POST /servis-armada/{id}/mulai - Mulai mengerjakan servis.
   Future<void> mulaiPengerjaan(String id) async {
     final res = await _api.post<Object?>('/servis-armada/$id/mulai');
     _ensureSuccess(res);
   }
 
-  /// POST /workshop/job/{id}/todo/{todoId}/toggle — Toggle status todo item.
+  /// POST /workshop/job/{id}/todo/{todoId}/toggle - Toggle status todo item.
   Future<WorkshopTodoItem> toggleTodoItem({
     required String jobId,
     required String todoId,
@@ -91,7 +91,7 @@ class WorkshopRepository {
     return res.data!;
   }
 
-  /// POST /workshop/job/{id}/todo/{todoId}/photo — Upload foto bukti todo.
+  /// POST /workshop/job/{id}/todo/{todoId}/photo - Upload foto bukti todo.
   /// Lewat outbox (attachment satu file `photo`): offline → foto tetap
   /// tersimpan di perangkat dan dikirim otomatis. Retry memakai
   /// Idempotency-Key yang SAMA persis.
@@ -113,7 +113,7 @@ class WorkshopRepository {
     return _outbox.enqueue(action, _sync.send);
   }
 
-  /// POST /workshop/job/{id}/request-sparepart — Request sparepart dari
+  /// POST /workshop/job/{id}/request-sparepart - Request sparepart dari
   /// inventory untuk job ini. Lewat outbox + route ber-middleware
   /// idempotency: retry tidak menggandakan order sparepart.
   Future<OutboxSendResult> requestSparepart({
@@ -138,7 +138,7 @@ class WorkshopRepository {
     return _outbox.enqueue(action, _sync.send);
   }
 
-  /// POST /servis-armada/{id}/selesai — Tandai servis selesai.
+  /// POST /servis-armada/{id}/selesai - Tandai servis selesai.
   Future<void> tandaiSelesai({
     required String id,
     String? catatanWorkshop,

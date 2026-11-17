@@ -79,7 +79,7 @@ class BackgroundLocationService {
   }
 
   /// Pastikan channel notifikasi FGS ada (flutter_background_service TIDAK
-  /// membuat channel custom — hanya channel default bila channelId null).
+  /// membuat channel custom - hanya channel default bila channelId null).
   /// Sekaligus membersihkan channel lama yang mungkin masih ada di perangkat
   /// (sbps_tracking, sbps_tracking_v2) dengan importance yang mengganggu.
   static Future<void> _ensureTrackingChannel() async {
@@ -93,7 +93,7 @@ class BackgroundLocationService {
       // pasti bisa tampil (best-effort, dialog OS hanya muncul sekali).
       await impl.requestNotificationsPermission();
       // Importance.min + tanpa suara/getar: notifikasi FGS wajib ada
-      // (ketentuan Android) tapi harus diam total — tracking bukan
+      // (ketentuan Android) tapi harus diam total - tracking bukan
       // peristiwa yang perlu mengganggu pengguna.
       await impl.createNotificationChannel(
         const AndroidNotificationChannel(
@@ -116,7 +116,7 @@ class BackgroundLocationService {
         } catch (_) {}
       }
     } catch (_) {
-      // Best-effort — guard di startTracking menangani sisanya.
+      // Best-effort - guard di startTracking menangani sisanya.
     }
   }
 

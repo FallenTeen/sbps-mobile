@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:geolocator/geolocator.dart';
@@ -175,7 +175,7 @@ class LocationBufferService {
   List<TrackPoint> snapshot() => List.unmodifiable(_points);
 
   /// Gabungkan titik yang ditulis oleh background service isolate
-  /// (langsung ke Hive box) ke list in-memory â€” dedupe by `id`.
+  /// (langsung ke Hive box) ke list in-memory - dedupe by `id`.
   Future<void> syncFromStore() async {
     final box = await _box();
     final raw = box.get('points');
@@ -191,11 +191,11 @@ class LocationBufferService {
         _points.removeRange(0, _points.length - _maxPoints);
       }
     } catch (_) {
-      // Data korup di box â€” biarkan in-memory untuk dipersist ulang.
+      // Data korup di box - biarkan in-memory untuk dipersist ulang.
     }
   }
 
-  /// Append SATU titik langsung ke Hive â€” untuk panggilan dari
+  /// Append SATU titik langsung ke Hive - untuk panggilan dari
   /// background service isolate yang punya instance/memory sendiri
   /// (tidak bisa memakai instance LocationBufferService utama).
   static Future<void> appendPointIsolate({
@@ -460,7 +460,7 @@ class LocationBufferService {
   static Future<bool> getPresensiOpenCached() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     if (box.get('presensi_open') != 'true') return false;
-    // Cache hanya berlaku hari ini — tolak sisa cache dari kemarin
+    // Cache hanya berlaku hari ini - tolak sisa cache dari kemarin
     // agar tracking tidak bocor ke sesi non-kerja.
     final savedDate = box.get('presensi_open_date');
     if (savedDate == null) return false;
@@ -469,7 +469,7 @@ class LocationBufferService {
   }
 
   /// Penanda sudah menampilkan pesan "tracking terputus" untuk episode
-  /// masalah yang sama â€” agar pengguna tidak dibanjiri pesan berulang.
+  /// masalah yang sama - agar pengguna tidak dibanjiri pesan berulang.
   static Future<void> setInterruptedNotified() async {
     final box = await Hive.openBox<String>(LocationBufferService._boxName);
     await box.put('interrupted_notified', 'true');
@@ -561,6 +561,6 @@ class LocationBufferService {
 
   Future<void> dispose() async {
     stop();
-    // Box dibiarkan terbuka â€” Hive menangani lifecycle global.
+    // Box dibiarkan terbuka - Hive menangani lifecycle global.
   }
 }

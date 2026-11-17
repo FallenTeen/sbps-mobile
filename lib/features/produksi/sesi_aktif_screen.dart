@@ -21,7 +21,6 @@ import 'models/master.dart';
 import 'models/production_session.dart';
 import 'produksi_providers.dart';
 import 'produksi_rules.dart';
-import 'produksi_ringkasan_screen.dart';
 import 'progress_hari_ini_screen.dart';
 import 'riwayat_produksi_screen.dart';
 
@@ -63,7 +62,7 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
     final sesi = ref.watch(sesiAktifProvider);
     // Peta sessionId → sample menunggu_hasil: penentu tombol QC per kartu.
     final waitingQc = ref.watch(waitingSamplesBySessionProvider);
-    // Progress per titik hari ini — dasar ringkasan "Produksi Hari Ini".
+    // Progress per titik hari ini - dasar ringkasan "Produksi Hari Ini".
     final progress = ref.watch(titikProgressProvider);
 
     return Scaffold(
@@ -71,17 +70,14 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
         title: const Text('Sesi Produksi'),
         actions: [
           AppTopBarActions(
+            showNotification: false,
             extraTrailingActions: [
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (value) {
                   switch (value) {
                     case 'ringkasan':
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const ProduksiRingkasanScreen(),
-                        ),
-                      );
+                      context.push('/produksi/ringkasan');
                       break;
                     case 'dokumentasi':
                       context.push('/dokumentasi');
@@ -160,9 +156,9 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
             progress: progress,
             waitingQc: waitingQc,
           ),
-          // Tab 2: Progress — konten nyata per titik hari ini.
+          // Tab 2: Progress - konten nyata per titik hari ini.
           const ProgressHariIniContent(),
-          // Tab 3: Riwayat — konten nyata dengan filter yang berfungsi.
+          // Tab 3: Riwayat - konten nyata dengan filter yang berfungsi.
           const RiwayatProduksiContent(),
         ],
       ),
@@ -281,7 +277,7 @@ Future<void> _refreshAll(WidgetRef ref) async {
   ref.invalidate(waitingSamplesBySessionProvider);
 }
 
-/// Ringkasan "Produksi Hari Ini" — menjawab: berapa sesi, total output,
+/// Ringkasan "Produksi Hari Ini" - menjawab: berapa sesi, total output,
 /// sesi berjalan, sesi menunggu QC, dan yang butuh perhatian.
 class _ProduksiHariIniHeader extends StatelessWidget {
   const _ProduksiHariIniHeader({required this.summary});
@@ -307,7 +303,7 @@ class _ProduksiHariIniHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Produksi Hari Ini — $today',
+                  'Produksi Hari Ini - $today',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -451,7 +447,7 @@ class _SessionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${session.produkNama ?? 'Produk'} — '
+                    '${session.produkNama ?? 'Produk'} - '
                     '${session.mesinNama ?? 'Mesin'}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -669,7 +665,7 @@ class _ErrorView extends StatelessWidget {
 }
 
 /// Form penutupan sesi: hasil_output wajib, catatan opsional, dan
-/// konsumsi bahan baku manual (items[]) — kosong = hitung otomatis BOM.
+/// konsumsi bahan baku manual (items[]) - kosong = hitung otomatis BOM.
 class _SelesaikanSheet extends ConsumerStatefulWidget {
   const _SelesaikanSheet({required this.session});
 
@@ -725,7 +721,7 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
       final hasil = double.parse(_hasilCtrl.text.replaceAll(',', '.'));
       final output = '${fmtNum(hasil)} $_satuan'.trim();
       messenger.showSnackBar(
-        SnackBar(content: Text('Sesi selesai — $output tercatat.')),
+        SnackBar(content: Text('Sesi selesai - $output tercatat.')),
       );
     } else if (result.queued) {
       Navigator.of(context).pop();

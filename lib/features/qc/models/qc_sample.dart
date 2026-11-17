@@ -1,6 +1,6 @@
 import '../../../core/json_num.dart';
 
-/// Sample QC (slump test / uji tekan) — docs/api-mobile.md §10.
+/// Sample QC (slump test / uji tekan) - docs/api-mobile.md §10.
 ///
 /// Bentuk `produksi` berbeda antar endpoint: respons slump/uji-tekan
 /// memakai string, detail QC memakai string juga, sedangkan item riwayat
@@ -38,7 +38,7 @@ class QcSample {
   final DateTime? createdAt;
 
   /// Waktu perubahan status terakhir (hasil uji tekan direkam).
-  /// Opsional — digunakan sebagai tanggal "selesai" sampel bila ada.
+  /// Opsional - digunakan sebagai tanggal "selesai" sampel bila ada.
   final DateTime? updatedAt;
 
   final String? sessionId;

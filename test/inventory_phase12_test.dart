@@ -38,7 +38,7 @@ OpnameItem _opname({
 }
 
 void main() {
-  group('Business rule stok — isStokRendah tidak berubah', () {
+  group('Business rule stok - isStokRendah tidak berubah', () {
     test('stok saat ini < minimum = rendah', () {
       final item = _stok(stokSaatIni: 4, stokMinimum: 5);
       expect(item.isStokRendah, isTrue);
@@ -55,7 +55,7 @@ void main() {
     });
   });
 
-  group('filterStok — pencarian', () {
+  group('filterStok - pencarian', () {
     test('query kosong mengembalikan semua', () {
       final items = [_stok(nama: 'Oli'), _stok(id: 'm2', nama: 'Ban')];
       expect(rules.filterStok(items).length, 2);
@@ -79,7 +79,7 @@ void main() {
     });
   });
 
-  group('filterStok — kategori', () {
+  group('filterStok - kategori', () {
     test('kategori null/Semua menampilkan semua', () {
       final items = [
         _stok(id: 'm1', kategori: 'Bahan Baku'),
@@ -100,7 +100,7 @@ void main() {
     });
   });
 
-  group('filterStok — stok rendah (filter + sort)', () {
+  group('filterStok - stok rendah (filter + sort)', () {
     test('hanyaRendah menampilkan item di bawah minimum saja', () {
       final items = [
         _stok(id: 'aman', stokSaatIni: 10, stokMinimum: 5),
@@ -146,7 +146,7 @@ void main() {
     });
   });
 
-  group('opnameReview — fisik vs sistem', () {
+  group('opnameReview - fisik vs sistem', () {
     test('fisik kosong tidak dihitung', () {
       final review = rules.opnameReview(
         [_opname(sistem: 10)],
@@ -193,7 +193,7 @@ void main() {
     });
   });
 
-  group('opnameSubmitItems — payload outbox', () {
+  group('opnameSubmitItems - payload outbox', () {
     test('hanya item dengan nilai fisik yang dikirim', () {
       final items = rules.opnameSubmitItems(
         [_opname(id: 'o1'), _opname(id: 'o2')],
@@ -227,7 +227,7 @@ void main() {
     });
   });
 
-  group('outstandingRequestItemIds — status per item request', () {
+  group('outstandingRequestItemIds - status per item request', () {
     InventoryRequest buildReq(List<InventoryRequestItem> items) =>
         InventoryRequest(
           id: 'req1',

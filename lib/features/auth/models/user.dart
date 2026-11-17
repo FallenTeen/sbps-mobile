@@ -1,4 +1,4 @@
-/// Model user dari GET /user — per audit (api-audit-report.md §4.1), objek
+// Model user dari GET /user - per audit (api-audit-report.md §4.1), objek
 /// user dikembalikan LANGSUNG sebagai `data`, bukan dibungkus `data.user`.
 /// Field `karyawan` ada di root objek; nilainya null berarti akun belum
 /// terhubung ke data karyawan (prasyarat presensi/formulir/produksi/tracking).

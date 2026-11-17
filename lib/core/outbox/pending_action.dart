@@ -60,7 +60,7 @@ enum PendingEndpoint {
 
   /// Endpoint multipart generik `POST /upload` dengan field `files[]`
   /// (1-10 file, docs/api-mobile.md §11.1). `client_uuid` dikirim sebagai
-  /// FORM FIELD — sync service menyuntikkannya dari [PendingAction.clientUuid].
+  /// FORM FIELD - sync service menyuntikkannya dari [PendingAction.clientUuid].
   bool get isUploadMedia => this == uploadMedia;
 
   /// Endpoint multipart dengan file bernama (bukan `photo`/`photos[]`),
@@ -78,12 +78,12 @@ enum PendingStatus { pending, syncing, success, failed }
 
 /// Satu aksi presensi yang menunggu dikirim ke server.
 ///
-/// Disimpan sebagai peta JSON di Hive box `outbox` — foto TIDAK disimpan
+/// Disimpan sebagai peta JSON di Hive box `outbox` - foto TIDAK disimpan
 /// sebagai base64, hanya path file lokal di [photoLocalPath].
 ///
 /// [idempotencyKey] dikirim ulang PERSIS sama pada setiap percobaan
 /// (middleware Idempotency-Key backend mengembalikan respons asli saat
-/// retry — lihat docs/api-mobile.md bagian Idempotency).
+/// retry - lihat docs/api-mobile.md bagian Idempotency).
 class PendingAction {
   PendingAction({
     required this.id,
@@ -104,7 +104,7 @@ class PendingAction {
 
   final String id;
 
-  /// UUID v4 unik per aksi — tidak boleh dipakai ulang antar aksi.
+  /// UUID v4 unik per aksi - tidak boleh dipakai ulang antar aksi.
   final String clientUuid;
 
   final PendingEndpoint endpoint;
@@ -113,7 +113,7 @@ class PendingAction {
   final Map<String, String> payloadJson;
 
   /// Body JSON untuk endpoint non-multipart ([PendingEndpoint.isJson]),
-  /// mis. sesi produksi. `client_uuid` TIDAK perlu diisi di sini —
+  /// mis. sesi produksi. `client_uuid` TIDAK perlu diisi di sini -
   /// sync service menyuntikkannya dari [clientUuid] saat kirim.
   final Map<String, dynamic> payloadData;
 

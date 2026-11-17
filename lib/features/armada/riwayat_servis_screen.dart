@@ -15,7 +15,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import 'servis_status.dart';
 
-/// Screen daftar servis armada — berfungsi sebagai WORK QUEUE:
+/// Screen daftar servis armada - berfungsi sebagai WORK QUEUE:
 /// kartu berisi unit, kategori, keluhan, tanggal, pengaju, status, dan
 /// next action; di atasnya ada ringkasan jumlah per status (dari server).
 class RiwayatServisScreen extends ConsumerStatefulWidget {

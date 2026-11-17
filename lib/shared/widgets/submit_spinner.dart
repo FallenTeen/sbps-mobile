@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 /// Spinner kecil untuk tombol submit yang sengaja di-disable selama
 /// proses berjalan (fill abu M3).
 ///
-/// Memakai [disabledForeground] (onSurface α38% — sama dengan disabled
+/// Memakai [disabledForeground] (onSurface α38% - sama dengan disabled
 /// foreground bawaan Material) supaya spinner tetap terbaca di mode terang
 /// maupun gelap, menggantikan pola `color: Colors.white` yang tak terlihat
 /// di atas fill abu.

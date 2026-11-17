@@ -1,6 +1,6 @@
 # SBPS Mobile
 
-Aplikasi Presensi & Proyek (SBPS) — Flutter unified app (staging/production via `--dart-define-from-file=env/*.json`).
+Aplikasi Presensi & Proyek (SBPS) - Flutter unified app (staging/production via `--dart-define-from-file=env/*.json`).
 
 ## Ringkasan
 
@@ -14,7 +14,7 @@ Aplikasi Presensi & Proyek (SBPS) — Flutter unified app (staging/production vi
 ## Prasyarat
 
 - Flutter 3.38.5
-- Shorebird CLI (`shorebird doctor` hijau) — untuk rilis/patch OTA
+- Shorebird CLI (`shorebird doctor` hijau) - untuk rilis/patch OTA
 - `android/key.properties` + `upload-keystore.jks` lokal untuk build release bertanda tangan (gitignored)
 
 ## Perintah dasar
@@ -31,7 +31,7 @@ flutter run --dart-define-from-file=env/production.json
 ## Rilis & OTA (Shorebird)
 
 - **Release baru** (perubahan native/versi baru): naikkan `version:` di `pubspec.yaml`, lalu `shorebird release android --build-number <N> --dart-define-from-file=env/production.json`.
-- **Patch OTA** (perubahan Dart-only): `shorebird patch android --dart-define-from-file=env/production.json` — patch aktif pada pembukaan app berikutnya.
+- **Patch OTA** (perubahan Dart-only): `shorebird patch android --dart-define-from-file=env/production.json` - patch aktif pada pembukaan app berikutnya.
 - Detail: `docs/SHOREBIRD-RUNBOOK.md`.
 
 ## CI/CD (Codemagic)

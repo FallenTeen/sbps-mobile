@@ -8,7 +8,7 @@ class TrackingRepository {
 
   final ApiClient _api;
 
-  /// POST /tracking/batch — idempotent via `batch_id` di body: retry
+  /// POST /tracking/batch - idempotent via `batch_id` di body: retry
   /// dengan batch_id sama mengembalikan hasil sebelumnya (duplicate:true)
   /// tanpa menduplikasi baris lokasi.
   Future<BatchSendResult> sendBatch({
@@ -32,7 +32,7 @@ class TrackingRepository {
     );
   }
 
-  /// GET /tracking/active-users — khusus Owner / Admin Keuangan.
+  /// GET /tracking/active-users - khusus Owner / Admin Keuangan.
   Future<List<ActiveUser>> getActiveUsers() async {
     final res = await _api.get<Map<String, dynamic>>(
       '/tracking/active-users',
@@ -48,7 +48,7 @@ class TrackingRepository {
     ];
   }
 
-  /// GET /tracking/hari-ini/{userId} — khusus Owner / Admin Keuangan.
+  /// GET /tracking/hari-ini/{userId} - khusus Owner / Admin Keuangan.
   /// 403 = bukan role berwenang; 422 = target tanpa data karyawan.
   Future<TrailData> getHariIni(String userId) async {
     final res = await _api.get<TrailData>(

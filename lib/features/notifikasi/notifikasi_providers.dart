@@ -55,7 +55,7 @@ class NotificationsController extends AsyncNotifier<NotificationsPage> {
 
   /// Tandai semua belum dibaca sebagai sudah dibaca: update lokal optimis,
   /// lalu sinkron berurutan ke server. Gagal jaringan tidak menggagalkan
-  /// tampilan — state lokal tetap "dibaca", server tersinkron saat refresh.
+  /// tampilan - state lokal tetap "dibaca", server tersinkron saat refresh.
   Future<void> markAllRead() async {
     final current = state.value;
     if (current == null) return;
@@ -85,7 +85,7 @@ final notificationsProvider =
       NotificationsController.new,
     );
 
-/// Badge jumlah belum dibaca — dipisah agar murah di-refresh tanpa
+/// Badge jumlah belum dibaca - dipisah agar murah di-refresh tanpa
 /// memuat seluruh daftar.
 class UnreadCountNotifier extends Notifier<int> {
   @override

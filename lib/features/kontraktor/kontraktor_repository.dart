@@ -10,7 +10,7 @@ class KontraktorRepository {
 
   final ApiClient _api;
 
-  /// GET /kontraktor/proyek — Daftar proyek kontrak klien.
+  /// GET /kontraktor/proyek - Daftar proyek kontrak klien.
   Future<List<ProyekKontrakItem>> getProyekList() async {
     final res = await _api.get<List<ProyekKontrakItem>>(
       '/kontraktor/proyek',
@@ -31,7 +31,7 @@ class KontraktorRepository {
     return res.data ?? const [];
   }
 
-  /// GET /kontraktor/proyek/{id} — Detail proyek kontrak (progress produksi, RAB, invoice, chat).
+  /// GET /kontraktor/proyek/{id} - Detail proyek kontrak (progress produksi, RAB, invoice, chat).
   Future<DetailProyekKontrak> getProyekDetail(String id) async {
     final res = await _api.get<DetailProyekKontrak>(
       '/kontraktor/proyek/$id',
@@ -42,7 +42,7 @@ class KontraktorRepository {
     return res.data!;
   }
 
-  /// GET /kontraktor/invoice — Daftar seluruh invoice proyek kontrak.
+  /// GET /kontraktor/invoice - Daftar seluruh invoice proyek kontrak.
   Future<List<InvoiceKontrakItem>> getInvoiceList() async {
     final res = await _api.get<List<InvoiceKontrakItem>>(
       '/kontraktor/invoice',
@@ -63,7 +63,7 @@ class KontraktorRepository {
     return res.data ?? const [];
   }
 
-  /// POST /kontraktor/komunikasi — Kirim pesan komunikasi pada proyek kontrak.
+  /// POST /kontraktor/komunikasi - Kirim pesan komunikasi pada proyek kontrak.
   Future<KomunikasiLogItem> sendMessage({
     required String proyekId,
     required String pesan,

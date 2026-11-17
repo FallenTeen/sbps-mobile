@@ -17,7 +17,7 @@ import 'armada_providers.dart';
 import 'unit_saya_home_screen.dart';
 import 'models/armada.dart';
 
-/// ArmadaHomeScreen — role-aware menu.
+/// ArmadaHomeScreen - role-aware menu.
 /// Menu ditampilkan berdasarkan sub-permission role yang login,
 /// dikelompokkan per section dengan judul.
 class ArmadaHomeScreen extends ConsumerWidget {
@@ -63,116 +63,120 @@ class ArmadaHomeScreen extends ConsumerWidget {
           ],
         ),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
         child: RefreshIndicator(
-        onRefresh: () async {
-          HapticFeedback.lightImpact();
-          ref.invalidate(armadaSayaProvider);
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Header
-            Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colors.primary.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(_iconForRole(activeRole), color: Colors.white, size: 28),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Armada',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+          onRefresh: () async {
+            HapticFeedback.lightImpact();
+            ref.invalidate(armadaSayaProvider);
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.colors.primary.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _iconForRole(activeRole),
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Armada',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _subtitleForRole(activeRole),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                          const SizedBox(height: 2),
+                          Text(
+                            _subtitleForRole(activeRole),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+              SizedBox(height: 20),
 
-            // Untuk driver: Kendaraan Saya tampil di atas
-            if (!isManager && showKendaraanSaya) ...[
-              _buildKendaraanSayaHeader(context),
-              const SizedBox(height: 10),
-              ..._armadaSection(ref),
-              SizedBox(height: 24),
-            ],
+              // Untuk driver: Kendaraan Saya tampil di atas
+              if (!isManager && showKendaraanSaya) ...[
+                _buildKendaraanSayaHeader(context),
+                const SizedBox(height: 10),
+                ..._armadaSection(ref),
+                SizedBox(height: 24),
+              ],
 
-            // Role-aware menu sections
-            for (final section in sections) ...[
-              Row(
-                children: [
-                  Icon(section.icon, size: 20, color: context.colors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    section.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary,
+              // Role-aware menu sections
+              for (final section in sections) ...[
+                Row(
+                  children: [
+                    Icon(section.icon, size: 20, color: context.colors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      section.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.textPrimary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              AdaptiveGrid(
-                compactColumns: 1,
-                mediumColumns: 2,
-                expandedColumns: 3,
-                spacing: 8,
-                children: [
-                  for (final item in section.items)
-                    _MenuTile(
-                      icon: item.icon,
-                      title: item.title,
-                      subtitle: item.subtitle,
-                      onTap: () => item.onTap(context),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+                AdaptiveGrid(
+                  compactColumns: 1,
+                  mediumColumns: 2,
+                  expandedColumns: 3,
+                  spacing: 8,
+                  children: [
+                    for (final item in section.items)
+                      _MenuTile(
+                        icon: item.icon,
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        onTap: () => item.onTap(context),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
 
-            // Untuk manager: Kendaraan Saya hanya tampil jika memang ada unit yang dipegang
-            if (isManager && showKendaraanSaya) ...[
-              _buildKendaraanSayaHeader(context),
-              const SizedBox(height: 10),
-              ..._armadaSection(ref),
-              SizedBox(height: 24),
+              // Untuk manager: Kendaraan Saya hanya tampil jika memang ada unit yang dipegang
+              if (isManager && showKendaraanSaya) ...[
+                _buildKendaraanSayaHeader(context),
+                const SizedBox(height: 10),
+                ..._armadaSection(ref),
+                SizedBox(height: 24),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );

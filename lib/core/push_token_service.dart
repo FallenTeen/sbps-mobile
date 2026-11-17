@@ -41,7 +41,7 @@ class PushTokenService {
       final token = await messaging.getToken();
       _cachedToken = token;
 
-      // Refresh token listener — simpan token baru saat FCM rotate.
+      // Refresh token listener - simpan token baru saat FCM rotate.
       messaging.onTokenRefresh.listen((newToken) {
         _cachedToken = newToken;
         debugPrint(
@@ -57,7 +57,7 @@ class PushTokenService {
 
       return token;
     } catch (e) {
-      // Firebase belum dikonfigurasi atau error lain — aman return null.
+      // Firebase belum dikonfigurasi atau error lain - aman return null.
       debugPrint('[PushToken] Failed to get token: $e');
       return null;
     }

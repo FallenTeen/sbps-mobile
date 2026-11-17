@@ -50,7 +50,7 @@ class Titik {
     radiusPresensiMeter: parseNum(json['radius_presensi_meter']) ?? 0,
   );
 
-  /// Parse toleran — null bila [raw] bukan objek titik yang valid.
+  /// Parse toleran - null bila [raw] bukan objek titik yang valid.
   /// Dipakai untuk nested `titik` pada respons presensi.
   static Titik? tryParse(Object? raw) {
     if (raw is! Map) return null;

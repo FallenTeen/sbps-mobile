@@ -304,6 +304,7 @@ class _LogistikVerifikasiScreenState
                           decoration: const InputDecoration(
                             labelText: 'Berat Kosong Baru (kg)',
                             hintText: 'Contoh: 8450',
+                            helperText: 'Tara = berat truk tanpa muatan. Tara master terisi otomatis dari data armada.',
                             border: OutlineInputBorder(),
                             suffixText: 'kg',
                             isDense: true,
@@ -331,6 +332,7 @@ class _LogistikVerifikasiScreenState
                 decoration: const InputDecoration(
                   labelText: 'Berat Isi / Bruto (kg)',
                   hintText: 'Contoh: 24500',
+                  helperText: 'Bruto = berat truk + muatan saat ditimbang. Netto dihitung otomatis (Bruto − Tara).',
                   border: OutlineInputBorder(),
                   suffixText: 'kg',
                 ),

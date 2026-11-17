@@ -15,7 +15,7 @@ import '../../shared/widgets/submit_spinner.dart';
 import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
-/// Riwayat mutasi stok (GET /inventory/mutasi) — replacement untuk SnackBar
+/// Riwayat mutasi stok (GET /inventory/mutasi) - replacement untuk SnackBar
 /// placeholder di InventoryHomeScreen. Filter multi-dimensi (kategori barang,
 /// tipe masuk/keluar, rentang tanggal), pencarian, pengelompokan tanggal, dan
 /// pagination (load more saat mendekati akhir list).

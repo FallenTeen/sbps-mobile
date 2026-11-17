@@ -12,7 +12,7 @@ import 'models/presensi_hari_ini.dart';
 import 'presensi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// Riwayat presensi (GET /presensi/riwayat) — filter bulan/tahun,
+/// Riwayat presensi (GET /presensi/riwayat) - filter bulan/tahun,
 /// pagination tombol "Muat lagi".
 class RiwayatScreen extends ConsumerStatefulWidget {
   const RiwayatScreen({super.key});

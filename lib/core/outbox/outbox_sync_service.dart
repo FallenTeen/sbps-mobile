@@ -50,13 +50,13 @@ class OutboxSyncService {
   bool _syncing = false;
 
   /// true bila ada permintaan force-sync yang datang saat siklus lain
-  /// berjalan — dijalankan sekali lagi setelah siklus tersebut selesai,
+  /// berjalan - dijalankan sekali lagi setelah siklus tersebut selesai,
   /// sehingga trigger manual/resume tidak hilang begitu saja.
   bool _forceSyncQueued = false;
 
   /// Aksi yang sedang dikirim sekarang, dipetakan ke future hasilnya.
   /// Caller kedua untuk aksi yang sama (mis. `enqueue` dan worker `syncNow`
-  /// yang memuat snapshot sama) JOIN future yang sama — SATU request nyata,
+  /// yang memuat snapshot sama) JOIN future yang sama - SATU request nyata,
   /// semua caller menerima hasil asli. Tanpa ini, caller kedua menerima
   /// `queued` (delivered:false) padahal request berhasil dikirim, sehingga
   /// `enqueue` menandai retryable dan UI menampilkan "Gagal menyimpan"
@@ -122,7 +122,7 @@ class OutboxSyncService {
         }
       }
       // Endpoint JSON (produksi): tanpa lampiran file, body dari
-      // payloadData; client_uuid disuntik dari action.clientUuid —
+      // payloadData; client_uuid disuntik dari action.clientUuid -
       // SAMA di setiap retry agar backend idempotent.
       if (action.endpoint.isJson) {
         final body = <String, dynamic>{...action.payloadData};
@@ -305,14 +305,14 @@ class OutboxSyncService {
         fields: {
           ...action.payloadJson,
           // Endpoint /upload & checklist/pengisian mensyaratkan client_uuid
-          // sebagai form field (bukan hanya header Idempotency-Key) — nilai
+          // sebagai form field (bukan hanya header Idempotency-Key) - nilai
           // SAMA tiap retry.
           if (action.endpoint.isUploadMedia || action.endpoint.isNamedPhoto)
             'client_uuid': action.clientUuid,
         },
         files: specs,
         headers: {
-          // SAMA persis di setiap retry — jangan generate ulang,
+          // SAMA persis di setiap retry - jangan generate ulang,
           // jangan dipakai ulang antar PendingAction berbeda.
           'Idempotency-Key': action.idempotencyKey,
         },
@@ -333,7 +333,7 @@ class OutboxSyncService {
       }
       // 4xx lain: validasi/konflik tidak akan membaik dengan retry.
       // Catatan: dengan Idempotency-Key aktif, retry key yang sama TIDAK
-      // menghasilkan 422 "sudah check-in" — respons asli dikembalikan.
+      // menghasilkan 422 "sudah check-in" - respons asli dikembalikan.
       // 422 di sini berarti konflik sungguhan (mis. sudah check-in lewat
       // jalur lain) atau payload invalid.
       if (status >= 400 && status < 500) {
@@ -396,7 +396,7 @@ class OutboxSyncService {
       final actions = await _repo.pendingActions();
       for (final action in actions) {
         // Aksi yang sedang di tangan `enqueue` (jalur langsung dari form
-        // submit) — serahkan pemiliknya, jangan diperebutkan worker syncNow.
+        // submit) - serahkan pemiliknya, jangan diperebutkan worker syncNow.
         // Bersama `OutboxRepository._enqueuing`, ini menutup celah race
         // "box.put() sudah tapi _inFlightActions[] belum".
         if (_repo.isEnqueuing(action.id)) continue;
@@ -413,7 +413,7 @@ class OutboxSyncService {
           await _repo.markFailed(action.id, result.errorMessage);
           AnalyticsService.outboxItemFail();
         } else {
-          // Offline / 5xx — retryable: tetap pending + backoff dilanjutkan.
+          // Offline / 5xx - retryable: tetap pending + backoff dilanjutkan.
           await _repo.markRetryable(action.id, result.errorMessage);
           AnalyticsService.outboxItemFail();
         }
@@ -422,7 +422,7 @@ class OutboxSyncService {
       _syncing = false;
       // Panggil callback HANYA bila ada aksi yang benar-benar dicoba kirim.
       // Siklus kosong (antrean habis / semua masih backoff) tidak mengubah
-      // state apa pun — memanggil onSyncCycleDone tiap menit memicu reload
+      // state apa pun - memanggil onSyncCycleDone tiap menit memicu reload
       // provider + fetch jaringan (`presensi/hari-ini`) secara percuma
       // meski tab presensi sedang tidak dibuka (indexedStack tetap hidup).
       if (attempted) onSyncCycleDone?.call();
@@ -445,7 +445,7 @@ class OutboxSyncService {
 
   /// Mulai listener konektivitas + timer periodik + sync awal saat app dibuka.
   /// Aman dipanggil ulang. [syncNow] awal tidak menunggu perubahan
-  /// konektivitas/timer 1 menit — data yang diantre sebelum app ditutup
+  /// konektivitas/timer 1 menit - data yang diantre sebelum app ditutup
   /// langsung dicoba kirim saat app kembali dibuka (test: app open kembali).
   void start() {
     _connectivitySub ??= _connectivityStream().listen(
@@ -464,7 +464,7 @@ class OutboxSyncService {
   ///
   /// Event konektivitas hanyalah pemicu (WiFi connected != internet reachable,
   /// §11). Transisi ke online di-debounce untuk menggabungkan lonjakan
-  /// (OFF→ON→OFF→ON, §15.4), lalu memaksa flush — jaringan yang baru kembali
+  /// (OFF→ON→OFF→ON, §15.4), lalu memaksa flush - jaringan yang baru kembali
   /// adalah konteks segar, termasuk untuk item yang sudah kehabisan jatah
   /// retry otomatis. Kegagalan tetap diklasifikasi ulang dari respons request.
   void handleConnectivityChange(List<ConnectivityResult> results) {

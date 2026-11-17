@@ -21,7 +21,7 @@ import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
 
-/// Pengisian Solar (langkah 02) — catat pengisian bahan bakar hari ini.
+/// Pengisian Solar (langkah 02) - catat pengisian bahan bakar hari ini.
 ///
 /// Opional: tidak menghalangi langkah berikutnya. Daftar menampilkan riwayat
 /// pengisian hari ini; form mencatat ODO/HM saat isi (+foto), liter, nominal
@@ -167,7 +167,7 @@ class _PengisianSolarScreenState extends ConsumerState<PengisianSolarScreen> {
           .map(
             (a) => DropdownMenuItem(
               value: a,
-              child: Text('${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ''}'),
+              child: Text('${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ''}'),
             ),
           )
           .toList(),
@@ -400,7 +400,7 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
         fotoNotaPath.isNotEmpty &&
         File(fotoNotaPath).existsSync();
     // Draft yang hanya berisi nilai prefill (tidak ada input user) tidak
-    // perlu ditawarkan — hindari banner "Lanjutkan?" yang tidak berguna.
+    // perlu ditawarkan - hindari banner "Lanjutkan?" yang tidak berguna.
     final meaningful =
         nominal.trim().isNotEmpty ||
         catatan.trim().isNotEmpty ||
@@ -760,7 +760,7 @@ class _PhotoField extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '$label — ketuk untuk ambil foto',
+                      '$label - ketuk untuk ambil foto',
                       style: TextStyle(
                         fontSize: 13,
                         color: context.colors.textTertiary,

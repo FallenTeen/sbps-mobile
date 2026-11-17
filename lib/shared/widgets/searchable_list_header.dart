@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// Dipakai di layar list panjang (RiwayatQC, RiwayatServis, RiwayatProduksi,
 /// Notifikasi) supaya user bisa mencari item tanpa harus scroll.
 ///
-/// Widget ini **tidak mengelola state filter** — ia hanya menampilkan search
+/// Widget ini **tidak mengelola state filter** - ia hanya menampilkan search
 /// field dan meneruskan query ke parent lewat `onChanged`. Parent screen
 /// bertanggung jawab menyimpan query dan memanggil `setState`.
 class SearchableListHeader extends StatefulWidget {

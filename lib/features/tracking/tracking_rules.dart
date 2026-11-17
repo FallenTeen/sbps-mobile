@@ -2,7 +2,7 @@
 ///
 /// Semua perhitungan bersumber dari timestamp AKTUAL server (`last_seen`,
 /// `aktif_sejak`). Tidak ada asumsi realtime: bila datanya lama, UI WAJIB
-/// menyebut keterlambatannya (mis. "Lokasi terakhir 18 menit lalu") — bukan
+/// menyebut keterlambatannya (mis. "Lokasi terakhir 18 menit lalu") - bukan
 /// berpura-pura live.
 library;
 
@@ -26,7 +26,7 @@ class TrackingFreshness {
 }
 
 /// Hitung kesegaran lokasi dari [lastSeen] vs [now]. Murni selisih
-/// timestamp aktual — tidak memakai clock GPS/lokal perangkat secara
+/// timestamp aktual - tidak memakai clock GPS/lokal perangkat secara
 /// terselubung.
 TrackingFreshness trackingFreshness(
   DateTime? lastSeen, {
@@ -67,7 +67,7 @@ String lokasiTerakhirText(
   return 'Terakhir update ${_fmtRelatifMenit(lastSeen!, now ?? DateTime.now())}';
 }
 
-/// "Aktif sejak 08:03" — murni dari waktu check-in server.
+/// "Aktif sejak 08:03" - murni dari waktu check-in server.
 String aktifSejakText(DateTime? aktifSejak) {
   if (aktifSejak == null) return 'Aktif sejak belum diketahui';
   final l = aktifSejak.toLocal();
@@ -120,7 +120,7 @@ String googleMapsUrl(double lat, double lng) {
 }
 
 /// Pilih URL lokasi untuk aksi "Buka di Google Maps" / "Bagikan Lokasi".
-/// Selalu utamakan `fromServer` (backend — format resmi, sama untuk mobile &
+/// Selalu utamakan `fromServer` (backend - format resmi, sama untuk mobile &
 /// web); bila server tak mengirim, bangun ulang lokal dari koordinat.
 /// Null bila tidak ada koordinat sama sekali.
 String? resolveLocationUrl({

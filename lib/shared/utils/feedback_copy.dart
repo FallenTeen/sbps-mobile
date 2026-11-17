@@ -6,12 +6,12 @@ import '../../core/api_client.dart';
 
 /// Data tersimpan lokal, belum diterima server.
 const String kCopyQueued =
-    'Tersimpan. Pengiriman tertunda — akan dikirim otomatis.';
+    'Tersimpan. Pengiriman tertunda - akan dikirim otomatis.';
 
 /// Data benar-benar diterima server.
 const String kCopySynced = 'Berhasil disinkronkan.';
 
-/// Upaya sinkronisasi gagal — data belum sampai ke server.
+/// Upaya sinkronisasi gagal - data belum sampai ke server.
 const String kCopyFailed = 'Data belum tersinkron. Coba lagi.';
 
 /// Pesan default saat jaringan/format error tanpa detail user-friendly.
@@ -24,7 +24,7 @@ const String kCopyConnError =
 /// error lain (SocketException, ClientException, dsb) diganti pesan umum
 /// agar detail teknis tidak bocor ke UI.
 ///
-/// Untuk 422 (validasi Laravel), pesan top-level biasanya generik — detail
+/// Untuk 422 (validasi Laravel), pesan top-level biasanya generik - detail
 /// per-field (`errors: {field: [pesan]}`, sudah berbahasa Indonesia dari
 /// backend) jauh lebih berguna bagi user, jadi itu yang ditampilkan.
 String friendlyErrorMessage(

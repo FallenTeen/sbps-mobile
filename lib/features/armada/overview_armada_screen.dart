@@ -16,7 +16,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import 'unit_monitoring_screen.dart';
 
-/// Overview Seluruh Armada — monitoring operasional yang bisa ditindaklanjuti.
+/// Overview Seluruh Armada - monitoring operasional yang bisa ditindaklanjuti.
 ///
 /// Bukan sekadar deretan angka: chip ringkasan status bisa difilter, kartu
 /// unit menampilkan unit, status, titik, ODO/HM (bila tersedia), peringatan
@@ -234,7 +234,7 @@ class _StatusFilterBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Status Unit — tap untuk filter',
+              'Status Unit - tap untuk filter',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -326,7 +326,7 @@ class _MonitorArmadaTile extends StatelessWidget {
 
   final MasterArmada unit;
 
-  /// Data pelengkap dari `/armada/saya` (titik/ODO/HM) — bila tersedia.
+  /// Data pelengkap dari `/armada/saya` (titik/ODO/HM) - bila tersedia.
   final ArmadaSaya? saya;
 
   /// Checklist hari ini unit ini dari `/armada/checklist-hari-ini`.

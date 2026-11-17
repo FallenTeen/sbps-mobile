@@ -10,7 +10,7 @@ import '../../shared/theme/app_theme.dart';
 /// Ditampilkan di AppBar setiap halaman.
 ///
 /// Saat aplikasi kadaluwarsa (version gate), ditampilkan label permanen
-/// "Aplikasi Kadaluwarsa" di sebelah tombol — klik membuka modal unduh.
+/// "Aplikasi Kadaluwarsa" di sebelah tombol - klik membuka modal unduh.
 class PortalSwitchButton extends ConsumerWidget {
   const PortalSwitchButton({super.key});
 
@@ -50,7 +50,7 @@ class PortalSwitchButton extends ConsumerWidget {
           tooltip: 'Ganti portal',
           icon: const Icon(Icons.apps),
           onPressed: () async {
-            // Konfirmasi dulu — ganti portal membatalkan navigasi ke
+            // Konfirmasi dulu - ganti portal membatalkan navigasi ke
             // layar sebelumnya, isian form yang belum dikirim bisa hilang.
             // Draft autosave tetap aman (tersimpan terpisah).
             final confirmed = await showDialog<bool>(

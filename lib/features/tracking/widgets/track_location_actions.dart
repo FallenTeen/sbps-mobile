@@ -4,10 +4,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Bottom sheet aksi lokasi titip untuk layar Tracking:
 ///
-///  1. **Buka di Google Maps** — buka [url] di aplikasi Google Maps eksternal
+///  1. **Buka di Google Maps** - buka [url] di aplikasi Google Maps eksternal
 ///     (fallback browser). URL memakai format universal (tidak butuh Google
 ///     Maps SDK / API key) dan selalu dari server bila tersedia.
-///  2. **Bagikan Lokasi** — salin [url] ke clipboard + munculkan snackbar
+///  2. **Bagikan Lokasi** - salin [url] ke clipboard + munculkan snackbar
 ///     (tanpa dependensi share_plus, sesuai keputusan).
 ///
 /// [url] HARUS sudah dipastikan ada oleh pemanggil (lihat resolveLocationUrl

@@ -38,7 +38,7 @@ void main() {
       expect(s.showFinancial, isFalse);
     });
 
-    test('Kontraktor hanya overview — bukan angka tanpa tindakan', () {
+    test('Kontraktor hanya overview - bukan angka tanpa tindakan', () {
       final s = dashboardSectionsFor('Kontraktor');
       expect(s.showOverview, isTrue);
       expect(s.showArmadaStatus, isFalse);
@@ -48,7 +48,7 @@ void main() {
     });
   });
 
-  group('attentionItemsFor — angka hanya tampil bila actionable', () {
+  group('attentionItemsFor - angka hanya tampil bila actionable', () {
     const none = AttentionCounts();
     final all = const AttentionCounts(
       servis: 3,
@@ -64,7 +64,7 @@ void main() {
       expect(attentionItemsFor('Kontraktor', none), isEmpty);
     });
 
-    test('Owner: servis, PO, invoice, stok — dengan drill-down nyata', () {
+    test('Owner: servis, PO, invoice, stok - dengan drill-down nyata', () {
       final items = attentionItemsFor('Owner', all);
       expect(items.map((i) => i.id), ['servis', 'po_pending', 'invoice',
           'stok_kritis']);

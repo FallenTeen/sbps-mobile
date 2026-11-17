@@ -28,7 +28,7 @@ class RiwayatProduksiScreen extends StatelessWidget {
   }
 }
 
-/// Konten riwayat (filter + daftar) — dipakai halaman penuh dan tab.
+/// Konten riwayat (filter + daftar) - dipakai halaman penuh dan tab.
 class RiwayatProduksiContent extends ConsumerStatefulWidget {
   const RiwayatProduksiContent({super.key});
 
@@ -483,7 +483,7 @@ class _RiwayatCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: ListTile(
         title: Text(
-          '${session.produkNama ?? 'Produk'} — ${session.mesinNama ?? 'Mesin'}',
+          '${session.produkNama ?? 'Produk'} - ${session.mesinNama ?? 'Mesin'}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

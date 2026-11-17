@@ -15,7 +15,7 @@ import 'role_permissions.dart';
 ///
 /// Saat outbox berubah, cache berikutnya yang di-ttl expired
 /// akan membaca ulang. Pola ini cukup karena badge/pending
-/// item tidak butuh real-time detik-detik — pembaruan dalam
+/// item tidak butuh real-time detik-detik - pembaruan dalam
 /// ~2 detik setelah aksi (check-in, submit, dll.) sudah
 /// memadai untuk UX di lapangan.
 final pendingSummaryProvider = Provider.autoDispose<PendingSummary>((ref) {

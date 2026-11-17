@@ -41,7 +41,7 @@ class AnalyticsService {
     } catch (_) {}
   }
 
-  // — Event standar —
+  // - Event standar -
 
   // Presensi
   static Future<void> presensiCheckinTap(String radiusStatus) =>

@@ -19,7 +19,7 @@ import 'qc_rules.dart';
 import 'qc_sheets.dart';
 import 'status_badge.dart';
 
-/// Home QC — inspection queue.
+/// Home QC - inspection queue.
 ///
 /// Menampilkan antrian pemeriksaan (sampel `menunggu_hasil`) lengkap dengan
 /// context produksi, plus ringkasan "Menunggu Pemeriksaan" (exact dari
@@ -37,6 +37,7 @@ class QcHomeScreen extends ConsumerWidget {
         bottom: const BrandStrip(),
         actions: [
           AppTopBarActions(
+            showNotification: false,
             extraLeadingActions: [
               IconButton(
                 tooltip: 'Riwayat QC',
@@ -159,7 +160,7 @@ class _HomeBody extends ConsumerWidget {
                   color: context.colors.warning,
                 ),
               ),
-              title: '${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}',
+              title: '${s.produkNama ?? 'Produk'} - ${s.mesinNama ?? 'Mesin'}',
               subtitle:
                   '${qcJenisUjiLabel(s.jenisUji)} ${_fmt(s.nilaiSlump)} mm\n'
                   '${s.titikNama ?? '-'} • '

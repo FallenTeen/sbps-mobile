@@ -77,7 +77,7 @@ class _BouncingButtonState extends State<BouncingButton>
         onTapCancel: _onTapCancel,
         onTap: widget.onPressed,
         // IgnorePointer prevents the child (e.g. FilledButton) from also
-        // responding to taps — wrapper is the single source of the action.
+        // responding to taps - wrapper is the single source of the action.
         // When wrapper is enabled (onPressed != null), block child taps;
         // when disabled, pointer passes through so child shows its own
         // disabled visual (greyed) naturally.

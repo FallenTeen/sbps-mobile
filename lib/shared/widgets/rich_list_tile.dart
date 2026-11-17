@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// RichListTile — pola list item berlapis untuk daftar record.
+/// RichListTile - pola list item berlapis untuk daftar record.
 ///
 /// Struktur visual:
 /// ```
@@ -32,7 +32,7 @@ class RichListTile extends StatelessWidget {
   /// Baris status tambahan (contoh: "Belum dicatat hari ini · Terakhir: 2 hari lalu").
   final String? subtitle;
 
-  /// Badge meta opsional — kategori, prioritas, atau info tambahan.
+  /// Badge meta opsional - kategori, prioritas, atau info tambahan.
   final String? meta;
 
   /// Warna badge meta. Default [context.colors.textTertiary].

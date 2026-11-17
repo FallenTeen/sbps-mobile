@@ -156,7 +156,7 @@ List<String> app2RolesOf(User user) =>
 bool needsRoleChoice(User user) => app2RolesOf(user).length > 1;
 
 /// Flag sesi: tampilkan halaman pemilih role sebelum masuk home.
-/// Tidak diset saat restore sesi — role tersimpan langsung
+/// Tidak diset saat restore sesi - role tersimpan langsung
 /// dipakai agar tidak mengganggu tiap kali app dibuka.
 class RoleChoicePendingNotifier extends Notifier<bool> {
   @override

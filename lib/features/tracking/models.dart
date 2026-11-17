@@ -12,7 +12,7 @@ class TrackPoint {
   final double lng;
   final DateTime timestamp;
 
-  /// ID stabil = ISO timestamp — dipakai untuk menghapus titik tertentu
+  /// ID stabil = ISO timestamp - dipakai untuk menghapus titik tertentu
   /// dari buffer setelah batch-nya terkirim.
   String get id => timestamp.toIso8601String();
 
@@ -38,7 +38,7 @@ class TrackPoint {
   };
 }
 
-/// Item GET /tracking/active-users — karyawan yang masih ber-presensi aktif
+/// Item GET /tracking/active-users - karyawan yang masih ber-presensi aktif
 /// hari ini beserta status GPS aktual dari server:
 /// [titik], [aktifSejak] (waktu check-in), [lastSeen] (GPS terakhir hari ini,
 /// null bila belum ada), [pointCount] (titik GPS hari ini), plus koordinat &
@@ -65,7 +65,7 @@ class ActiveUser {
   /// Titik kerja dari presensi aktif (nama), bila tersedia dari server.
   final String? titik;
 
-  /// Waktu check-in yang masih aktif — dasar teks "aktif sejak".
+  /// Waktu check-in yang masih aktif - dasar teks "aktif sejak".
   final DateTime? aktifSejak;
 
   /// Timestamp lokasi GPS TERAKHIR hari ini. Null = belum ada GPS tercatat.
@@ -78,7 +78,7 @@ class ActiveUser {
   final double? lastLng;
 
   /// URL universal Google Maps untuk aksi "Buka di Google Maps"/"Bagikan
-  /// Lokasi" — selalu pakai yang dikirim server (sumber kebenaran tunggal:
+  /// Lokasi" - selalu pakai yang dikirim server (sumber kebenaran tunggal:
   /// sama formatnya di mobile & web), fallback dihitung lokal bila null.
   final String? googleMapsUrlFromServer;
 
@@ -104,7 +104,7 @@ class ActiveUser {
   }
 }
 
-/// Data GET /tracking/hari-ini/{userId} — jejak lokasi satu user hari ini.
+/// Data GET /tracking/hari-ini/{userId} - jejak lokasi satu user hari ini.
 class TrailData {
   const TrailData({
     required this.userId,

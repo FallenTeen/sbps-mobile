@@ -4,7 +4,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 
 /// Generic read-cache layer untuk response GET.
 ///
-/// Pola: *cache-first-then-refresh* — tampilkan data dari Hive langsung
+/// Pola: *cache-first-then-refresh* - tampilkan data dari Hive langsung
 /// (instant, walau offline), lalu di background coba fetch terbaru dan
 /// update cache+UI kalau online.
 ///
@@ -81,7 +81,7 @@ class CacheService {
       onFresh?.call(fresh);
       return fresh;
     } catch (_) {
-      // Network gagal — kembalikan cache kalau ada.
+      // Network gagal - kembalikan cache kalau ada.
       return cached;
     }
   }

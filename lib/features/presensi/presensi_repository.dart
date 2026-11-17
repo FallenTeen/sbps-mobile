@@ -5,14 +5,14 @@ import 'models/presensi_hari_ini.dart';
 import 'models/titik.dart';
 
 /// Repository presensi: titik & penugasan (A1.3), status hari ini &
-/// riwayat (A1.4). Pengiriman check-in/out lewat outbox — lihat
+/// riwayat (A1.4). Pengiriman check-in/out lewat outbox - lihat
 /// PresensiController.
 class PresensiRepository {
   PresensiRepository({required ApiClient api}) : _api = api;
 
   final ApiClient _api;
 
-  /// Daftar titik aktif — `data` berupa array langsung.
+  /// Daftar titik aktif - `data` berupa array langsung.
   Future<List<Titik>> getTitikAktif() async {
     final res = await _api.get<List<Titik>>(
       '/titik-aktif',

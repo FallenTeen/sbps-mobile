@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'status_pill.dart';
 
-/// Kartu list generik untuk "antrian kerja" — dipakai di WorkshopQueueScreen
+/// Kartu list generik untuk "antrian kerja" - dipakai di WorkshopQueueScreen
 /// dan section request di InventoryHomeScreen. Konsisten style dengan
 /// AppEmptyState/SkeletonLoader yang sudah ada.
 class QueueCard extends StatelessWidget {

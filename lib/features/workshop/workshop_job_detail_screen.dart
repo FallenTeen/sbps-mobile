@@ -27,7 +27,7 @@ import 'workshop_models.dart';
 import 'workshop_providers.dart';
 import 'workshop_rules.dart';
 
-/// Screen detail job workshop (full-page) — membungkus
+/// Screen detail job workshop (full-page) - membungkus
 /// [WorkshopJobDetailContent] dengan Scaffold + AppBar.
 /// Dipakai route push di Compact/Medium.
 class WorkshopJobDetailScreen extends ConsumerWidget {
@@ -52,7 +52,7 @@ class WorkshopJobDetailScreen extends ConsumerWidget {
   }
 }
 
-/// Konten detail job workshop tanpa Scaffold/AppBar — dipakai sebagai
+/// Konten detail job workshop tanpa Scaffold/AppBar - dipakai sebagai
 /// body full-page (lewat [WorkshopJobDetailScreen]) maupun panel kanan
 /// [AdaptiveMasterDetail] saat Expanded.
 class WorkshopJobDetailContent extends ConsumerStatefulWidget {
@@ -65,7 +65,7 @@ class WorkshopJobDetailContent extends ConsumerStatefulWidget {
   final String jobId;
 
   /// Dipanggil setelah job berhasil ditandai selesai saat mode embedded
-  /// (panel kanan AdaptiveMasterDetail) — menggantikan `context.pop()`.
+  /// (panel kanan AdaptiveMasterDetail) - menggantikan `context.pop()`.
   final VoidCallback? onJobCompleted;
 
   @override
@@ -126,7 +126,7 @@ class _WorkshopJobDetailContentState
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Foto bukti masih menunggu sinkron — lihat Data Belum '
+              'Foto bukti masih menunggu sinkron - lihat Data Belum '
               'Terkirim sampai foto sebelumnya terkirim.',
             ),
           ),
@@ -197,7 +197,7 @@ class _WorkshopJobDetailContentState
           );
         }
       } else if (result.permanentlyFailed) {
-        // 4xx: aksi ditandai "Gagal dikirim" di outbox — jangan tampilkan
+        // 4xx: aksi ditandai "Gagal dikirim" di outbox - jangan tampilkan
         // sebagai "tersimpan/menunggu" (queued ≠ server success, §16/§31).
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -249,7 +249,7 @@ class _WorkshopJobDetailContentState
       if (result.delivered) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Pengerjaan dimulai — job masuk Dikerjakan.'),
+            content: Text('Pengerjaan dimulai - job masuk Dikerjakan.'),
           ),
         );
       } else {
@@ -474,7 +474,7 @@ class _WorkshopJobDetailContentState
               border: Border.all(color: context.colors.border),
             ),
             child: Text(
-              'Belum ada item pekerjaan untuk job ini — job tidak bisa '
+              'Belum ada item pekerjaan untuk job ini - job tidak bisa '
               'ditandai selesai tanpa item. Hubungi admin servis.',
               style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
             ),
@@ -853,7 +853,7 @@ class _WorkshopJobDetailContentState
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      '${r.totalItems} item diminta — status ${r.status.label} '
+                      '${r.totalItems} item diminta - status ${r.status.label} '
                       '(request #${r.id})',
                       style: TextStyle(
                         fontSize: 12,

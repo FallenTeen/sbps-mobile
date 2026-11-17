@@ -28,7 +28,7 @@ final locationServiceProvider = Provider<LocationService>(
   (ref) => LocationService(),
 );
 
-/// Daftar titik aktif — di-refresh saat pull-to-refresh.
+/// Daftar titik aktif - di-refresh saat pull-to-refresh.
 final titikAktifProvider = FutureProvider.autoDispose<List<Titik>>(
   (ref) => ref.watch(presensiRepositoryProvider).getTitikAktif(),
 );
@@ -56,7 +56,7 @@ enum GpsProblem { serviceDisabled, permissionDenied, unavailable }
 /// Ambang posisi dianggap "basi" ketika melebihi durasi ini.
 const gpsStaleAfter = Duration(minutes: 10);
 
-/// Snapshot kondisi GPS — dipakai UI untuk gating check-in/out.
+/// Snapshot kondisi GPS - dipakai UI untuk gating check-in/out.
 class LocationSnapshot {
   const LocationSnapshot({
     this.loading = false,
@@ -168,18 +168,18 @@ final outboxSyncServiceProvider = Provider<OutboxSyncService>((ref) {
     // Presensi bisa saja baru terkirim di latar belakang.
     ref.invalidate(hariIniProvider);
     // Daftar aksi pending ter-update otomatis lewat StreamProvider
-    // (OutboxRepository.changes) — tidak perlu invalidate manual.
+    // (OutboxRepository.changes) - tidak perlu invalidate manual.
   };
   ref.onDispose(service.dispose);
   return service;
 });
 
-/// Dipanggil dari [OutboxRepository.onChanged] — antrean berubah.
+/// Dipanggil dari [OutboxRepository.onChanged] - antrean berubah.
 /// Dipecah ke fungsi biasa supaya tidak menimbulkan siklus inferensi tipe
 /// antara `outboxRepositoryProvider` dan `pendingActionsProvider`.
 void _onOutboxChanged(Ref ref) {
   // Perbarui jumlah antrean. Daftar aksi pending ter-update otomatis
-  // lewat StreamProvider (OutboxRepository.changes) — invalidate manual
+  // lewat StreamProvider (OutboxRepository.changes) - invalidate manual
   // di sini memicu CircularDependencyError saat provider di-build.
   unawaited(ref.read(pendingCountProvider.notifier).reload());
 }
@@ -201,7 +201,7 @@ final pendingCountProvider = NotifierProvider<PendingCountNotifier, int>(
 /// Daftar data lokal yang belum berhasil dikirim ke server.
 ///
 /// StreamProvider: otomatis ter-update setiap isi outbox berubah
-/// (OutboxRepository.changes) — TANPA invalidasi manual. Pola lama
+/// (OutboxRepository.changes) - TANPA invalidasi manual. Pola lama
 /// (`onChanged → ref.invalidate(pendingActionsProvider)`) memicu
 /// CircularDependencyError di Riverpod 3 saat provider sedang di-build.
 final pendingActionsProvider = StreamProvider<List<PendingAction>>((
@@ -228,7 +228,7 @@ class PendingPresensiInfo {
 }
 
 /// Menghindari duplicate check-in/check-out saat aksi yang sama masih
-/// mengantre di outbox (offline) — kartu menampilkan "menunggu sinkron".
+/// mengantre di outbox (offline) - kartu menampilkan "menunggu sinkron".
 final pendingPresensiProvider = Provider<PendingPresensiInfo>((ref) {
   final actions = ref.watch(pendingActionsProvider).value ?? const [];
   PendingPresensiInfo info = const PendingPresensiInfo();
@@ -280,7 +280,7 @@ class PresensiSubmitState {
 
   final bool busy;
 
-  /// Fase aktif saat busy — untuk indikator kompres → kirim di UI.
+  /// Fase aktif saat busy - untuk indikator kompres → kirim di UI.
   final UploadPhase? phase;
 }
 
@@ -322,7 +322,7 @@ class PresensiSubmitController extends Notifier<PresensiSubmitState> {
       AnalyticsService.presensiCheckinTap(
         endpoint == PendingEndpoint.presensiCheckIn ? 'check_in' : 'check_out',
       );
-      // kompres dulu (maks ~500KB, sisi 1600px) — path hasil
+      // kompres dulu (maks ~500KB, sisi 1600px) - path hasil
       // kompresi yang masuk outbox, bukan file asli kamera.
       final compressed = await ref
           .read(photoCompressionProvider)

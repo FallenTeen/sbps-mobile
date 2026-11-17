@@ -17,7 +17,7 @@ final armadaStatusProvider = FutureProvider.autoDispose<ArmadaStatusData>(
   (ref) => ref.watch(dashboardRepositoryProvider).getArmadaStatus(),
 );
 
-/// Filter monitoring armada (Bagian 21.11) — field null memakai default server
+/// Filter monitoring armada (Bagian 21.11) - field null memakai default server
 /// (unit bisnis: semua; rentang: 30 hari terakhir).
 typedef ArmadaMonitoringFilter = ({
   String? unitBisnisId,
@@ -71,7 +71,7 @@ final invoiceBelumDibayarProvider =
       (ref) => ref.watch(dashboardRepositoryProvider).getInvoiceBelumDibayar(),
     );
 
-/// Sesi produksi selesai yang belum punya sampel QC (menunggu_hasil) — total
+/// Sesi produksi selesai yang belum punya sampel QC (menunggu_hasil) - total
 /// EXACT dari pagination server (1 halaman, tanpa muat seluruh antrian).
 /// Dipakai kartu "Produksi Menunggu QC" di dashboard Mandor Titik.
 final produksiMenungguQcProvider = FutureProvider.autoDispose<int>((ref) async {
@@ -87,7 +87,7 @@ final titikDetailProvider = FutureProvider.autoDispose
           ref.watch(dashboardRepositoryProvider).getTitikDetail(titikId),
     );
 
-/// StateProvider periode chart aktif — dipakai layar dashboard & keuangan.
+/// StateProvider periode chart aktif - dipakai layar dashboard & keuangan.
 class ChartPeriodNotifier extends Notifier<ChartPeriod> {
   @override
   ChartPeriod build() => currentPeriod();
@@ -108,7 +108,7 @@ DashboardSections dashboardSectionsFor(String? role) => DashboardSections(
   showFinancial: RoleAccess.isAdminLike(role),
 );
 
-/// Akses section dashboard sisi client — UX saja, backend tetap 403.
+/// Akses section dashboard sisi client - UX saja, backend tetap 403.
 class RoleAccess {
   const RoleAccess._();
 

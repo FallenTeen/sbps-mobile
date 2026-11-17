@@ -26,7 +26,7 @@ enum DraftFormType {
     servisAjuan => 'Ajuan Servis',
     formulirLapangan => 'Formulir Lapangan',
     dokumentasi => 'Dokumentasi Produksi',
-    workshopSelesai => 'Workshop — Selesaikan',
+    workshopSelesai => 'Workshop - Selesaikan',
     checklist => 'Checklist',
     checklistMajor => 'Checklist Major',
     slumpTest => 'Slump Test',
@@ -39,9 +39,9 @@ enum DraftFormType {
 }
 
 /// Satu draft form yang belum disubmit, tersimpan lokal di Hive box
-/// `form_drafts` (terpisah dari box outbox — draft ≠ outbox).
+/// `form_drafts` (terpisah dari box outbox - draft ≠ outbox).
 ///
-/// Hanya menyimpan referensi path foto, bukan binary — file tetap di
+/// Hanya menyimpan referensi path foto, bukan binary - file tetap di
 /// storage device (konsisten dengan pola compress-then-reference di outbox).
 class FormDraft {
   const FormDraft({
@@ -120,7 +120,7 @@ class FormDraft {
 
 /// Penyimpanan draft form (Hive box `form_drafts`).
 ///
-/// CRUD mirror pola [OutboxRepository] yang sudah ada — draft disimpan
+/// CRUD mirror pola [OutboxRepository] yang sudah ada - draft disimpan
 /// sebagai string JSON ber-key `draftKey`. Draft bersifat lokal per device,
 /// tidak disinkron ke server.
 class DraftRepository {
@@ -180,7 +180,7 @@ class DraftRepository {
     await box.put(draftKey, jsonEncode(draft.toJson()));
   }
 
-  /// Hapus draft — dipanggil setelah submit berhasil, saat user memilih
+  /// Hapus draft - dipanggil setelah submit berhasil, saat user memilih
   /// "Mulai Baru", atau saat expired.
   Future<void> delete(String draftKey) async {
     final box = await _ensureOpen();
@@ -188,7 +188,7 @@ class DraftRepository {
   }
 
   /// Hapus file foto yang direferensikan draft yang dibuang (expired /
-  /// korup) — hanya bila file memang masih ada. Draft yang masih hidup
+  /// korup) - hanya bila file memang masih ada. Draft yang masih hidup
   /// TIDAK dihapus di sini (pengguna bisa lanjut mengisi).
   void _deletePhotoFiles(FormDraft draft) {
     for (final path in draft.photoLocalPaths) {
@@ -196,12 +196,12 @@ class DraftRepository {
         final file = File(path);
         if (file.existsSync()) file.deleteSync();
       } catch (_) {
-        // Path rusak / file sudah dipindah — abaikan.
+        // Path rusak / file sudah dipindah - abaikan.
       }
     }
   }
 
-  /// Bersihkan semua draft yang kedaluwarsa (housekeeping — dipanggil saat
+  /// Bersihkan semua draft yang kedaluwarsa (housekeeping - dipanggil saat
   /// app start) beserta file foto yang direferensikannya.
   Future<int> cleanupExpired() async {
     final box = await _ensureOpen();

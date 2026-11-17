@@ -14,7 +14,7 @@ import 'models/master.dart';
 import 'produksi_providers.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// Halaman "Mulai Sesi" — wizard bertahap:
+/// Halaman "Mulai Sesi" - wizard bertahap:
 /// 1. Mesin (wajib)
 /// 2. Produk (wajib, auto-prefill bila hanya satu produk tersedia atau
 ///    mesin punya produk_default)
@@ -321,7 +321,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
         const SizedBox(height: 4),
         Text(
           singleProduct
-              ? 'Hanya satu produk tersedia — diisi otomatis.'
+              ? 'Hanya satu produk tersedia - diisi otomatis.'
               : isPrefilled
                   ? 'Produk diisi otomatis dari mesin. Anda dapat mengubahnya.'
                   : 'Pilih jenis produk yang akan diproduksi.',
@@ -375,7 +375,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
         ),
         const SizedBox(height: 4),
         const Text(
-          'Opsional — kosongkan untuk otomatis mengikuti titik mesin.',
+          'Opsional - kosongkan untuk otomatis mengikuti titik mesin.',
           style: TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 16),
@@ -390,7 +390,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Tidak ada titik tersedia — akan menggunakan titik default mesin.',
+                      'Tidak ada titik tersedia - akan menggunakan titik default mesin.',
                       style: TextStyle(color: context.colors.textSecondary),
                     ),
                   ),
@@ -439,7 +439,7 @@ class _MulaiSesiScreenState extends ConsumerState<MulaiSesiScreen> {
         ),
         const SizedBox(height: 4),
         const Text(
-          'Opsional — tambahkan catatan untuk sesi ini.',
+          'Opsional - tambahkan catatan untuk sesi ini.',
           style: TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 16),
@@ -562,7 +562,7 @@ class _StepProgressIndicator extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${labels[current]} — Langkah ${current + 1} dari $total',
+                  '${labels[current]} - Langkah ${current + 1} dari $total',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: hasError ? theme.colorScheme.error : null,

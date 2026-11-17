@@ -9,7 +9,7 @@ import '../../shared/utils/feedback_copy.dart';
 import 'qc_providers.dart';
 import 'qc_rules.dart';
 
-/// Konteks produksi yang sedang diperiksa — ditampilkan SEBELUM input hasil
+/// Konteks produksi yang sedang diperiksa - ditampilkan SEBELUM input hasil
 /// supaya petugas tahu persis apa yang sedang diuji.
 class QcInspectionContext {
   const QcInspectionContext({
@@ -31,7 +31,7 @@ class QcInspectionContext {
 
 enum _QcPhase { input, review }
 
-/// Kartu konteks produksi — menjawab "apa yang sedang diperiksa".
+/// Kartu konteks produksi - menjawab "apa yang sedang diperiksa".
 class _ContextCard extends StatelessWidget {
   const _ContextCard({required this.context, required this.icon});
 
@@ -114,7 +114,7 @@ class _ContextCard extends StatelessWidget {
   );
 }
 
-/// Strip catatan hasil — hanya parafrase jujur, TIDAK menghitung formula.
+/// Strip catatan hasil - hanya parafrase jujur, TIDAK menghitung formula.
 class _ResultNote extends StatelessWidget {
   const _ResultNote({required this.text, this.icon = Icons.info_outline});
 
@@ -232,7 +232,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
         SnackBar(
           content: Text(
             result.delivered
-                ? 'Slump test dicatat — menunggu hasil uji tekan.'
+                ? 'Slump test dicatat - menunggu hasil uji tekan.'
                 : kCopyQueued,
           ),
         ),
@@ -268,7 +268,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${widget.context.produkNama ?? 'Produk'} — '
+                '${widget.context.produkNama ?? 'Produk'} - '
                 '${widget.context.mesinNama ?? 'Mesin'}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -305,7 +305,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
                 const SizedBox(height: 8),
                 _ResultNote(
                   icon: Icons.move_to_inbox_outlined,
-                  text: 'Setelah dicatat, sampel masuk antrean — status '
+                  text: 'Setelah dicatat, sampel masuk antrean - status '
                       '"Menunggu hasil" sampai hasil uji tekan direkam.',
                 ),
                 const SizedBox(height: 16),
@@ -397,7 +397,7 @@ class _SlumpTestSheetState extends ConsumerState<SlumpTestSheet> {
   }
 }
 
-/// Bottom sheet "Catat Uji Tekan" — sesi harus punya sample slump yang
+/// Bottom sheet "Catat Uji Tekan" - sesi harus punya sample slump yang
 /// masih menunggu hasil. Flow:
 /// Context → Target → Actual → Catatan → Result → Review → Submit.
 class UjiTekanSheet extends ConsumerStatefulWidget {
@@ -502,7 +502,7 @@ class _UjiTekanSheetState extends ConsumerState<UjiTekanSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${widget.context.produkNama ?? 'Produk'} — '
+                '${widget.context.produkNama ?? 'Produk'} - '
                 '${widget.context.mesinNama ?? 'Mesin'}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),

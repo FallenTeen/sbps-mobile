@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 /// - "Lanjutkan Draft" → mengisi form dari draft yang tersimpan.
 /// - "Mulai Baru" → menghapus draft dan memulai dari awal.
 ///
-/// Tidak blok modal — cukup ringan di atas form, tidak mengganggu flow.
+/// Tidak blok modal - cukup ringan di atas form, tidak mengganggu flow.
 class DraftRestoreBanner extends StatelessWidget {
   const DraftRestoreBanner({
     super.key,

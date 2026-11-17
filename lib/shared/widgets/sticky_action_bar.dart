@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'submit_spinner.dart';
 
-/// Bilah aksi menempel di bawah layar — pola "Sticky Action Bar".
+/// Bilah aksi menempel di bawah layar - pola "Sticky Action Bar".
 ///
 /// Menampilkan tombol utama (dan opsi tombol sekunder) yang selalu terlihat
 /// saat user scroll, dengan SafeArea bawah, shadow atas, dan warna surface
@@ -26,7 +26,7 @@ class StickyActionBar extends StatelessWidget {
   final String primaryLabel;
   final VoidCallback onPrimary;
 
-  /// Label tombol sekunder (opsional) — OutlinedButton di sebelah kiri.
+  /// Label tombol sekunder (opsional) - OutlinedButton di sebelah kiri.
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
 

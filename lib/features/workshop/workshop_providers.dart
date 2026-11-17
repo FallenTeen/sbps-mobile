@@ -37,7 +37,7 @@ class WorkshopQueueState {
   final String? error;
   final bool refreshing;
 
-  /// Id job yang sedang menunggu sparepart — dari request inventori yang
+  /// Id job yang sedang menunggu sparepart - dari request inventori yang
   /// masih `pending`/`diproses` (data nyata, bukan asumsi).
   final Set<String> waitingSparepartJobIds;
 
@@ -51,7 +51,7 @@ class WorkshopQueueState {
   int get dikerjakanCount =>
       items.where((j) => j.status == WorkshopJobStatus.dikerjakan).length;
 
-  /// Jumlah pekerjaan aktif (belum selesai) — "N pekerjaan" di ringkasan.
+  /// Jumlah pekerjaan aktif (belum selesai) - "N pekerjaan" di ringkasan.
   int get activeCount =>
       items.where((j) => j.status != WorkshopJobStatus.selesai).length;
 

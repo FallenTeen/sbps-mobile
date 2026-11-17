@@ -53,6 +53,7 @@ import '../features/presensi/titik_kerja_screen.dart';
 import '../features/portal/portal_providers.dart';
 import '../features/portal/combined_selection_screen.dart';
 import '../features/produksi/mulai_sesi_screen.dart';
+import '../features/produksi/produksi_ringkasan_screen.dart';
 import '../features/produksi/progress_hari_ini_screen.dart';
 import '../features/produksi/riwayat_produksi_screen.dart';
 import '../features/produksi/sesi_aktif_screen.dart';
@@ -65,6 +66,7 @@ import '../features/tracking/active_users_screen.dart';
 import '../features/tracking/trail_screen.dart';
 import '../features/upload/dokumentasi_screen.dart';
 import '../features/outbox/data_belum_terkirim_screen.dart';
+import '../features/notifikasi/notifikasi_providers.dart';
 import '../features/notifikasi/notifikasi_screen.dart';
 import '../features/formulir/formulir_screen.dart';
 import '../features/presensi/riwayat_screen.dart';
@@ -88,29 +90,39 @@ const kAppRoutePaths = <String>[
   '/data-belum-terkirim',
   '/dokumentasi',
   '/formulir',
-  // Branch 0 — Beranda.
+  // Logistik & Security - di luar shell (layar penuh).
+  '/logistik',
+  '/logistik/verifikasi/:ritaseId',
+  '/security',
+  '/security/buku-tamu',
+  '/security/buku-tamu/baru',
+  '/security/checklist',
+  '/security/darurat/baru',
+  '/security/verifikasi-ritase',
+  // Branch 0 - Beranda.
   '/home',
   '/proyek-home',
-  // Branch 1 — Produksi.
+  // Branch 1 - Produksi.
   '/produksi/sesi-aktif',
   '/produksi/mulai',
   '/produksi/riwayat',
   '/produksi/progress',
-  // Branch 2 — QC.
+  '/produksi/ringkasan',
+  // Branch 2 - QC.
   '/qc',
   '/qc/riwayat',
   '/qc/riwayat/detail/:sampleId',
-  // Branch 3 — Tracking.
+  // Branch 3 - Tracking.
   '/tracking/pengguna-aktif',
   '/tracking/pengguna-aktif/hari-ini/:userId',
-  // Branch 4 — Dashboard Operasional.
+  // Branch 4 - Dashboard Operasional.
   '/dashboard',
   '/dashboard/titik/:titikId',
-  // Branch 5 — Dashboard Finansial.
+  // Branch 5 - Dashboard Finansial.
   '/dashboard/keuangan',
   '/dashboard/keuangan/po-pending',
   '/dashboard/keuangan/invoice',
-  // Branch 6 — Armada.
+  // Branch 6 - Armada.
   '/armada',
   '/armada/ritase',
   '/armada/checklist',
@@ -123,28 +135,29 @@ const kAppRoutePaths = <String>[
   '/armada/ritase-input',
   '/armada/checklist-major',
   '/armada/unit-saya',
+  '/armada/dashboard-saya',
   '/armada/servis',
   '/armada/servis/ajuan',
   '/armada/servis/:id',
   '/armada/servis/eksternal/:id',
-  // Branch 7 — Kontraktor.
+  // Branch 7 - Kontraktor.
   '/kontraktor/proyek',
   '/kontraktor/proyek/:id',
-  // Branch 8 — Workshop.
+  // Branch 8 - Workshop.
   '/workshop',
   '/workshop/job/:id',
   '/workshop/servis-eksternal',
-  // Branch 9 — Inventory.
+  // Branch 9 - Inventory.
   '/inventory',
   '/inventory/stok',
   '/inventory/stok/:id',
   '/inventory/riwayat',
   '/inventory/opname',
   '/inventory/request/:id',
-  // Branch 10 — Presensi (universal).
+  // Branch 10 - Presensi (universal).
   '/presensi',
   '/presensi/riwayat',
-  // Branch 11 — Notifikasi (universal).
+  // Branch 11 - Notifikasi (universal).
   '/notifikasi',
 ];
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -152,6 +165,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(authControllerProvider, (_, _) => refresher.ping());
   ref.listen(activeRoleProvider, (_, _) => refresher.ping());
   ref.listen(selectedPortalProvider, (_, _) => refresher.ping());
+  // Badge tab Notifikasi persisten: rebuild shell saat jumlah unread berubah.
+  ref.listen(unreadCountProvider, (_, _) => refresher.ping());
   ref.onDispose(refresher.dispose);
 
   // Semua pengguna (semua portal & role) tinggal di satu shell tunggal;
@@ -163,8 +178,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state, navigationShell) {
         final portal = ref.read(selectedPortalProvider).value;
         final isPresensiPortal = portal == AppPortal.presensi;
-        final activeRole =
-            isPresensiPortal ? null : ref.read(activeRoleProvider);
+        final activeRole = isPresensiPortal
+            ? null
+            : ref.read(activeRoleProvider);
         final destinations = buildNavDestinations(activeRole);
         if (destinations.isEmpty) return navigationShell;
 
@@ -177,10 +193,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
         return AdaptiveNavShell(
           currentIndex: currentDestIndex < 0 ? null : currentDestIndex,
+          notifikasiBadgeCount: ref.read(unreadCountProvider),
           onDestinationSelected: (destIndex) {
             final dest = destinations[destIndex];
-            final targetBranch =
-                navBranchFor(dest.key, activeRole, _proyekBranchByModule);
+            final targetBranch = navBranchFor(
+              dest.key,
+              activeRole,
+              _proyekBranchByModule,
+            );
             navigationShell.goBranch(
               targetBranch,
               initialLocation: targetBranch == currentBranch,
@@ -336,11 +356,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         }
 
         // Guard finansial: khusus Owner / Admin Keuangan.
-        const financialPrefixes = <String>[
-          '/dashboard/keuangan',
-          '/dashboard/po-pending',
-          '/dashboard/invoice',
-        ];
+        const financialPrefixes = <String>['/dashboard/keuangan'];
         if (financialPrefixes.any(location.startsWith) &&
             !RolePermissions.isAdminLike(ref.read(activeRoleProvider))) {
           return currentHomeFor();
@@ -425,7 +441,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               key: state.pageKey,
               child: LogistikVerifikasiScreen(
                 ritaseId: state.pathParameters['ritaseId']!,
-                ritase: state.extra is RitaseItem ? state.extra as RitaseItem : null,
+                ritase: state.extra is RitaseItem
+                    ? state.extra as RitaseItem
+                    : null,
               ),
             ),
           ),
@@ -548,6 +566,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
         pageBuilder: (context, state) => buildAppTransitionPage(
           key: state.pageKey,
           child: const ProgressHariIniScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/produksi/ringkasan',
+        pageBuilder: (context, state) => buildAppTransitionPage(
+          key: state.pageKey,
+          child: const ProduksiRingkasanScreen(),
         ),
       ),
     ],

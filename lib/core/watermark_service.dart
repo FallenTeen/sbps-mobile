@@ -24,7 +24,7 @@ class WatermarkResult {
   final double? longitude;
 }
 
-/// Payload untuk isolat watermark — hanya tipe sendable (bytes + string).
+/// Payload untuk isolat watermark - hanya tipe sendable (bytes + string).
 class _WatermarkJob {
   const _WatermarkJob({required this.bytes, required this.lines});
 
@@ -47,7 +47,7 @@ class WatermarkService {
 
   /// watermark foto di [sourcePath] dan simpan ke path baru.
   ///
-  /// [employeeName] bersifat opsional — tampil kalau tidak null/kosong.
+  /// [employeeName] bersifat opsional - tampil kalau tidak null/kosong.
   /// GPS diambil dengan timeout; kalau gagal, watermark menampilkan
   /// "Lokasi tidak tersedia" dan GPS status = unavailable.
   Future<WatermarkResult> watermark({
@@ -67,7 +67,7 @@ class WatermarkService {
         gpsStatus = GpsStatus.available;
       }
     } catch (_) {
-      // GPS gagal — lanjut tanpa koordinat.
+      // GPS gagal - lanjut tanpa koordinat.
     }
 
     // 2. Baca gambar (I/O cepat; decode berat dialihkan ke isolat).
@@ -97,7 +97,7 @@ class WatermarkService {
       outBytes = null;
     }
     if (outBytes == null) {
-      // Gagal decode/isolate — kembalikan path asli.
+      // Gagal decode/isolate - kembalikan path asli.
       return WatermarkResult(
         path: sourcePath,
         gpsStatus: gpsStatus,
@@ -125,7 +125,7 @@ Uint8List? _applyWatermarkTopLevel(_WatermarkJob job) {
   final image = img.decodeImage(job.bytes);
   if (image == null) return null;
   _drawWatermarkTopLevel(image, job.lines);
-  // Kualitas 85 cukup — hasilnya langsung di-re-encode oleh
+  // Kualitas 85 cukup - hasilnya langsung di-re-encode oleh
   // PhotoCompressionService (target ≤500KB) tanpa kehilangan kualitas
   // final yang bermakna, tapi hemat decode/encode dobel di isolat.
   return img.encodeJpg(image, quality: 85);

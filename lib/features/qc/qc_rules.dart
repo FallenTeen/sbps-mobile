@@ -1,6 +1,6 @@
 import 'models/qc_sample.dart';
 
-/// Logika bisnis murni modul QC — queue-first inspection.
+/// Logika bisnis murni modul QC - queue-first inspection.
 /// Tidak mengubah formula atau validasi backend; hanya membungkus aturan
 /// yang sudah ada menjadi fungsi teruji supaya bisa dipakai ulang UI.
 
@@ -32,7 +32,7 @@ List<QcSample> qcSelesaiHariIni(List<QcSample> items, DateTime now) {
       .toList();
 }
 
-/// Ringkasan home QC — angka jujur dari data server:
+/// Ringkasan home QC - angka jujur dari data server:
 /// - menungguPemeriksaan = total sampel status `menunggu_hasil`
 ///   (langsung dari pagination server, jadi exact);
 /// - selesaiHariIni = jumlah sampel yang benar-benar selesai hari ini

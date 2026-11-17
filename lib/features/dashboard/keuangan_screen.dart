@@ -14,7 +14,7 @@ import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
 
-/// Dashboard finansial (HANYA Owner/Admin Keuangan — guard route +
+/// Dashboard finansial (HANYA Owner/Admin Keuangan - guard route +
 /// validasi backend 403).
 ///
 /// Sebelumnya layar ini cuma berisi 1 chart bar tanpa konteks tambahan.
@@ -33,7 +33,7 @@ class KeuanganScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Dashboard Finansial'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
@@ -108,7 +108,7 @@ class KeuanganScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Ringkasan KPI — Total Masuk / Total Keluar / Saldo bulan berjalan
+// Ringkasan KPI - Total Masuk / Total Keluar / Saldo bulan berjalan
 // ---------------------------------------------------------------------------
 
 class _RingkasanSkeleton extends StatelessWidget {
@@ -129,7 +129,7 @@ class _RingkasanSkeleton extends StatelessWidget {
 }
 
 /// Ringkasan Total Masuk / Total Keluar / Saldo (surplus-defisit) bulan
-/// berjalan, dihitung dari data chart yang sama — tanpa request tambahan.
+/// berjalan, dihitung dari data chart yang sama - tanpa request tambahan.
 ///
 /// Layout `Wrap` + `LayoutBuilder` (bukan `Row` rata 3 kolom tetap) supaya
 /// aman terhadap font scaling besar & layar sempit, konsisten dengan pola
@@ -254,7 +254,7 @@ class _KpiCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Rincian per minggu — angka pasti (bukan cuma chart)
+// Rincian per minggu - angka pasti (bukan cuma chart)
 // ---------------------------------------------------------------------------
 
 class _DetailMingguanCard extends StatelessWidget {
@@ -343,7 +343,7 @@ class _DetailRow extends StatelessWidget {
       return Expanded(
         flex: 3,
         // FittedBox: nilai Rupiah mengecil otomatis kalau tidak muat,
-        // bukan dipotong "..." — angka finansial harus tetap utuh terbaca.
+        // bukan dipotong "..." - angka finansial harus tetap utuh terbaca.
         child: FittedBox(
           fit: BoxFit.scaleDown,
           alignment: align == TextAlign.right
@@ -393,7 +393,7 @@ class _DetailRow extends StatelessWidget {
 // file). Ditulis ulang lokal di sini supaya Dashboard Finansial punya akses
 // langsung ke dua hal ini tanpa perlu ubah file lain. Kalau mau, ke depan
 // ini bisa diekstrak jadi widget publik di widgets/charts.dart supaya tidak
-// dobel — tapi untuk sekarang sengaja dibiarkan lokal biar scope perubahan
+// dobel - tapi untuk sekarang sengaja dibiarkan lokal biar scope perubahan
 // minimal.
 // ---------------------------------------------------------------------------
 
@@ -435,7 +435,7 @@ class _PoPendingShortcutCard extends ConsumerWidget {
           title: const Text('PO Menunggu Approval'),
           subtitle: Text(
             data.cappedAtLimit
-                ? '${data.total}+ pending — menampilkan $kPoPendingLimit terbaru'
+                ? '${data.total}+ pending - menampilkan $kPoPendingLimit terbaru'
                 : '${data.items.length} menunggu aksi',
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -484,7 +484,7 @@ class _InvoiceShortcutCard extends ConsumerWidget {
           title: const Text('Invoice Belum Dibayar'),
           subtitle: Text(
             data.cappedAtLimit
-                ? '${data.total}+ invoice — menampilkan 20 terbaru'
+                ? '${data.total}+ invoice - menampilkan 20 terbaru'
                 : '${data.items.length} belum lunas',
           ),
           trailing: const Icon(Icons.chevron_right),

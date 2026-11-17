@@ -20,7 +20,7 @@ import 'upload_providers.dart';
 
 /// Lampirkan dokumentasi foto produksi/QC: pilih 1-10 foto,
 /// opsional kaitkan ke sesi produksi (subject_type "ProductionSession"),
-/// kirim via outbox — offline = antrean otomatis.
+/// kirim via outbox - offline = antrean otomatis.
 class DokumentasiScreen extends ConsumerStatefulWidget {
   const DokumentasiScreen({super.key});
 
@@ -170,7 +170,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
     final sesiList = sesiAktif.value ?? const <ProductionSession>[];
     final sesiNama = _sesi == null
         ? 'Tidak dikaitkan'
-        : '${_sesi!.produkNama ?? 'Produk'} — ${_sesi!.mesinNama ?? 'Mesin'}';
+        : '${_sesi!.produkNama ?? 'Produk'} - ${_sesi!.mesinNama ?? 'Mesin'}';
     final valid = _paths.isNotEmpty;
 
     return Scaffold(
@@ -266,7 +266,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                               DropdownMenuItem(
                                 value: s,
                                 child: Text(
-                                  '${s.produkNama ?? 'Produk'} — '
+                                  '${s.produkNama ?? 'Produk'} - '
                                   '${s.mesinNama ?? 'Mesin'}',
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -309,7 +309,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                         KeyValueRow(
                           label: 'Catatan',
                           value: _catatanCtrl.text.trim().isEmpty
-                              ? '—'
+                              ? '-'
                               : _catatanCtrl.text.trim(),
                         ),
                         const SizedBox(height: 4),
@@ -341,7 +341,7 @@ class _DokumentasiScreenState extends ConsumerState<DokumentasiScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: Text(
-                      'Draft tersimpan otomatis di perangkat — aman bila '
+                      'Draft tersimpan otomatis di perangkat - aman bila '
                       'aplikasi tertutup.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: context.colors.textTertiary,

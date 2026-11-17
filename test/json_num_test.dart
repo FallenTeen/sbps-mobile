@@ -4,7 +4,7 @@ import 'package:sbps_mobile/core/json_num.dart';
 import 'package:sbps_mobile/features/dashboard/models.dart';
 
 void main() {
-  group('parseNum / parseInt — toleran string numerik dari backend Laravel', () {
+  group('parseNum / parseInt - toleran string numerik dari backend Laravel', () {
     test('menerima num langsung', () {
       expect(parseNum(42.5), 42.5);
       expect(parseNum(7), 7.0);
@@ -31,7 +31,7 @@ void main() {
     });
   });
 
-  group('KeuanganChart.fromRaw — kontrak finansial string numerik', () {
+  group('KeuanganChart.fromRaw - kontrak finansial string numerik', () {
     test('parsing sukses walau masuk/keluar dikirim sebagai string', () {
       final chart = KeuanganChart.fromRaw({
         'bulan': '9',
@@ -56,7 +56,7 @@ void main() {
     });
   });
 
-  group('PoPendingPage / InvoicePendingPage — total string', () {
+  group('PoPendingPage / InvoicePendingPage - total string', () {
     test('PoPendingPage.total string tetap terbaca', () {
       final po = PoPendingPage.fromRaw({
         'total': '3',

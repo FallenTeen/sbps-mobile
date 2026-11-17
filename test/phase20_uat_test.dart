@@ -32,7 +32,7 @@ import 'package:sbps_mobile/shared/widgets/submit_spinner.dart';
 ///
 /// Skenario UAT yang dapat direproduksi headless. Verifikasi perangkat fisik
 /// (kamera, GPS asli, FCM, background service, perangkat low-end) TIDAK di
-/// sini — lihat `docs/UAT_REPORT.md` (dicatat BLOCKED).
+/// sini - lihat `docs/UAT_REPORT.md` (dicatat BLOCKED).
 ///
 /// Cakupan:
 /// - duplicate tap / double submit (BouncingButton + busy-guard provider),
@@ -59,7 +59,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-DRV-01 — Duplicate tap / double submit
+  // UAT-DRV-01 - Duplicate tap / double submit
   // ==========================================================================
   group('UAT-DRV-01 duplicate tap', () {
     testWidgets('BouncingButton: satu tap = satu aksi (child tidak ikut)', (
@@ -120,7 +120,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-DRV-02 — Stale GPS ditolak sebelum submit
+  // UAT-DRV-02 - Stale GPS ditolak sebelum submit
   // ==========================================================================
   group('UAT-DRV-02 stale GPS', () {
     test('posisi basi ditolak & meminta segarkan lokasi', () async {
@@ -167,7 +167,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-DRV-03 — Submit sukses = satu aksi, idempoten
+  // UAT-DRV-03 - Submit sukses = satu aksi, idempoten
   // ==========================================================================
   group('UAT-DRV-03 submit sukses', () {
     test('tepat satu PendingAction terkirim dengan idempotency key', () async {
@@ -203,7 +203,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-SYNC-01 — Klasifikasi retry / failed sync
+  // UAT-SYNC-01 - Klasifikasi retry / failed sync
   // ==========================================================================
   group('UAT-SYNC-01 klasifikasi retry', () {
     test('4xx → permanentlyFailed (tidak diulang otomatis)', () async {
@@ -250,7 +250,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-PARTIAL-01 — Partial submission (ritase)
+  // UAT-PARTIAL-01 - Partial submission (ritase)
   // ==========================================================================
   group('UAT-PARTIAL-01 partial submission', () {
     test('sebagian record terkirim TIDAK dianggap selesai', () {
@@ -276,7 +276,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-ATTACH-01 — Attachment persistence (outbox)
+  // UAT-ATTACH-01 - Attachment persistence (outbox)
   // ==========================================================================
   group('UAT-ATTACH-01 attachment persistence', () {
     test('encode/decode mempertahankan path lampiran', () {
@@ -362,7 +362,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-DRAFT-01 — Draft persistence + restoration
+  // UAT-DRAFT-01 - Draft persistence + restoration
   // ==========================================================================
   group('UAT-DRAFT-01 draft restoration', () {
     test('DraftRepository: simpan → muat mempertahankan field & foto', () async {
@@ -423,7 +423,7 @@ void main() {
   });
 
   // ==========================================================================
-  // UAT-UI-01 — Dark mode / font 130% / tablet
+  // UAT-UI-01 - Dark mode / font 130% / tablet
   // ==========================================================================
   group('UAT-UI-01 dark mode', () {
     testWidgets('widget bersama render di dark theme tanpa overflow', (

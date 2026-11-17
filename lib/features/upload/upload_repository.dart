@@ -15,7 +15,7 @@ class UploadRepository {
   final Uuid _uuid;
 
   /// POST /upload (multipart): 1-10 file @<=10MB.
-  /// `client_uuid` dibuat sekali per kiriman — retry dengan nilai sama
+  /// `client_uuid` dibuat sekali per kiriman - retry dengan nilai sama
   /// mengembalikan daftar file kiriman pertama (200) tanpa duplikat.
   Future<List<UploadedFile>> uploadFiles(
     List<String> paths, {
@@ -48,7 +48,7 @@ class UploadRepository {
     return res.data ?? const [];
   }
 
-  /// DELETE /upload/{id} — 403 "file bukan milik user" diteruskan apa
+  /// DELETE /upload/{id} - 403 "file bukan milik user" diteruskan apa
   /// adanya via [ApiException] (kecuali user berperan Owner).
   Future<void> deleteFile(String id) async {
     await _api.delete<void>('/upload/$id');

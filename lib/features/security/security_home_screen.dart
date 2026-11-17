@@ -28,7 +28,7 @@ class SecurityHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Security & Keamanan'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,

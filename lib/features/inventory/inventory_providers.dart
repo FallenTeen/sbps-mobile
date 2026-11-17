@@ -31,7 +31,7 @@ final inventoryRequestDetailProvider = FutureProvider.autoDispose
     );
 
 // ---------------------------------------------------------------------------
-// Riwayat mutasi stok (GET /inventory/mutasi) — filter + pagination
+// Riwayat mutasi stok (GET /inventory/mutasi) - filter + pagination
 // ---------------------------------------------------------------------------
 
 /// Filter layar Riwayat Inventory: tipe mutasi, kategori, rentang tanggal.
@@ -173,7 +173,7 @@ final inventoryMutasiProvider = NotifierProvider<
   InventoryMutasiState
 >(InventoryMutasiController.new);
 
-/// Riwayat mutasi untuk 1 barang spesifik (layar Detail Stok) — muat 50
+/// Riwayat mutasi untuk 1 barang spesifik (layar Detail Stok) - muat 50
 /// item pertama agar panel detail cukup informatif tanpa pagination token.
 final inventoryMaterialMutasiProvider = FutureProvider.autoDispose
     .family<StokMutasiPage, String>(

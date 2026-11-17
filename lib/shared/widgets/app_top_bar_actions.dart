@@ -41,6 +41,12 @@ Future<void> confirmRoleSwitch(
 /// 4. Notifikasi in-app dengan badge (`/notifikasi`)
 /// 5. Ganti peran (bila user memiliki >1 peran App 2 dan sedang di portal Proyek)
 /// 6. Logout (`confirmLogout`)
+///
+/// Layar di luar shell navigasi (tanpa tab persisten, mis. Logistik & Security
+/// home) tetap menampilkan bel notifikasi via [showNotification]; layar di
+/// dalam shell memakai `showNotification: false` karena tab Notifikasi
+/// persisten sudah menyediakan badge yang sama.
+///
 /// Serta mendukung aksi khusus layar via [extraLeadingActions] & [extraTrailingActions].
 class AppTopBarActions extends ConsumerWidget {
   const AppTopBarActions({

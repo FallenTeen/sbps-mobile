@@ -23,7 +23,7 @@ class ServisRepository {
   final OutboxSyncService _sync;
   static const _uuid = Uuid();
 
-  /// GET /master/armada — daftar semua armada untuk dropdown ajuan servis.
+  /// GET /master/armada - daftar semua armada untuk dropdown ajuan servis.
   Future<List<MasterArmada>> getMasterArmada() async {
     final res = await _api.get<List<MasterArmada>>(
       '/master/armada',
@@ -40,7 +40,7 @@ class ServisRepository {
     return res.data ?? const [];
   }
 
-  /// POST /servis-armada — Ajukan permohonan servis armada (Bagian 1).
+  /// POST /servis-armada - Ajukan permohonan servis armada (Bagian 1).
   /// Lewat outbox: offline → antrean, retry memakai Idempotency-Key yang
   /// SAMA (route punya middleware idempotency) sehingga double-submit
   /// dibalas respons asli, bukan membuat ajuan kedua.
@@ -74,7 +74,7 @@ class ServisRepository {
     return result;
   }
 
-  /// GET /servis-armada — Riwayat ajuan servis (paginasi).
+  /// GET /servis-armada - Riwayat ajuan servis (paginasi).
   Future<ServisArmadaPage> getRiwayatServis({
     int page = 1,
     String? status,
@@ -93,7 +93,7 @@ class ServisRepository {
         );
   }
 
-  /// GET /servis-armada/saya — Riwayat ajuan servis milik user aktif / armada yang di-PIC-kan.
+  /// GET /servis-armada/saya - Riwayat ajuan servis milik user aktif / armada yang di-PIC-kan.
   Future<List<ServisArmada>> getServisSaya() async {
     final res = await _api.get<List<ServisArmada>>(
       '/servis-armada/saya',
@@ -110,7 +110,7 @@ class ServisRepository {
     return res.data ?? const [];
   }
 
-  /// GET /servis-armada/{id} — Detail ajuan servis beserta sparepart dan workshop log.
+  /// GET /servis-armada/{id} - Detail ajuan servis beserta sparepart dan workshop log.
   Future<ServisArmada> getDetailServis(String id) async {
     final res = await _api.get<ServisArmada>(
       '/servis-armada/$id',
@@ -121,7 +121,7 @@ class ServisRepository {
     return res.data!;
   }
 
-  /// POST /servis-armada/{id}/approve — Persetujuan servis oleh Kepala Divisi / Admin.
+  /// POST /servis-armada/{id}/approve - Persetujuan servis oleh Kepala Divisi / Admin.
   Future<void> approveServis({required String id, String? catatan}) async {
     final res = await _api.post<Object?>(
       '/servis-armada/$id/approve',
@@ -130,7 +130,7 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// POST /servis-armada/{id}/tolak — Penolakan servis dengan alasan.
+  /// POST /servis-armada/{id}/tolak - Penolakan servis dengan alasan.
   Future<void> tolakServis({required String id, required String alasan}) async {
     final res = await _api.post<Object?>(
       '/servis-armada/$id/tolak',
@@ -139,7 +139,7 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// POST /servis-armada/eksternal — Pengajuan servis eksternal.
+  /// POST /servis-armada/eksternal - Pengajuan servis eksternal.
   Future<OutboxSendResult> submitServisEksternal({
     required String armadaId,
     required String namaBengkel,
@@ -186,7 +186,7 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/eksternal/nota — Tambah foto nota servis eksternal.
+  /// POST /servis-armada/{id}/eksternal/nota - Tambah foto nota servis eksternal.
   Future<OutboxSendResult> submitServisEksternalNota({
     required String servisId,
     required List<String> fotoNotaPaths,
@@ -210,7 +210,7 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/foto-hasil — Tambah foto hasil pengerjaan.
+  /// POST /servis-armada/{id}/foto-hasil - Tambah foto hasil pengerjaan.
   Future<OutboxSendResult> submitServisFotoHasil({
     required String servisId,
     required String fotoPath,
@@ -234,13 +234,13 @@ class ServisRepository {
     return result;
   }
 
-  /// POST /servis-armada/{id}/selesai — Driver atau workshop menandai servis selesai.
+  /// POST /servis-armada/{id}/selesai - Driver atau workshop menandai servis selesai.
   Future<void> selesaiServis({required String servisId}) async {
     final res = await _api.post<Object?>('/servis-armada/$servisId/selesai');
     _ensureSuccess(res);
   }
 
-  /// POST /workshop/servis-eksternal/{id}/verifikasi — Verifikasi Workshop.
+  /// POST /workshop/servis-eksternal/{id}/verifikasi - Verifikasi Workshop.
   Future<void> verifikasiServisEksternal({
     required String servisId,
     required String status,
@@ -257,7 +257,7 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// GET /servis-armada?tipe_servis=eksternal — Daftar servis eksternal untuk verifikasi workshop.
+  /// GET /servis-armada?tipe_servis=eksternal - Daftar servis eksternal untuk verifikasi workshop.
   Future<List<ServisArmada>> getServisEksternalList() async {
     final res = await _api.get<List<ServisArmada>>(
       '/servis-armada',

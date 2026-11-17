@@ -158,7 +158,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
           return true;
         }
       } catch (_) {}
-      // Tidak ada bukti sesi aktif — matikan tracking, jaga privasi.
+      // Tidak ada bukti sesi aktif - matikan tracking, jaga privasi.
       await LocationBufferService.setPresensiOpen(false);
       return false;
     }
@@ -233,7 +233,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
       message: null,
       pendingPoints: _buffer.count,
     );
-    // Tracking kembali sehat — izinkan pesan "tracking terputus"
+    // Tracking kembali sehat - izinkan pesan "tracking terputus"
     // berikutnya jika benar-benar bermasalah lagi.
     unawaited(LocationBufferService.clearInterruptedNotified());
 
@@ -270,7 +270,7 @@ class TrackingScheduler extends Notifier<TrackingStatus> {
     // Reset flag presensi di cache Hive agar watchdog dan evaluate() berikutnya
     // tidak salah membaca sisa cache dan merestart tracking di luar jam kerja.
     unawaited(LocationBufferService.setPresensiOpen(false));
-    // Sesi tracking berakhir — pesan "terputus" berikutnya boleh muncul lagi.
+    // Sesi tracking berakhir - pesan "terputus" berikutnya boleh muncul lagi.
     unawaited(LocationBufferService.clearInterruptedNotified());
 
     state = state.copyWith(

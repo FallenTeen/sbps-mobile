@@ -23,7 +23,7 @@ class OutboxRepository {
   Future<Box<String>>? _opening;
 
   /// FIFO gate: operasi mutasi menunggu chain ini selesai sebelum jalan.
-  /// Ibarat mutex cooperative — selamanya berisi Future yang menggantung
+  /// Ibarat mutex cooperative - selamanya berisi Future yang menggantung
   /// operasi berikutnya. Setiap enqueue: `_gate = _gate.then(operasiBaru)`.
   Future<void> _gate = Future<void>.value();
 
@@ -37,7 +37,7 @@ class OutboxRepository {
   void Function()? onChanged;
 
   /// Stream perubahan isi outbox (broadcast). Source of truth untuk UI
-  /// daftar aksi pending — menggantikan pola `onChanged → ref.invalidate`
+  /// daftar aksi pending - menggantikan pola `onChanged → ref.invalidate`
   /// yang memicu CircularDependencyError saat provider sedang di-build.
   final StreamController<void> _changeController =
       StreamController<void>.broadcast();
@@ -80,7 +80,7 @@ class OutboxRepository {
   /// Simpan aksi baru dan langsung coba kirim lewat [send].
   /// Mengembalikan hasil percobaan pertama.
   ///
-  /// Alur lock-aware (menutup H1 — jendela box.put → _inFlightActions):
+  /// Alur lock-aware (menutup H1 - jendela box.put → _inFlightActions):
   /// 1. Tandai id dalam `_enqueuing` (sebelum box.put).
   /// 2. Serialized: box.put + _notify (Hive write terkunci serial).
   /// 3. Luar lock: panggil `send(action)` (network call, bisa lama).
@@ -134,7 +134,7 @@ class OutboxRepository {
   /// + failed yang belum melewati batas retry.
   ///
   /// ID yang masih di dalam alur `enqueue` (belum selesai post-process)
-  /// DISARING KELUAR — syncNow worker tidak boleh memperebutkan action
+  /// DISARING KELUAR - syncNow worker tidak boleh memperebutkan action
   /// yang sedang dikirim oleh jalur `enqueue.send` langsung.
   Future<List<PendingAction>> pendingActions() => _serialized(() async {
     final box = await _ensureOpen();

@@ -7,7 +7,7 @@ void main() {
     test('copy queued menegaskan pengiriman tertunda otomatis', () {
       expect(
         kCopyQueued,
-        'Tersimpan. Pengiriman tertunda — akan dikirim otomatis.',
+        'Tersimpan. Pengiriman tertunda - akan dikirim otomatis.',
       );
       expect(kCopyQueued.contains('berhasil'), isFalse);
       expect(kCopyQueued.contains('berhasil disimpan'), isFalse);

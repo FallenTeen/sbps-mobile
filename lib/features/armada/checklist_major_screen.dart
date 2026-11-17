@@ -22,7 +22,7 @@ import 'models/armada.dart';
 import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 
-/// Checklist Major — Serah Terima Kendaraan (Section 21.10).
+/// Checklist Major - Serah Terima Kendaraan (Section 21.10).
 ///
 /// Workflow nyata 7 langkah: Pilih Kendaraan → Konteks Unit → Checklist
 /// (progres "X / 10 dinilai") → Bukti Foto → Review (ringkasan kondisi +
@@ -271,7 +271,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
           tooltip: 'Kembali',
           onPressed: _goBack,
         ),
-        title: Text('Checklist Serah Terima — ${_unit?.platNomor ?? ''}'),
+        title: Text('Checklist Serah Terima - ${_unit?.platNomor ?? ''}'),
         actions: const [PortalSwitchButton()],
       ),
       body: Column(
@@ -644,7 +644,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
             AppEmptyState(
               icon: Icons.verified_outlined,
               title: 'Semua Baik',
-              subtitle: 'Tidak ada item rusak — bukti foto tidak diperlukan.',
+              subtitle: 'Tidak ada item rusak - bukti foto tidak diperlukan.',
             )
           else ...[
             Text(
@@ -1082,7 +1082,7 @@ class _WizardStepHeader extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Langkah $stepIndex dari $totalSteps — $stepLabel',
+                  'Langkah $stepIndex dari $totalSteps - $stepLabel',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1158,7 +1158,7 @@ class _MajorItemTile extends StatelessWidget {
   final VoidCallback onDeletePhoto;
   final VoidCallback onPreview;
 
-  /// Kondisi item saat berangkat (mode kembali) — null bila tak tersedia.
+  /// Kondisi item saat berangkat (mode kembali) - null bila tak tersedia.
   final MajorChecklistStatus? berangkatHint;
 
   @override
@@ -1621,7 +1621,7 @@ Color _majorStatusColor(BuildContext context, MajorChecklistStatus s) {
 // Step 1: Pilih kendaraan
 // =============================================================================
 
-/// Unit terpilih — merangkum data dari `ArmadaSaya` (kaya konteks) atau
+/// Unit terpilih - merangkum data dari `ArmadaSaya` (kaya konteks) atau
 /// fallback `MasterArmada` (dropdown master).
 class _SelectedUnit {
   const _SelectedUnit({
@@ -1697,7 +1697,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Langkah 1 dari 5 — Pilih Kendaraan',
+                  'Langkah 1 dari 5 - Pilih Kendaraan',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

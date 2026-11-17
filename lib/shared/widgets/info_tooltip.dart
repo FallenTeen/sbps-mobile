@@ -54,12 +54,21 @@ class InfoTooltip extends StatelessWidget {
     final renderBox = context.findRenderObject() as RenderBox;
     final target = renderBox.localToGlobal(renderBox.size.center(Offset.zero));
 
-    final entry = OverlayEntry(
-      builder: (_) => _TooltipOverlay(target: target, message: message),
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _TooltipOverlay(
+        target: target,
+        message: message,
+        onDismiss: () {
+          if (entry.mounted) entry.remove();
+        },
+      ),
     );
 
     overlay.insert(entry);
-    Future.delayed(const Duration(seconds: 3), () => entry.remove());
+    Future.delayed(const Duration(seconds: 3), () {
+      if (entry.mounted) entry.remove();
+    });
   }
 
   void _showBottomSheet(BuildContext context) {
@@ -110,10 +119,15 @@ class InfoTooltip extends StatelessWidget {
 }
 
 class _TooltipOverlay extends StatefulWidget {
-  const _TooltipOverlay({required this.target, required this.message});
+  const _TooltipOverlay({
+    required this.target,
+    required this.message,
+    required this.onDismiss,
+  });
 
   final Offset target;
   final String message;
+  final VoidCallback onDismiss;
 
   @override
   State<_TooltipOverlay> createState() => _TooltipOverlayState();
@@ -151,9 +165,7 @@ class _TooltipOverlayState extends State<_TooltipOverlay>
       children: [
         Positioned.fill(
           child: GestureDetector(
-            onTap: () => _controller.reverse().then((_) {
-              // Overlay removed externally
-            }),
+            onTap: () => _controller.reverse().then((_) => widget.onDismiss()),
             behavior: HitTestBehavior.translucent,
           ),
         ),

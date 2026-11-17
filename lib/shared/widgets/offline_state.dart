@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_empty_state.dart';
 
-/// State offline penuh — pola "Offline State".
+/// State offline penuh - pola "Offline State".
 ///
 /// Dipakai saat konten membutuhkan koneksi (mis. halaman pemetaan bank soal,
 /// halaman yang melarang bekerja offline). Berbeda dari OfflineBanner yang

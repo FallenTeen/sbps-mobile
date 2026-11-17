@@ -31,7 +31,7 @@ class ProyekHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: null,
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: role == null
           ? const AppEmptyState(

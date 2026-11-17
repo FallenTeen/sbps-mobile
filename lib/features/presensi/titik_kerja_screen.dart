@@ -83,6 +83,7 @@ class _TitikKerjaScreenState extends ConsumerState<TitikKerjaScreen> {
         bottom: const BrandStrip(),
         actions: [
           AppTopBarActions(
+            showNotification: false,
             extraLeadingActions: [
               IconButton(
                 tooltip: 'Riwayat presensi',
@@ -319,7 +320,7 @@ class _LocationCard extends StatelessWidget {
             height: 22,
             child: SubmitSpinner(),
           ),
-          title: const Text('Mengambil lokasiâ€¦'),
+          title: const Text('Mengambil lokasi…'),
           subtitle: const Text('Jarak ke titik dihitung setelah posisi siap.'),
           trailing: IconButton(
             icon: const Icon(Icons.refresh),
@@ -353,7 +354,7 @@ class _LocationCard extends StatelessWidget {
       );
     }
 
-    // Ada posisi tapi sudah basi â†’ minta segarkan sebelum check-in.
+    // Ada posisi tapi sudah basi -> minta segarkan sebelum check-in.
     if (location.hasPosition && location.isStale) {
       return Card(
         color: theme.colorScheme.surfaceContainerHighest,
@@ -380,7 +381,7 @@ class _LocationCard extends StatelessWidget {
         title: const Text('Lokasi siap'),
         subtitle: Text(
           location.loading
-              ? 'Memperbarui lokasiâ€¦'
+              ? 'Memperbarui lokasi…'
               : 'Pilih titik kerja untuk check-in.',
         ),
         trailing: IconButton(

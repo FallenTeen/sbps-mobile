@@ -1,4 +1,4 @@
-/// Model modul Armada (driver) — docs/api-mobile.md §Armada.
+// Model modul Armada (driver) - docs/api-mobile.md §Armada.
 ///
 /// Dibaca dari endpoint `armada/saya`, `armada/ritase`, dan
 /// `armada/checklist-hari-ini`.
@@ -357,10 +357,10 @@ class ArmadaChecklist {
   /// pada kontrak lama; pada kontrak baru selalu null (lihat [pengisian]).
   final double? solarLiter;
 
-  /// Section 21: ODO-meter saat ini (km) — dari `awal.odo_pagi`.
+  /// Section 21: ODO-meter saat ini (km) - dari `awal.odo_pagi`.
   final double? odoKm;
 
-  /// Section 21: jam operasional (untuk alat stasioner) — dari `awal.hm_odo`.
+  /// Section 21: jam operasional (untuk alat stasioner) - dari `awal.hm_odo`.
   final double? jamOperasional;
 
   /// Checklist awal hari ini (null bila belum diisi).

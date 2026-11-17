@@ -238,7 +238,7 @@ enum MutasiTipe {
   String get label => this == MutasiTipe.masuk ? 'Masuk' : 'Keluar';
 }
 
-/// Asal catatan mutasi — dipetakan dari `referensi_type` di backend
+/// Asal catatan mutasi - dipetakan dari `referensi_type` di backend
 /// (PurchaseOrder / ProductionSession / StokOpname / pengajuan servis / manual).
 enum MutasiSumber {
   pembelian,
@@ -318,7 +318,7 @@ class StokMutasi {
   }
 }
 
-/// Halaman riwayat mutasi (`{ items, pagination }`) — format sama dengan
+/// Halaman riwayat mutasi (`{ items, pagination }`) - format sama dengan
 /// riwayat QC / ritase.
 class StokMutasiPage {
   const StokMutasiPage({

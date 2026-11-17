@@ -47,7 +47,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // isTodayFor — filter tanggal murni
+  // isTodayFor - filter tanggal murni
   // -------------------------------------------------------------------
   group('isTodayFor', () {
     final now = DateTime(2026, 9, 17, 12, 0, 0);
@@ -127,7 +127,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // qcSelesaiHariIni — BENAR-BENAR tanggal, bukan sekadar total
+  // qcSelesaiHariIni - BENAR-BENAR tanggal, bukan sekadar total
   // -------------------------------------------------------------------
   group('qcSelesaiHariIni', () {
     final now = DateTime(2026, 9, 17);
@@ -172,14 +172,11 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // qcHomeSummary — angka jujur untuk header QC
+  // qcHomeSummary - angka jujur untuk header QC
   // -------------------------------------------------------------------
   group('qcHomeSummary', () {
     test('memeta nilai menunggu & selesai hari ini', () {
-      final s = qcHomeSummary(
-        menungguPemeriksaan: 2,
-        selesaiHariIni: 5,
-      );
+      final s = qcHomeSummary(menungguPemeriksaan: 2, selesaiHariIni: 5);
       expect(s.menungguPemeriksaan, 2);
       expect(s.selesaiHariIni, 5);
     });
@@ -192,7 +189,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // validateNilaiWajib / validateNilaiOpsional — sesuai kontrak
+  // validateNilaiWajib / validateNilaiOpsional - sesuai kontrak
   // -------------------------------------------------------------------
   group('validateNilaiWajib', () {
     test('kosong → wajib', () {
@@ -244,7 +241,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // qcResultNote — tidak menghitung formula kelulusan (backend menentukan)
+  // qcResultNote - tidak menghitung formula kelulusan (backend menentukan)
   // -------------------------------------------------------------------
   group('qcResultNote', () {
     test('tanpa target & actual → hasil akan direkam', () {
@@ -269,7 +266,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // QcSample.fromJson — menoleransi bentuk produksi (string) dan session
+  // QcSample.fromJson - menoleransi bentuk produksi (string) dan session
   // (objek) sesuai MobileQcController
   // -------------------------------------------------------------------
   group('QcSample.fromJson', () {
@@ -354,13 +351,10 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // Widget: Home QC — queue-first
+  // Widget: Home QC - queue-first
   // -------------------------------------------------------------------
   group('QcHomeScreen (widget)', () {
-    Future<void> pumpHome(
-      WidgetTester tester, {
-      QcHomeData? data,
-    }) async {
+    Future<void> pumpHome(WidgetTester tester, {QcHomeData? data}) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -380,8 +374,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('menampilkan ringkasan menunggu & selesai hari ini',
-        (WidgetTester tester) async {
+    testWidgets('menampilkan ringkasan menunggu & selesai hari ini', (
+      WidgetTester tester,
+    ) async {
       final now = DateTime(2026, 9, 17);
       await pumpHome(
         tester,
@@ -415,15 +410,16 @@ void main() {
       expect(find.text('2 Menunggu Pemeriksaan'), findsOneWidget);
       expect(find.text('5 Selesai Hari Ini'), findsOneWidget);
       expect(find.text('Antrian Pemeriksaan'), findsOneWidget);
-      expect(find.text('Ready Mix — Batching 1'), findsOneWidget);
-      expect(find.text('Beton K300 — Batching 2'), findsOneWidget);
+      expect(find.text('Ready Mix - Batching 1'), findsOneWidget);
+      expect(find.text('Beton K300 - Batching 2'), findsOneWidget);
       expect(find.textContaining('Titik A'), findsOneWidget);
       expect(find.textContaining('Titik B'), findsOneWidget);
       expect(find.text('Menunggu Uji Tekan'), findsNWidgets(2));
     });
 
-    testWidgets('antrian kosong → empty state bermakna',
-        (WidgetTester tester) async {
+    testWidgets('antrian kosong → empty state bermakna', (
+      WidgetTester tester,
+    ) async {
       await pumpHome(
         tester,
         data: const QcHomeData(
@@ -435,8 +431,9 @@ void main() {
       expect(find.text('Tidak Ada Pemeriksaan Menunggu'), findsOneWidget);
     });
 
-    testWidgets('tap item antrian membuka sheet dengan context produksi',
-        (WidgetTester tester) async {
+    testWidgets('tap item antrian membuka sheet dengan context produksi', (
+      WidgetTester tester,
+    ) async {
       final now = DateTime(2026, 9, 17, 8, 30);
       await pumpHome(
         tester,
@@ -456,7 +453,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Ready Mix — Batching 1'));
+      await tester.tap(find.text('Ready Mix - Batching 1'));
       await tester.pumpAndSettle();
 
       expect(find.text('Catat Uji Tekan'), findsOneWidget);

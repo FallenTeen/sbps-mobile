@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Tema-warna aplikasi SBPS sebagai `ThemeExtension`.
 ///
 /// Dipakai untuk semua warna inline yang dulu memakai konstanta statis
-/// `AppTheme.*` (mis. `context.colors.textPrimary`) — supaya warnanya otomatis
+/// `AppTheme.*` (mis. `context.colors.textPrimary`) - supaya warnanya otomatis
 /// mengikuti mode terang/gelap tanpa perlu cabang `if (isDark)`. Diakses
 /// lewat `context.colors.*` (ekstensi `AppThemeContext`).
 ///
@@ -49,13 +49,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color textTertiary;
   final Color textMuted;
 
-  /// Warna data positif chart (masuk/pass-rate) — kontras AA di atas card.
+  /// Warna data positif chart (masuk/pass-rate) - kontras AA di atas card.
   final Color chartPositive;
 
-  /// Warna data negatif chart (keluar/gagal) — kontras AA di atas card.
+  /// Warna data negatif chart (keluar/gagal) - kontras AA di atas card.
   final Color chartNegative;
 
-  /// Garis grid chart — terlihat baik di mode terang maupun gelap.
+  /// Garis grid chart - terlihat baik di mode terang maupun gelap.
   final Color chartGridLine;
 
   /// Warna batang primer chart (mis. chart produksi).
@@ -68,10 +68,13 @@ class AppColors extends ThemeExtension<AppColors> {
     card: Color(0xFFFFFFFF),
     border: Color(0xFFE2E8F0),
     primary: Color(0xFFDC2626),
-    secondary: Color(0xFF6366F1),
-    info: Color(0xFF3B82F6),
-    success: Color(0xFF10B981),
-    warning: Color(0xFFF59E0B),
+    // Aksen semantis mode terang digelapkan satu langkah agar teks 12–14sp
+    // di atas permukaan terang memenuhi WCAG AA ≥4.5:1 (nilai lama:
+    // warning 2.15:1, success 2.54:1, info 3.68:1, secondary 4.47:1).
+    secondary: Color(0xFF4F46E5),
+    info: Color(0xFF2563EB),
+    success: Color(0xFF047857),
+    warning: Color(0xFFB45309),
     error: Color(0xFFB91C1C),
     textPrimary: Color(0xFF0F172A),
     textSecondary: Color(0xFF475569),

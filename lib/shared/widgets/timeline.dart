@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 /// Status titik timeline.
 enum TimelineStatus { done, current, pending, rejected }
 
-/// Model item garis waktu — pola "Timeline".
+/// Model item garis waktu - pola "Timeline".
 class TimelineItem {
   const TimelineItem({
     required this.title,
@@ -27,7 +27,7 @@ class TimelineItem {
 
 /// Garis waktu vertikal dengan titik status berwarna.
 ///
-/// Konsisten dengan WorkflowStepper (step indicator) — titik hijau = selesai,
+/// Konsisten dengan WorkflowStepper (step indicator) - titik hijau = selesai,
 /// merah = sedang, abu = belum. Dipakai untuk riwayat / proses bertahap.
 class Timeline extends StatelessWidget {
   const Timeline({super.key, required this.items, this.padding = const EdgeInsets.symmetric(vertical: 4)});

@@ -15,7 +15,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import 'servis_status.dart';
 
-/// Drill-down satu unit armada — monitoring operasional yang dapat ditindaklanjuti.
+/// Drill-down satu unit armada - monitoring operasional yang dapat ditindaklanjuti.
 ///
 /// Menampilkan: informasi unit, status, titik, ODO/HM (bila tersedia),
 /// peringatan nyata, dan riwayat servis unit ini beserta aksi (ajukan servis,
@@ -326,7 +326,7 @@ class _UnitInfoChip extends StatelessWidget {
   }
 }
 
-/// Baris satu servis unit — tap untuk membuka detail.
+/// Baris satu servis unit - tap untuk membuka detail.
 class _ServisTile extends StatelessWidget {
   const _ServisTile({required this.item});
 

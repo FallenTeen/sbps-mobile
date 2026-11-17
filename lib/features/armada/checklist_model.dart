@@ -1,4 +1,4 @@
-/// Model & pure-logic checklist harian armada — docs/api-mobile.md §Armada,
+// Model & pure-logic checklist harian armada - docs/api-mobile.md §Armada,
 /// Section 21. Business rule tetap dua kondisi (`kondisi_baik` / bukan baik);
 /// tiga level item di bawah hanyalah pembeda kualitas input dari sisi app.
 library;

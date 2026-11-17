@@ -26,8 +26,6 @@ class AppTheme {
   static const Color _surfaceVariant = Color(0xFFF1F5F9);
   static const Color _background = Color(0xFFF8FAFC);
   static const Color _error = Color(0xFFB91C1C);
-  static const Color _success = Color(0xFF10B981);
-  static const Color _warning = Color(0xFFF59E0B);
 
   // ── Brand Gradient ─────────────────────────────────────────────────────────
   /// Gradien identitas SBPS: dipakai di splash, header ringkasan,
@@ -166,10 +164,10 @@ class AppTheme {
       color: Color(0xFF64748B),
     ),
     labelSmall: const TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
       letterSpacing: 0.3,
-      color: Color(0xFF94A3B8),
+      color: Color(0xFF64748B),
     ),
   );
 
@@ -222,7 +220,8 @@ class AppTheme {
       borderSide: const BorderSide(color: _error),
     ),
     labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+    // Hint diangkat ke slate-500: #94A3B8 (2.56:1) gagal AA di atas fill putih.
+    hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
   );
 
   // ── Main ThemeData ─────────────────────────────────────────────────────────
@@ -254,7 +253,6 @@ class AppTheme {
   static const Color _darkTextPrimary = Color(0xFFF1F5F9);
   static const Color _darkTextSecondary = Color(0xFFC7CDD8);
   static const Color _darkTextTertiary = Color(0xFF9AA3B2);
-  static const Color _darkTextMuted = Color(0xFF6B7280);
   static const Color _darkPrimary = Color(0xFFF87171);
   static const Color _darkOnPrimary = Color(0xFF3D0A0A);
 
@@ -461,20 +459,22 @@ class AppTheme {
       borderSide: const BorderSide(color: Color(0xFFF28B82)),
     ),
     labelStyle: const TextStyle(color: _darkTextTertiary, fontSize: 14),
-    hintStyle: const TextStyle(color: _darkTextMuted, fontSize: 14),
+    // Hint gelap memakai slate-400 (#94A3B8): #6B7280 hanya 3.10:1 di atas
+    // surfaceVariant gelap.
+    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
   );
 
   // ── Design Tokens (for inline use) ─────────────────────────────────────────
   static const Color primaryColor = _primary;
-  static const Color secondaryColor = _secondary;
+  static const Color secondaryColor = Color(0xFF4F46E5);
   static const Color tertiaryColor = _tertiary;
   static const Color surfaceColor = _surface;
   static const Color surfaceVariantColor = _surfaceVariant;
   static const Color backgroundColor = _background;
   static const Color errorColor = _error;
-  static const Color successColor = _success;
-  static const Color warningColor = _warning;
-  static const Color infoColor = Color(0xFF3B82F6);
+  static const Color successColor = Color(0xFF047857);
+  static const Color warningColor = Color(0xFFB45309);
+  static const Color infoColor = Color(0xFF2563EB);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF64748B);
@@ -486,8 +486,8 @@ class AppTheme {
 /// Warna spinner/label saat tombol sengaja di-disable selama submit
 /// (fill abu M3: onSurface 12%).
 ///
-/// Memakai `onSurface` α38% — warna yang SAMA dengan disabled foreground
-/// bawaan Material — sehingga spinner tak lagi "putih tak terbaca" di atas
+/// Memakai `onSurface` α38% - warna yang SAMA dengan disabled foreground
+/// bawaan Material - sehingga spinner tak lagi "putih tak terbaca" di atas
 /// fill abu, baik di mode terang maupun gelap.
 Color disabledForeground(BuildContext context) {
   return Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);

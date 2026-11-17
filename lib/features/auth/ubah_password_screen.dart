@@ -10,7 +10,7 @@ import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import 'auth_providers.dart';
 
-/// Layar Ubah Password — route `/profil/ubah-password`.
+/// Layar Ubah Password - route `/profil/ubah-password`.
 ///
 /// Memeriksa password saat ini, memvalidasi password baru minimal 8 karakter,
 /// serta mengirimkan `POST /change-password`.

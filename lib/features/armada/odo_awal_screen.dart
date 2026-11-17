@@ -20,13 +20,13 @@ import 'armada_providers.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
 
-/// ODO/HM Harian — input sekali per hari (KM untuk kendaraan, HM/jam untuk
+/// ODO/HM Harian - input sekali per hari (KM untuk kendaraan, HM/jam untuk
 /// alat berat). Source of truth ODO/HM adalah `GET /armada/saya` → [ArmadaSaya]
 /// yang juga dipakai Home, Checklist, dan Ritase.
 ///
 /// Menampilkan: tipe unit + satuan, terakhir (previous), sekarang (current),
 /// pemakaian (delta), serta warning ANOMALI bila nilai sekarang lebih kecil
-/// dari yang tercatat — nilai tidak diterima secara diam-diam, business rule
+/// dari yang tercatat - nilai tidak diterima secara diam-diam, business rule
 /// backend tidak diubah.
 class OdoAwalScreen extends ConsumerStatefulWidget {
   const OdoAwalScreen({super.key});
@@ -127,7 +127,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
         _odoController.clear();
       }
     });
-    // Cek draft setelah prefill selesai — restore hanya ditawarkan bila
+    // Cek draft setelah prefill selesai - restore hanya ditawarkan bila
     // isinya benar-benar berbeda dari prefill (lihat _restoreFromDraft).
     await _autosave.load();
   }
@@ -229,7 +229,9 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
       if (context.canPop()) {
         context.pop();
       } else {
-        context.go('/armada/unit-saya');
+        // Kembali ke Beranda (Unit Saya juga dirender di branch Beranda -
+        // /armada/unit-saya adalah route duplikat yang memecah konteks back).
+        context.go('/home');
       }
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -446,7 +448,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           .map(
             (a) => DropdownMenuItem(
               value: a,
-              child: Text('${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}'),
+              child: Text('${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ""}'),
             ),
           )
           .toList(),
@@ -491,8 +493,8 @@ class _UnitTypeBanner extends StatelessWidget {
           Expanded(
             child: Text(
               isAlatBerat
-                  ? 'Alat Berat — nilai dalam HM (jam mesin)'
-                  : 'Kendaraan — nilai dalam KM (odometer)',
+                  ? 'Alat Berat - nilai dalam HM (jam mesin)'
+                  : 'Kendaraan - nilai dalam KM (odometer)',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),

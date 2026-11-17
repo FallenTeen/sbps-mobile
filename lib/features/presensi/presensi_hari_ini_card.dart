@@ -22,7 +22,7 @@ import 'presensi_providers.dart';
 
 String presensiSubmissionMessage(CheckInResult result) {
   if (result.luarRadius) {
-    return 'Presensi tercatat — Di luar area kerja. Foto dan lokasi tetap tersimpan untuk review.';
+    return 'Presensi tercatat - Di luar area kerja. Foto dan lokasi tetap tersimpan untuk review.';
   }
 
   if (result.queued) {
@@ -137,7 +137,7 @@ class PresensiHariIniCard extends ConsumerWidget {
 
     // Pre-feedback: bila posisi di luar radius titik saat check-in, jelaskan
     // jarak, batas radius, dan konsekuensinya SEBELUM aksi. Backend tetap
-    // validator final — business rule radius tidak diubah.
+    // validator final - business rule radius tidak diubah.
     if (endpoint == PendingEndpoint.presensiCheckIn) {
       final jarak = ref.read(selectedTitikDistanceProvider);
       if (jarak != null && jarak > titik.radiusPresensiMeter) {
@@ -282,7 +282,7 @@ class PresensiHariIniCard extends ConsumerWidget {
                         child: Text(
                           adaLokasi
                               ? 'Foto dilengkapi data lokasi (watermark).'
-                              : 'Foto tanpa data lokasi — koordinat GPS atmosferik dipakai.',
+                              : 'Foto tanpa data lokasi - koordinat GPS atmosferik dipakai.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -372,7 +372,7 @@ class PresensiHariIniCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Posisi Anda saat ini berjarak ${_fmtDistance(jarak)} dari titik "${titik.nama}" — melebihi radius presensi ${titik.radiusPresensiMeter.round()} m yang ditetapkan.',
+                    'Posisi Anda saat ini berjarak ${_fmtDistance(jarak)} dari titik "${titik.nama}" - melebihi radius presensi ${titik.radiusPresensiMeter.round()} m yang ditetapkan.',
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
@@ -778,7 +778,7 @@ class _GpsStatusStrip extends StatelessWidget {
       fg = onGradient ? Colors.white : context.colors.warning;
       icon = Icons.warning_amber_rounded;
       pesan =
-          'Luar radius — ${_fmtDistance(jd)} dari "${t.nama}" (batas ${t.radiusPresensiMeter.round()} m). Presensi akan ditandai untuk review.';
+          'Luar radius - ${_fmtDistance(jd)} dari "${t.nama}" (batas ${t.radiusPresensiMeter.round()} m). Presensi akan ditandai untuk review.';
       showRefresh = false;
     } else if (jd != null) {
       bg = onGradient
@@ -786,7 +786,7 @@ class _GpsStatusStrip extends StatelessWidget {
           : context.colors.success.withValues(alpha: 0.1);
       fg = onGradient ? Colors.white : context.colors.success;
       icon = Icons.check_circle_outline;
-      pesan = 'Dalam radius — ${_fmtDistance(jd)} dari "${t.nama}".';
+      pesan = 'Dalam radius - ${_fmtDistance(jd)} dari "${t.nama}".';
       showRefresh = false;
     } else {
       bg = Colors.black.withValues(alpha: 0.25);
@@ -874,7 +874,7 @@ class _CompletedCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Masuk ${fmtWaktu(presensi.checkIn)} — Pulang ${fmtWaktu(presensi.checkOut)}',
+                    'Masuk ${fmtWaktu(presensi.checkIn)} - Pulang ${fmtWaktu(presensi.checkOut)}',
                     style: TextStyle(
                       color: context.colors.textTertiary,
                       fontSize: 13,

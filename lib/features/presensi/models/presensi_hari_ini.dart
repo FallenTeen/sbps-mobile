@@ -6,7 +6,7 @@ enum PresensiStatus { belumCheckIn, menungguCheckOut, selesai }
 
 /// Ringkasan presensi hari ini.
 ///
-/// Saat `belum_check_in`, backend tetap mengirim objek dengan field null —
+/// Saat `belum_check_in`, backend tetap mengirim objek dengan field null -
 /// diparse menjadi [PresensiStatus.belumCheckIn] dengan field kosong.
 class PresensiHariIni {
   const PresensiHariIni({

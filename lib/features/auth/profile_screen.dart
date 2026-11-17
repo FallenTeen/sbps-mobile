@@ -13,7 +13,7 @@ import '../portal/portal_providers.dart';
 import '../presensi/presensi_providers.dart';
 import 'auth_providers.dart';
 
-/// Layar profil user — role aktif, portal, preferensi, aktivitas (notifikasi
+/// Layar profil user - role aktif, portal, preferensi, aktivitas (notifikasi
 /// & data pending), keamanan (ganti password), dan logout
 /// (docs/api-mobile.md §5.5, §5.8).
 ///

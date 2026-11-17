@@ -73,7 +73,7 @@ class _InventoryRequestDetailScreenState
     );
   }
 
-  /// Pilih item yang akan ditandai tersedia — default semua belum tersedia.
+  /// Pilih item yang akan ditandai tersedia - default semua belum tersedia.
   Future<List<InventoryRequestItem>?> _pickItems(
     List<InventoryRequestItem> outstanding,
   ) {

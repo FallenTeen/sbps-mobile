@@ -4,7 +4,7 @@ import 'models/production_session.dart';
 
 /// Repository Laporan Produksi Harian (docs/api-mobile.md §8) + master
 /// data §8.6. Endpoint tulis memakai `client_uuid` di BODY (bukan header
-/// Idempotency-Key) — dijalankan via outbox agar tahan offline.
+/// Idempotency-Key) - dijalankan via outbox agar tahan offline.
 class ProduksiRepository {
   ProduksiRepository({required ApiClient api}) : _api = api;
 
@@ -46,7 +46,7 @@ class ProduksiRepository {
     return res.data ?? const [];
   }
 
-  /// GET /produksi/sesi-aktif — daftar sesi berstatus berjalan.
+  /// GET /produksi/sesi-aktif - daftar sesi berstatus berjalan.
   Future<List<ProductionSession>> getSesiAktif() async {
     final res = await _api.get<List<ProductionSession>>(
       '/produksi/sesi-aktif',
@@ -83,7 +83,7 @@ class ProduksiRepository {
         );
   }
 
-  /// GET /produksi/titik-progress — ringkasan output per titik hari ini.
+  /// GET /produksi/titik-progress - ringkasan output per titik hari ini.
   Future<(String, List<TitikProgressItem>)> getTitikProgress() async {
     final res = await _api.get<Map<String, dynamic>>(
       '/produksi/titik-progress',

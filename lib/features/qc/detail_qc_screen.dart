@@ -37,7 +37,7 @@ class DetailQcScreen extends ConsumerWidget {
   }
 }
 
-/// Konten detail QC tanpa Scaffold/AppBar — dipakai sebagai body full-page
+/// Konten detail QC tanpa Scaffold/AppBar - dipakai sebagai body full-page
 /// maupun panel kanan [AdaptiveMasterDetail] saat Expanded.
 class DetailQcContent extends ConsumerWidget {
   const DetailQcContent({super.key, required this.sampleId});

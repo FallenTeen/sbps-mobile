@@ -151,6 +151,11 @@ class _SecurityLaporanDaruratScreenState
 
             // Tingkat Kedaruratan
             const Text('Tingkat Kedaruratan', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              'Siaga: perlu dipantau • Darurat: perlu tindakan segera • Kritis: bahaya nyata, Evak / panggil bantuan.',
+              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+            ),
             const SizedBox(height: 8),
             SegmentedButton<String>(
               segments: [

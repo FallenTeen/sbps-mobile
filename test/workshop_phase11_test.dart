@@ -60,22 +60,27 @@ InventoryRequest _req(String jobId, InventoryRequestStatus status) {
 }
 
 void main() {
-  group('Antrian Workshop — reject tidak masuk pending', () {
-    test('antrianFromRaw hanya mempertahankan disetujui/dikerjakan/selesai', () {
-      final jobs = WorkshopRepository.antrianFromRaw(_rawServisItems([
-        'diajukan',
-        'disetujui',
-        'ditolak',
-        'dikerjakan',
-        'selesai',
-      ]));
-      expect(jobs.length, 3);
-      expect(jobs.map((j) => j.status), [
-        WorkshopJobStatus.menunggu, // disetujui
-        WorkshopJobStatus.dikerjakan,
-        WorkshopJobStatus.selesai,
-      ]);
-    });
+  group('Antrian Workshop - reject tidak masuk pending', () {
+    test(
+      'antrianFromRaw hanya mempertahankan disetujui/dikerjakan/selesai',
+      () {
+        final jobs = WorkshopRepository.antrianFromRaw(
+          _rawServisItems([
+            'diajukan',
+            'disetujui',
+            'ditolak',
+            'dikerjakan',
+            'selesai',
+          ]),
+        );
+        expect(jobs.length, 3);
+        expect(jobs.map((j) => j.status), [
+          WorkshopJobStatus.menunggu, // disetujui
+          WorkshopJobStatus.dikerjakan,
+          WorkshopJobStatus.selesai,
+        ]);
+      },
+    );
 
     test('antrianFromRaw menangani pembungkus {data: []}', () {
       final jobs = WorkshopRepository.antrianFromRaw({
@@ -87,11 +92,14 @@ void main() {
 
     test('ditolak/diajukan bukan pekerjaan workshop', () {
       expect(WorkshopRepository.isWorkForWorkshop(_servis('ditolak')), isFalse);
-      expect(WorkshopRepository.isWorkForWorkshop(_servis('diajukan')), isFalse);
+      expect(
+        WorkshopRepository.isWorkForWorkshop(_servis('diajukan')),
+        isFalse,
+      );
     });
   });
 
-  group('Selesai Hari Ini — benar-benar berdasarkan tanggal', () {
+  group('Selesai Hari Ini - benar-benar berdasarkan tanggal', () {
     final now = DateTime(2026, 9, 16, 12, 0);
 
     test('isTodayFor mencocokkan hari yang sama', () {
@@ -118,7 +126,7 @@ void main() {
     });
   });
 
-  group('Menunggu Sparepart — dari request inventori nyata', () {
+  group('Menunggu Sparepart - dari request inventori nyata', () {
     test('hanya request pending/diproses yang dihitung', () {
       final jobs = [
         _job('dikerjakan', id: 'j1'),
@@ -128,7 +136,10 @@ void main() {
       final requests = [
         _req('j1', InventoryRequestStatus.pending),
         _req('j2', InventoryRequestStatus.diproses),
-        _req('j3', InventoryRequestStatus.pending), // job selesai — dikecualikan
+        _req(
+          'j3',
+          InventoryRequestStatus.pending,
+        ), // job selesai - dikecualikan
         _req('ghost', InventoryRequestStatus.pending), // bukan job di antrian
         InventoryRequest(
           id: 'x',
@@ -138,7 +149,7 @@ void main() {
           status: InventoryRequestStatus.ditolak,
           items: const [],
           createdAt: DateTime.now(),
-        ), // ditolak — tidak menunggu
+        ), // ditolak - tidak menunggu
       ];
       final waiting = sparepartWaitingJobIds(jobs, requests);
       expect(waiting, {'j1', 'j2'});
@@ -147,7 +158,9 @@ void main() {
 
     test('job 0-item / selesai tidak menambah menunggu sparepart', () {
       final jobs = [_job('selesai', id: 's1')];
-      final waiting = sparepartWaitingJobIds(jobs, [_req('s1', InventoryRequestStatus.pending)]);
+      final waiting = sparepartWaitingJobIds(jobs, [
+        _req('s1', InventoryRequestStatus.pending),
+      ]);
       expect(waiting, isEmpty);
     });
   });
@@ -183,7 +196,10 @@ void main() {
     test('item belum semua selesai diblokir', () {
       final check = workshopCanComplete(
         status: WorkshopJobStatus.dikerjakan,
-        todos: [item('a', done: true, photo: '/tmp/x.jpg'), item('b')],
+        todos: [
+          item('a', done: true, photo: '/tmp/x.jpg'),
+          item('b'),
+        ],
       );
       expect(check.allowed, isFalse);
       expect(check.reason, contains('Selesaikan semua item'));
@@ -240,7 +256,7 @@ void main() {
     });
   });
 
-  group('Detail job — data lengkap dari servis', () {
+  group('Detail job - data lengkap dari servis', () {
     test('WorkshopJobDetail.fromJson mengurai pengaju, ODO, todos', () {
       final detail = WorkshopJobDetail.fromJson({
         'id': 'j1',

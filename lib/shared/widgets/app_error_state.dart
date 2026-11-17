@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_empty_state.dart';
 
-/// State error global — pola "Error State".
+/// State error global - pola "Error State".
 ///
 /// Dipakai saat data gagal dimuat (mis. network error, API down). Menampilkan
 /// ikon error besar + pesan + tombol "Coba Lagi". Mengkonsolidasikan pola

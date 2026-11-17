@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Judul section konsisten untuk mengelompokkan konten — pola "Section Header".
+/// Judul section konsisten untuk mengelompokkan konten - pola "Section Header".
 ///
 /// Dipakai sebelum kartu/list di dalam halaman. Ukuran 15–16 / 600 sesuai
 /// Design System global, dengan aksi opsional di kanan (mis. "Lihat Semua").

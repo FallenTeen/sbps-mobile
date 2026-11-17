@@ -27,6 +27,7 @@ import 'features/version/version_gate.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/notification_handler.dart';
 import 'shared/widgets/sync_action_button.dart';
+
 /// Handler FCM background/terminated: wajib top-level function (ketentuan Firebase).
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -48,14 +49,14 @@ Future<void> main() async {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // Crashlytics — tangkap semua error Flutter
+    // Crashlytics - tangkap semua error Flutter
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
   } catch (e) {
-    debugPrint('[FCM] Firebase init failed: $e — push notifications disabled');
+    debugPrint('[FCM] Firebase init failed: $e - push notifications disabled');
   }
 
   runApp(const ProviderScope(child: SbpsApp()));
@@ -91,7 +92,7 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
           ref.read(unreadCountProvider.notifier).reload();
         });
       } catch (_) {
-        // Firebase tidak terinisialisasi — skip.
+        // Firebase tidak terinisialisasi - skip.
       }
 
       // Setup notification tap handler (deep link).
@@ -127,7 +128,7 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
       await Future<void>.delayed(const Duration(seconds: 2));
       final running = ref.read(trackingSchedulerProvider).running;
       if (running) return;
-      // Maksimal 1x per episode masalah — jangan berulang tiap resume.
+      // Maksimal 1x per episode masalah - jangan berulang tiap resume.
       if (await LocationBufferService.isInterruptedNotified()) return;
       await LocationBufferService.setInterruptedNotified();
       final blocked = await LocationBufferService.isAuthBlocked();
@@ -154,26 +155,29 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
     if (last != null && now.difference(last) < const Duration(minutes: 5)) {
       return;
     }
-    Connectivity().checkConnectivity().then((results) {
-      final online = results.any(
-        (r) =>
-            r == ConnectivityResult.wifi ||
-            r == ConnectivityResult.mobile ||
-            r == ConnectivityResult.ethernet ||
-            r == ConnectivityResult.vpn,
-      );
-      if (!online || !mounted) return;
-      _lastVisualRefresh = DateTime.now();
-      ref.invalidate(armadaSayaProvider);
-      ref.invalidate(checklistHariIniProvider);
-      ref.invalidate(helpersProvider);
-      // refresh() (bukan invalidate): pertahankan item lama saat gagal.
-      ref.read(ritaseRiwayatProvider.notifier).refresh();
-      ref.read(unreadCountProvider.notifier).reload();
-      ref.read(pendingCountProvider.notifier).reload();
-    }).catchError((_) {
-      // Connectivity check gagal — anggap offline, lewati refresh.
-    });
+    Connectivity()
+        .checkConnectivity()
+        .then((results) {
+          final online = results.any(
+            (r) =>
+                r == ConnectivityResult.wifi ||
+                r == ConnectivityResult.mobile ||
+                r == ConnectivityResult.ethernet ||
+                r == ConnectivityResult.vpn,
+          );
+          if (!online || !mounted) return;
+          _lastVisualRefresh = DateTime.now();
+          ref.invalidate(armadaSayaProvider);
+          ref.invalidate(checklistHariIniProvider);
+          ref.invalidate(helpersProvider);
+          // refresh() (bukan invalidate): pertahankan item lama saat gagal.
+          ref.read(ritaseRiwayatProvider.notifier).refresh();
+          ref.read(unreadCountProvider.notifier).reload();
+          ref.read(pendingCountProvider.notifier).reload();
+        })
+        .catchError((_) {
+          // Connectivity check gagal - anggap offline, lewati refresh.
+        });
   }
 
   @override
@@ -250,30 +254,28 @@ class _Splash extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colors.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Text(
-                  'S',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+            // Logo SBPS - pola sama dengan login_screen.dart: gambar aset,
+            // dark mode di-tint putih (BlendMode.srcIn).
+            Center(
+              child: Theme.of(context).brightness == Brightness.dark
+                  ? ColorFiltered(
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      child: Image.asset(
+                        'assets/main-logo.png',
+                        width: 96,
+                        height: 96,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Image.asset(
+                      'assets/main-logo.png',
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.contain,
+                    ),
             ),
             const SizedBox(height: 20),
             Text(

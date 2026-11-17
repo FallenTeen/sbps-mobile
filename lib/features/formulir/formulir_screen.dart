@@ -47,7 +47,7 @@ String _presensiStatusLabel(PresensiStatus status) => switch (status) {
   PresensiStatus.selesai => 'Selesai',
 };
 
-/// Status laporan untuk kartu index — menjelaskan "langkah apa berikutnya".
+/// Status laporan untuk kartu index - menjelaskan "langkah apa berikutnya".
 enum _ReportStatus { belumDiisi, menungguSinkron, selesai }
 
 class FormulirScreen extends ConsumerWidget {
@@ -139,7 +139,7 @@ class _FormulirBody extends ConsumerWidget {
   }
 }
 
-/// Kartu index — "Laporan Lapangan Hari Ini": laporan hari ini, jumlah
+/// Kartu index - "Laporan Lapangan Hari Ini": laporan hari ini, jumlah
 /// lengkap/belum lengkap, titik, tanggal, status, dan next action.
 /// Jangan menampilkan daftar record tanpa konteks.
 class _LaporanIndexCard extends StatelessWidget {
@@ -796,12 +796,12 @@ class _FormulirEditorState extends ConsumerState<_FormulirEditor> {
           ),
           KeyValueRow(
             label: 'Kondisi area',
-            value: reviewKondisi.isEmpty ? '—' : reviewKondisi,
+            value: reviewKondisi.isEmpty ? '-' : reviewKondisi,
           ),
           KeyValueRow(label: 'Kendala', value: reviewKendala),
           KeyValueRow(
             label: 'Catatan tambahan',
-            value: reviewCatatan.isEmpty ? '—' : reviewCatatan,
+            value: reviewCatatan.isEmpty ? '-' : reviewCatatan,
           ),
           KeyValueRow(label: 'Dokumentasi', value: '${_foto.length} foto'),
           const SizedBox(height: 4),
@@ -891,7 +891,7 @@ class _FormulirEditorState extends ConsumerState<_FormulirEditor> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: Text(
-                      'Draft tersimpan otomatis di perangkat — aman bila '
+                      'Draft tersimpan otomatis di perangkat - aman bila '
                       'aplikasi tertutup.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: context.colors.textTertiary,

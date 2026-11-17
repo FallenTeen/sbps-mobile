@@ -59,7 +59,7 @@ const kProyekModules = <ProyekModule>[
   ),
 ];
 
-/// Permission matrix sisi client — HANYA lapisan UX untuk navigasi/guard
+/// Permission matrix sisi client - HANYA lapisan UX untuk navigasi/guard
 /// route. Validasi sesungguhnya tetap di backend (403 kalau ditembus
 /// langsung). Catatan backend: guard "Admin" = `Owner` ATAU
 /// `Admin Keuangan`, jadi keduanya mendapat akses penuh di sini.
@@ -67,7 +67,10 @@ class RolePermissions {
   const RolePermissions._();
 
   static const Map<String, Set<String>> _matrix = <String, Set<String>>{
-    'Mandor Titik': {'produksi', 'qc', 'tracking', 'dashboard'},
+    // Catatan: 'tracking' TIDAK diberikan ke Mandor Titik - guard router
+    // `/tracking` mensyaratkan isAdminLike (Owner/Admin Keuangan), jadi
+    // permission ini hanya menghasilkan kartu modul yang menolak klik.
+    'Mandor Titik': {'produksi', 'qc', 'dashboard'},
     'Mandor Proyek': {'produksi', 'qc'},
     'Koordinator CBP': {'produksi', 'qc'},
     'Koordinator AMP': {'produksi', 'qc'},
@@ -98,7 +101,7 @@ class RolePermissions {
     'Driver Standby': {'armada'},
     'Driver Kondisional': {'armada'},
     'Operator Alat Berat': {'armada'},
-    // F-02: tanpa 'logistik' — role ini tidak punya permission logistik
+    // F-02: tanpa 'logistik' - role ini tidak punya permission logistik
     // di backend (verify ritase logistik|manage timbang) → modul akan 403.
     'Kepala Divisi Armada': {'armada', 'dashboard'},
     'Ketua Divisi Armada': {'armada', 'dashboard'},
@@ -128,7 +131,7 @@ AdaptiveNavDestination _homeDestination() => const AdaptiveNavDestination(
   selectedIcon: AppIcons.navHomeActive,
 );
 
-/// Tab "Presensi" — universal untuk semua role (tiap karyawan wajib absen,
+/// Tab "Presensi" - universal untuk semua role (tiap karyawan wajib absen,
 /// termasuk Driver Armada, Workshop, Inventory, dan role manajemen).
 AdaptiveNavDestination _presensiDestination() => const AdaptiveNavDestination(
   key: 'presensi',
@@ -152,7 +155,7 @@ AdaptiveNavDestination _tugasDestination() => const AdaptiveNavDestination(
 );
 
 /// Branch indeks di dalam shell tunggal SBPS Mobile untuk tab Presensi dan
-/// Notifikasi (branch 10 & 11 — see [navBranchFor]).
+/// Notifikasi (branch 10 & 11 - see [navBranchFor]).
 const kPresensiBranchIndex = 10;
 const kNotifikasiBranchIndex = 11;
 
@@ -187,7 +190,7 @@ enum AppHomeKind { presensi, driver, workshop, inventory, logistik, security, pr
 /// - Workshop → "Workshop Hari Ini" (antrian).
 /// - Inventory → "Perhatian Hari Ini" (stok rendah / request / opname).
 /// - Role lain (Mandor/Owner/Admin/Kontraktor/Kepala Divisi) → module cards
-///   penuh ([ProyekHomeScreen]) — attention + operational + modul.
+///   penuh ([ProyekHomeScreen]) - attention + operational + modul.
 AppHomeKind appHomeKindFor({
   required String? role,
   required bool presensiPortal,

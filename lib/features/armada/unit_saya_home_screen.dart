@@ -17,7 +17,7 @@ import 'armada_providers.dart';
 import 'checklist_model.dart';
 import 'models/armada.dart';
 
-/// Driver Home — pusat pekerjaan harian driver.
+/// Driver Home - pusat pekerjaan harian driver.
 ///
 /// Menjawab: unit saya apa, lokasi saya di mana, apa yang selesai, apa yang
 /// berikutnya, dan apa yang bermasalah hari ini.
@@ -47,7 +47,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -98,7 +98,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
               );
             }
 
-            // driver bisa ditugaskan > 1 unit — Beranda harus bisa
+            // driver bisa ditugaskan > 1 unit - Beranda harus bisa
             // menampilkan & berpindah antar unit, bukan diam-diam memakai
             // unit pertama saja.
             ArmadaSaya armada = items.first;
@@ -115,7 +115,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                 .where((r) => r.tanggal != null && r.tanggal!.startsWith(today))
                 // Multi-unit: jangan campurkan muatan unit lain ke ringkasan
                 // unit terpilih (ritase tanpa armada_id dianggap milik
-                // driver — tetap tampil).
+                // driver - tetap tampil).
                 .where(
                   (r) =>
                       items.length == 1 ||
@@ -565,7 +565,7 @@ class _PekerjaanHariIni extends ConsumerWidget {
         .toList();
 
     // submission offline (masih di outbox) tidak terlihat di data
-    // server — tanpa overlay ini driver menganggap datanya hilang dan
+    // server - tanpa overlay ini driver menganggap datanya hilang dan
     // mengisi ulang. Flag step menyala juga untuk data yang masih lokal.
     final pending =
         ref.watch(pendingActionsProvider).value ?? const <PendingAction>[];
@@ -584,7 +584,7 @@ class _PekerjaanHariIni extends ConsumerWidget {
     final pendingChecklistAkhir = hasPendingSync(
       PendingEndpoint.armadaChecklistAkhir,
     );
-    final kSync = 'Tersimpan — menunggu sinkronisasi';
+    final kSync = 'Tersimpan - menunggu sinkronisasi';
 
     final hasChecklist =
         myChecklists.any((c) => c.sudahIsi) || pendingChecklistAwal;
@@ -1159,6 +1159,18 @@ class _ShortcutSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+          _ShortcutTile(
+            icon: Icons.route_outlined,
+            title: 'Riwayat Muatan',
+            subtitle: 'Pengiriman & upah per muatan',
+            onTap: () => context.push('/armada/ritase'),
+          ),
+          _ShortcutTile(
+            icon: Icons.dashboard_outlined,
+            title: 'Dashboard Saya',
+            subtitle: 'Ringkasan kinerja & muatan hari ini',
+            onTap: () => context.push('/armada/dashboard-saya'),
+          ),
           _ShortcutTile(
             icon: Icons.build_outlined,
             title: 'Ajukan Servis',

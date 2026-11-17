@@ -70,7 +70,7 @@ void main() {
     });
   });
 
-  group('AdaptiveNavShell — role aktif selalu terlihat (Phase 18)', () {
+  group('AdaptiveNavShell - role aktif selalu terlihat (Phase 18)', () {
     const destinations = [
       AdaptiveNavDestination(
         key: 'home',
@@ -122,7 +122,7 @@ void main() {
     });
   });
 
-  group('RegisterScreen — validasi konfirmasi password (Phase 18)', () {
+  group('RegisterScreen - validasi konfirmasi password (Phase 18)', () {
     Finder fieldWithLabel(String label) =>
         find.widgetWithText(TextFormField, label);
 
@@ -204,7 +204,7 @@ void main() {
     });
   });
 
-  group('LoginScreen — error copy ramah user (no raw exception)', () {
+  group('LoginScreen - error copy ramah user (no raw exception)', () {
     testWidgets('ApiException server → pesan server ditampilkan', (
       tester,
     ) async {
@@ -248,7 +248,7 @@ void main() {
     });
   });
 
-  group('ProfileScreen — profil lengkap & role aktif (Phase 18)', () {
+  group('ProfileScreen - profil lengkap & role aktif (Phase 18)', () {
     testWidgets('menampilkan "Bekerja sebagai", portal, aktivitas & logout', (
       tester,
     ) async {

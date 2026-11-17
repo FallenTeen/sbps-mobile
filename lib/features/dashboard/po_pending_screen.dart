@@ -10,7 +10,7 @@ import 'status_chip.dart';
 import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
-/// Daftar PO menunggu approval (Owner/Admin Keuangan) — server dibatasi
+/// Daftar PO menunggu approval (Owner/Admin Keuangan) - server dibatasi
 /// maks 20 item terbaru; UI memberi label eksplisit bila tepat 20
 /// (kemungkinan ada lebih banyak yang tidak tampil).
 class PoPendingScreen extends ConsumerWidget {
@@ -75,7 +75,7 @@ class PoPendingScreen extends ConsumerWidget {
                 if (i == 0) {
                   return const InfoBanner(
                     message:
-                        'Layar ini bersifat read-only — persetujuan PO '
+                        'Layar ini bersifat read-only - persetujuan PO '
                         'dikelola oleh tim finansial melalui sistem lain.',
                   );
                 }

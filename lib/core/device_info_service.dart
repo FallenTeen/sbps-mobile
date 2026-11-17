@@ -15,7 +15,7 @@ class DeviceInfoService {
   String? _type;
   String? _name;
 
-  /// 'android' / 'ios' — fallback 'android' di platform lain (dev desktop).
+  /// 'android' / 'ios' - fallback 'android' di platform lain (dev desktop).
   String get type => _type ?? 'android';
 
   /// Contoh: "Xiaomi M2012K11AC". Fallback 'unknown' sampai [load] selesai.
@@ -33,7 +33,7 @@ class DeviceInfoService {
         _name = info.utsname.machine;
       }
     } catch (_) {
-      // Biarkan fallback type/name default — backend masih menerima request.
+      // Biarkan fallback type/name default - backend masih menerima request.
     }
   }
 }

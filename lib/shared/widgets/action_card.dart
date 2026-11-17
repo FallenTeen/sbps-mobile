@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Kartu aksi berdiri — pola "Action Card".
+/// Kartu aksi berdiri - pola "Action Card".
 ///
 /// Mengkonsolidasikan pola kartu berisi ikon + judul + deskripsi singkat
 /// yang bila diketuk menjalankan suatu aksi (mis. "Mulai Ritase",
@@ -27,7 +27,7 @@ class ActionCard extends StatelessWidget {
 
   final VoidCallback onTap;
 
-  /// Warna ikon — default [context.colors.primary].
+  /// Warna ikon - default [context.colors.primary].
   final Color? iconColor;
 
   /// Mode ringkas: padding lebih kecil, ikon 24 (tanpa subtitle).

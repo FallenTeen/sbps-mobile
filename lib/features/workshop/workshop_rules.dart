@@ -1,4 +1,4 @@
-/// Aturan work queue Workshop — murni & bisa diuji tanpa UI/API.
+// Aturan work queue Workshop - murni & bisa diuji tanpa UI/API.
 ///
 /// Sumber kebenaran status: `WorkshopJobStatus` (menunggu <- disetujui,
 /// dikerjakan, selesai). `ditolak`/`diajukan` BUKAN pekerjaan workshop dan
@@ -81,7 +81,7 @@ WorkshopCompleteCheck workshopCanComplete({
   if (todos.isEmpty) {
     return const WorkshopCompleteCheck(
       false,
-      'Job ini belum punya item pekerjaan — hubungi admin servis.',
+      'Job ini belum punya item pekerjaan - hubungi admin servis.',
     );
   }
   if (todos.any((t) => !t.isDone)) {

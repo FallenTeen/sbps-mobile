@@ -18,10 +18,10 @@ typedef DraftRestorer = void Function(FormDraft draft);
 /// Controller autosave draft form.
 ///
 /// Menangani:
-/// - **Debounced on-change** — tunggu jeda ±800ms tanpa perubahan baru simpan.
-/// - **Lifecycle save** — saat app masuk background, paksa simpan langsung.
-/// - **Load** — saat form dibuka, cek draft tersimpan.
-/// - **Clear** — saat submit berhasil / user pilih "Mulai Baru".
+/// - **Debounced on-change** - tunggu jeda ±800ms tanpa perubahan baru simpan.
+/// - **Lifecycle save** - saat app masuk background, paksa simpan langsung.
+/// - **Load** - saat form dibuka, cek draft tersimpan.
+/// - **Clear** - saat submit berhasil / user pilih "Mulai Baru".
 ///
 /// Tidak dibunggu menjadi mixin supaya bisa dipakai dari _any_ State
 /// tanpa harus mengubah class hierarchy (karena banyak form sudah
@@ -56,7 +56,7 @@ class AutosaveController extends WidgetsBindingObserver {
   }) : // Repository ditangkap sekali di sini (dipanggil dari initState, ref
        // masih valid): beberapa form memanggil flush() di dalam dispose(),
        // dan saat itu WidgetRef sudah tidak boleh dipakai (Riverpod 3
-       // melempar "Bad state: Using ref ...") — crash Crashlytics issue
+       // melempar "Bad state: Using ref ...") - crash Crashlytics issue
        // AutosaveController._save.
        _repo = ref.read(draftRepositoryProvider);
 
@@ -94,7 +94,7 @@ class AutosaveController extends WidgetsBindingObserver {
   }
 
   /// Dipanggil dari `didChangeAppLifecycleState(AppLifecycleState.paused)`
-  /// — atau setiap kali perlu flush pending sekarang.
+  /// - atau setiap kali perlu flush pending sekarang.
   void flush() {
     _timer?.cancel();
     _save();

@@ -20,7 +20,7 @@ class SkeletonLoader extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    // Warna skeleton mengikuti skema tema (M3 surface) — konsisten dengan
+    // Warna skeleton mengikuti skema tema (M3 surface) - konsisten dengan
     // SkeletonBlock, kontras terjaga di mode terang & gelap.
     final defaultBase = isDark
         ? scheme.surfaceContainerHigh
@@ -232,7 +232,7 @@ class SkeletonDashboardOverview extends StatelessWidget {
   }
 }
 
-/// Skeleton khusus area chart — tinggi tetap [height] (default 180dp, sesuai
+/// Skeleton khusus area chart - tinggi tetap [height] (default 180dp, sesuai
 /// tinggi spesifikasi chart) supaya tidak ada layout-shift saat data sedang
 /// di-fetch. Bentuk placeholder: batang-batang berdiri seperti bar chart.
 class ChartSkeleton extends StatelessWidget {

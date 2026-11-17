@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 
-/// Baris label–nilai — pola "Key/Value Row".
+/// Baris label–nilai - pola "Key/Value Row".
 ///
 /// Dipakai untuk menampilkan detail/info teknis secara konsisten:
 /// label kecil di kiri (meta), nilai di kanan (lebih tegas), opsional ikon.
@@ -91,7 +91,7 @@ class KeyValueRow extends StatelessWidget {
                       button: true,
                       label: 'Salin $label',
                       child: InkWell(
-                        // Hit area ~36x36 (padding 10 + ikon 16) + tooltip —
+                        // Hit area ~36x36 (padding 10 + ikon 16) + tooltip -
                         // cukup bagi target sakelar baris yang padat.
                         borderRadius: BorderRadius.circular(8),
                         onTap: () {

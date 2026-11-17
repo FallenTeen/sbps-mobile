@@ -180,7 +180,7 @@ final detailServisProvider = FutureProvider.autoDispose
 // Ringkasan Work Queue (total per status dari server)
 // ---------------------------------------------------------------------------
 
-/// Ringkasan jumlah servis per status — sumber angka work queue index.
+/// Ringkasan jumlah servis per status - sumber angka work queue index.
 /// Menggunakan endpoint riwayat yang sama dengan query `status` per bucket
 /// (tidak mengarang endpoint status baru).
 class ServisQueueSummary {
@@ -248,7 +248,7 @@ final servisQueueSummaryProvider = FutureProvider.autoDispose<
 ///
 /// Endpoint riwayat `/servis-armada` tidak menerima filter `armada_id`,
 /// jadi ambil beberapa halaman lalu filter client-side. Batasi maksimal
-/// [kMaxPages] halaman (±75 entri) — cukup untuk drill-down monitoring.
+/// [kMaxPages] halaman (±75 entri) - cukup untuk drill-down monitoring.
 const int servisArmadaMaxPages = 5;
 
 final servisArmadaUnitProvider = FutureProvider.autoDispose

@@ -16,12 +16,12 @@ final formulirRepositoryProvider = Provider<FormulirRepository>(
   (ref) => FormulirRepository(api: ref.watch(apiClientProvider)),
 );
 
-/// Formulir hari ini — null bila belum diisi (mode form kosong).
+/// Formulir hari ini - null bila belum diisi (mode form kosong).
 final formulirHariIniProvider = FutureProvider.autoDispose<FormulirLapangan?>(
   (ref) => ref.watch(formulirRepositoryProvider).getHariIni(),
 );
 
-/// true bila masih ada formulir yang mengantre dikirim di outbox —
+/// true bila masih ada formulir yang mengantre dikirim di outbox -
 /// mencegah submit ganda / re-entry saat sinkron belum selesai.
 final pendingFormulirProvider = Provider<bool>((ref) {
   final actions = ref.watch(pendingActionsProvider).value ?? const [];
@@ -35,7 +35,7 @@ class FormulirSubmitState {
 
   final bool busy;
 
-  /// Fase aktif saat busy — untuk indikator kompres → kirim di UI.
+  /// Fase aktif saat busy - untuk indikator kompres → kirim di UI.
   final UploadPhase? phase;
 }
 

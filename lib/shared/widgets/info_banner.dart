@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Banner informasi ringan — dipakai untuk memberi konteks aksi pada layar
+/// Banner informasi ringan - dipakai untuk memberi konteks aksi pada layar
 /// read-only (mis. PO menunggu approval / invoice belum dibayar dikelola
 /// oleh tim finansial, bukan lewat aplikasi).
 class InfoBanner extends StatelessWidget {

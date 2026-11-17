@@ -1,7 +1,7 @@
 import 'models/production_session.dart';
 
 /// Logika bisnis murni modul Produksi.
-/// Tidak mengubah formula/validasi backend — hanya membungkus aturan
+/// Tidak mengubah formula/validasi backend - hanya membungkus aturan
 /// yang sudah ada menjadi fungsi teruji supaya bisa dipakai ulang UI.
 
 /// Format durasi sesi ringkas: `45m`, `1j 30m`, `2j`.
@@ -13,7 +13,7 @@ String formatDurasiSesi(Duration d) {
   return '${d.inMinutes}m';
 }
 
-/// Ringkasan "Produksi Hari Ini" di home sesi produksi — dihitung
+/// Ringkasan "Produksi Hari Ini" di home sesi produksi - dihitung
 /// murni dari data yang sudah tersedia di endpoint yang ada:
 /// - total sesi hari ini  = sesi selesai (titik-progress) + sesi berjalan;
 /// - total output hari ini = jumlah total_output dari titik-progress;
@@ -75,7 +75,7 @@ List<ProductionSession> filterRiwayatByStatus(
   return items;
 }
 
-/// Validasi inline hasil output — satu-satunya aturan: angka valid &
+/// Validasi inline hasil output - satu-satunya aturan: angka valid &
 /// tidak negatif (sama dengan validasi `_SelesaikanSheet`).
 String? validateHasilOutput(String raw) {
   final text = raw.trim().replaceAll(',', '.');
@@ -90,7 +90,7 @@ String? validateHasilOutput(String raw) {
 String sessionStatusLabel(String status) =>
     status == 'selesai' ? 'Selesai' : 'Berjalan';
 
-/// "Next action" sebuah sesi aktif — turunan data yang tersedia:
+/// "Next action" sebuah sesi aktif - turunan data yang tersedia:
 /// bila sudah ada sample menunggu hasil uji tekan, langkah berikutnya
 /// adalah mencatat hasil uji tekan; bila belum, catat slump test berkala.
 String nextActionForSession({required bool hasWaitingQc}) => hasWaitingQc

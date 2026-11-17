@@ -1,4 +1,4 @@
-/// Model Servis Armada — alur 4 bagian pengajuan, persetujuan, workshop, sparepart.
+// Model Servis Armada - alur 4 bagian pengajuan, persetujuan, workshop, sparepart.
 /// (docs manual-book Section 21 & api-mobile)
 library;
 

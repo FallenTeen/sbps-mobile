@@ -25,7 +25,7 @@ class ProgressHariIniScreen extends StatelessWidget {
   }
 }
 
-/// Konten progress per titik — dipakai mandiri (halaman penuh) maupun
+/// Konten progress per titik - dipakai mandiri (halaman penuh) maupun
 /// sebagai isi tab "Progress" di [sesi_aktif_screen.dart] (tab tidak boleh
 /// tab tidak boleh hanya redirect ke halaman lain).
 class ProgressHariIniContent extends ConsumerWidget {
@@ -71,7 +71,7 @@ class ProgressHariIniContent extends ConsumerWidget {
                 AppEmptyState(
                   icon: Icons.emoji_events_outlined,
                   title: 'Belum ada output hari ini',
-                  subtitle: '${data.tanggal} — mulai sesi dan catat hasil '
+                  subtitle: '${data.tanggal} - mulai sesi dan catat hasil '
                       'output untuk melihat progress per titik.',
                   actionLabel: 'Muat Ulang',
                   onAction: () =>

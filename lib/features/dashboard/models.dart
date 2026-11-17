@@ -1,4 +1,4 @@
-/// Model Dashboard & Chart — docs/api-mobile.md §12.
+// Model Dashboard & Chart - docs/api-mobile.md §12.
 ///
 /// Semua parser toleran terhadap field yang hilang / bentuk berbeda,
 /// karena sebagian nilai bisa null dari backend.
@@ -344,7 +344,7 @@ class ArmadaStatusData {
 }
 
 // ---------------------------------------------------------------------------
-// Monitoring Armada (Bagian 21.11) — GET /dashboard/armada-monitoring
+// Monitoring Armada (Bagian 21.11) - GET /dashboard/armada-monitoring
 // ---------------------------------------------------------------------------
 
 class ArmadaMonitoringData {

@@ -3,7 +3,7 @@
 /// Dipakai bersama oleh handler push FCM (`notification_handler.dart`),
 /// daftar riwayat in-app (`features/notifikasi/notifikasi_screen.dart`), dan
 /// daftar aktivitas beranda (`features/dashboard/dashboard_home_screen.dart`)
-/// supaya tap notifikasi **selalu** menuju layar yang relevan di dalam app —
+/// supaya tap notifikasi **selalu** menuju layar yang relevan di dalam app -
 /// dengan validasi route dikenali + hak akses role, dan pesan yang jelas
 /// ketika tujuan tidak tersedia.
 library;
@@ -62,7 +62,7 @@ class ResolvedNotificationDestination {
   bool get actionable => status == NotificationTargetStatus.open;
 }
 
-/// Pesan snackbar saat tujuan tidak (bisa) dibuka — null bila aman lanjut.
+/// Pesan snackbar saat tujuan tidak (bisa) dibuka - null bila aman lanjut.
 String? notificationDestinationMessage(ResolvedNotificationDestination d) {
   return switch (d.status) {
     NotificationTargetStatus.deniedRole =>
@@ -92,7 +92,7 @@ const _financialPrefixes = <String>[
   '/dashboard/invoice',
 ];
 
-/// Route universal — semua role boleh buka.
+/// Route universal - semua role boleh buka.
 const _universalRoutes = <String>{
   '/home',
   '/proyek-home',
@@ -124,7 +124,7 @@ bool isKnownNotificationRoute(String path) {
   return _routePatterns.any((p) => p.hasMatch(candidate));
 }
 
-/// Bolehkah `role` membuka route `path`? Guard sisi client — backend tetap
+/// Bolehkah `role` membuka route `path`? Guard sisi client - backend tetap
 /// validator utama. Role `null` (cold-start FCM sebelum auth pulih) diasumsikan
 /// boleh: guard router-lah yang menegakkan.
 bool roleCanOpenRoute(String? role, String path) {
@@ -191,7 +191,7 @@ bool _isAbsoluteUrl(String url) => Uri.tryParse(url)?.hasScheme ?? false;
 ///
 /// Mengembalikan path go_router (diawali `/`, mis. `/armada/servis/123`) bila
 /// tautan bersifat internal, atau `null` bila bukan tautan dalam app (mis.
-/// `https://...` eksternal — harus dibuka lewat `url_launcher`).
+/// `https://...` eksternal - harus dibuka lewat `url_launcher`).
 String? notificationActionRoute(String? actionUrl) {
   final url = actionUrl?.trim();
   if (url == null || url.isEmpty) return null;
@@ -199,7 +199,7 @@ String? notificationActionRoute(String? actionUrl) {
   return url;
 }
 
-/// Route dari payload push FCM (`route` + opsional `id`) — pola yang
+/// Route dari payload push FCM (`route` + opsional `id`) - pola yang
 /// dipakai `notification_handler.dart`. `route="/armada/servis"` + `id="123"`
 /// → `/armada/servis/123`. Terpisah dari [notificationActionRoute] karena
 /// payload FCM menyandang `route` dan `id` sebagai field terpisah.

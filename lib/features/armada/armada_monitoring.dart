@@ -18,7 +18,7 @@ class MonitorUnitWarning {
     this.icon = Icons.warning_amber_rounded,
   });
 
-  /// Kunci identifikasi (mis. `status`, `checklist`, `servis`) — dipakai
+  /// Kunci identifikasi (mis. `status`, `checklist`, `servis`) - dipakai
   /// untuk mendeduplikasi peringatan & keperluan uji.
   final String key;
 
@@ -49,7 +49,7 @@ List<MonitorUnitWarning> unitWarnings({
     warnings.add(
       MonitorUnitWarning(
         key: 'status',
-        message: 'Unit berstatus "$status" — tidak beroperasi.',
+        message: 'Unit berstatus "$status" - tidak beroperasi.',
         icon: Icons.priority_high_rounded,
       ),
     );
@@ -82,7 +82,7 @@ List<MonitorUnitWarning> unitWarnings({
     warnings.add(
       MonitorUnitWarning(
         key: 'servis-disetujui',
-        message: '${disetujui.length} servis disetujui — menunggu penjadwalan.',
+        message: '${disetujui.length} servis disetujui - menunggu penjadwalan.',
         icon: Icons.event_available_outlined,
       ),
     );

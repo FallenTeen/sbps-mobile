@@ -10,7 +10,7 @@ import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
 import 'package:sbps_mobile/core/outbox/outbox_sync_service.dart';
 import 'package:sbps_mobile/core/outbox/pending_action.dart';
 
-/// ONLINE/OFFLINE — reliability mutation.
+/// ONLINE/OFFLINE - reliability mutation.
 ///
 /// Pola "error saat kirim form, beberapa detik kemudian
 /// item muncul di halaman sinkronisasi, lalu butuh Sync manual":
@@ -36,7 +36,7 @@ void main() {
     } catch (_) {}
   });
 
-  group('OutboxSyncService.send — total, tidak pernah melempar', () {
+  group('OutboxSyncService.send - total, tidak pernah melempar', () {
     late OutboxRepository repo;
     late _ThrowingApiClient api;
     late OutboxSyncService service;
@@ -181,7 +181,7 @@ void main() {
     });
   });
 
-  group('Auto-sync — launch, reconnect, coalescing', () {
+  group('Auto-sync - launch, reconnect, coalescing', () {
     late OutboxRepository repo;
     late _ThrowingApiClient api;
     late OutboxSyncService service;
@@ -276,7 +276,7 @@ void main() {
     expect(slow.calls, 2, reason: 'trigger force dijalankan setelah siklus aktif');
   });
 
-  group('Klasifikasi ApiException — rate limit bukan kegagalan permanen', () {
+  group('Klasifikasi ApiException - rate limit bukan kegagalan permanen', () {
     late OutboxRepository repo;
 
     setUp(() async {
@@ -326,7 +326,7 @@ Future<void> _settle() async {
   }
 }
 
-/// Menunggu [condition] benar (dengan batas waktu) — untuk mensinkronkan test
+/// Menunggu [condition] benar (dengan batas waktu) - untuk mensinkronkan test
 /// race agar request worker sudah terdaftar sebelum caller kedua masuk.
 Future<void> _waitFor(bool Function() condition) async {
   for (var i = 0; i < 200; i++) {
@@ -347,7 +347,7 @@ class _ThrowingApiClient extends ApiClient {
   Object? error;
   int failuresBeforeSuccess;
 
-  /// Saat disetel, panggilan berikutnya (pertama) menunggu gate dibuka —
+  /// Saat disetel, panggilan berikutnya (pertama) menunggu gate dibuka -
   /// untuk mensimulasikan request yang masih berjalan ketika caller kedua
   /// memanggil `send()` untuk aksi yang sama.
   Completer<void>? gate;
@@ -400,7 +400,7 @@ class _ThrowingApiClient extends ApiClient {
   }
 }
 
-/// Fake yang SELALU melempar [ApiException] dengan status tertentu —
+/// Fake yang SELALU melempar [ApiException] dengan status tertentu -
 /// untuk mengunci klasifikasi 429/408 (transient) vs 4xx lain (permanen).
 class _StatusApiClient extends ApiClient {
   _StatusApiClient(this.statusCode);

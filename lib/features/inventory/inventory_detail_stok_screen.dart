@@ -16,7 +16,7 @@ import 'inventory_models.dart';
 import 'inventory_providers.dart';
 
 /// Detail satu barang stok: info item + riwayat mutasi barang tersebut
-/// (layer full-page ketika Compact/Medium — pengganti SnackBar placeholder).
+/// (layer full-page ketika Compact/Medium - pengganti SnackBar placeholder).
 class InventoryDetailStokScreen extends ConsumerWidget {
   const InventoryDetailStokScreen({super.key, required this.itemId});
 
@@ -42,7 +42,7 @@ class InventoryDetailStokScreen extends ConsumerWidget {
   }
 }
 
-/// Konten detail stok tanpa Scaffold/AppBar — dipakai sebagai body full-page
+/// Konten detail stok tanpa Scaffold/AppBar - dipakai sebagai body full-page
 /// maupun panel kanan [AdaptiveMasterDetail] saat Expanded.
 class InventoryDetailStokContent extends ConsumerStatefulWidget {
   const InventoryDetailStokContent({super.key, required this.itemId});
@@ -399,7 +399,7 @@ class _MutasiSection extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'Menampilkan ${page.items.length} dari ${page.total} mutasi — riwayat lebih lengkap di layar Riwayat.',
+                      'Menampilkan ${page.items.length} dari ${page.total} mutasi - riwayat lebih lengkap di layar Riwayat.',
                       style: TextStyle(
                         fontSize: 12,
                         color: context.colors.textTertiary,

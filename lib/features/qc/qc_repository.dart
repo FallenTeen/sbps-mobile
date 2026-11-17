@@ -3,7 +3,7 @@ import 'models/qc_sample.dart';
 
 /// Repository Quality Control (docs/api-mobile.md §10).
 /// Endpoint tulis (slump-test, uji-tekan) dijalankan via outbox dengan
-/// `client_uuid` di body — lihat qc_providers.
+/// `client_uuid` di body - lihat qc_providers.
 class QcRepository {
   QcRepository({required ApiClient api}) : _api = api;
 

@@ -1,4 +1,4 @@
-/// Model helper armada — helper tidak punya akun, PIC (Driver)
+// Model helper armada - helper tidak punya akun, PIC (Driver)
 /// yang mengabsenkan mereka dari aplikasinya.
 /// (docs manual-book Section 21)
 library;

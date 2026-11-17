@@ -67,7 +67,7 @@ class OpnameReview {
   final List<OpnameSelisihItem> selisihItems;
 }
 
-/// Hitung ringkasan review opname — murni, tanpa side-effect.
+/// Hitung ringkasan review opname - murni, tanpa side-effect.
 OpnameReview opnameReview(
   List<OpnameItem> items,
   Map<String, int?> fisikValues,
@@ -95,7 +95,7 @@ OpnameReview opnameReview(
   );
 }
 
-/// Bangun list [OpnameSubmitItem] dari input fisik — murni.
+/// Bangun list [OpnameSubmitItem] dari input fisik - murni.
 List<OpnameSubmitItem> opnameSubmitItems(
   List<OpnameItem> items,
   Map<String, int?> fisikValues,
@@ -112,7 +112,7 @@ List<OpnameSubmitItem> opnameSubmitItems(
   ];
 }
 
-/// ID item dalam request yang belum tersedia — dipakai untuk per-item proses.
+/// ID item dalam request yang belum tersedia - dipakai untuk per-item proses.
 List<String> outstandingRequestItemIds(InventoryRequest request) {
   return [
     for (final item in request.items)

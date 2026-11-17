@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Pengelompokan field form — pola "Form Section".
+/// Pengelompokan field form - pola "Form Section".
 ///
 /// Membungkus satu kelompok field (label + input) ke dalam kartu berdampingan
 /// dengan judul section opsional. Jarak antar field default 12 (Design System

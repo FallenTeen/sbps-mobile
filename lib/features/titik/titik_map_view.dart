@@ -29,7 +29,7 @@ class TitikMapView extends StatefulWidget {
   /// ID titik yang sedang dipilih (untuk visual highlight pada marker).
   final String? selectedTitikId;
 
-  /// Posisi user saat ini (opsional) — digambar sebagai penanda biru dan
+  /// Posisi user saat ini (opsional) - digambar sebagai penanda biru dan
   /// dipakai untuk menghitung jarak ke titik di bottom sheet marker.
   final LatLng? userPosition;
 

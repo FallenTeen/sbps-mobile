@@ -3,12 +3,12 @@ library;
 
 /// Persiapan struktur data tanpa menunggu backend.
 ///
-/// Status: **pending backend** — field checklist akhir belum tersedia di
+/// Status: **pending backend** - field checklist akhir belum tersedia di
 /// `GET /armada/saya` maupun endpoint checklist terkait. UI `WorkflowStepper`
 /// step ④ sengaja TIDAK diubah sampai endpoint siap (biarkan placeholder).
 ///
 /// Bentuk item sengaja MENGIKUTI shape yang sudah dipakai `POST /armada/checklist`
-/// (`items: [{label, baik, has_foto}]`) — reuse struktur existing, bukan bikin
+/// (`items: [{label, baik, has_foto}]`) - reuse struktur existing, bukan bikin
 /// struktur data baru. `WorkshopTodoItem` (workshop_models.dart) tidak dipakai
 /// karena shape-nya job/todo (`jobId`/`isDone`) dan tidak cocok dengan item
 /// pemeriksaan kondisi (`label`/`baik`/foto).
@@ -44,7 +44,7 @@ class ChecklistAkhirItem {
   };
 }
 
-/// Satu kiriman "checklist akhir" satu armada — siap dipakai saat endpoint
+/// Satu kiriman "checklist akhir" satu armada - siap dipakai saat endpoint
 /// backend checklist akhir dibuka. Belum ada pemanggilan UI (menunggu backend).
 class ChecklistAkhir {
   const ChecklistAkhir({
@@ -69,7 +69,7 @@ class ChecklistAkhir {
 
   bool get isSubmitted => submittedAt != null;
 
-  /// Bangun dari draft lokal — shape sama dengan checklist harian; penanda
+  /// Bangun dari draft lokal - shape sama dengan checklist harian; penanda
   /// `submittedAt` mengisi [submittedAt] bila jackpot mark submit ter-set.
   static ChecklistAkhir? fromDraft(
     String armadaId,

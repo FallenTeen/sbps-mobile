@@ -28,27 +28,30 @@ RitaseRecord _rec({
 
 void main() {
   group('RitaseRecord payload (business rule tidak berubah)', () {
-    test('toPayload lengkap — tanpa odo_per_trip (F-03: backend tidak punya kolom)', () {
-      final record = _rec(
-        index: 1,
-        armadaId: 'a-1',
-        jumlah: 3,
-        satuan: 'ton',
-        catatan: 'Muatan pasir',
-      );
+    test(
+      'toPayload lengkap - tanpa odo_per_trip (F-03: backend tidak punya kolom)',
+      () {
+        final record = _rec(
+          index: 1,
+          armadaId: 'a-1',
+          jumlah: 3,
+          satuan: 'ton',
+          catatan: 'Muatan pasir',
+        );
 
-      final payload = record.toPayload();
+        final payload = record.toPayload();
 
-      expect(payload['armada_id'], 'a-1');
-      expect(payload['jumlah_rit'], 3);
-      expect(payload['satuan_volume'], 'tonase');
-      expect(payload['catatan'], 'Muatan pasir');
-      expect(
-        payload.containsKey('odo_per_trip'),
-        isFalse,
-        reason: 'F-03: field dihapus — ODO tetap lewat checklist awal/akhir',
-      );
-    });
+        expect(payload['armada_id'], 'a-1');
+        expect(payload['jumlah_rit'], 3);
+        expect(payload['satuan_volume'], 'tonase');
+        expect(payload['catatan'], 'Muatan pasir');
+        expect(
+          payload.containsKey('odo_per_trip'),
+          isFalse,
+          reason: 'F-03: field dihapus - ODO tetap lewat checklist awal/akhir',
+        );
+      },
+    );
 
     test('draft lama dengan odo_per_trip tetap terbaca (backward compat)', () {
       final legacy = RitaseRecord.fromJson({
@@ -61,11 +64,23 @@ void main() {
     });
 
     test('mapping satuan_volume tetap persis versi lama', () {
-      expect(_rec(index: 1, armadaId: 'a', satuan: 'rit').satuanVolume, 'ritase');
-      expect(_rec(index: 2, armadaId: 'a', satuan: 'trip').satuanVolume, 'ritase');
-      expect(_rec(index: 3, armadaId: 'a', satuan: 'ton').satuanVolume, 'tonase');
+      expect(
+        _rec(index: 1, armadaId: 'a', satuan: 'rit').satuanVolume,
+        'ritase',
+      );
+      expect(
+        _rec(index: 2, armadaId: 'a', satuan: 'trip').satuanVolume,
+        'ritase',
+      );
+      expect(
+        _rec(index: 3, armadaId: 'a', satuan: 'ton').satuanVolume,
+        'tonase',
+      );
       expect(_rec(index: 4, armadaId: 'a', satuan: 'm³').satuanVolume, 'm3');
-      expect(_rec(index: 5, armadaId: 'a', satuan: 'kg').satuanVolume, 'ritase');
+      expect(
+        _rec(index: 5, armadaId: 'a', satuan: 'kg').satuanVolume,
+        'ritase',
+      );
     });
 
     test('catatan kosong tidak dikirim sebagai payload kosong', () {
@@ -167,11 +182,7 @@ void main() {
 
     test('allSynced hanya saat semua record terkirim', () {
       final allDone = [
-        _rec(
-          index: 1,
-          armadaId: 'a',
-          status: RitaseRecordStatus.synced,
-        ),
+        _rec(index: 1, armadaId: 'a', status: RitaseRecordStatus.synced),
       ];
       expect(summaryRitase(allDone).allSynced, isTrue);
 
@@ -199,10 +210,7 @@ void main() {
         same(draft),
       );
       expect(
-        reconcileRecordStatus(
-          synced,
-          mapOf({'cu-2': PendingStatus.failed}),
-        ),
+        reconcileRecordStatus(synced, mapOf({'cu-2': PendingStatus.failed})),
         same(synced),
       );
     });
@@ -260,10 +268,7 @@ void main() {
         createdAt: DateTime(2026),
         status: RitaseRecordStatus.queued,
       );
-      expect(
-        reconcileRecordStatus(queued, mapOf({})),
-        same(queued),
-      );
+      expect(reconcileRecordStatus(queued, mapOf({})), same(queued));
     });
   });
 }

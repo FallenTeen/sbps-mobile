@@ -1,6 +1,6 @@
 import '../../../core/json_num.dart';
 
-/// Sesi produksi — struktur `data` dari /produksi/mulai, /selesai,
+/// Sesi produksi - struktur `data` dari /produksi/mulai, /selesai,
 /// /sesi-aktif, dan item /riwayat (docs/api-mobile.md §8).
 class ProductionSession {
   const ProductionSession({

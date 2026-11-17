@@ -398,7 +398,7 @@ void main() {
     });
   });
 
-  group('NotifikasiScreen (widget) — action center', () {
+  group('NotifikasiScreen (widget) - action center', () {
     testWidgets('render chip kategori + tile berisi label kategori',
         (WidgetTester tester) async {
       final repo = _FakeNotifikasiRepository(
@@ -509,7 +509,7 @@ void main() {
     });
   });
 
-  group('NotifikasiScreen (widget) — deep-link pada tap tile', () {
+  group('NotifikasiScreen (widget) - deep-link pada tap tile', () {
     testWidgets('tap tile route internal → push layar tujuan (markRead dulu)',
         (WidgetTester tester) async {
       final repo = _FakeNotifikasiRepository(

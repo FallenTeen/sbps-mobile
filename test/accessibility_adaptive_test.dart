@@ -120,10 +120,10 @@ Future<void> _pumpAtSize(
 
 void main() {
   // ========================================================================
-  // 8.5 — Font scaling 130%
+  // 8.5 - Font scaling 130%
   // ========================================================================
 
-  group('AdaptiveNavShell — no overflow at 130% font scale', () {
+  group('AdaptiveNavShell - no overflow at 130% font scale', () {
     testWidgets('compact: NavigationBar', (tester) async {
       await _pumpAtSize(
         tester,
@@ -175,7 +175,7 @@ void main() {
     });
   });
 
-  group('AdaptiveMasterDetail — no overflow at 130% font scale', () {
+  group('AdaptiveMasterDetail - no overflow at 130% font scale', () {
     testWidgets('expanded layout with SearchableListHeader + list tiles', (
       tester,
     ) async {
@@ -237,7 +237,7 @@ void main() {
         ),
       );
 
-      // Select an item — detail panel should appear (expanded mode)
+      // Select an item - detail panel should appear (expanded mode)
       final item0 = find.textContaining('Item 0: judul yang sengaja');
       await tester.tap(item0);
       await tester.pump();
@@ -246,7 +246,7 @@ void main() {
     });
   });
 
-  group('Chart — no overflow at 130% font scale', () {
+  group('Chart - no overflow at 130% font scale', () {
     testWidgets('ProduksiBarChart', (tester) async {
       await _pumpAtSize(
         tester,
@@ -269,10 +269,10 @@ void main() {
   });
 
   // ========================================================================
-  // 8.5 — TalkBack / Semantics
+  // 8.5 - TalkBack / Semantics
   // ========================================================================
 
-  group('AdaptiveNavShell — TalkBack semantics labels', () {
+  group('AdaptiveNavShell - TalkBack semantics labels', () {
     testWidgets('NavigationBar (compact) exposes all destination labels', (
       tester,
     ) async {
@@ -324,7 +324,7 @@ void main() {
     });
   });
 
-  group('Chart — Semantics summary for TalkBack', () {
+  group('Chart - Semantics summary for TalkBack', () {
     testWidgets('ProduksiBarChart semantic label contains weekly summary', (
       tester,
     ) async {

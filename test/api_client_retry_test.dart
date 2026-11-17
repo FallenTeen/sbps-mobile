@@ -65,8 +65,8 @@ void main() {
   });
 }
 
-/// Adapter palsu: `failuresBeforeSuccess` panggilan pertama gagal — sebagai
-/// network error (default) atau HTTP `failStatus` — lalu sukses.
+/// Adapter palsu: `failuresBeforeSuccess` panggilan pertama gagal - sebagai
+/// network error (default) atau HTTP `failStatus` - lalu sukses.
 class _FlakyAdapter implements HttpClientAdapter {
   _FlakyAdapter({
     required this.failuresBeforeSuccess,

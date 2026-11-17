@@ -221,7 +221,7 @@ class ProduksiSubmitController extends Notifier<ProduksiSubmitState> {
     ref.invalidate(titikProgressProvider);
   }
 
-  /// POST /produksi/mulai — client_uuid dibuat SEKALI saat aksi dibuat
+  /// POST /produksi/mulai - client_uuid dibuat SEKALI saat aksi dibuat
   /// dan ikut tersimpan di outbox sehingga retry tidak membuat sesi dobel.
   Future<ProduksiSubmitResult> mulai({
     required String mesinId,

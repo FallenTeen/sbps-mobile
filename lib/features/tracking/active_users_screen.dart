@@ -21,7 +21,7 @@ import 'widgets/track_location_actions.dart';
 enum _StatusFilter { semua, segar, stale }
 
 /// Daftar user yang masih ber-presensi aktif hari ini + status GPS terkini
-/// — khusus Owner/Admin Keuangan. Auto-refresh tiap 60 detik.
+/// - khusus Owner/Admin Keuangan. Auto-refresh tiap 60 detik.
 ///
 /// Freshness/stale-state dihitung dari timestamp AKTUAL server (`last_seen`):
 /// user yang lambat diperlihatkan jujur ("Lokasi terakhir X menit lalu"),
@@ -200,7 +200,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
 }
 
 /// Ringkasan KPI: total user presensi aktif, berapa yang update-nya segar,
-/// dan berapa yang perlu dicek (stale) — semua hitungan dari timestamp
+/// dan berapa yang perlu dicek (stale) - semua hitungan dari timestamp
 /// AKTUAL server, senada dengan pola KPI di Monitoring Armada.
 class _StatsRow extends StatelessWidget {
   const _StatsRow({
@@ -303,7 +303,7 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-/// Filter status (Semua/Segar/Perlu dicek) — child dari [SearchableListHeader].
+/// Filter status (Semua/Segar/Perlu dicek) - child dari [SearchableListHeader].
 class _StatusFilterChips extends StatelessWidget {
   const _StatusFilterChips({required this.value, required this.onChanged});
 
@@ -338,7 +338,7 @@ class _StatusFilterChips extends StatelessWidget {
   }
 }
 
-/// Toggle Daftar / Peta — tetap di atas konten agar user gampang berpindah.
+/// Toggle Daftar / Peta - tetap di atas konten agar user gampang berpindah.
 class _ViewToggle extends StatelessWidget {
   const _ViewToggle({required this.value, required this.onChanged});
 
@@ -402,7 +402,7 @@ class _ActiveUsersList extends StatelessWidget {
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
         // Tinggi TETAP (bukan aspect ratio): kartu punya 4 baris konten
-        // (nama+badge, titik, aktif sejak, lokasi terakhir, footer chip) —
+        // (nama+badge, titik, aktif sejak, lokasi terakhir, footer chip) -
         // aspect ratio membuat tinggi ikut menyusut saat kolom melebar
         // (grid 3 kolom di layar lebar → kartu overflow). Nilai ini punya
         // slack untuk font scaling ~130%.
@@ -550,7 +550,7 @@ class _ActiveUsersMapState extends State<_ActiveUsersMap> {
   }
 }
 
-/// Marker peta user aktif — pin (warna sesuai kesegaran) + label nama.
+/// Marker peta user aktif - pin (warna sesuai kesegaran) + label nama.
 class _UserMapMarker extends StatelessWidget {
   const _UserMapMarker({
     required this.user,
@@ -574,7 +574,7 @@ class _UserMapMarker extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      // FittedBox(scaleDown) — Marker di flutter_map punya width/height TETAP
+      // FittedBox(scaleDown) - Marker di flutter_map punya width/height TETAP
       // (dari MarkerLayer); jika konten (ikon pin + label nama) sedikit lebih
       // tinggi dari yang dialokasikan (mis. metrik font platform berbeda,
       // atau pengaturan font besar), ini menyusutkan tampilan alih-alih

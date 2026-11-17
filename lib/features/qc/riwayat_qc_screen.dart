@@ -205,7 +205,7 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
                   ? context.colors.primary.withValues(alpha: 0.06)
                   : null,
               title: Text(
-                '${s.produkNama ?? 'Produk'} — ${s.mesinNama ?? 'Mesin'}',
+                '${s.produkNama ?? 'Produk'} - ${s.mesinNama ?? 'Mesin'}',
               ),
               subtitle: Text(
                 'Slump ${_fmt(s.nilaiSlump)}'

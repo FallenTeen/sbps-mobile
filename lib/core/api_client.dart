@@ -121,7 +121,7 @@ class ApiClient {
     );
   }
 
-  /// DELETE — hapus file upload (docs/api-mobile.md §11.2).
+  /// DELETE - hapus file upload (docs/api-mobile.md §11.2).
   Future<ApiResponse<T>> delete<T>(
     String path, {
     Map<String, dynamic>? query,
@@ -195,8 +195,8 @@ class ApiClient {
       final action = response.statusCode! >= 500
           ? 'Coba lagi beberapa saat. Jika masih gagal, hubungi admin.'
           : (isGet || (errors != null && errors.containsKey('karyawan'))
-              ? 'Hubungi admin atau coba lagi.'
-              : 'Periksa kembali data Anda dan coba kirim ulang.');
+                ? 'Hubungi admin atau coba lagi.'
+                : 'Periksa kembali data Anda dan coba kirim ulang.');
 
       final parts = [
         statusMsg,
@@ -263,8 +263,7 @@ class _TransientNetworkRetryInterceptor extends Interceptor {
       handler.next(err);
       return;
     }
-    final count =
-        (err.requestOptions.extra['_transientRetry'] as int?) ?? 0;
+    final count = (err.requestOptions.extra['_transientRetry'] as int?) ?? 0;
     if (count >= _maxRetries) {
       handler.next(err);
       return;

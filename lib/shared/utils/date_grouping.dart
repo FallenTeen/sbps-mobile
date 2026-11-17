@@ -5,7 +5,7 @@ import '../../core/formatters.dart';
 ///
 /// Dipakai sebagai header group dalam list agar user bisa memahami skala
 /// waktu tanpa membaca setiap tanggal. Jangan duplikasi logika ini di layar
-/// lain — pakai fungsi ini supaya perilakunya konsisten.
+/// lain - pakai fungsi ini supaya perilakunya konsisten.
 String dateGroupLabel(DateTime dt) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);

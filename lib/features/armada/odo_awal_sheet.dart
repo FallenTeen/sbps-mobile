@@ -230,7 +230,7 @@ class _OdoAwalSheetState extends ConsumerState<OdoAwalSheet> {
                                 (a) => DropdownMenuItem(
                                   value: a,
                                   child: Text(
-                                    '${a.platNomor} — ${a.jenis ?? a.kodeUnit ?? ""}',
+                                    '${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ""}',
                                   ),
                                 ),
                               )

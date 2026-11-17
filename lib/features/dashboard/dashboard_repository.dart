@@ -38,7 +38,7 @@ class DashboardRepository {
         ProduksiChart(bulan: bulan ?? 1, tahun: tahun ?? 1, items: const []);
   }
 
-  /// GET /dashboard/chart/keuangan?bulan=&tahun= — Owner/Admin Keuangan.
+  /// GET /dashboard/chart/keuangan?bulan=&tahun= - Owner/Admin Keuangan.
   Future<KeuanganChart> getKeuanganChart({int? bulan, int? tahun}) async {
     final res = await _api.get<KeuanganChart>(
       '/dashboard/chart/keuangan',
@@ -58,7 +58,7 @@ class DashboardRepository {
     return res.data ?? const ArmadaStatusData(total: 0, items: []);
   }
 
-  /// GET /dashboard/armada-monitoring (Bagian 21.11) — metrik utilisasi &
+  /// GET /dashboard/armada-monitoring (Bagian 21.11) - metrik utilisasi &
   /// kondisi seluruh armada. Filter opsional: unit_bisnis_id, dari, sampai.
   Future<ArmadaMonitoringData> getArmadaMonitoring({
     String? unitBisnisId,
@@ -84,7 +84,7 @@ class DashboardRepository {
         );
   }
 
-  /// GET /dashboard/kehadiran-divisi — Owner/Admin.
+  /// GET /dashboard/kehadiran-divisi - Owner/Admin.
   Future<KehadiranDivisiData> getKehadiranDivisi() async {
     final res = await _api.get<KehadiranDivisiData>(
       '/dashboard/kehadiran-divisi',
@@ -94,7 +94,7 @@ class DashboardRepository {
         const KehadiranDivisiData(tanggal: '', totalHadir: 0, items: []);
   }
 
-  /// GET /dashboard/po-pending — Owner/Admin Keuangan. Server maks 20 item.
+  /// GET /dashboard/po-pending - Owner/Admin Keuangan. Server maks 20 item.
   Future<PoPendingPage> getPoPending() async {
     final res = await _api.get<PoPendingPage>(
       '/dashboard/po-pending',
@@ -103,7 +103,7 @@ class DashboardRepository {
     return res.data ?? const PoPendingPage(total: 0, items: []);
   }
 
-  /// GET /dashboard/invoice-belum-dibayar — Owner/Admin Keuangan. Maks 20 item.
+  /// GET /dashboard/invoice-belum-dibayar - Owner/Admin Keuangan. Maks 20 item.
   Future<InvoicePendingPage> getInvoiceBelumDibayar() async {
     final res = await _api.get<InvoicePendingPage>(
       '/dashboard/invoice-belum-dibayar',

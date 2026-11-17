@@ -76,7 +76,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
       )
       .length;
 
-  /// Review sheet — ringkas hasil hitung, lalu konfirmasi sebelum submit.
+  /// Review sheet - ringkas hasil hitung, lalu konfirmasi sebelum submit.
   Future<bool> _reviewAndConfirm({
     required List<OpnameItem> items,
     required List<Titik> titiks,
@@ -684,6 +684,7 @@ class _OpnameItemCard extends StatelessWidget {
                   onChanged: onChanged,
                   decoration: InputDecoration(
                     hintText: 'Jumlah fisik',
+                    helperText: 'Hasil hitung barang di rak (bukan angka sistem)',
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,

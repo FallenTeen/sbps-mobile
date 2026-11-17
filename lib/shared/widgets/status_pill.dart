@@ -31,7 +31,7 @@ class StatusPill extends StatelessWidget {
   ///
   /// Ambang dipilih di 0.42 (bukan 0.179 teoretis) supaya warna gelap dan
   /// "tepian" (merah tua, oranye) tetap memakai teks putih, sedangkan amber
-  /// terang (luminansi ≈0.44) beralih ke teks gelap — kontras putih-on-amber
+  /// terang (luminansi ≈0.44) beralih ke teks gelap - kontras putih-on-amber
   /// hanya ~2.1:1 (gagal AA), gelap-on-amber ~7.8:1.
   Color _foreground(bool filled) {
     if (!filled) return color;

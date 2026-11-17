@@ -14,7 +14,7 @@ import 'armada_monitoring.dart';
 import 'models/servis_armada.dart';
 import 'unit_monitoring_screen.dart';
 
-/// Monitoring Armada (Bagian 21.11) — metrik utilisasi (total jam aktif,
+/// Monitoring Armada (Bagian 21.11) - metrik utilisasi (total jam aktif,
 /// HM/Jam, rekap durasi per tanggal) + kondisi seluruh armada (checklist,
 /// downtime, servis) untuk menu Ketua Divisi Armada.
 class MonitoringArmadaScreen extends ConsumerStatefulWidget {
@@ -36,7 +36,7 @@ class _MonitoringArmadaScreenState
     sampai: null,
   );
 
-  /// Filter status unit (null = semua) — diterapkan client-side.
+  /// Filter status unit (null = semua) - diterapkan client-side.
   String? _statusFilter;
 
   static String _iso(DateTime dt) =>
@@ -61,7 +61,7 @@ class _MonitoringArmadaScreenState
     ref.invalidate(armadaMonitoringProvider(_filter));
   }
 
-  /// Drill-down ke data satu unit — konsisten dengan Overview Armada
+  /// Drill-down ke data satu unit - konsisten dengan Overview Armada
   /// (checklist, ODO/HM, peringatan, riwayat servis).
   void _openUnit(ArmadaMonitoringUnit unit) {
     Navigator.of(context).push(
@@ -72,7 +72,7 @@ class _MonitoringArmadaScreenState
   }
 
   /// Endpoint monitoring tidak membawa titik/ODO/HM terkini; [MasterArmada]
-  /// hanya perlu identitas unit — sisanya diambil ulang dari `/armada/saya`,
+  /// hanya perlu identitas unit - sisanya diambil ulang dari `/armada/saya`,
   /// `/armada/checklist-hari-ini`, dan `/servis-armada` di layar drill-down.
   MasterArmada _toMasterArmada(ArmadaMonitoringUnit u) => MasterArmada(
     id: u.id,
@@ -238,7 +238,7 @@ class _RangeSelector extends StatelessWidget {
 ///
 /// Layout memakai `Wrap` + `LayoutBuilder` (bukan `GridView.count` dengan
 /// `childAspectRatio` tetap) supaya tinggi tiap kartu menyesuaikan isinya
-/// sendiri — aman terhadap font scaling besar (§22.8) dan label 2 kata
+/// sendiri - aman terhadap font scaling besar (§22.8) dan label 2 kata
 /// (mis. "Pemakaian HM") tanpa memaksa kartu jadi terlalu pendek/overflow.
 class _RingkasanGrid extends StatelessWidget {
   const _RingkasanGrid({required this.ringkasan});
@@ -307,8 +307,8 @@ class _RingkasanGrid extends StatelessWidget {
         builder: (context, constraints) {
           const spacing = 8.0;
           // Tetap 2 kolom (konvensi kartu summary/dashboard di proyek ini,
-          // §22.8), tapi lebar dihitung dari constraints aktual — bukan
-          // GridView aspect-ratio — biar tinggi kartu bebas menyesuaikan isi.
+          // §22.8), tapi lebar dihitung dari constraints aktual - bukan
+          // GridView aspect-ratio - biar tinggi kartu bebas menyesuaikan isi.
           final itemWidth = (constraints.maxWidth - spacing) / 2;
           return Wrap(
             spacing: spacing,
@@ -676,7 +676,7 @@ class _UnitCard extends StatelessWidget {
               const SizedBox(height: 10),
               // Metrik Jam/ODO/HM/Rit: lebar per item dihitung dari ruang
               // tersedia (bukan Expanded rata 4 kolom tetap) supaya nilai
-              // panjang (mis. "125.000 km") tidak terpotong "..." — lihat
+              // panjang (mis. "125.000 km") tidak terpotong "..." - lihat
               // FittedBox di _Metric untuk pengaman tambahan.
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -787,7 +787,7 @@ class _Metric extends StatelessWidget {
           Icon(icon, size: 14, color: colors.textTertiary),
           const SizedBox(height: 2),
           // FittedBox: nilai mengecil otomatis kalau tidak muat, bukan
-          // dipotong "..." — penting untuk dashboard monitoring supaya
+          // dipotong "..." - penting untuk dashboard monitoring supaya
           // angka tetap utuh terbaca.
           FittedBox(
             fit: BoxFit.scaleDown,

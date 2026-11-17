@@ -122,7 +122,7 @@ class EmptyHint extends StatelessWidget {
 }
 
 /// Dropdown pemilih periode (bulan + tahun) yang menulis ke
-/// [chartPeriodProvider] — dipakai chart produksi & keuangan.
+/// [chartPeriodProvider] - dipakai chart produksi & keuangan.
 class PeriodPicker extends ConsumerWidget {
   const PeriodPicker({super.key});
 

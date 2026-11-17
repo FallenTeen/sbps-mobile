@@ -19,7 +19,7 @@ class UploadSubmitState {
 
   final bool busy;
 
-  /// Fase aktif saat busy — kompres → kirim (reuse pola formulir).
+  /// Fase aktif saat busy - kompres → kirim (reuse pola formulir).
   final UploadPhase? phase;
 }
 

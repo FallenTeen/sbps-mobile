@@ -20,7 +20,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import 'servis_status.dart';
 
-/// Detail Pengajuan Servis Armada — menampilkan timeline
+/// Detail Pengajuan Servis Armada - menampilkan timeline
 /// (Diajukan → Disetujui → Dikerjakan → Selesai), data pengajuan,
 /// catatan workshop, sparepart, dan aksi persetujuan/penolakan.
 class DetailServisScreen extends StatelessWidget {
@@ -46,7 +46,7 @@ class DetailServisScreen extends StatelessWidget {
   }
 }
 
-/// Konten detail pengajuan servis tanpa Scaffold/AppBar — dipakai sebagai
+/// Konten detail pengajuan servis tanpa Scaffold/AppBar - dipakai sebagai
 /// body full-page (lewat [DetailServisScreen]) maupun panel kanan
 /// [AdaptiveMasterDetail] saat Expanded.
 class DetailServisContent extends ConsumerStatefulWidget {

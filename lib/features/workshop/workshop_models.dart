@@ -58,7 +58,7 @@ class WorkshopJob {
       'disetujui' => WorkshopJobStatus.menunggu,
       'dikerjakan' => WorkshopJobStatus.dikerjakan,
       'selesai' => WorkshopJobStatus.selesai,
-      // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop — jangan pernah
+      // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop - jangan pernah
       // ditampilkan sebagai "Menunggu" (antrian hanya untuk yang disetujui).
       _ => null,
     };
@@ -147,7 +147,7 @@ class WorkshopJobDetail {
   final WorkshopJob job;
   final List<WorkshopTodoItem> todos;
 
-  /// Sumber data asli dari `/servis-armada/{id}` — menyimpan pengaju,
+  /// Sumber data asli dari `/servis-armada/{id}` - menyimpan pengaju,
   /// odometer, catatan workshop, sparepart, tanggal, dll.
   final ServisArmada servis;
 

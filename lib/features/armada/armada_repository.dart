@@ -10,7 +10,7 @@ import '../../core/outbox/pending_action.dart';
 import 'models/armada.dart';
 import 'models/helper.dart';
 
-/// Repository modul Armada (driver) — docs/api-mobile.md §Armada
+/// Repository modul Armada (driver) - docs/api-mobile.md §Armada
 /// dan manual-book Section 21.
 ///
 /// Endpoint POST (tulis) di-route lewat outbox supaya bisa offline.
@@ -29,10 +29,10 @@ class ArmadaRepository {
   static const _uuid = Uuid();
 
   // ---------------------------------------------------------------------------
-  // GET endpoints (read — tidak perlu outbox)
+  // GET endpoints (read - tidak perlu outbox)
   // ---------------------------------------------------------------------------
 
-  /// GET /armada/saya — kendaraan yang dipegang driver.
+  /// GET /armada/saya - kendaraan yang dipegang driver.
   Future<List<ArmadaSaya>> getArmadaSaya() async {
     final res = await _api.get<List<ArmadaSaya>>(
       '/armada/saya',
@@ -41,7 +41,7 @@ class ArmadaRepository {
     return res.data ?? [];
   }
 
-  /// GET /armada/pengisian-solar?armada_id=&tanggal= — riwayat pengisian.
+  /// GET /armada/pengisian-solar?armada_id=&tanggal= - riwayat pengisian.
   Future<List<PengisianSolarItem>> getPengisianSolar({
     String? armadaId,
     String? tanggal,
@@ -57,7 +57,7 @@ class ArmadaRepository {
     return res.data ?? [];
   }
 
-  /// GET /armada/odo-awal-proyek?armada_id= — riwayat ODO awal proyek.
+  /// GET /armada/odo-awal-proyek?armada_id= - riwayat ODO awal proyek.
   Future<List<OdoAwalProyekItem>> getOdoAwalProyek({String? armadaId}) async {
     final res = await _api.get<List<OdoAwalProyekItem>>(
       '/armada/odo-awal-proyek',
@@ -69,7 +69,7 @@ class ArmadaRepository {
     return res.data ?? [];
   }
 
-  /// GET /armada/ritase?page=&per_page= — riwayat pengiriman driver.
+  /// GET /armada/ritase?page=&per_page= - riwayat pengiriman driver.
   Future<RitasePage> getRitase({int page = 1, int perPage = 15}) async {
     final res = await _api.get<RitasePage>(
       '/armada/ritase',
@@ -80,7 +80,7 @@ class ArmadaRepository {
         const RitasePage(items: [], currentPage: 1, lastPage: 1, total: 0);
   }
 
-  /// GET /armada/checklist-hari-ini — status checklist tiap armada hari ini.
+  /// GET /armada/checklist-hari-ini - status checklist tiap armada hari ini.
   Future<List<ArmadaChecklist>> getChecklistHariIni() async {
     final res = await _api.get<List<ArmadaChecklist>>(
       '/armada/checklist-hari-ini',
@@ -89,7 +89,7 @@ class ArmadaRepository {
     return res.data ?? const [];
   }
 
-  /// GET /armada/helper — daftar helper untuk PIC aktif.
+  /// GET /armada/helper - daftar helper untuk PIC aktif.
   Future<List<Helper>> getHelpers() async {
     final res = await _api.get<List<Helper>>(
       '/armada/helper',
@@ -99,10 +99,10 @@ class ArmadaRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // POST endpoints (write — lewat outbox untuk offline support)
+  // POST endpoints (write - lewat outbox untuk offline support)
   // ---------------------------------------------------------------------------
 
-  /// POST /armada/checklist/awal (multipart) — checklist awal hari ini.
+  /// POST /armada/checklist/awal (multipart) - checklist awal hari ini.
   /// [items] berisi `{bagian, kondisi, catatan?, foto?}`. Foto item
   /// bermasalah dikirim sebagai multipart FILE `items[i][foto]`.
   /// [fotoStokSolarPath]/[fotoOdoPagiPath] wajib saat pembuatan pertama.
@@ -151,7 +151,7 @@ class ArmadaRepository {
     return result.delivered;
   }
 
-  /// POST /armada/checklist/akhir (multipart) — checklist akhir (final).
+  /// POST /armada/checklist/akhir (multipart) - checklist akhir (final).
   Future<bool> submitChecklistAkhir({
     required String armadaId,
     required List<Map<String, dynamic>> items,
@@ -197,7 +197,7 @@ class ArmadaRepository {
     return result.delivered;
   }
 
-  /// POST /armada/pengisian-solar (multipart) — catat satu pengisian solar.
+  /// POST /armada/pengisian-solar (multipart) - catat satu pengisian solar.
   ///
   /// [fotoOdoPath] wajib; [fotoNotaPath] opsional; [liter] opsional.
   Future<bool> submitPengisianSolar({
@@ -242,7 +242,7 @@ class ArmadaRepository {
     return result.delivered;
   }
 
-  /// POST /armada/checklist-major — serah terima kendaraan (Section 21.10).
+  /// POST /armada/checklist-major - serah terima kendaraan (Section 21.10).
   /// Menggunakan outbox untuk offline support. [items] berupa daftar peta
   /// `{label, status, photo_index?}`; [photoPaths] berisi path foto item
   /// (urutan sesuai `photo_index`), dikirim sebagai field multipart `photos[]`.
@@ -271,7 +271,7 @@ class ArmadaRepository {
     return _outbox.enqueue(action, _sync.send);
   }
 
-  /// POST /armada/odo-awal-proyek — input sekali per armada per proyek.
+  /// POST /armada/odo-awal-proyek - input sekali per armada per proyek.
   /// Menggunakan outbox untuk offline support.
   Future<bool> submitOdoAwalProyek({
     required String armadaId,
@@ -303,7 +303,7 @@ class ArmadaRepository {
     return result.delivered;
   }
 
-  /// POST /armada/helper/{helperId}/presensi — PIC absenkan helper.
+  /// POST /armada/helper/{helperId}/presensi - PIC absenkan helper.
   /// [tipe] adalah 'check_in' atau 'check_out'. [photoPath] wajib.
   /// Menggunakan outbox untuk offline support.
   Future<bool> submitHelperPresensi({
@@ -328,7 +328,7 @@ class ArmadaRepository {
     return result.delivered;
   }
 
-  /// POST /armada/ritase/input — satu catatan muatan via outbox.
+  /// POST /armada/ritase/input - satu catatan muatan via outbox.
   ///
   /// [clientUuid] & [idempotencyKey] opsional: bila diisi dipakai persis
   /// (retry memakai nilai yang sama → server idempotent). Default: uuid baru.

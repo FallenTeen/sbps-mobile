@@ -84,7 +84,7 @@ class AuthRepository {
     );
   }
 
-  /// Data user aktif — objek user LANGSUNG di `data` (bukan data.user).
+  /// Data user aktif - objek user LANGSUNG di `data` (bukan data.user).
   Future<User> getCurrentUser() async {
     final res = await _api.get<Map<String, dynamic>>(
       '/user',
@@ -106,7 +106,7 @@ class AuthRepository {
     }
   }
 
-  /// Update profil user — POST /update-profile (docs/api-mobile.md §5.5).
+  /// Update profil user - POST /update-profile (docs/api-mobile.md §5.5).
   /// Field opsional: hanya kirim yang diisi user.
   Future<User> updateProfile({
     String? name,
@@ -131,7 +131,7 @@ class AuthRepository {
     return User.fromJson(res.data!);
   }
 
-  /// Ubah password user — POST /change-password
+  /// Ubah password user - POST /change-password
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -153,7 +153,7 @@ class AuthRepository {
     _ensureSuccess(res);
   }
 
-  /// Logout dari semua perangkat — POST /logout-all-devices
+  /// Logout dari semua perangkat - POST /logout-all-devices
   /// (docs/api-mobile.md §5.8). Cabut semua token Sanctum kecuali
   /// token saat ini (bila backend mendukung), lalu bersihkan sesi lokal.
   Future<void> logoutAllDevices() async {

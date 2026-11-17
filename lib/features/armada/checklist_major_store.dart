@@ -6,7 +6,7 @@ import 'checklist_major_model.dart';
 
 /// Penyimpanan lokal snapshot "berangkat" Checklist Major (Hive).
 ///
-/// Berfungsi sebagai basis perbandingan mode "kembali" — tidak ada GET
+/// Berfungsi sebagai basis perbandingan mode "kembali" - tidak ada GET
 /// riwayat checklist-major di API, jadi kondisi berangkat dicatat di
 /// perangkat saat submit berangkat berhasil. Snapshot terbaru per armada.
 class ChecklistMajorStore {

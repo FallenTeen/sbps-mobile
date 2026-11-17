@@ -63,7 +63,7 @@ class AppNotification {
   /// Base route internal go_router tujuan deep-link (mis. `/armada/servis`).
   final String? route;
 
-  /// Id record tujuan — path parameter route (mis. `123` / UUID / `po_2`).
+  /// Id record tujuan - path parameter route (mis. `123` / UUID / `po_2`).
   final String? routeId;
   final bool isRead;
   final String? time;

@@ -76,8 +76,9 @@ void main() {
     expect(find.textContaining('Pembaruan'), findsNothing);
   });
 
-  testWidgets('updater tidak tersedia (debug/flutter build) → kosong',
-      (tester) async {
+  testWidgets('updater tidak tersedia (debug/flutter build) → kosong', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(_FakeUpdater(available: false), VersionGateState.ok),
     );
@@ -114,7 +115,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Tutup dalam 2…'), findsOneWidget);
 
-    // Dismiss sebelum 3 detik gagal — prompt tetap tampil.
+    // Dismiss sebelum 3 detik gagal - prompt tetap tampil.
     await tester.tap(find.textContaining('Tutup dalam'));
     await tester.pump();
     expect(find.text('Pembaruan telah terpasang'), findsOneWidget);
@@ -132,10 +133,7 @@ void main() {
   testWidgets('restartRequired langsung popup', (tester) async {
     await tester.pumpWidget(
       _wrap(
-        _FakeUpdater(
-          available: true,
-          status: UpdateStatus.restartRequired,
-        ),
+        _FakeUpdater(available: true, status: UpdateStatus.restartRequired),
         VersionGateState.ok,
       ),
     );

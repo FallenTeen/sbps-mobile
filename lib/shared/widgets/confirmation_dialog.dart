@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Tingkatan severity dialog konfirmasi:
-/// - [warning]: aksi reversibel/ringan (keluar form dengan draft, hapus foto draft) —
+/// - [warning]: aksi reversibel/ringan (keluar form dengan draft, hapus foto draft) -
 ///   tombol confirm netral (bukan merah).
-/// - [destructive]: aksi permanen/final (logout, reject, hapus permanen, selesaikan job) —
+/// - [destructive]: aksi permanen/final (logout, reject, hapus permanen, selesaikan job) -
 ///   tombol confirm merah error ([context.colors.error]).
-/// - [critical]: aksi berdampak luas (logout semua device) —
+/// - [critical]: aksi berdampak luas (logout semua device) -
 ///   tombol merah + icon warning di header, barrier tidak bisa di-dismiss.
 enum ConfirmSeverity { warning, destructive, critical }
 
@@ -23,7 +23,7 @@ class ConfirmationResult {
   final String? reason;
 }
 
-/// Komponen terpusat dialog konfirmasi — dipakai semua layar supaya pola
+/// Komponen terpusat dialog konfirmasi - dipakai semua layar supaya pola
 /// warna/ikon/eksekusi tombol konsisten.
 ///
 /// Penggunaan standar:

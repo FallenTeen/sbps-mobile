@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Judul halaman konsisten untuk bagian atas konten — pola "Page Header".
+/// Judul halaman konsisten untuk bagian atas konten - pola "Page Header".
 ///
 /// Dipakai di dalam area scroll (bukan AppBar) supaya seluruh layar memiliki
 /// judul dengan ukuran/berat yang sama: 20/700 (Design System global),

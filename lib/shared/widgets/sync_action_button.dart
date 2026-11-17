@@ -20,7 +20,7 @@ final connectivityStatusProvider =
       }
     });
 
-/// Tombol sinkron global — bisa ditaruh di AppBar layar manapun.
+/// Tombol sinkron global - bisa ditaruh di AppBar layar manapun.
 ///
 /// Menampilkan ikon cloud + badge jumlah aksi tertunda + dot berkedip.
 /// Tap → force sync semua aksi outbox, tampilkan snackbar hasilnya.
@@ -80,7 +80,7 @@ class SyncActionButton extends ConsumerWidget {
             SnackBar(
               content: Text(
                 remaining > 0
-                    ? 'Sinkronisasi selesai — $remaining aksi masih tertunda.'
+                    ? 'Sinkronisasi selesai - $remaining aksi masih tertunda.'
                     : 'Semua data berhasil disinkronkan.',
               ),
               duration: const Duration(seconds: 2),
@@ -143,7 +143,7 @@ class OfflineBanner extends ConsumerWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          'Anda sedang offline — data tetap tersimpan di HP.',
+                          'Anda sedang offline - data tetap tersimpan di HP.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: fg,
                             fontWeight: FontWeight.w600,

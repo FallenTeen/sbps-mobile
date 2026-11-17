@@ -25,7 +25,7 @@ class ShorebirdUpdateState {
 
 /// Kontroler update OTA: cek patch di background, unduh otomatis
 /// saat ada patch baru, dan prompt restart hanya SETELAH unduhan berhasil.
-/// Prompt 1x per sesi — tidak menggate startup.
+/// Prompt 1x per sesi - tidak menggate startup.
 class ShorebirdUpdateNotifier extends Notifier<ShorebirdUpdateState> {
   @override
   ShorebirdUpdateState build() {
@@ -94,7 +94,7 @@ final shorebirdUpdateProvider =
       ShorebirdUpdateNotifier.new,
     );
 
-/// Host popup pembaharuan OTA — full-screen overlay di atas aplikasi.
+/// Host popup pembaharuan OTA - full-screen overlay di atas aplikasi.
 /// Muncul 1x per sesi saat patch siap, tanpa mengganggu state layar aktif.
 class ShorebirdUpdateBanner extends ConsumerWidget {
   const ShorebirdUpdateBanner({required this.child, super.key});
@@ -247,7 +247,7 @@ class _UpdatePromptState extends ConsumerState<_UpdatePrompt> {
   }
 
   /// Hentikan background tracking (notifikasi ikut hilang via
-  /// `service.stopSelf()`) lalu matikan proses — syarat patch aktif.
+  /// `service.stopSelf()`) lalu matikan proses - syarat patch aktif.
   Future<void> _bukaUlangSekarang() async {
     try {
       final tracking = BackgroundLocationService.instance;

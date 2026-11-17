@@ -71,7 +71,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       appBar: AppBar(
         title: const Text('Workshop Hari Ini'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: AdaptiveMasterDetail(
         key: _masterDetailKey,
@@ -88,7 +88,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               // Horizontal scroll: 3 label chip tidak muat di layar sempit
-              // (~320dp) / text scale 130% — dulu memicu overflow.
+              // (~320dp) / text scale 130% - dulu memicu overflow.
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -119,7 +119,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
     );
   }
 
-  /// Ringkasan "Workshop Hari Ini" — angka dari status nyata server.
+  /// Ringkasan "Workshop Hari Ini" - angka dari status nyata server.
   Widget _buildSummary(
     BuildContext context,
     String? selectedId,

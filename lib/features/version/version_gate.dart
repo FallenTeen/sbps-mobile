@@ -20,7 +20,7 @@ class VersionGateState {
 /// Cek versi saat start:
 /// force_update=true dan versi terpasang < min_version → layar blocking.
 ///
-/// Gagal jaringan saat cek TIDAK memblokir aplikasi (fail-open) —
+/// Gagal jaringan saat cek TIDAK memblokir aplikasi (fail-open) -
 /// user tetap bisa bekerja; cek diulang di start berikutnya.
 class VersionGateController extends AsyncNotifier<VersionGateState> {
   @override

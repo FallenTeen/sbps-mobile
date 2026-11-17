@@ -47,7 +47,7 @@ class TitikSelector extends StatefulWidget {
   /// Apakah menampilkan SegmentedButton toggle di atas.
   final bool showToggle;
 
-  /// Posisi user saat ini — ditampilkan sebagai penanda biru di peta bila ada.
+  /// Posisi user saat ini - ditampilkan sebagai penanda biru di peta bila ada.
   final LatLng? userPosition;
 
   @override

@@ -16,7 +16,7 @@ ServisArmada _servis(String status, {String armadaId = 'a1'}) {
 }
 
 void main() {
-  group('Checklist Major — item & status', () {
+  group('Checklist Major - item & status', () {
     test('defaultMajorChecklistItems membuat 10 item belum dinilai', () {
       final items = defaultMajorChecklistItems();
       expect(items.length, 10);
@@ -217,7 +217,7 @@ void main() {
     });
   });
 
-  group('Pemantauan armada — peringatan (data nyata)', () {
+  group('Pemantauan armada - peringatan (data nyata)', () {
     test('unit non-operasional diberi peringatan', () {
       final w = unitWarnings(status: 'rusak');
       expect(w.map((e) => e.key), contains('status'));

@@ -107,7 +107,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
             final firstTime = data.items.first.timestamp.toLocal();
             final lastTime = data.items.last.timestamp.toLocal();
 
-            // URL lokasi untuk aksi Buka/Bagikan — selalu utamakan kiriman
+            // URL lokasi untuk aksi Buka/Bagikan - selalu utamakan kiriman
             // server (format resmi); fallback koordinat titik terakhir.
             final lastUrl = resolveLocationUrl(
               fromServer: data.googleMapsUrlFromServer,
@@ -244,7 +244,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
                   itemCount: data.items.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, i) {
-                    // Hindari alloc + O(n²) `reversed.toList()` per baris —
+                    // Hindari alloc + O(n²) `reversed.toList()` per baris -
                     // tautan indeks terbalik langsung tanpa salinan.
                     final item = data.items[data.items.length - 1 - i];
                     final isLatest = i == 0;

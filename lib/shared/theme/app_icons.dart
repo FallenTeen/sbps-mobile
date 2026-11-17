@@ -22,7 +22,7 @@ abstract final class AppIconSize {
 /// Mapping ikon semantik ke [IconData] aktual.
 ///
 /// Kalau nanti ingin mengganti satu ikon secara global (atau ikon set yang
-/// berbeda per dark/light/outdoor mode), cukup ubah di file ini — bukan
+/// berbeda per dark/light/outdoor mode), cukup ubah di file ini - bukan
 /// cari-ganti di puluhan layar.
 abstract final class AppIcons {
   // ── Status ──────────────────────────────────────────────────────────────────

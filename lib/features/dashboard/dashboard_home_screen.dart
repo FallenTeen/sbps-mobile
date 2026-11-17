@@ -28,12 +28,12 @@ import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard operasional per role (attention-first):
 ///
-/// 1. Perlu Perhatian   — item actionable (servis, PO, invoice, stok kritis,
+/// 1. Perlu Perhatian   - item actionable (servis, PO, invoice, stok kritis,
 ///                        produksi menunggu QC). Angka hanya tampil bila ADA
 ///                        drill-down; item = 0 tidak dimunculkan.
-/// 2. Operasional Hari Ini — overview titik, armada, kehadiran, chart.
-/// 3. Ringkasan Finansial   — chart keuangan, PO pending, invoice.
-/// 4. Aktivitas Terbaru     — notifikasi terbaru (real, tap → layar terkait).
+/// 2. Operasional Hari Ini - overview titik, armada, kehadiran, chart.
+/// 3. Ringkasan Finansial   - chart keuangan, PO pending, invoice.
+/// 4. Aktivitas Terbaru     - notifikasi terbaru (real, tap → layar terkait).
 class DashboardHomeScreen extends ConsumerWidget {
   const DashboardHomeScreen({super.key});
 
@@ -46,7 +46,7 @@ class DashboardHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Dashboard Operasional'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -341,7 +341,7 @@ class _SectionOverviewState extends State<_SectionOverview> {
   }
 }
 
-/// Tile ringkasan satu titik — dipakai di dashboard home; tap membuka
+/// Tile ringkasan satu titik - dipakai di dashboard home; tap membuka
 /// detail titik.
 class TitikOverviewTile extends StatelessWidget {
   const TitikOverviewTile({super.key, required this.titik});
@@ -624,7 +624,7 @@ class _SectionKehadiran extends ConsumerWidget {
   }
 }
 
-/// Kartu KPI kecil (ikon + angka + label) — dipakai di ringkasan kehadiran.
+/// Kartu KPI kecil (ikon + angka + label) - dipakai di ringkasan kehadiran.
 class _KehadiranStat extends StatelessWidget {
   const _KehadiranStat({
     required this.icon,
@@ -756,7 +756,7 @@ class _PoPendingCard extends ConsumerWidget {
           title: const Text('PO Menunggu Approval'),
           subtitle: Text(
             data.cappedAtLimit
-                ? '${data.total}+ pending — menampilkan $kPoPendingLimit terbaru'
+                ? '${data.total}+ pending - menampilkan $kPoPendingLimit terbaru'
                 : '${data.items.length} menunggu aksi',
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -805,7 +805,7 @@ class _InvoiceCard extends ConsumerWidget {
           title: const Text('Invoice Belum Dibayar'),
           subtitle: Text(
             data.cappedAtLimit
-                ? '${data.total}+ invoice — menampilkan 20 terbaru'
+                ? '${data.total}+ invoice - menampilkan 20 terbaru'
                 : '${data.items.length} belum lunas',
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -868,7 +868,7 @@ class _ActivityTile extends ConsumerWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Semantics(
-        // Status belum dibaca tidak hanya diwarnai — dibacakan ke TalkBack.
+        // Status belum dibaca tidak hanya diwarnai - dibacakan ke TalkBack.
         label: unread ? 'Notifikasi belum dibaca' : 'Notifikasi sudah dibaca',
         child: CircleAvatar(
           radius: 18,

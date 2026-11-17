@@ -29,7 +29,7 @@ class CapturedPhoto {
 ///
 /// Bila [processingContext] diberikan, tampilkan overlay "Menyiapkan foto…"
 /// selama watermark + kompresi berjalan (setelah kamera tertutup, sebelum
-/// pratinjau muncul) — tanpa itu user tidak tahu app sedang memproses.
+/// pratinjau muncul) - tanpa itu user tidak tahu app sedang memproses.
 Future<CapturedPhoto?> takeWatermarkedPhoto(
   WidgetRef ref, {
   BuildContext? processingContext,

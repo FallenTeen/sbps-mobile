@@ -9,7 +9,7 @@ import 'ritase_model.dart';
 /// Berbeda dari outbox: store ini menyimpan SELURUH record hari ini
 /// (termasuk yang sudah synced) supaya index "Muatan Hari Ini" tetap
 /// menjawab berapa record / berapa rit / unit terkait / status tiap record.
-/// Draft TIDAK dihapus saat keluar dari screen — hanya hilang bila user
+/// Draft TIDAK dihapus saat keluar dari screen - hanya hilang bila user
 /// menghapusnya atau session diganti hari.
 class RitaseDraftStore {
   RitaseDraftStore._();

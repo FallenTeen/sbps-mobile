@@ -177,7 +177,7 @@ class _PendingActionTile extends StatelessWidget {
               Text(
                 action.errorMessage!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  // pending = retryable (menunggu jaringan) — jangan tampil
+                  // pending = retryable (menunggu jaringan) - jangan tampil
                   // merah seperti error permanen (failed) yang butuh tindakan.
                    color: action.status == PendingStatus.failed
                        ? context.colors.error

@@ -2,7 +2,7 @@ import '../../core/api_client.dart';
 import '../../core/api_response.dart';
 import 'inventory_models.dart';
 
-/// Repository modul Inventory — Stok & Sparepart (Section 14d / Bagian 21.7).
+/// Repository modul Inventory - Stok & Sparepart (Section 14d / Bagian 21.7).
 /// Mengelola ringkasan, daftar stok bahan baku & sparepart, request sparepart
 /// dari workshop, dan checklist stok opname.
 class InventoryRepository {
@@ -10,7 +10,7 @@ class InventoryRepository {
 
   final ApiClient _api;
 
-  /// GET /inventory/summary — ringkasan jumlah item, nilai stok, item yang
+  /// GET /inventory/summary - ringkasan jumlah item, nilai stok, item yang
   /// di bawah minimum, dan request sparepart pending.
   Future<InventorySummary> getSummary() async {
     final res = await _api.get<InventorySummary>(
@@ -26,7 +26,7 @@ class InventoryRepository {
     return res.data!;
   }
 
-  /// GET /inventory/materials?kategori= — daftar stok dengan saldo saat ini.
+  /// GET /inventory/materials?kategori= - daftar stok dengan saldo saat ini.
   Future<List<InventoryItem>> getStok({String? kategori}) async {
     final res = await _api.get<List<InventoryItem>>(
       '/inventory/materials',
@@ -43,7 +43,7 @@ class InventoryRepository {
     return res.data ?? const [];
   }
 
-  /// GET /inventory/requests?status= — request sparepart dari workshop.
+  /// GET /inventory/requests?status= - request sparepart dari workshop.
   Future<List<InventoryRequest>> getRequests({String? status}) async {
     final res = await _api.get<List<InventoryRequest>>(
       '/inventory/requests',
@@ -60,7 +60,7 @@ class InventoryRepository {
     return res.data ?? const [];
   }
 
-  /// GET /inventory/requests/{id} — detail satu request sparepart.
+  /// GET /inventory/requests/{id} - detail satu request sparepart.
   Future<InventoryRequest> getRequestDetail(String id) async {
     final res = await _api.get<InventoryRequest>(
       '/inventory/requests/$id',
@@ -71,7 +71,7 @@ class InventoryRepository {
     return res.data!;
   }
 
-  /// POST /inventory/requests/{id}/proses — tandai item yang dikirim jadi
+  /// POST /inventory/requests/{id}/proses - tandai item yang dikirim jadi
   /// tersedia (nominal/jumlah lama dipertahankan saat hanya id yang dikirim).
   Future<void> prosesRequest({
     required String id,
@@ -88,7 +88,7 @@ class InventoryRepository {
     _ensureSuccess(res);
   }
 
-  /// GET /inventory/opname/materials — item untuk form stok opname.
+  /// GET /inventory/opname/materials - item untuk form stok opname.
   Future<List<OpnameItem>> getOpnameMaterials() async {
     final res = await _api.get<List<OpnameItem>>(
       '/inventory/opname/materials',
@@ -131,7 +131,7 @@ class InventoryRepository {
         const StokMutasiPage(items: [], currentPage: 1, lastPage: 1, total: 0);
   }
 
-  /// GET /inventory/materials/{id}/mutasi — riwayat mutasi khusus 1 barang.
+  /// GET /inventory/materials/{id}/mutasi - riwayat mutasi khusus 1 barang.
   Future<StokMutasiPage> getMaterialMutasi(
     String id, {
     DateTime? tanggalMulai,

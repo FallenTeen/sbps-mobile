@@ -156,7 +156,7 @@ class SecurityRepository {
   // Laporan Darurat
   // ---------------------------------------------------------------------------
 
-  /// Submit Laporan Darurat — offline-first & kirim cepat.
+  /// Submit Laporan Darurat - offline-first & kirim cepat.
   Future<void> submitLaporanDarurat({
     required String kategori,
     required String judul,

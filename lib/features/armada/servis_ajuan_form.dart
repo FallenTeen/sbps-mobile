@@ -20,7 +20,7 @@ import 'models/servis_armada.dart';
 import 'servis_providers.dart';
 import 'servis_status.dart';
 
-/// Satu-satunya source of truth form Pengajuan Servis — dipakai oleh
+/// Satu-satunya source of truth form Pengajuan Servis - dipakai oleh
 /// [AjuanServisScreen] (full page) maupun [AjuanServisSheet] (bottom sheet)
 /// supaya tidak ada implementasi yang saling berbeda.
 ///
@@ -312,7 +312,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
             );
 
       AnalyticsService.servisAjuanSubmit();
-      // Data kini tersimpan aman (di server ATAU di outbox) — draft tidak
+      // Data kini tersimpan aman (di server ATAU di outbox) - draft tidak
       // lagi dibutuhkan. Queued != Synced: snackbar membedakan keduanya.
       await _autosave.clear();
       if (!mounted) return;
@@ -853,7 +853,7 @@ class _ServisAjuanFormState extends ConsumerState<ServisAjuanForm> {
   }
 }
 
-/// Banner tipe unit — dipakai form servis supaya konteks ODO/HM jelas,
+/// Banner tipe unit - dipakai form servis supaya konteks ODO/HM jelas,
 /// konsisten dengan pola OdoAwalScreen.
 class _UnitTypeBanner extends StatelessWidget {
   const _UnitTypeBanner({required this.isAlatBerat});
@@ -880,8 +880,8 @@ class _UnitTypeBanner extends StatelessWidget {
           Expanded(
             child: Text(
               isAlatBerat
-                  ? 'Alat Berat — nilai dalam HM (jam mesin)'
-                  : 'Kendaraan — nilai dalam KM (odometer)',
+                  ? 'Alat Berat - nilai dalam HM (jam mesin)'
+                  : 'Kendaraan - nilai dalam KM (odometer)',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),

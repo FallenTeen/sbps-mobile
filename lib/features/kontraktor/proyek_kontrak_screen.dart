@@ -43,7 +43,7 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portal Kontraktor'),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

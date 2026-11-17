@@ -29,8 +29,9 @@ ProviderScope _wrap(VersionGateState gate, Widget child) => ProviderScope(
 );
 
 void main() {
-  testWidgets('app kadaluwarsa → modal merah dengan tombol unduh',
-      (tester) async {
+  testWidgets('app kadaluwarsa → modal merah dengan tombol unduh', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         VersionGateState(blocked: true, info: _info()),
@@ -43,7 +44,7 @@ void main() {
     expect(find.textContaining('minimal 2.0.0'), findsOneWidget);
     expect(find.text('Unduh Aplikasi'), findsOneWidget);
 
-    // Tutup dengan "Nanti" — state user tidak hilang.
+    // Tutup dengan "Nanti" - state user tidak hilang.
     await tester.tap(find.text('Nanti'));
     await tester.pumpAndSettle();
     expect(find.text('Aplikasi Kadaluwarsa'), findsNothing);

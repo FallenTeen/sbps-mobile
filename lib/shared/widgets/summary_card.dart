@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Kartu ringkasan bergradien — pola "Summary Card".
+/// Kartu ringkasan bergradien - pola "Summary Card".
 ///
 /// Dipakai di bagian atas halaman untuk menampilkan angka penting
 /// (mis. jumlah sesi aktif, jumlah unit, ringkasan antrian). Menggunakan
@@ -35,10 +35,10 @@ class SummaryCard extends StatelessWidget {
   /// Ikon di sisi kanan (opsional).
   final IconData? icon;
 
-  /// Aksi saat kartu diketuk (opsional — menampilkan chevron).
+  /// Aksi saat kartu diketuk (opsional - menampilkan chevron).
   final VoidCallback? onTap;
 
-  /// Konten tambahan di kanan (mis. jumlah QC tertunda) — mengalahkan [icon].
+  /// Konten tambahan di kanan (mis. jumlah QC tertunda) - mengalahkan [icon].
   final Widget? badge;
 
   final TextStyle? valueStyle;

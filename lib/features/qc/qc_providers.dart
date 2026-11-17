@@ -153,7 +153,7 @@ final waitingSamplesBySessionProvider =
     });
 
 // ---------------------------------------------------------------------------
-// Home QC — queue-first
+// Home QC - queue-first
 // ---------------------------------------------------------------------------
 
 /// Ringkasan home QC (queue):
@@ -256,7 +256,7 @@ class QcSubmitController extends Notifier<QcSubmitState> {
     ref.invalidate(qcHomeProvider);
   }
 
-  /// POST /qc/slump-test — client_uuid dibuat SEKALI saat aksi dibuat.
+  /// POST /qc/slump-test - client_uuid dibuat SEKALI saat aksi dibuat.
   Future<QcSubmitResult> slumpTest({
     required String sessionId,
     required double nilaiSlump,
@@ -304,7 +304,7 @@ class QcSubmitController extends Notifier<QcSubmitState> {
     }
   }
 
-  /// POST /qc/uji-tekan — sesi harus punya sample slump menunggu hasil.
+  /// POST /qc/uji-tekan - sesi harus punya sample slump menunggu hasil.
   /// 422 "tidak ada sample menunggu" diteruskan sebagai [QcSubmitResult.error].
   Future<QcSubmitResult> ujiTekan({
     required String sessionId,
@@ -349,7 +349,7 @@ class QcSubmitController extends Notifier<QcSubmitState> {
       return const QcSubmitResult(queued: true);
     } on ApiException catch (e) {
       // Termasuk 422 "tidak ada sample slump test yang menunggu hasil"
-      // — UI mengarahkan user mencatat slump test dulu.
+      // - UI mengarahkan user mencatat slump test dulu.
       return QcSubmitResult(error: e.message);
     } catch (_) {
       return const QcSubmitResult(error: 'Gagal mencatat uji tekan.');

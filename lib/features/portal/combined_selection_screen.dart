@@ -113,7 +113,7 @@ class _CombinedSelectionScreenState
     final canProyek = canAccessProyek(user);
     final roles = app2RolesOf(user);
 
-    // Auto-skip sekali saja — retry di build berikutnya selama user belum
+    // Auto-skip sekali saja - retry di build berikutnya selama user belum
     // termuat (auth masih loading), lalu berhenti selamanya.
     if (!_autoSkipDone) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -3,7 +3,7 @@ import '../../core/api_response.dart';
 import 'models/formulir_lapangan.dart';
 
 /// Repository Formulir Lapangan (docs/api-mobile.md §7).
-/// Submit lewat outbox — lihat [FormulirController].
+/// Submit lewat outbox - lihat [FormulirController].
 class FormulirRepository {
   FormulirRepository({required ApiClient api}) : _api = api;
 

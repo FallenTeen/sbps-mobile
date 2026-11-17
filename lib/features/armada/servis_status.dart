@@ -1,4 +1,4 @@
-/// Status & alur Servis Armada — source of truth label/aksi/kronologi.
+// Status & alur Servis Armada - source of truth label/aksi/kronologi.
 ///
 /// Semua layar (index / work queue, detail, form) memakai helper ini supaya
 /// tidak ada label atau urutan timeline yang terpecah antar file.
@@ -76,12 +76,12 @@ bool canApproveServis(String? role) {
 String servisNextAction(ServisArmada item, {bool canApprove = false}) {
   return switch (item.status) {
     'diajukan' => canApprove
-        ? 'Perlu persetujuan — buka untuk Setujui / Tolak'
+        ? 'Perlu persetujuan - buka untuk Setujui / Tolak'
         : 'Menunggu persetujuan atasan',
     'disetujui' => 'Menunggu dijadwalkan workshop',
     'dikerjakan' => 'Sedang dikerjakan workshop',
-    'selesai' => 'Selesai — lihat hasil & biaya servis',
-    'ditolak' => 'Ditolak — ajukan ulang bila perlu',
+    'selesai' => 'Selesai - lihat hasil & biaya servis',
+    'ditolak' => 'Ditolak - ajukan ulang bila perlu',
     _ => '',
   };
 }

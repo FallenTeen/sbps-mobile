@@ -22,7 +22,7 @@ import 'notifikasi_providers.dart';
 /// (Approval/Servis/Stok/Produksi/Presensi/Formulir/Sistem), status baca,
 /// dan tap → markRead lalu navigasi deep-link ke layar terkait. Destination
 /// yang tidak dikenali / tanpa hak akses tetap dibuka secara jelas (pesan
-/// snackbar) — bukan diam.
+/// snackbar) - bukan diam.
 class NotifikasiScreen extends ConsumerStatefulWidget {
   const NotifikasiScreen({super.key});
 
@@ -274,7 +274,7 @@ class CategoryVisual {
 }
 
 CategoryVisual categoryVisual(NotificationCategory c) {
-  // Dipanggil dalam build — warna mengikuti tema via context.
+  // Dipanggil dalam build - warna mengikuti tema via context.
   switch (c) {
     case NotificationCategory.approval:
       return CategoryVisual(
@@ -382,7 +382,7 @@ class _Tile extends ConsumerWidget {
 
     switch (resolved.status) {
       case NotificationTargetStatus.open:
-        // Deep-link internal: push (bukan go) supaya back stack tetap utuh —
+        // Deep-link internal: push (bukan go) supaya back stack tetap utuh -
         // user bisa kembali ke daftar notifikasi.
         try {
           context.push(resolved.route!);

@@ -10,7 +10,7 @@ import '../../shared/widgets/submit_spinner.dart';
 import 'armada_providers.dart';
 import 'models/helper.dart';
 
-/// Presensi Helper (Pendamping) — work queue harian untuk PIC (Driver).
+/// Presensi Helper (Pendamping) - work queue harian untuk PIC (Driver).
 /// Menampilkan nama helper, status hari ini, dan action berikutnya:
 /// Belum Masuk → [Presensi Masuk]; Sedang Bekerja → [Presensi Pulang];
 /// Sudah Pulang → selesai.

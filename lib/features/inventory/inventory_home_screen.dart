@@ -39,7 +39,7 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
       appBar: AppBar(
         title: const Text('Inventory'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
@@ -143,13 +143,6 @@ class _InventoryHomeScreenState extends ConsumerState<InventoryHomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                _AttentionTile(
-                  icon: Icons.fact_check_outlined,
-                  label: 'Stok Opname',
-                  subtitle: 'Hitung fisik stok',
-                  color: context.colors.info,
-                  onTap: () => context.push('/inventory/opname'),
-                ),
                 if (summary.nilaiStok > 0) ...[
                   const SizedBox(height: 14),
                   Container(
@@ -327,7 +320,6 @@ class _AttentionTile extends StatelessWidget {
     required this.label,
     required this.color,
     this.count,
-    this.subtitle,
     this.onTap,
   });
 
@@ -335,7 +327,6 @@ class _AttentionTile extends StatelessWidget {
   final String label;
   final Color color;
   final int? count;
-  final String? subtitle;
   final VoidCallback? onTap;
 
   @override
@@ -385,15 +376,7 @@ class _AttentionTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    if (subtitle != null)
-                      Text(
-                        subtitle!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.colors.textTertiary,
-                        ),
-                      )
-                    else if (hasCount)
+                    if (hasCount)
                       Text(
                         isZero ? 'Aman' : '$count',
                         style: TextStyle(

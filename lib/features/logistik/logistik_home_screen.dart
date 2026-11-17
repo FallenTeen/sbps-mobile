@@ -34,12 +34,14 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
       appBar: AppBar(
         title: const Text('Logistik & Timbang'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions()],
+        actions: const [AppTopBarActions(showNotification: false)],
       ),
       body: ResponsiveCenter(
         maxWidth: AppBreakpoints.maxContentWidth,
         child: Column(
         children: [
+          // Entri modul Inventory (role Logistik punya permission inventory).
+          _InventoryEntryCard(onTap: () => context.push('/inventory')),
           // Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -134,6 +136,85 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedFilter = index),
+    );
+  }
+}
+
+/// Entri ke modul Inventory dari Beranda Logistik.
+///
+/// Role Logistik memiliki permission `inventory` di matriks client, tetapi
+/// sebelumnya tidak ada satu pun entri UI yang membuka `/inventory` - modul
+/// hanya bisa dijangkau lewat deep-link notifikasi.
+class _InventoryEntryCard extends StatelessWidget {
+  const _InventoryEntryCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: context.colors.border),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: context.colors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.inventory_2_outlined,
+                    size: 20,
+                    color: context.colors.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Inventory',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Cek stok barang & request sparepart',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: context.colors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

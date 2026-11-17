@@ -13,7 +13,7 @@ import '../../features/notifikasi/models/notification.dart';
 import '../../features/notifikasi/notifikasi_providers.dart';
 import 'notification_routes.dart';
 
-/// Handler for notification taps — navigate ke layar terkait.
+/// Handler for notification taps - navigate ke layar terkait.
 ///
 /// Mendukung 2 skenario:
 /// 1. App sudah terbuka (background) → onMessageOpenedApp
@@ -76,7 +76,7 @@ class NotificationHandler {
 
       switch (resolved.status) {
         case NotificationTargetStatus.open:
-          // push (bukan go) supaya back stack tetap utuh — user bisa kembali
+          // push (bukan go) supaya back stack tetap utuh - user bisa kembali
           // ke layar sebelumnya setelah melihat tujuan notifikasi.
           router.push(resolved.route!);
           _markReadBestEffort(data);
@@ -95,13 +95,13 @@ class NotificationHandler {
       try {
         router.push('/notifikasi');
       } catch (_) {
-        // Router belum siap — biarkan user tetap di layar sekarang.
+        // Router belum siap - biarkan user tetap di layar sekarang.
       }
     }
   }
 
   /// Tandai dibaca best-effort. HANYA saat payload membawa `notification_id`
-  /// eksplisit — payload lama memakai `id` sebagai id record route, sehingga
+  /// eksplisit - payload lama memakai `id` sebagai id record route, sehingga
   /// menandai sembarangan bisa menandai record yang salah.
   Future<void> _markReadBestEffort(Map<String, dynamic> data) async {
     final notificationId = data['notification_id']?.toString();
@@ -114,7 +114,7 @@ class NotificationHandler {
           .markRead(notificationId);
       ref.read(unreadCountProvider.notifier).reload();
     } catch (error) {
-      // Best-effort saja — jaringan/read gagal tidak boleh mengganggu navigasi.
+      // Best-effort saja - jaringan/read gagal tidak boleh mengganggu navigasi.
       debugPrint('[FCM] markRead best-effort failed: $error');
     }
   }

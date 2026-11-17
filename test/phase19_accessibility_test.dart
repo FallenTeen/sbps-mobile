@@ -27,7 +27,7 @@ void main() {
     home: Scaffold(body: child),
   );
 
-  group('StatusPill — kontras teks filled (Phase 19)', () {
+  group('StatusPill - kontras teks filled (Phase 19)', () {
     testWidgets('amber terang memakai teks gelap', (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -61,28 +61,40 @@ void main() {
     testWidgets('label dibatasi satu baris dengan ellipsis', (tester) async {
       await tester.pumpWidget(
         wrap(
-          const StatusPill(label: 'Selesai Dikerjakan Hari Ini', color: Colors.blue),
+          const StatusPill(
+            label: 'Selesai Dikerjakan Hari Ini',
+            color: Colors.blue,
+          ),
         ),
       );
 
-      final text = tester.widget<Text>(find.text('Selesai Dikerjakan Hari Ini'));
+      final text = tester.widget<Text>(
+        find.text('Selesai Dikerjakan Hari Ini'),
+      );
       expect(text.maxLines, 1);
       expect(text.overflow, TextOverflow.ellipsis);
     });
   });
 
-  group('SubmitSpinner — terbaca di tombol disabled (Phase 19)', () {
+  group('SubmitSpinner - terbaca di tombol disabled (Phase 19)', () {
     testWidgets('memakai ukuran & stroke yang diminta', (tester) async {
-      await tester.pumpWidget(wrap(const SubmitSpinner(size: 18, strokeWidth: 3)));
+      await tester.pumpWidget(
+        wrap(const SubmitSpinner(size: 18, strokeWidth: 3)),
+      );
 
       final indicator = tester.widget<CircularProgressIndicator>(
         find.byType(CircularProgressIndicator),
       );
       expect(indicator.strokeWidth, 3);
-      expect(tester.getSize(find.byType(CircularProgressIndicator)), const Size(18, 18));
+      expect(
+        tester.getSize(find.byType(CircularProgressIndicator)),
+        const Size(18, 18),
+      );
     });
 
-    testWidgets('warnanya BUKAN putih (disabled foreground α38%)', (tester) async {
+    testWidgets('warnanya BUKAN putih (disabled foreground α38%)', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const SubmitSpinner()));
 
       final indicator = tester.widget<CircularProgressIndicator>(
@@ -93,8 +105,10 @@ void main() {
     });
   });
 
-  group('StickyActionBar — touch target ≥48dp (Phase 19)', () {
-    testWidgets('tombol utama minimal 48dp walau text scale 130%', (tester) async {
+  group('StickyActionBar - touch target ≥48dp (Phase 19)', () {
+    testWidgets('tombol utama minimal 48dp walau text scale 130%', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -137,7 +151,7 @@ void main() {
     });
   });
 
-  group('KeyValueRow — aksi salin aksesibel (Phase 19)', () {
+  group('KeyValueRow - aksi salin aksesibel (Phase 19)', () {
     testWidgets('tooltip "Salin <label>" tersedia', (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -153,8 +167,10 @@ void main() {
     });
   });
 
-  group('AppEmptyState — teks sekunder kontras (Phase 19)', () {
-    testWidgets('subtitle memakai onSurfaceVariant, bukan outline', (tester) async {
+  group('AppEmptyState - teks sekunder kontras (Phase 19)', () {
+    testWidgets('subtitle memakai onSurfaceVariant, bukan outline', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           const AppEmptyState(
@@ -165,7 +181,9 @@ void main() {
         ),
       );
 
-      final text = tester.widget<Text>(find.text('Data akan tampil setelah sinkron.'));
+      final text = tester.widget<Text>(
+        find.text('Data akan tampil setelah sinkron.'),
+      );
       final scheme = Theme.of(
         tester.element(find.text('Data akan tampil setelah sinkron.')),
       ).colorScheme;
@@ -173,49 +191,57 @@ void main() {
     });
   });
 
-  group('OutboxSyncService.syncNow — tidak panggil callback saat tak ada aksi', () {
-    test('antrean kosong → onSyncCycleDone TIDAK dipanggil', () async {
-      final service = OutboxSyncService(_FakeOutboxRepository([]), ApiClient());
-      var called = 0;
-      service.onSyncCycleDone = () => called++;
+  group(
+    'OutboxSyncService.syncNow - tidak panggil callback saat tak ada aksi',
+    () {
+      test('antrean kosong → onSyncCycleDone TIDAK dipanggil', () async {
+        final service = OutboxSyncService(
+          _FakeOutboxRepository([]),
+          ApiClient(),
+        );
+        var called = 0;
+        service.onSyncCycleDone = () => called++;
 
-      await service.syncNow();
+        await service.syncNow();
 
-      expect(called, 0);
-    });
+        expect(called, 0);
+      });
 
-    test('aksi masih backoff → TIDAK dipanggil', () async {
-      final service = OutboxSyncService(
-        _FakeOutboxRepository([
-          _action(
-            'a-1',
-            retryCount: 5,
-            lastAttemptAt: DateTime.now().subtract(const Duration(seconds: 5)),
-          ),
-        ]),
-        ApiClient(),
-      );
-      var called = 0;
-      service.onSyncCycleDone = () => called++;
+      test('aksi masih backoff → TIDAK dipanggil', () async {
+        final service = OutboxSyncService(
+          _FakeOutboxRepository([
+            _action(
+              'a-1',
+              retryCount: 5,
+              lastAttemptAt: DateTime.now().subtract(
+                const Duration(seconds: 5),
+              ),
+            ),
+          ]),
+          ApiClient(),
+        );
+        var called = 0;
+        service.onSyncCycleDone = () => called++;
 
-      await service.syncNow();
+        await service.syncNow();
 
-      expect(called, 0);
-    });
+        expect(called, 0);
+      });
 
-    test('aksi melewati batas percobaan → TIDAK dipanggil', () async {
-      final service = OutboxSyncService(
-        _FakeOutboxRepository([_action('a-2', retryCount: 99)]),
-        ApiClient(),
-      );
-      var called = 0;
-      service.onSyncCycleDone = () => called++;
+      test('aksi melewati batas percobaan → TIDAK dipanggil', () async {
+        final service = OutboxSyncService(
+          _FakeOutboxRepository([_action('a-2', retryCount: 99)]),
+          ApiClient(),
+        );
+        var called = 0;
+        service.onSyncCycleDone = () => called++;
 
-      await service.syncNow();
+        await service.syncNow();
 
-      expect(called, 0);
-    });
-  });
+        expect(called, 0);
+      });
+    },
+  );
 }
 
 class _FakeOutboxRepository extends OutboxRepository {

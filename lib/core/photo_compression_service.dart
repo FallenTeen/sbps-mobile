@@ -13,7 +13,7 @@ enum UploadPhase { compressing, sending }
 /// - Sisi terpanjang di-resize maks [maxDim] px bila perlu.
 /// - EXIF dipertahankan (`keepExif`) supaya orientasi foto tidak berbalik.
 /// - Hasil disimpan sebagai file JPEG baru di direktori temporary aplikasi;
-///   path file itulah yang masuk ke PendingAction — bukan bytes/base64.
+///   path file itulah yang masuk ke PendingAction - bukan bytes/base64.
 ///
 /// Bila kompresi gagal (plugin error dsb.), path ASLI dikembalikan agar
 /// alur presensi user tidak pernah terblokir oleh masalah kompresi.
@@ -56,11 +56,11 @@ class PhotoCompressionService {
         if (quality < 45 && bound > 800) bound = 800;
       }
 
-      // Kualitas terendah pun tetap lebih baik daripada file asli —
+      // Kualitas terendah pun tetap lebih baik daripada file asli -
       // pakai hasil kompresi terakhir bila target tidak tercapai.
       return best ?? sourcePath;
     } catch (_) {
-      // Kompresi tidak boleh menggagalkan presensi — pakai file asli.
+      // Kompresi tidak boleh menggagalkan presensi - pakai file asli.
       return sourcePath;
     }
   }

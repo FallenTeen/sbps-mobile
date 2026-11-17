@@ -1,4 +1,4 @@
-/// Model & pure-logic ritase/muatan — docs/api-mobile.md §Armada, Section 21.4.
+// Model & pure-logic ritase/muatan - docs/api-mobile.md §Armada, Section 21.4.
 ///
 /// Satu record = satu pengiriman POST /armada/ritase/input. Record punya
 /// status per-record (draft/queued/synced/failed) supaya partial failure
@@ -6,7 +6,7 @@
 /// tidak diubah: payload wire `{armada_id, jumlah_rit, satuan_volume,
 /// material?, jumlah_volume?, catatan?}`.
 ///
-/// Catatan: field `odo_per_trip` dihapus (F-03) — backend tidak menerima
+/// Catatan: field `odo_per_trip` dihapus (F-03) - backend tidak menerima
 /// kolom ini maupun menyimpannya; ODO tetap lewat checklist awal/akhir
 /// (dengan deteksi anomali) dan ODO Awal proyek.
 library;
@@ -61,7 +61,7 @@ class RitaseRecord {
     this.idempotencyKey = '',
   });
 
-  /// UUID lokal stabil — identitas record untuk edit/delete/status.
+  /// UUID lokal stabil - identitas record untuk edit/delete/status.
   final String id;
 
   /// Nomor urut tampilan (#1, #2, ...).
@@ -99,7 +99,7 @@ class RitaseRecord {
   /// True bila siap dikirim (payload lengkap).
   bool get isComplete => armadaId.isNotEmpty && jumlah > 0;
 
-  /// Nilai wire `satuan_volume` — mapping DIJAGA persis seperti versi lama
+  /// Nilai wire `satuan_volume` - mapping DIJAGA persis seperti versi lama
   /// (business rule tidak diubah).
   String get satuanVolume => switch (satuan) {
     'ton' => 'tonase',

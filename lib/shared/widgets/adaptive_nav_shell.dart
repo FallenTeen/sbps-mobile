@@ -12,7 +12,7 @@ class AdaptiveNavDestination {
     required this.selectedIcon,
   });
 
-  /// Identitas destinasi ('home', 'produksi', 'qc', …) — dipakai router untuk
+  /// Identitas destinasi ('home', 'produksi', 'qc', …) - dipakai router untuk
   /// memetakan destinasi ke branch `StatefulShellRoute`.
   final String key;
 
@@ -33,7 +33,7 @@ class AdaptiveNavDestination {
 /// - Expanded (≥840dp): `NavigationRail` extended di kiri, label selalu tampil.
 ///
 /// Jika [destinations] kosong (mis. role hanya punya 1 modul), shell tidak
-/// dirender sama sekali — cukup tampilkan [child] polos.
+/// dirender sama sekali - cukup tampilkan [child] polos.
 class AdaptiveNavShell extends StatelessWidget {
   const AdaptiveNavShell({
     super.key,
@@ -42,6 +42,7 @@ class AdaptiveNavShell extends StatelessWidget {
     required this.onDestinationSelected,
     required this.destinations,
     this.activeRole,
+    this.notifikasiBadgeCount = 0,
   });
 
   /// Pane konten aktif, biasanya `StatefulNavigationShell` dari GoRouter.
@@ -56,10 +57,15 @@ class AdaptiveNavShell extends StatelessWidget {
 
   final List<AdaptiveNavDestination> destinations;
 
-  /// Role aktif — bila diisi, strip "Bekerja sebagai: …" ditampilkan
+  /// Role aktif - bila diisi, strip "Bekerja sebagai: …" ditampilkan
   /// persisten di atas konten. Nilai null (mis. layar
   /// presensi-only) tidak menampilkan strip.
   final String? activeRole;
+
+  /// Jumlah notifikasi belum dibaca - tampil sebagai badge pada destinasi
+  /// `notifikasi` (tab persisten menjadi satu-satunya pintu notifikasi di
+  /// dalam shell; bel AppBar dihapus dari kluster aksi).
+  final int notifikasiBadgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +77,8 @@ class AdaptiveNavShell extends StatelessWidget {
     final railDestinations = [
       for (final d in destinations)
         NavigationRailDestination(
-          icon: Icon(d.icon),
-          selectedIcon: Icon(d.selectedIcon),
+          icon: _destinationIcon(context, d),
+          selectedIcon: _destinationIcon(context, d, selected: true),
           label: Text(d.label),
         ),
     ];
@@ -138,14 +144,30 @@ class AdaptiveNavShell extends StatelessWidget {
                   destinations: [
                     for (final d in destinations)
                       NavigationDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: _destinationIcon(context, d),
+                        selectedIcon: _destinationIcon(context, d, selected: true),
                         label: d.label,
                       ),
                   ],
                 ),
         );
     }
+  }
+
+  /// Ikon destinasi; destinasi `notifikasi` membungkus badge jumlah belum
+  /// dibaca sehingga indikator tetap terlihat tanpa bel AppBar tambahan.
+  Widget _destinationIcon(
+    BuildContext context,
+    AdaptiveNavDestination d, {
+    bool selected = false,
+  }) {
+    final icon = Icon(selected ? d.selectedIcon : d.icon);
+    if (d.key != 'notifikasi' || notifikasiBadgeCount <= 0) return icon;
+    return Badge(
+      isLabelVisible: true,
+      label: Text(notifikasiBadgeCount > 99 ? '99+' : '$notifikasiBadgeCount'),
+      child: icon,
+    );
   }
 }
 

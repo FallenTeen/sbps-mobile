@@ -8,7 +8,7 @@ import 'app_empty_state.dart';
 /// Pola list→detail adaptif (spesifikasi Bagian 2):
 /// - Compact/Medium (<840dp): hanya render [masterBuilder]; saat item dipilih,
 ///   tetap push route detail penuh lewat [pushRouteFor] (perilaku identik lama).
-/// - Expanded (>=840dp): Row split — kiri [masterBuilder] (380dp), kanan
+/// - Expanded (>=840dp): Row split - kiri [masterBuilder] (380dp), kanan
 ///   [detailBuilder] atau [emptyDetailPlaceholder]. Pemilihan cukup update
 ///   state lokal (tanpa push), dipisah divider vertikal tipis.
 ///

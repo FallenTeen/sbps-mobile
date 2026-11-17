@@ -1,4 +1,4 @@
-/// Model Checklist Major — Serah Terima Kendaraan (Section 21.10).
+// Model Checklist Major - Serah Terima Kendaraan (Section 21.10).
 ///
 /// Logika murni (tanpa Flutter) supaya gampang diuji: status per item,
 /// progres penilaian, ringkasan kondisi, bukti foto, dan snapshot
@@ -158,12 +158,12 @@ extension MajorChecklistModeX on MajorChecklistMode {
   String get subLabel =>
       this == MajorChecklistMode.berangkat
           ? 'Serah terima awal / penyerahan unit'
-          : 'Pengembalian unit — bandingkan dengan kondisi berangkat';
+          : 'Pengembalian unit - bandingkan dengan kondisi berangkat';
 }
 
 /// Snapshot kondisi "berangkat" tersimpan lokal per armada.
 ///
-/// Dipakai sebagai basis perbandingan saat mode "kembali" — tidak mengarang
+/// Dipakai sebagai basis perbandingan saat mode "kembali" - tidak mengarang
 /// endpoint baru; disimpan lokal dari submit berangkat terakhir di perangkat ini.
 class MajorChecklistSnapshot {
   const MajorChecklistSnapshot({
@@ -243,7 +243,7 @@ class MajorItemComparison {
 
 /// Membandingkan kondisi kini (mode kembali) dengan snapshot berangkat.
 ///
-/// Mengembalikan daftar perbandingan per label — dipakai pada layar Review
+/// Mengembalikan daftar perbandingan per label - dipakai pada layar Review
 /// bila mode kembali & snapshot tersedia. [snapshot] null → otomatis
 /// dianggap tidak ada data berangkat.
 List<MajorItemComparison> compareReturnToBerangkat(

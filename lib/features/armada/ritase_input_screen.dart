@@ -26,13 +26,13 @@ import 'models/armada.dart';
 import 'ritase_draft_store.dart';
 import 'ritase_model.dart';
 
-/// Muatan Hari Ini — hub multi-record ritase (Section 21.4).
+/// Muatan Hari Ini - hub multi-record ritase (Section 21.4).
 ///
 /// Index menjawab: berapa record, berapa total rit (per satuan, tidak
 /// dijumlah menggabungkan satuan yang berbeda), unit terkait, dan status
 /// tiap record (Draft / Menunggu sinkron / Dikirim / Gagal).
 ///
-/// Record dapat dibuat, diedit, dihapus, disimpan sebagai draft (persisten —
+/// Record dapat dibuat, diedit, dihapus, disimpan sebagai draft (persisten -
 /// keluar layar tidak menghapus), direview, dikirim per record, dan di-retry.
 /// Submit berjalan per record (sequential) sehingga partial failure terlihat
 /// per record. Queued ≠ server success (badge "Menunggu sinkron" terpisah
@@ -231,7 +231,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   }
 
   /// Buang aksi outbox yang masih mengganggu (antre/gagal) dengan
-  /// mencocokkan `client_uuid` — mencegah pengiriman payload lama.
+  /// mencocokkan `client_uuid` - mencegah pengiriman payload lama.
   Future<void> _cancelPendingByClientUuid(String clientUuid) async {
     if (clientUuid.isEmpty) return;
     try {
@@ -245,7 +245,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   }
 
   // -------------------------------------------------------------------------
-  // Submit per record (sequential — partial failure terlihat per record)
+  // Submit per record (sequential - partial failure terlihat per record)
   // -------------------------------------------------------------------------
 
   Future<void> _submitRecords(List<RitaseRecord> targets) async {
@@ -335,7 +335,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           firstFail,
         );
       }
-      // Riwayat tab mengambil dari server — segarkan setelah ada yang terkirim.
+      // Riwayat tab mengambil dari server - segarkan setelah ada yang terkirim.
       if (delivered > 0) ref.invalidate(ritaseRiwayatProvider);
     }
   }
@@ -442,7 +442,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         );
       } else if (failed == 0) {
         _snack(
-          '$queued muatan tersimpan — akan dikirim otomatis.',
+          '$queued muatan tersimpan - akan dikirim otomatis.',
         );
       } else {
         _snack('Gagal mengirim: $firstFail');
@@ -462,7 +462,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
         'Muatan #$index gagal: ${errorMsg ?? "Periksa koneksi lalu coba lagi"}',
       );
     } else if (queued > 0) {
-      _snack('Muatan #$index tersimpan — akan dikirim otomatis.');
+      _snack('Muatan #$index tersimpan - akan dikirim otomatis.');
     } else {
       _snack('Muatan #$index berhasil dikirim ke server.');
     }
@@ -493,7 +493,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           _snack('Sedang mencoba mengirim muatan #${record.index}...');
         }
       } else {
-        // Aksi sudah hilang (kemungkinan sudah masuk server) — enqueue ulang.
+        // Aksi sudah hilang (kemungkinan sudah masuk server) - enqueue ulang.
         await _submitRecords([record]);
       }
     } catch (_) {
@@ -644,7 +644,7 @@ class _SummaryHeader extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Muatan Hari Ini — $recordText • $unitText',
+                  'Muatan Hari Ini - $recordText • $unitText',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: context.colors.textPrimary,
@@ -662,7 +662,7 @@ class _SummaryHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          // Total per satuan — TIDAK dijumlah lintas satuan (tidak menyesatkan).
+          // Total per satuan - TIDAK dijumlah lintas satuan (tidak menyesatkan).
           Wrap(
             spacing: 8,
             runSpacing: 4,
@@ -848,7 +848,7 @@ class _RecordCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${record.jumlah} ${record.satuan} — $jenis'
+              '${record.jumlah} ${record.satuan} - $jenis'
               '${record.isAlatBerat ? ' • HM' : ''}',
               style: TextStyle(
                 fontSize: 13,
@@ -1051,7 +1051,7 @@ class _SubmitBar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                '${summary.queuedCount} tersimpan — terkirim otomatis.',
+                '${summary.queuedCount} tersimpan - terkirim otomatis.',
                 style: TextStyle(fontSize: 12, color: context.colors.warning),
               ),
             ),
@@ -1261,7 +1261,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                   .map(
                     (a) => DropdownMenuItem(
                       value: a,
-                      child: Text('${a.platNomor} — ${a.jenis ?? 'N/A'}'),
+                      child: Text('${a.platNomor} - ${a.jenis ?? 'N/A'}'),
                     ),
                   )
                   .toList(),
@@ -1371,6 +1371,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                           decoration: const InputDecoration(
                             labelText: 'Jumlah Muatan',
                             hintText: 'Contoh: 12.5',
+                            helperText: 'Angka muatan sesuai satuan di samping (ton/m³/kg/rit).',
                             border: OutlineInputBorder(),
                             isDense: true,
                           ),
