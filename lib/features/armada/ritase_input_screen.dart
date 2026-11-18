@@ -16,7 +16,10 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/accordion_tile.dart';
+import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/bouncing_button.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/status_banner.dart';
 import '../../shared/widgets/status_pill.dart';
@@ -54,6 +57,8 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
   bool _loaded = false;
   bool _submittingAll = false;
   final Set<String> _syncingIds = {};
+  final GlobalKey<AdaptiveMasterDetailState> _masterDetailKey =
+      GlobalKey<AdaptiveMasterDetailState>();
 
   @override
   void initState() {
@@ -443,9 +448,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           '$delivered muatan terkirim, $queued disimpan di antrean offline.',
         );
       } else if (failed == 0) {
-        _snack(
-          '$queued muatan tersimpan - akan dikirim otomatis.',
-        );
+        _snack('$queued muatan tersimpan - akan dikirim otomatis.');
       } else {
         _snack('Gagal mengirim: $firstFail');
       }
@@ -536,6 +539,7 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           title: 'Gagal memuat data armada',
           subtitle:
               'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(armadaSayaProvider),
         ),
@@ -551,69 +555,113 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           final byId = {for (final a in armadaList) a.id: a};
           final summary = summaryRitase(_records);
 
-            return Column(
-                children: [
-                  _SummaryHeader(
-                    summary: summary,
-                    onAdd: () => _openFormSheet(armadaList: armadaList),
+          return Column(
+            children: [
+              _SummaryHeader(
+                summary: summary,
+                onAdd: () => _openFormSheet(armadaList: armadaList),
+              ),
+              // Show progress banner when there are pending sync items
+              if (summary.hasPending)
+                StatusBanner(
+                  status: StatusConfig(
+                    label:
+                        '${summary.recordCount - summary.syncedCount} muatan masih menunggu sinkron',
+                    color: context.colors.warning,
+                    icon: Icons.cloud_upload_outlined,
                   ),
-                  // Show progress banner when there are pending sync items
-                  if (summary.hasPending)
-                    StatusBanner(
-                      status: StatusConfig(
-                        label: '${summary.recordCount - summary.syncedCount} muatan masih menunggu sinkron',
-                        color: context.colors.warning,
-                        icon: Icons.cloud_upload_outlined,
-                      ),
-                      showProgressRing: false,
-                    ),
-                  Expanded(
-                    child: _records.isEmpty
-                        ? AppEmptyState(
-                            icon: Icons.add_box_outlined,
-                            title: 'Belum ada muatan',
-                            subtitle:
-                                'Catat muatan/jam kerja unit Anda hari ini.\n'
-                                'Draft tersimpan otomatis dan tidak hilang '
-                                'saat Anda keluar layar.',
-                            actionLabel: 'Tambah Muatan',
-                            onAction: () => _openFormSheet(armadaList: armadaList),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                            itemCount: _records.length,
-                            itemBuilder: (context, i) {
-                              final record = _records[i];
-                              return _RecordCard(
-                                record: record,
-                                armada: byId[record.armadaId],
-                                submitting:
-                                    _syncingIds.contains(record.id) ||
-                                    (_submittingAll &&
-                                        record.status == RitaseRecordStatus.draft),
-                                onEdit: () => _openFormSheet(
-                                  existing: record,
-                                  armadaList: armadaList,
-                                ),
-                                onDelete: () => _deleteRecord(record),
-                                onReview: () => _openReviewSheet(record),
-                                onSubmit: () => _submitRecords([record]),
-                                onRetry: () => _retryRecord(record),
-                              );
-                            },
-                          ),
+                  showProgressRing: false,
+                ),
+              Expanded(
+                child: AdaptiveMasterDetail(
+                  key: _masterDetailKey,
+                  // Compact tetap buka bottom sheet (perilaku lama).
+                  onCompactSelect: (id) {
+                    final record = _records.firstWhere((r) => r.id == id);
+                    _openFormSheet(existing: record, armadaList: armadaList);
+                  },
+                  pushRouteFor: (id) => '/armada/ritase-input',
+                  masterBuilder: (context, selectedId, onSelect) =>
+                      _records.isEmpty
+                      ? AppEmptyState(
+                          icon: Icons.add_box_outlined,
+                          title: 'Belum ada muatan',
+                          subtitle:
+                              'Catat muatan/jam kerja unit Anda hari ini.\n'
+                              'Draft tersimpan otomatis dan tidak hilang '
+                              'saat Anda keluar layar.',
+                          illustrationVariant: EmptyStateVariant.noData,
+                          actionLabel: 'Tambah Muatan',
+                          onAction: () =>
+                              _openFormSheet(armadaList: armadaList),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                          itemCount: _records.length,
+                          itemBuilder: (context, i) {
+                            final record = _records[i];
+                            return _RecordCard(
+                              record: record,
+                              armada: byId[record.armadaId],
+                              selected: record.id == selectedId,
+                              submitting:
+                                  _syncingIds.contains(record.id) ||
+                                  (_submittingAll &&
+                                      record.status ==
+                                          RitaseRecordStatus.draft),
+                              onEdit: () => onSelect(record.id),
+                              onDelete: () => _deleteRecord(record),
+                              onReview: () => _openReviewSheet(record),
+                              onSubmit: () => _submitRecords([record]),
+                              onRetry: () => _retryRecord(record),
+                            );
+                          },
+                        ),
+                  emptyDetailPlaceholder: const MasterDetailEmptyPlaceholder(
+                    icon: Icons.edit_note,
+                    title: 'Belum ada muatan dipilih',
+                    subtitle: 'Tekan Edit pada record untuk mengubah isian.',
                   ),
-                  if (_records.isNotEmpty && (summary.draftCount + summary.failedCount) > 0)
-                    StickyActionBar(
-                      primaryLabel: _submittingAll
-                          ? 'Mengirim...'
-                          : 'Kirim Semua Muatan (${summary.draftCount + summary.failedCount})',
-                      showPrimaryLoading: _submittingAll,
-                      primaryIcon: Icons.send,
-                      onPrimary: _submitAll,
-                    ),
-                ],
-              );
+                  detailBuilder: (context, selectedId) {
+                    RitaseRecord? record;
+                    for (final r in _records) {
+                      if (r.id == selectedId) {
+                        record = r;
+                        break;
+                      }
+                    }
+                    if (record == null || !record.isLocalEditable) {
+                      return const MasterDetailEmptyPlaceholder(
+                        icon: Icons.edit_note,
+                        title: 'Belum ada muatan dipilih',
+                        subtitle:
+                            'Tekan Edit pada record untuk mengubah isian.',
+                      );
+                    }
+                    return _RecordFormSheet(
+                      armadaList: armadaList,
+                      existing: record,
+                      nextIndex: _nextIndex,
+                      onSaved: (result) {
+                        _upsertRecord(record, result);
+                        _masterDetailKey.currentState?.clearSelection();
+                      },
+                    );
+                  },
+                ),
+              ),
+              if (_records.isNotEmpty &&
+                  (summary.draftCount + summary.failedCount) > 0)
+                StickyActionBar(
+                  primaryLabel: _submittingAll
+                      ? 'Mengirim...'
+                      : 'Kirim Semua Muatan (${summary.draftCount + summary.failedCount})',
+                  showPrimaryLoading: _submittingAll,
+                  primaryIcon: Icons.send,
+                  onPrimary: _submitAll,
+                ),
+            ],
+          );
         },
       ),
     );
@@ -795,18 +843,20 @@ class _StatusDot extends StatelessWidget {
 class _RecordCard extends StatelessWidget {
   const _RecordCard({
     required this.record,
-    required this.armada,
-    required this.submitting,
-    required this.onEdit,
     required this.onDelete,
+    required this.onEdit,
     required this.onReview,
     required this.onSubmit,
     required this.onRetry,
+    this.armada,
+    this.submitting = false,
+    this.selected = false,
   });
 
   final RitaseRecord record;
   final ArmadaSaya? armada;
   final bool submitting;
+  final bool selected;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onReview;
@@ -821,6 +871,7 @@ class _RecordCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
+      color: selected ? context.colors.primary.withValues(alpha: 0.06) : null,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
@@ -1035,8 +1086,6 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-
-
 String _labelJenis(String? jenis) => labelJenisArmada(jenis, fallback: 'Unit');
 
 // ---------------------------------------------------------------------------
@@ -1048,11 +1097,16 @@ class _RecordFormSheet extends ConsumerStatefulWidget {
     required this.armadaList,
     required this.nextIndex,
     this.existing,
+    this.onSaved,
   });
 
   final List<ArmadaSaya> armadaList;
   final int nextIndex;
   final RitaseRecord? existing;
+
+  /// Mode inline (detail pane master-detail): hasil save dikirim via callback
+  /// alih-alih Navigator.pop. Jika null, berperilaku sebagai bottom sheet.
+  final void Function(RitaseRecord record)? onSaved;
 
   @override
   ConsumerState<_RecordFormSheet> createState() => _RecordFormSheetState();
@@ -1079,6 +1133,7 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
   String _satuan = 'rit';
   String _muatanSatuan = 'ton';
   bool _isSingleUnit = false;
+  bool _muatanExpanded = false;
 
   @override
   void initState() {
@@ -1096,6 +1151,9 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
         _muatanJumlahCtrl.text = existing.muatanJumlah.toString();
       }
       _muatanSatuan = existing.muatanSatuan ?? 'ton';
+      if (existing.muatanJenis != null || existing.muatanJumlah != null) {
+        _muatanExpanded = true;
+      }
     } else if (_isSingleUnit) {
       _armada = widget.armadaList.first;
     }
@@ -1162,7 +1220,11 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
     );
 
     AnalyticsService.ritaseRecordAdd();
-    Navigator.of(context).pop(record);
+    if (widget.onSaved != null) {
+      widget.onSaved!(record);
+    } else {
+      Navigator.of(context).pop(record);
+    }
   }
 
   @override
@@ -1195,11 +1257,13 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Tutup',
-                  onPressed: () => Navigator.pop(context),
-                ),
+                // Mode inline tidak punya sheet untuk ditutup.
+                if (widget.onSaved == null)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Tutup',
+                    onPressed: () => Navigator.pop(context),
+                  ),
               ],
             ),
             const Divider(height: 1),
@@ -1271,89 +1335,103 @@ class _RecordFormSheetState extends ConsumerState<_RecordFormSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Blok Muatan (draft, opsional)
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: context.colors.surfaceVariant.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.colors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Blok Muatan (draft, opsional) - accordion
+            AccordionTile(
+              expanded: _muatanExpanded,
+              onToggle: () =>
+                  setState(() => _muatanExpanded = !_muatanExpanded),
+              header: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.scale_rounded, size: 18, color: context.colors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Muatan (Draft, Opsional)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.scale_rounded,
+                    size: 18,
+                    color: context.colors.primary,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(width: 8),
                   Text(
-                    'Diisi driver sebagai angka versi driver. Boleh kosong untuk ritase non-Kantor Pusat.',
+                    'Muatan (Draft, Opsional)',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: context.colors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textPrimary,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _muatanJenisCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Jenis / Material Muatan',
-                      hintText: 'Contoh: Pasir, Tanah Urug, Sirtu, Split',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          controller: _muatanJumlahCtrl,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: 'Jumlah Muatan',
-                            hintText: 'Contoh: 12.5',
-                            helperText: 'Angka muatan sesuai satuan di samping (ton/m³/kg/rit).',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _muatanSatuan,
-                          decoration: const InputDecoration(
-                            labelText: 'Satuan',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'ton', child: Text('ton')),
-                            DropdownMenuItem(value: 'm3', child: Text('m³')),
-                            DropdownMenuItem(value: 'kg', child: Text('kg')),
-                            DropdownMenuItem(value: 'rit', child: Text('rit')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) setState(() => _muatanSatuan = v);
-                          },
-                        ),
-                      ),
-                    ],
                   ),
                 ],
+              ),
+              content: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Diisi driver sebagai angka versi driver. Boleh kosong untuk ritase non-Kantor Pusat.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _muatanJenisCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Jenis / Material Muatan',
+                        hintText: 'Contoh: Pasir, Tanah Urug, Sirtu, Split',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: _muatanJumlahCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Jumlah Muatan',
+                              hintText: 'Contoh: 12.5',
+                              helperText:
+                                  'Angka muatan sesuai satuan di samping (ton/m³/kg/rit).',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _muatanSatuan,
+                            decoration: const InputDecoration(
+                              labelText: 'Satuan',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'ton',
+                                child: Text('ton'),
+                              ),
+                              DropdownMenuItem(value: 'm3', child: Text('m³')),
+                              DropdownMenuItem(value: 'kg', child: Text('kg')),
+                              DropdownMenuItem(
+                                value: 'rit',
+                                child: Text('rit'),
+                              ),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) {
+                                setState(() => _muatanSatuan = v);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -1472,11 +1550,14 @@ class _ReviewSheet extends StatelessWidget {
                     label: 'Satuan Sistem',
                     value: record.satuanVolume,
                   ),
-                  if (record.muatanJumlah != null || (record.muatanJenis != null && record.muatanJenis!.isNotEmpty)) ...[
+                  if (record.muatanJumlah != null ||
+                      (record.muatanJenis != null &&
+                          record.muatanJenis!.isNotEmpty)) ...[
                     const Divider(height: 12),
                     _ReviewRow(
                       label: 'Muatan (Draft)',
-                      value: '${record.muatanJumlah != null ? "${record.muatanJumlah} ${record.muatanSatuan ?? 'ton'}" : ""}${record.muatanJenis != null ? " · ${record.muatanJenis}" : ""}',
+                      value:
+                          '${record.muatanJumlah != null ? "${record.muatanJumlah} ${record.muatanSatuan ?? 'ton'}" : ""}${record.muatanJenis != null ? " · ${record.muatanJenis}" : ""}',
                     ),
                   ],
                   if (record.catatan != null &&

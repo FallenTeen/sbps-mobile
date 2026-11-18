@@ -5,11 +5,30 @@ import '../../core/app_preferences.dart';
 import '../../features/proyek/role_permissions.dart';
 import 'animations/hero_transition.dart';
 
-final recentModulesProvider = FutureProvider<List<String>>((ref) async {
-  final raw = await AppPreferences.getString('recent_modules');
-  if (raw == null || raw.isEmpty) return const [];
-  return raw.split(',').where((e) => e.isNotEmpty).toList();
-});
+class RecentModulesNotifier extends AsyncNotifier<List<String>> {
+  static const _maxEntries = 10;
+
+  @override
+  Future<List<String>> build() async {
+    final raw = await AppPreferences.getString('recent_modules');
+    if (raw == null || raw.isEmpty) return const [];
+    return raw.split(',').where((e) => e.isNotEmpty).toList();
+  }
+
+  Future<void> add(String key) async {
+    final list = [...(state.value ?? const <String>[])];
+    list.remove(key);
+    list.insert(0, key);
+    if (list.length > _maxEntries) list.length = _maxEntries;
+    state = AsyncData(list);
+    await AppPreferences.setString('recent_modules', list.join(','));
+  }
+}
+
+final recentModulesProvider =
+    AsyncNotifierProvider<RecentModulesNotifier, List<String>>(
+      RecentModulesNotifier.new,
+    );
 
 class RecentModulesRow extends ConsumerWidget {
   final int maxItems;

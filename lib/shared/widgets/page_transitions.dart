@@ -1,13 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Standard page transition for GoRouter:
 /// Subtle horizontal slide + smooth fade-in.
-/// Optimized for 60fps performance on low-to-mid tier devices (~250ms).
+/// Optimized for 60fps performance on low-to-mid tier devices (300ms).
 CustomTransitionPage<T> buildAppTransitionPage<T>({
   required LocalKey key,
   required Widget child,
-  Duration duration = const Duration(milliseconds: 250),
+  Duration duration = const Duration(milliseconds: 300),
 }) {
   return CustomTransitionPage<T>(
     key: key,
@@ -48,7 +48,7 @@ CustomTransitionPage<T> buildAppTransitionPage<T>({
 CustomTransitionPage<T> buildFadeThroughPage<T>({
   required LocalKey key,
   required Widget child,
-  Duration duration = const Duration(milliseconds: 220),
+  Duration duration = const Duration(milliseconds: 300),
 }) {
   return CustomTransitionPage<T>(
     key: key,
@@ -75,11 +75,27 @@ CustomTransitionPage<T> buildFadeThroughPage<T>({
   );
 }
 
-/// Helper PageRoute for Navigator.of(context).push calls
+/// Fade + subtle scale for dialogs/bottom sheets (200ms). Use via
+/// `showDialog`/`showModalBottomSheet` `transitionBuilder` or
+/// `PageRouteBuilder` to keep motion consistent with the app shell.
+Widget buildFadeScaleTransition({
+  required Animation<double> animation,
+  required Widget child,
+}) {
+  final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+  return FadeTransition(
+    opacity: curved,
+    child: ScaleTransition(
+      scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
+      child: child,
+    ),
+  );
+}
+
 class AppPageRoute<T> extends PageRouteBuilder<T> {
   AppPageRoute({
     required WidgetBuilder builder,
-    Duration duration = const Duration(milliseconds: 250),
+    Duration duration = const Duration(milliseconds: 300),
     super.settings,
   }) : super(
          pageBuilder: (context, animation, secondaryAnimation) =>

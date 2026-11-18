@@ -93,8 +93,8 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
 /// `true` = skema kontras tinggi. Baca-tulis Hive via [AppPreferences].
 final highContrastModeProvider =
     AsyncNotifierProvider<HighContrastModeNotifier, bool>(
-  HighContrastModeNotifier.new,
-);
+      HighContrastModeNotifier.new,
+    );
 
 class HighContrastModeNotifier extends AsyncNotifier<bool> {
   @override
@@ -103,6 +103,22 @@ class HighContrastModeNotifier extends AsyncNotifier<bool> {
   Future<void> toggle() async {
     final value = !(state.value ?? false);
     await AppPreferences.setHighContrastMode(value);
+    state = AsyncData(value);
+  }
+}
+
+/// Mode luar ruangan: teks diperbesar agar terbaca di bawah matahari.
+final outdoorModeProvider = AsyncNotifierProvider<OutdoorModeNotifier, bool>(
+  OutdoorModeNotifier.new,
+);
+
+class OutdoorModeNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async => await AppPreferences.getOutdoorMode();
+
+  Future<void> toggle() async {
+    final value = !(state.value ?? false);
+    await AppPreferences.setOutdoorMode(value);
     state = AsyncData(value);
   }
 }

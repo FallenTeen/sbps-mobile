@@ -13,6 +13,7 @@ import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/form_section.dart';
@@ -83,6 +84,7 @@ class _PengisianSolarScreenState extends ConsumerState<PengisianSolarScreen> {
           title: 'Gagal memuat data armada',
           subtitle:
               'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(armadaSayaProvider),
         ),
@@ -92,6 +94,7 @@ class _PengisianSolarScreenState extends ConsumerState<PengisianSolarScreen> {
               icon: Icons.local_gas_station_outlined,
               title: 'Belum ada unit yang ditugaskan',
               subtitle: 'Hubungi admin untuk penugasan unit.',
+              illustrationVariant: EmptyStateVariant.noData,
             );
           }
           _applySingle(armadaList);

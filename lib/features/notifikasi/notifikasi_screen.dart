@@ -10,6 +10,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/rich_list_tile.dart';
@@ -72,18 +73,22 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                 case 'refresh':
                   ref.read(notificationsProvider.notifier).refresh();
                   break;
+                case 'archive':
+                  _showArchiveSheet(context);
+                  break;
               }
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
+            itemBuilder: (context) => [
+              const PopupMenuItem(
                 value: 'mark_all',
                 child: Text('Tandai semua dibaca'),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(value: 'archive', child: Text('Arsip')),
+              const PopupMenuItem(
                 value: 'clear_filter',
                 child: Text('Bersihkan filter'),
               ),
-              PopupMenuItem(value: 'refresh', child: Text('Segarkan')),
+              const PopupMenuItem(value: 'refresh', child: Text('Segarkan')),
             ],
           ),
         ],
@@ -95,6 +100,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Notifikasi',
             subtitle: friendlyErrorMessage(error),
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: () => ref.read(notificationsProvider.notifier).refresh(),
           ),
@@ -105,10 +111,11 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
   }
 
   Widget _buildList(BuildContext context, NotificationsPage page) {
+    final active = page.items.where((n) => !n.isArchived).toList();
     final q = _searchQuery.toLowerCase();
     final searched = q.isEmpty
-        ? page.items
-        : page.items
+        ? active
+        : active
               .where(
                 (n) =>
                     (n.title ?? '').toLowerCase().contains(q) ||
@@ -128,6 +135,16 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
         icon: Icons.notifications_none,
         title: 'Belum Ada Notifikasi',
         subtitle: 'Pemberitahuan aktivitas dan sistem akan muncul di sini.',
+        illustrationVariant: EmptyStateVariant.noData,
+      );
+    }
+    if (active.isEmpty) {
+      return AppEmptyState(
+        icon: Icons.inventory_2_outlined,
+        title: 'Semua Notifikasi Diarsipkan',
+        subtitle: 'Buka menu Arsip untuk mengembalikan notifikasi.',
+        actionLabel: 'Buka Arsip',
+        onAction: () => _showArchiveSheet(context),
       );
     }
     if (searched.isEmpty) {
@@ -135,6 +152,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
         icon: Icons.search_off_outlined,
         title: 'Tidak Ada Hasil Pencarian',
         subtitle: 'Tidak ditemukan notifikasi yang cocok dengan pencarian.',
+        illustrationVariant: EmptyStateVariant.noResults,
       );
     }
     if (filtered.isEmpty) {
@@ -153,10 +171,11 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
         icon: Icons.done_all,
         title: 'Semua Sudah Dibaca',
         subtitle: 'Tidak ada notifikasi baru yang belum dibuka.',
+        illustrationVariant: EmptyStateVariant.success,
       );
     }
 
-    final unreadCount = page.items.where((n) => !n.isRead).length;
+    final unreadCount = active.where((n) => !n.isRead).length;
 
     AppNotification notificationFor(String id) => page.items.firstWhere(
       (n) => n.id == id,
@@ -269,6 +288,100 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     }
     flush();
     return slivers;
+  }
+
+  void _showArchiveSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const _ArchiveSheet(),
+    );
+  }
+}
+
+/// Sheet arsip lokal: kembalikan per item atau tampilkan semuanya.
+class _ArchiveSheet extends ConsumerWidget {
+  const _ArchiveSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = (ref.watch(notificationsProvider).value?.items ?? const [])
+        .where((n) => n.isArchived)
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Arsip',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Tutup',
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          if (items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                'Arsip kosong. Geser notifikasi ke kiri untuk mengarsipkan.',
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: items.length,
+                itemBuilder: (context, i) {
+                  final n = items[i];
+                  final visual = categoryVisual(n.category);
+                  void restore() =>
+                      ref.read(notificationsProvider.notifier).restore(n.id);
+                  return ListTile(
+                    leading: Icon(visual.icon, color: visual.color),
+                    title: Text(n.title ?? '(Tanpa judul)'),
+                    subtitle: Text(n.time ?? ''),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.unarchive_outlined),
+                      tooltip: 'Kembalikan',
+                      onPressed: restore,
+                    ),
+                    onTap: restore,
+                  );
+                },
+              ),
+            ),
+          if (items.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () {
+                ref.read(notificationsProvider.notifier).restoreAll();
+                Navigator.pop(context);
+                FeedbackService.success(
+                  context,
+                  'Semua notifikasi arsip dikembalikan.',
+                );
+              },
+              icon: const Icon(Icons.unarchive_outlined),
+              label: const Text('Kembalikan Semua'),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -407,10 +520,10 @@ class _SwipeTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey(notification.id),
       background: Container(
-        color: Colors.red.withValues(alpha: 0.2),
+        color: colors.primary.withValues(alpha: 0.16),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.red),
+        child: Icon(Icons.mark_email_read_outlined, color: colors.primary),
       ),
       secondaryBackground: Container(
         color: Colors.green.withValues(alpha: 0.2),
@@ -420,13 +533,23 @@ class _SwipeTile extends ConsumerWidget {
       ),
       onDismissed: (direction) {
         if (direction == DismissDirection.startToEnd) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifikasi ditandai sudah dibaca.')),
-          );
+          ref.read(notificationsProvider.notifier).markRead(notification);
+          FeedbackService.success(context, 'Notifikasi ditandai dibaca.');
         } else if (direction == DismissDirection.endToStart) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifikasi diarsipkan.')),
-          );
+          ref.read(notificationsProvider.notifier).archive(notification);
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: const Text('Notifikasi diarsipkan.'),
+                action: SnackBarAction(
+                  label: 'Urungkan',
+                  onPressed: () => ref
+                      .read(notificationsProvider.notifier)
+                      .restore(notification.id),
+                ),
+              ),
+            );
         }
       },
       child: RichListTile(

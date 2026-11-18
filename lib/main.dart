@@ -239,9 +239,26 @@ class _App extends ConsumerWidget {
       darkTheme: darkTheme,
       themeMode: themeMode,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      builder: (context, child) => ShorebirdUpdateBanner(
-        child: OfflineBanner(child: child ?? const SizedBox.shrink()),
-      ),
+      builder: (context, child) {
+        // Outdoor mode: boost teks 15% dari skala sistem agar terbaca
+        // di bawah matahari.
+        final media = MediaQuery.of(context);
+        final outdoor = ref.watch(outdoorModeProvider).value ?? false;
+        final scaler = outdoor
+            ? TextScaler.linear((media.textScaler.scale(100) / 100) * 1.15)
+            : media.textScaler;
+        return MediaQuery(
+          data: media.copyWith(textScaler: scaler),
+          // HeroControllerScope: Hero lintas-rute butuh controller di atas
+          // Navigator GoRouter (go_router tidak memasangnya otomatis).
+          child: HeroControllerScope(
+            controller: HeroController(),
+            child: ShorebirdUpdateBanner(
+              child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+            ),
+          ),
+        );
+      },
       debugShowCheckedModeBanner: banner,
       routerConfig: ref.watch(appRouterProvider),
     );

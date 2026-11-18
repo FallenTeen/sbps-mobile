@@ -62,10 +62,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       final updatedUser = await ref
           .read(authRepositoryProvider)
-          .updateProfile(
-            name: _nameCtrl.text,
-            phone: _phoneCtrl.text,
-          );
+          .updateProfile(name: _nameCtrl.text, phone: _phoneCtrl.text);
       // Refresh auth state agar UI lain ikut update.
       ref.invalidate(authControllerProvider);
       if (!mounted) return;
@@ -112,7 +109,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('Sekarang bekerja sebagai $target.')));
+      ..showSnackBar(
+        SnackBar(content: Text('Sekarang bekerja sebagai $target.')),
+      );
   }
 
   Future<void> _logout() async {
@@ -310,9 +309,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notifikasi'),
-                  subtitle: Text(unread > 0
-                      ? '$unread notifikasi belum dibaca'
-                      : 'Tidak ada notifikasi baru'),
+                  subtitle: Text(
+                    unread > 0
+                        ? '$unread notifikasi belum dibaca'
+                        : 'Tidak ada notifikasi baru',
+                  ),
                   trailing: unread > 0 ? _CountBadge(count: unread) : null,
                   onTap: () => context.push('/notifikasi'),
                 ),
@@ -320,9 +321,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.cloud_upload_outlined),
                   title: const Text('Data Belum Terkirim'),
-                  subtitle: Text(pending > 0
-                      ? '$pending aksi menunggu sinkronisasi'
-                      : 'Semua data sudah tersinkron'),
+                  subtitle: Text(
+                    pending > 0
+                        ? '$pending aksi menunggu sinkronisasi'
+                        : 'Semua data sudah tersinkron',
+                  ),
                   trailing: pending > 0 ? _CountBadge(count: pending) : null,
                   onTap: () => context.push('/data-belum-terkirim'),
                 ),
@@ -370,6 +373,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          const SizedBox(height: 12),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.contrast_rounded),
+                  title: const Text('Kontras Tinggi'),
+                  subtitle: const Text(
+                    'Skema warna kontras tinggi untuk aksesibilitas.',
+                  ),
+                  value: ref.watch(highContrastModeProvider).value ?? false,
+                  onChanged: (_) =>
+                      ref.read(highContrastModeProvider.notifier).toggle(),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.wb_sunny_outlined),
+                  title: const Text('Mode Luar Ruangan'),
+                  subtitle: const Text(
+                    'Perbesar teks 15% agar mudah dibaca di bawah matahari.',
+                  ),
+                  value: ref.watch(outdoorModeProvider).value ?? false,
+                  onChanged: (_) =>
+                      ref.read(outdoorModeProvider.notifier).toggle(),
+                ),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 24),
 
@@ -378,7 +410,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SectionHeader(leadingIcon: Icons.person_outline, title: 'Data Diri', padding: EdgeInsets.zero),
+                SectionHeader(
+                  leadingIcon: Icons.person_outline,
+                  title: 'Data Diri',
+                  padding: EdgeInsets.zero,
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameCtrl,
@@ -446,11 +482,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           FilledButton.tonalIcon(
             onPressed: _loggingOut ? null : _logout,
             icon: _loggingOut
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: SubmitSpinner(),
-                  )
+                ? const SizedBox(width: 18, height: 18, child: SubmitSpinner())
                 : const Icon(Icons.logout, size: 20),
             label: const Text('Logout'),
           ),
@@ -458,11 +490,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           OutlinedButton.icon(
             onPressed: _loggingOutAll ? null : _logoutAllDevices,
             icon: _loggingOutAll
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: SubmitSpinner(),
-                  )
+                ? const SizedBox(width: 18, height: 18, child: SubmitSpinner())
                 : const Icon(Icons.devices),
             label: const Text('Logout dari Semua Perangkat'),
             style: OutlinedButton.styleFrom(

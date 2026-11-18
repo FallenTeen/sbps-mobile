@@ -21,6 +21,7 @@ class AdaptiveMasterDetail extends StatefulWidget {
     required this.detailBuilder,
     required this.emptyDetailPlaceholder,
     required this.pushRouteFor,
+    this.onCompactSelect,
     this.initialSelectedId,
   });
 
@@ -42,6 +43,10 @@ class AdaptiveMasterDetail extends StatefulWidget {
   /// Route tujuan halaman detail saat Compact/Medium (full-page push),
   /// mis. `(id) => '/workshop/job/$id'`.
   final String Function(String id) pushRouteFor;
+
+  /// Override navigasi Compact/Medium. Dipakai saat detail berupa form/sheet
+  /// (bukan route). Jika null, Compact/Medium tetap push [pushRouteFor].
+  final void Function(String id)? onCompactSelect;
 
   /// Id awal yang dibaca dari query `?selected=` pada route master.
   final String? initialSelectedId;
@@ -74,6 +79,8 @@ class AdaptiveMasterDetailState extends State<AdaptiveMasterDetail> {
   void _onSelect(String id) {
     if (context.isExpanded) {
       setState(() => _selectedId = id);
+    } else if (widget.onCompactSelect != null) {
+      widget.onCompactSelect!(id);
     } else {
       context.push(widget.pushRouteFor(id));
     }

@@ -44,6 +44,7 @@ class AppNotification {
     this.routeId,
     required this.isRead,
     this.time,
+    this.isArchived = false,
   });
 
   /// Id NOTIFIKASI (basis markRead).
@@ -68,7 +69,10 @@ class AppNotification {
   final bool isRead;
   final String? time;
 
-  AppNotification copyWith({bool? isRead}) => AppNotification(
+  /// Flag lokal (bukan dari server): true = diarsipkan user di perangkat ini.
+  final bool isArchived;
+
+  AppNotification copyWith({bool? isRead, bool? isArchived}) => AppNotification(
     id: id,
     title: title,
     body: body,
@@ -79,6 +83,7 @@ class AppNotification {
     routeId: routeId,
     isRead: isRead ?? this.isRead,
     time: time,
+    isArchived: isArchived ?? this.isArchived,
   );
 
   static AppNotification fromJson(Object? raw) {

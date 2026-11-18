@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/app_preferences.dart';
 import '../../features/proyek/role_permissions.dart';
+import '../utils/feedback_service.dart';
+import '../utils/module_routes.dart';
 import 'animations/hero_transition.dart';
+import 'recent_modules_row.dart' show recentModulesProvider;
 
 class PinnedModulesRow extends ConsumerStatefulWidget {
   final int maxItems;
@@ -14,7 +18,9 @@ class PinnedModulesRow extends ConsumerStatefulWidget {
 }
 
 class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
-  List<String> _pinned = [];
+  List<String> _pinned = const [];
+
+  static const _defaults = ['dashboard', 'produksi', 'armada', 'logistik'];
 
   @override
   void initState() {
@@ -24,16 +30,38 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
 
   Future<void> _load() async {
     final raw = await AppPreferences.getString('pinned_modules');
-    if (raw == null || raw.isEmpty) return;
+    final list = raw == null || raw.isEmpty
+        ? [..._defaults]
+        : raw.split(',').where((e) => e.isNotEmpty).toList();
+    if (!mounted) return;
+    setState(() => _pinned = list);
+  }
+
+  Future<void> _save() =>
+      AppPreferences.setString('pinned_modules', _pinned.join(','));
+
+  Future<void> _togglePin(String key) async {
+    setState(() {
+      if (_pinned.contains(key)) {
+        _pinned = [..._pinned]..remove(key);
+      } else {
+        _pinned = [key, ..._pinned];
+      }
+    });
+    await _save();
     if (mounted) {
-      setState(
-        () => _pinned = raw.split(',').where((e) => e.isNotEmpty).toList(),
+      FeedbackService.info(
+        context,
+        _pinned.contains(key) ? 'Modul dipin' : 'Pin modul dihapus',
       );
     }
   }
 
-  Future<void> _save() async {
-    await AppPreferences.setString('pinned_modules', _pinned.join(','));
+  void _openModule(String key) {
+    final route = moduleRouteFor(key);
+    if (route == null) return;
+    ref.read(recentModulesProvider.notifier).add(key);
+    context.push(route);
   }
 
   @override
@@ -55,6 +83,8 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
       child: ReorderableListView(
         scrollDirection: Axis.horizontal,
         buildDefaultDragHandles: false,
+        // Dual SDK support: onReorderItem only exists in newer Flutter.
+        // ignore: deprecated_member_use
         onReorder: (oldIndex, newIndex) {
           setState(() {
             if (newIndex > oldIndex) newIndex -= 1;
@@ -68,24 +98,30 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
             SizedBox(
               key: ValueKey(modules[i].key),
               width: 72,
-              child: Column(
-                children: [
-                  HeroTransition(
-                    tag: 'module-${modules[i].key}',
-                    placeholder: CircleAvatar(
-                      child: Icon(modules[i].icon, size: 20),
+              child: GestureDetector(
+                onTap: () => _openModule(modules[i].key),
+                onLongPress: () => _togglePin(modules[i].key),
+                child: Column(
+                  children: [
+                    HeroTransition(
+                      tag: 'module-${modules[i].key}',
+                      placeholder: CircleAvatar(
+                        child: Icon(modules[i].icon, size: 20),
+                      ),
+                      child: CircleAvatar(
+                        child: Icon(modules[i].icon, size: 20),
+                      ),
                     ),
-                    child: CircleAvatar(child: Icon(modules[i].icon, size: 20)),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    modules[i].label,
-                    style: Theme.of(context).textTheme.labelSmall,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      modules[i].label,
+                      style: Theme.of(context).textTheme.labelSmall,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
         ],

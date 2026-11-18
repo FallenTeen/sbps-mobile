@@ -16,24 +16,12 @@ import '../auth/auth_providers.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
 import 'pending_summary_provider.dart';
+import '../../shared/utils/module_routes.dart';
 
 /// Rute tujuan setiap kartu modul di Beranda Proyek.
 /// Menjadi satu-satunya sumber keputusan navigasi supaya modul baru tidak
 /// terjebak di fallback "belum tersedia".
-String? proyekModuleRoute(String moduleKey) => switch (moduleKey) {
-  'produksi' => '/produksi/sesi-aktif',
-  'qc' => '/qc',
-  'tracking' => '/tracking/pengguna-aktif',
-  'dashboard' => '/dashboard',
-  'keuangan' => '/dashboard/keuangan',
-  'armada' => '/armada',
-  'kontraktor' => '/kontraktor/proyek',
-  'workshop' => '/workshop',
-  'inventory' => '/inventory',
-  'logistik' => '/logistik',
-  'security' => '/security',
-  _ => null,
-};
+String? proyekModuleRoute(String moduleKey) => moduleRouteFor(moduleKey);
 
 class ProyekHomeScreen extends ConsumerWidget {
   const ProyekHomeScreen({super.key});
@@ -73,7 +61,13 @@ class ProyekHomeScreen extends ConsumerWidget {
                       .toList(),
                 ),
               ],
-              onSelected: (r) {},
+              onSelected: (r) {
+                final route = moduleRouteFor(r.subtitle);
+                if (route != null) {
+                  ref.read(recentModulesProvider.notifier).add(r.subtitle);
+                  context.push(route);
+                }
+              },
             ),
           ),
           const AppTopBarActions(showNotification: false),
@@ -333,6 +327,7 @@ class _ModuleCard extends ConsumerWidget {
 
     final route = proyekModuleRoute(module.key);
     if (route != null) {
+      ref.read(recentModulesProvider.notifier).add(module.key);
       open(route);
       return;
     }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +28,7 @@ import '../../shared/widgets/global_search_sheet.dart';
 import '../../shared/widgets/pinned_modules_row.dart';
 import '../../shared/widgets/recent_modules_row.dart';
 import '../../shared/widgets/skeleton_loader.dart';
+import '../../shared/utils/module_routes.dart';
 
 /// Dashboard operasional per role (attention-first):
 ///
@@ -59,16 +60,24 @@ class DashboardHomeScreen extends ConsumerWidget {
                 SearchableModule(
                   name: 'Modul',
                   items: kProyekModules
-                      .map((m) => SearchResult(
-                        title: m.label,
-                        subtitle: m.key,
-                        icon: m.icon,
-                        route: '/proyek',
-                      ))
+                      .map(
+                        (m) => SearchResult(
+                          title: m.label,
+                          subtitle: m.key,
+                          icon: m.icon,
+                          route: '/proyek',
+                        ),
+                      )
                       .toList(),
                 ),
               ],
-              onSelected: (r) {},
+              onSelected: (r) {
+                final route = moduleRouteFor(r.subtitle);
+                if (route != null) {
+                  ref.read(recentModulesProvider.notifier).add(r.subtitle);
+                  context.push(route);
+                }
+              },
             ),
           ),
           const AppTopBarActions(showNotification: false),
@@ -105,7 +114,10 @@ class DashboardHomeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               const PinnedModulesRow(),
               const SizedBox(height: 20),
-              SectionHeader(title: 'Operasional Hari Ini', padding: const EdgeInsets.only(bottom: 8)),
+              SectionHeader(
+                title: 'Operasional Hari Ini',
+                padding: const EdgeInsets.only(bottom: 8),
+              ),
               if (sections.showOverview) ...[
                 const _SectionOverview(),
                 const SizedBox(height: 20),
@@ -123,7 +135,10 @@ class DashboardHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
               if (sections.showFinancial) ...[
-                SectionHeader(title: 'Ringkasan Finansial', padding: const EdgeInsets.only(bottom: 8)),
+                SectionHeader(
+                  title: 'Ringkasan Finansial',
+                  padding: const EdgeInsets.only(bottom: 8),
+                ),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.payments_outlined),
@@ -141,7 +156,10 @@ class DashboardHomeScreen extends ConsumerWidget {
                 const _InvoiceCard(),
                 const SizedBox(height: 20),
               ],
-              SectionHeader(title: 'Aktivitas Terbaru', padding: const EdgeInsets.only(bottom: 8)),
+              SectionHeader(
+                title: 'Aktivitas Terbaru',
+                padding: const EdgeInsets.only(bottom: 8),
+              ),
               const _SectionRecentActivity(),
             ],
           ),

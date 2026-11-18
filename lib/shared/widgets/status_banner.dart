@@ -35,19 +35,21 @@ class StatusBanner extends StatelessWidget {
     this.actions = const [],
     this.showProgressRing = false,
     this.progress,
+    this.margin = const EdgeInsets.fromLTRB(16, 16, 16, 0),
   });
 
   final StatusConfig status;
   final List<StatusAction> actions;
   final bool showProgressRing;
   final double? progress;
+  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: margin,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: status.color.withValues(alpha: 0.12),

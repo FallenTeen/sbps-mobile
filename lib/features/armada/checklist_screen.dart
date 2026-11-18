@@ -15,6 +15,7 @@ import '../../shared/widgets/accordion_tile.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
+import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/status_banner.dart';
 import '../../shared/widgets/sticky_action_bar.dart';
@@ -79,6 +80,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
           title: 'Gagal memuat data armada',
           subtitle:
               'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(armadaSayaProvider),
         ),
@@ -88,6 +90,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
               icon: Icons.no_crash_outlined,
               title: 'Belum ada unit yang ditugaskan',
               subtitle: 'Hubungi admin untuk penugasan unit.',
+              illustrationVariant: EmptyStateVariant.noData,
             );
           }
           if (armadaList.length == 1 && _armadaId != armadaList.first.id) {
@@ -122,9 +125,9 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                       .map(
                         (a) => DropdownMenuItem(
                           value: a.id,
-                    child: Text(
-                      '${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ''}',
-                    ),
+                          child: Text(
+                            '${a.platNomor} - ${a.jenis ?? a.kodeUnit ?? ''}',
+                          ),
                         ),
                       )
                       .toList(),
@@ -185,7 +188,9 @@ class _ArmadaHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -272,10 +277,9 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
   @override
   void initState() {
     super.initState();
-    final bagianList =
-        widget.item?.bagianDefault.isNotEmpty == true
-            ? widget.item!.bagianDefault
-            : _bagianDefault;
+    final bagianList = widget.item?.bagianDefault.isNotEmpty == true
+        ? widget.item!.bagianDefault
+        : _bagianDefault;
     _bagian = [for (final b in bagianList) _BagianState(bagian: b)];
     _catatanCtrl = [for (final _ in _bagian) TextEditingController()];
 
@@ -480,10 +484,9 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
 
   void _restoreDraft(Map<String, dynamic> data) {
     setState(() {
-      final opsi =
-          widget.item?.opsiStokSolar.isNotEmpty == true
-              ? widget.item!.opsiStokSolar
-              : _stokSolarFallback;
+      final opsi = widget.item?.opsiStokSolar.isNotEmpty == true
+          ? widget.item!.opsiStokSolar
+          : _stokSolarFallback;
       final stok = data['stokSolar'];
       if (stok is String && opsi.any((o) => o.value == stok)) _stokSolar = stok;
       final odo = data['odo'];
@@ -523,17 +526,16 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
           final fotoPath = m['foto']?.toString();
           final fotoUrl = m['fotoUrl']?.toString();
           _bagian[idx]
-            ..level =
-                ChecklistItemLevel.values
-                    .where((l) => l.wireValue == kondisi)
-                    .firstOrNull
+            ..level = ChecklistItemLevel.values
+                .where((l) => l.wireValue == kondisi)
+                .firstOrNull
             ..catatan = m['catatan']?.toString() ?? ''
-            ..fotoPath =
-                (fotoPath != null && File(fotoPath).existsSync())
+            ..fotoPath = (fotoPath != null && File(fotoPath).existsSync())
                 ? fotoPath
                 : null
-            ..fotoUrl =
-                (fotoUrl != null && fotoUrl.isNotEmpty) ? fotoUrl : null;
+            ..fotoUrl = (fotoUrl != null && fotoUrl.isNotEmpty)
+                ? fotoUrl
+                : null;
           _catatanCtrl[idx].text = _bagian[idx].catatan;
         }
       }
@@ -692,10 +694,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
       _autosaveTimer = null;
       _autosaveStopped = true;
       try {
-        await ChecklistDraftStore.clear(
-          armada.id,
-          isAkhir: widget.isAkhir,
-        );
+        await ChecklistDraftStore.clear(armada.id, isAkhir: widget.isAkhir);
       } catch (_) {}
       if (!mounted) return;
       AnalyticsService.checklistSubmit(true);
@@ -720,7 +719,8 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
         _snack(
           friendlyErrorMessage(
             e,
-            fallback: 'Gagal menyimpan checklist. Periksa koneksi lalu coba lagi.',
+            fallback:
+                'Gagal menyimpan checklist. Periksa koneksi lalu coba lagi.',
           ),
         );
       }
@@ -740,10 +740,9 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
   Widget build(BuildContext context) {
     final diperiksa = _bagian.where((b) => b.level != null).length;
     final progres = _bagian.isEmpty ? 0.0 : diperiksa / _bagian.length;
-    final stokOpsi =
-        widget.item?.opsiStokSolar.isNotEmpty == true
-            ? widget.item!.opsiStokSolar
-            : _stokSolarFallback;
+    final stokOpsi = widget.item?.opsiStokSolar.isNotEmpty == true
+        ? widget.item!.opsiStokSolar
+        : _stokSolarFallback;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -756,7 +755,8 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
           ),
           const SizedBox(height: 12),
         ],
-        if (_readOnly) _LockedBanner(isAkhir: widget.isAkhir, alasan: _lockReason),
+        if (_readOnly)
+          _LockedBanner(isAkhir: widget.isAkhir, alasan: _lockReason),
         if (_readOnly) const SizedBox(height: 12),
         if (!_readOnly)
           StatusBanner(
@@ -875,23 +875,26 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
         ),
         const SizedBox(height: 8),
         for (var i = 0; i < _bagian.length; i++)
-          AccordionTile(
-            expanded: _expanded == i,
-            onToggle: () => setState(
-              () => _expanded = _expanded == i ? null : i,
-            ),
-            header: _BagianHeader(
-              state: _bagian[i],
-              catatanCtrl: _catatanCtrl[i],
-              readOnly: _readOnly,
-            ),
-            content: _BagianContent(
-              state: _bagian[i],
-              readOnly: _readOnly,
-              catatanCtrl: _catatanCtrl[i],
-              onLevelChanged: (level) => _setLevel(i, level),
-              onFoto: () => _pickItemFoto(i),
-              onCatatanChanged: _scheduleAutosave,
+          StaggeredEntrance(
+            index: i,
+            delayStep: const Duration(milliseconds: 50),
+            child: AccordionTile(
+              expanded: _expanded == i,
+              onToggle: () =>
+                  setState(() => _expanded = _expanded == i ? null : i),
+              header: _BagianHeader(
+                state: _bagian[i],
+                catatanCtrl: _catatanCtrl[i],
+                readOnly: _readOnly,
+              ),
+              content: _BagianContent(
+                state: _bagian[i],
+                readOnly: _readOnly,
+                catatanCtrl: _catatanCtrl[i],
+                onLevelChanged: (level) => _setLevel(i, level),
+                onFoto: () => _pickItemFoto(i),
+                onCatatanChanged: _scheduleAutosave,
+              ),
             ),
           ),
         const SizedBox(height: 12),
@@ -915,10 +918,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
 }
 
 class _LockedBanner extends StatelessWidget {
-  const _LockedBanner({
-    required this.isAkhir,
-    required this.alasan,
-  });
+  const _LockedBanner({required this.isAkhir, required this.alasan});
 
   final bool isAkhir;
   final String? alasan;
@@ -1264,7 +1264,9 @@ class _PhotoField extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                tersedia ? '$label - foto tersedia' : '$label - ketuk untuk ambil',
+                tersedia
+                    ? '$label - foto tersedia'
+                    : '$label - ketuk untuk ambil',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1398,9 +1400,7 @@ class _ToggleChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: selected
-                    ? selectedColor
-                    : context.colors.textSecondary,
+                color: selected ? selectedColor : context.colors.textSecondary,
               ),
             ),
           ),
