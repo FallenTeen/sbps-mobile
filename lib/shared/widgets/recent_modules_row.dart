@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/app_preferences.dart';
 import '../../features/proyek/role_permissions.dart';
-import 'animations/hero_transition.dart';
+import '../utils/module_routes.dart';
+import 'module_shortcut.dart';
 
 class RecentModulesNotifier extends AsyncNotifier<List<String>> {
   static const _maxEntries = 10;
@@ -49,37 +51,33 @@ class RecentModulesRow extends ConsumerWidget {
 
     if (modules.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 80,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: modules.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final m = modules[i];
-          return SizedBox(
-            width: 72,
-            child: Column(
-              children: [
-                HeroTransition(
-                  tag: 'module-${m.key}',
-                  placeholder: CircleAvatar(child: Icon(m.icon, size: 20)),
-                  child: CircleAvatar(child: Icon(m.icon, size: 20)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  m.label,
-                  style: Theme.of(context).textTheme.labelSmall,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const ModuleSectionLabel(label: 'Terakhir Dibuka', icon: Icons.history),
+        SizedBox(
+          height: 84,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: modules.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final m = modules[i];
+              return ModuleShortcut(
+                icon: m.icon,
+                label: m.label,
+                onTap: () {
+                  final route = moduleRouteFor(m.key);
+                  if (route == null) return;
+                  ref.read(recentModulesProvider.notifier).add(m.key);
+                  context.push(route);
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

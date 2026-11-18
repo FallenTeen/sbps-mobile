@@ -111,7 +111,7 @@ class DashboardHomeScreen extends ConsumerWidget {
               const _SectionAttention(),
               const SizedBox(height: 12),
               const RecentModulesRow(),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               const PinnedModulesRow(),
               const SizedBox(height: 20),
               SectionHeader(

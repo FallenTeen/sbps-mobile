@@ -6,7 +6,7 @@ import '../../core/app_preferences.dart';
 import '../../features/proyek/role_permissions.dart';
 import '../utils/feedback_service.dart';
 import '../utils/module_routes.dart';
-import 'animations/hero_transition.dart';
+import 'module_shortcut.dart';
 import 'recent_modules_row.dart' show recentModulesProvider;
 
 class PinnedModulesRow extends ConsumerStatefulWidget {
@@ -78,54 +78,45 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
 
     if (modules.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 80,
-      child: ReorderableListView(
-        scrollDirection: Axis.horizontal,
-        buildDefaultDragHandles: false,
-        // Dual SDK support: onReorderItem only exists in newer Flutter.
-        // ignore: deprecated_member_use
-        onReorder: (oldIndex, newIndex) {
-          setState(() {
-            if (newIndex > oldIndex) newIndex -= 1;
-            final item = _pinned.removeAt(oldIndex);
-            _pinned.insert(newIndex, item);
-          });
-          _save();
-        },
-        children: [
-          for (int i = 0; i < modules.length; i++)
-            SizedBox(
-              key: ValueKey(modules[i].key),
-              width: 72,
-              child: GestureDetector(
-                onTap: () => _openModule(modules[i].key),
-                onLongPress: () => _togglePin(modules[i].key),
-                child: Column(
-                  children: [
-                    HeroTransition(
-                      tag: 'module-${modules[i].key}',
-                      placeholder: CircleAvatar(
-                        child: Icon(modules[i].icon, size: 20),
-                      ),
-                      child: CircleAvatar(
-                        child: Icon(modules[i].icon, size: 20),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      modules[i].label,
-                      style: Theme.of(context).textTheme.labelSmall,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const ModuleSectionLabel(
+          label: 'Akses Cepat',
+          icon: Icons.push_pin_outlined,
+        ),
+        SizedBox(
+          height: 84,
+          child: ReorderableListView(
+            scrollDirection: Axis.horizontal,
+            buildDefaultDragHandles: false,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            // Dual SDK support: onReorderItem only exists in newer Flutter.
+            // ignore: deprecated_member_use
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex -= 1;
+                final item = _pinned.removeAt(oldIndex);
+                _pinned.insert(newIndex, item);
+              });
+              _save();
+            },
+            children: [
+              for (int i = 0; i < modules.length; i++)
+                Padding(
+                  key: ValueKey(modules[i].key),
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ModuleShortcut(
+                    icon: modules[i].icon,
+                    label: modules[i].label,
+                    onTap: () => _openModule(modules[i].key),
+                    onLongPress: () => _togglePin(modules[i].key),
+                  ),
                 ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

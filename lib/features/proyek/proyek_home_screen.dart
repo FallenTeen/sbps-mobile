@@ -92,7 +92,7 @@ class ProyekHomeScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
 
                   const RecentModulesRow(),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   const PinnedModulesRow(),
                   const SizedBox(height: 16),
 
