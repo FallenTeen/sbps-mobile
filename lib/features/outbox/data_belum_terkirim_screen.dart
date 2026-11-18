@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../presensi/presensi_providers.dart';
 
@@ -54,6 +55,7 @@ class _DataBelumTerkirimScreenState
           icon: Icons.cloud_off_outlined,
           title: 'Gagal membuka antrean',
           subtitle: friendlyErrorMessage(error),
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba lagi',
           onAction: () => ref.invalidate(pendingActionsProvider),
         ),
@@ -64,6 +66,7 @@ class _DataBelumTerkirimScreenState
               title: 'Semua data sudah terkirim',
               subtitle:
                   'Aksi yang belum tersinkron akan tampil di sini untuk dikirim ulang.',
+              illustrationVariant: EmptyStateVariant.success,
             );
           }
           return RefreshIndicator(

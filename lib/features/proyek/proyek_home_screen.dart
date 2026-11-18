@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
@@ -78,6 +79,7 @@ class ProyekHomeScreen extends ConsumerWidget {
               icon: Icons.person_off_outlined,
               title: 'Peran aktif tidak tersedia',
               subtitle: 'Peran aktif tidak tersedia untuk App Proyek.',
+              illustrationVariant: EmptyStateVariant.noPermission,
             )
           : ResponsiveCenter(
               maxWidth: AppBreakpoints.maxContentWidth,

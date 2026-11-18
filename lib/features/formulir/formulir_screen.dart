@@ -10,6 +10,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/form_section.dart';
@@ -80,6 +81,7 @@ class FormulirScreen extends ConsumerWidget {
               icon: Icons.cloud_off_outlined,
               title: 'Gagal memuat status presensi',
               subtitle: friendlyErrorMessage(error),
+              illustrationVariant: EmptyStateVariant.error,
               actionLabel: 'Coba lagi',
               onAction: () => ref.invalidate(hariIniProvider),
             ),
@@ -90,6 +92,7 @@ class FormulirScreen extends ConsumerWidget {
                     subtitle:
                         'Formulir lapangan hanya bisa diisi setelah Anda '
                         'melakukan check-in presensi.',
+                    illustrationVariant: EmptyStateVariant.noData,
                     actionLabel: 'Kembali',
                     onAction: () => Navigator.of(context).maybePop(),
                   )
@@ -118,6 +121,7 @@ class _FormulirBody extends ConsumerWidget {
               icon: Icons.cloud_off_outlined,
               title: 'Gagal memuat formulir hari ini',
               subtitle: friendlyErrorMessage(error),
+              illustrationVariant: EmptyStateVariant.error,
               actionLabel: 'Coba Lagi',
               onAction: () => ref.invalidate(formulirHariIniProvider),
             ),

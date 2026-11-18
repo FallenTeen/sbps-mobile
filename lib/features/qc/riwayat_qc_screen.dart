@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/searchable_list_header.dart';
@@ -152,6 +153,7 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Data QC',
             subtitle: state.error,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: () => ref.read(qcRiwayatProvider.notifier).refresh(),
           ),
@@ -172,6 +174,9 @@ class _RiwayatQcScreenState extends ConsumerState<RiwayatQcScreen> {
             subtitle: _searchQuery.isNotEmpty
                 ? 'Tidak ditemukan data yang cocok dengan "$_searchQuery".'
                 : 'Belum ada data pengujian sampel untuk filter status ini.',
+            illustrationVariant: _searchQuery.isNotEmpty
+                ? EmptyStateVariant.noResults
+                : EmptyStateVariant.noData,
           ),
         ],
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_empty_state.dart';
+import 'illustrated_empty_state.dart';
 
 /// State offline penuh - pola "Offline State".
 ///
@@ -27,6 +28,7 @@ class OfflineState extends StatelessWidget {
       icon: Icons.cloud_off_rounded,
       title: title,
       subtitle: subtitle,
+      illustrationVariant: EmptyStateVariant.offline,
       actionLabel: onRetry != null ? 'Coba Lagi' : null,
       onAction: onRetry,
     );

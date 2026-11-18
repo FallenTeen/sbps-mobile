@@ -12,6 +12,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -280,6 +281,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
           title: 'Gagal memuat data armada',
           subtitle:
               'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(armadaSayaProvider),
         ),
@@ -290,6 +292,7 @@ class _OdoAwalScreenState extends ConsumerState<OdoAwalScreen> {
               title: 'Tidak ada armada yang ditugaskan',
               subtitle:
                   'Hubungi admin untuk mendapatkan penugasan unit kendaraan.',
+              illustrationVariant: EmptyStateVariant.noData,
             );
           }
 

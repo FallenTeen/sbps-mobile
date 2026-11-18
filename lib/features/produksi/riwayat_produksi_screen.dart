@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -240,9 +241,9 @@ class _RiwayatProduksiContentState
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Riwayat',
             subtitle: state.error,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
-            onAction: () =>
-                ref.read(riwayatProduksiProvider.notifier).refresh(),
+            onAction: () => ref.read(riwayatProduksiProvider.notifier).refresh(),
           ),
         ],
       );
@@ -261,6 +262,9 @@ class _RiwayatProduksiContentState
             subtitle: _searchQuery.isNotEmpty
                 ? 'Tidak ditemukan data yang cocok dengan "$_searchQuery".'
                 : 'Belum ada data riwayat produksi untuk filter ini.',
+            illustrationVariant: _searchQuery.isNotEmpty || _selectedStatus != null
+                ? EmptyStateVariant.noResults
+                : EmptyStateVariant.noData,
           ),
         ],
       );

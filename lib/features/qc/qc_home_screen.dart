@@ -8,6 +8,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/info_tooltip.dart';
@@ -74,6 +75,7 @@ Widget errorView(BuildContext context, WidgetRef ref, Object e) {
         icon: Icons.cloud_off_outlined,
         title: 'Gagal Memuat Antrian QC',
         subtitle: message,
+        illustrationVariant: EmptyStateVariant.error,
         actionLabel: 'Coba Lagi',
         onAction: () => ref.invalidate(qcHomeProvider),
       ),
@@ -147,6 +149,7 @@ class _HomeBody extends ConsumerWidget {
             title: 'Tidak Ada Pemeriksaan Menunggu',
             subtitle: 'Sampel slump di sesi produksi muncul di sini '
                 'setelah "Catat Slump Test".',
+            illustrationVariant: EmptyStateVariant.noData,
           )
         else
           for (final s in queue)

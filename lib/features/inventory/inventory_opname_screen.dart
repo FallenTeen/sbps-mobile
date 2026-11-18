@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -288,6 +289,7 @@ class _InventoryOpnameScreenState extends ConsumerState<InventoryOpnameScreen> {
                     icon: Icons.fact_check_outlined,
                     title: 'Tidak ada data stok',
                     subtitle: 'Belum ada barang untuk opname',
+                    illustrationVariant: EmptyStateVariant.noData,
                   );
                 }
                 return ListView.builder(

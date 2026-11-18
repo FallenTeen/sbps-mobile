@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -107,6 +108,7 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Riwayat',
             subtitle: _error,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: _reload,
           ),
@@ -123,6 +125,7 @@ class _RiwayatFormulirScreenState extends ConsumerState<RiwayatFormulirScreen> {
             title: 'Belum Ada Formulir',
             subtitle:
                 'Riwayat pengisian formulir lapangan akan muncul di sini.',
+            illustrationVariant: EmptyStateVariant.noData,
           ),
         ],
       );

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/breakpoints.dart';
 import 'app_empty_state.dart';
+import 'illustrated_empty_state.dart';
 
 /// Pola list→detail adaptif (spesifikasi Bagian 2):
 /// - Compact/Medium (<840dp): hanya render [masterBuilder]; saat item dipilih,
@@ -124,7 +125,12 @@ class MasterDetailEmptyPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        child: AppEmptyState(icon: icon, title: title, subtitle: subtitle),
+        child: AppEmptyState(
+          icon: icon,
+          title: title,
+          subtitle: subtitle,
+          illustrationVariant: EmptyStateVariant.noData,
+        ),
       ),
     );
   }

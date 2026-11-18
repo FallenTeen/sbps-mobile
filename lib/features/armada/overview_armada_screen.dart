@@ -5,6 +5,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../dashboard/dashboard_providers.dart';
@@ -138,6 +139,7 @@ class _OverviewArmadaScreenState extends ConsumerState<OverviewArmadaScreen> {
                     icon: Icons.filter_alt_off_outlined,
                     title: 'Tidak ada unit "$filter"',
                     subtitle: 'Tidak ada unit dengan status filter ini.',
+                    illustrationVariant: EmptyStateVariant.noResults,
                     actionLabel: 'Hapus filter',
                     onAction: () => setState(() => _statusFilter = null),
                   );

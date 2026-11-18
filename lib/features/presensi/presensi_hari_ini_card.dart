@@ -12,6 +12,7 @@ import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -61,6 +62,7 @@ class PresensiHariIniCard extends ConsumerWidget {
         icon: Icons.error_outline,
         title: 'Gagal memuat status presensi',
         subtitle: friendlyErrorMessage(error),
+        illustrationVariant: EmptyStateVariant.error,
         actionLabel: 'Coba lagi',
         onAction: () => ref.invalidate(hariIniProvider),
       ),

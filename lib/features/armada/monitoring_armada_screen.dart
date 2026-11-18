@@ -7,6 +7,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../dashboard/dashboard_providers.dart';
 import '../dashboard/models.dart';
@@ -130,6 +131,7 @@ class _MonitoringArmadaScreenState
                   icon: Icons.local_shipping_outlined,
                   title: 'Tidak ada armada',
                   subtitle: 'Belum ada unit armada terdaftar untuk dimonitor.',
+                  illustrationVariant: EmptyStateVariant.noData,
                 );
               }
 

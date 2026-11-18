@@ -7,6 +7,7 @@ import 'models/production_session.dart';
 import 'produksi_providers.dart';
 import 'produksi_rules.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 
 /// Ringkasan output produksi per titik hari ini (GET /produksi/titik-progress).
@@ -73,9 +74,9 @@ class ProgressHariIniContent extends ConsumerWidget {
                   title: 'Belum ada output hari ini',
                   subtitle: '${data.tanggal} - mulai sesi dan catat hasil '
                       'output untuk melihat progress per titik.',
+                  illustrationVariant: EmptyStateVariant.noData,
                   actionLabel: 'Muat Ulang',
-                  onAction: () =>
-                      ref.invalidate(titikProgressProvider),
+                  onAction: () => ref.invalidate(titikProgressProvider),
                 ),
               ],
             );

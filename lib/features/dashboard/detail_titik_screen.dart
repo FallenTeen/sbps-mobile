@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -54,6 +55,7 @@ class DetailTitikScreen extends ConsumerWidget {
                   subtitle: e is ApiException
                       ? e.message
                       : 'Gagal memuat detail titik.',
+                  illustrationVariant: EmptyStateVariant.error,
                   actionLabel: 'Coba Lagi',
                   onAction: () => ref.invalidate(titikDetailProvider(titikId)),
                 ),

@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/searchable_list_header.dart';
 import '../../shared/widgets/submit_spinner.dart';
@@ -182,6 +183,7 @@ class _RiwayatServisScreenState extends ConsumerState<RiwayatServisScreen> {
         title: 'Gagal memuat data servis',
         subtitle:
             'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+        illustrationVariant: EmptyStateVariant.error,
         actionLabel: 'Coba lagi',
         onAction: _refreshAll,
       );
@@ -198,6 +200,9 @@ class _RiwayatServisScreenState extends ConsumerState<RiwayatServisScreen> {
         subtitle: _searchQuery.isNotEmpty
             ? 'Tidak ditemukan data yang cocok dengan "$_searchQuery".'
             : 'Ajukan servis pertama kali dengan menekan tombol + di bawah.',
+        illustrationVariant: _searchQuery.isNotEmpty
+            ? EmptyStateVariant.noResults
+            : EmptyStateVariant.noData,
         actionLabel: _searchQuery.isNotEmpty ? null : 'Ajukan Servis',
         onAction: _searchQuery.isNotEmpty
             ? null

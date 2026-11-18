@@ -5,6 +5,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/status_pill.dart';
@@ -159,6 +160,7 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
             icon: Icons.inventory_2_outlined,
             title: 'Tidak ada data stok',
             subtitle: 'Belum ada bahan baku atau sparepart',
+            illustrationVariant: EmptyStateVariant.noData,
           );
         }
         return _buildList(items, selectedId ?? '', onSelect);
@@ -235,6 +237,9 @@ class _InventoryStokScreenState extends ConsumerState<InventoryStokScreen> {
               subtitle: _hanyaRendah
                   ? 'Tidak ada item di bawah stok minimum.'
                   : 'Coba ubah filter atau kata kunci pencarian',
+              illustrationVariant: _hanyaRendah
+                  ? EmptyStateVariant.success
+                  : EmptyStateVariant.noResults,
             ),
           )
         else

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
@@ -180,6 +181,9 @@ class _SecurityBukuTamuScreenState
                           subtitle: _query.isEmpty
                               ? 'Belum ada catatan tamu masuk hari ini.'
                               : 'Tidak ada tamu yang cocok dengan pencarian "$_query".',
+                          illustrationVariant: _query.isEmpty
+                              ? EmptyStateVariant.noData
+                              : EmptyStateVariant.noResults,
                         ),
                       ],
                     ),

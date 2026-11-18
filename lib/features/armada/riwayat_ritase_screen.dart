@@ -8,6 +8,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/status_pill.dart';
 import '../../core/formatters.dart';
@@ -73,6 +74,7 @@ class _HariIniTab extends ConsumerWidget {
         icon: Icons.cloud_off_outlined,
         title: 'Gagal memuat data',
         subtitle: friendlyErrorMessage(e),
+        illustrationVariant: EmptyStateVariant.error,
         actionLabel: 'Coba lagi',
         onAction: () => ref.invalidate(armadaSayaProvider),
       ),
@@ -82,6 +84,7 @@ class _HariIniTab extends ConsumerWidget {
             icon: Icons.route_outlined,
             title: 'Tidak ada armada',
             subtitle: 'Anda belum memiliki armada yang ditugaskan.',
+            illustrationVariant: EmptyStateVariant.noData,
           );
         }
 
@@ -227,6 +230,7 @@ class _RiwayatTab extends ConsumerWidget {
         icon: Icons.cloud_off_outlined,
         title: 'Gagal memuat data',
         subtitle: state.error!,
+        illustrationVariant: EmptyStateVariant.error,
         actionLabel: 'Coba lagi',
         onAction: () => ref.read(ritaseRiwayatProvider.notifier).refresh(),
       );
@@ -236,6 +240,7 @@ class _RiwayatTab extends ConsumerWidget {
         icon: Icons.route_outlined,
         title: 'Belum ada riwayat muatan',
         subtitle: 'Muatan yang sudah Anda catat akan muncul di sini.',
+        illustrationVariant: EmptyStateVariant.noData,
       );
     }
 

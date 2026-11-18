@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_empty_state.dart';
+import 'illustrated_empty_state.dart';
 
 /// State error global - pola "Error State".
 ///
@@ -33,6 +34,7 @@ class ErrorState extends StatelessWidget {
       icon: Icons.error_outline_rounded,
       title: message,
       subtitle: detail,
+      illustrationVariant: EmptyStateVariant.error,
       actionLabel: onRetry != null ? 'Coba Lagi' : null,
       onAction: onRetry,
       padding: padding,

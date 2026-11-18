@@ -9,6 +9,7 @@ import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/status_pill.dart';
@@ -220,6 +221,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
                   icon: Icons.no_crash_outlined,
                   title: 'Belum ada armada',
                   subtitle: 'Belum ada armada yang ditugaskan ke Anda.',
+                  illustrationVariant: EmptyStateVariant.noData,
                 ),
               ]
             : [for (final a in items) _ArmadaCard(armada: a)],
@@ -232,6 +234,7 @@ class ArmadaHomeScreen extends ConsumerWidget {
             title: 'Gagal memuat data armada',
             subtitle:
                 'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Muat Ulang',
             onAction: () => ref.invalidate(armadaSayaProvider),
           ),

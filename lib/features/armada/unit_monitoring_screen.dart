@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/submit_spinner.dart';
@@ -270,6 +271,7 @@ class UnitMonitoringScreen extends ConsumerWidget {
               icon: Icons.cloud_off_outlined,
               title: 'Gagal memuat riwayat servis',
               subtitle: friendlyErrorMessage(e),
+              illustrationVariant: EmptyStateVariant.error,
               actionLabel: 'Coba lagi',
               onAction: () => ref.invalidate(servisArmadaUnitProvider(unit.id)),
             ),
@@ -279,6 +281,7 @@ class UnitMonitoringScreen extends ConsumerWidget {
                   icon: Icons.build_outlined,
                   title: 'Belum Ada Riwayat Servis',
                   subtitle: 'Unit ini belum pernah diajukan servis.',
+                  illustrationVariant: EmptyStateVariant.noData,
                 );
               }
               return Column(

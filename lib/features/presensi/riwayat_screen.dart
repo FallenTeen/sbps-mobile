@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../core/api_client.dart';
@@ -178,6 +179,7 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Riwayat',
             subtitle: _error,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: _reload,
           ),
@@ -193,6 +195,7 @@ class _RiwayatScreenState extends ConsumerState<RiwayatScreen> {
             icon: Icons.history_toggle_off,
             title: 'Belum Ada Riwayat',
             subtitle: 'Tidak ada data presensi pada bulan dan tahun ini.',
+            illustrationVariant: EmptyStateVariant.noData,
           ),
         ],
       );

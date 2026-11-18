@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/date_grouping.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/rich_list_tile.dart';
@@ -248,6 +249,7 @@ class _InventoryRiwayatScreenState
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Riwayat',
             subtitle: state.error,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: () => ref.read(inventoryMutasiProvider.notifier).refresh(),
           ),
@@ -267,6 +269,8 @@ class _InventoryRiwayatScreenState
             subtitle: noData
                 ? 'Mutasi masuk/keluar stok akan tercatat di sini.\nUbah filter untuk melihat rentang lain.'
                 : 'Tidak ditemukan barang yang cocok dengan "$_searchQuery".',
+            illustrationVariant:
+                noData ? EmptyStateVariant.noData : EmptyStateVariant.noResults,
             actionLabel: noData ? 'Coba Lagi' : null,
             onAction: noData
                 ? () => ref.read(inventoryMutasiProvider.notifier).refresh()
@@ -283,6 +287,7 @@ class _InventoryRiwayatScreenState
             icon: Icons.filter_alt_off_outlined,
             title: 'Tidak Ada Mutasi ${filter.tipe!.label}',
             subtitle: 'Ubah filter tipe atau rentang tanggal.',
+            illustrationVariant: EmptyStateVariant.noResults,
           ),
         ],
       );

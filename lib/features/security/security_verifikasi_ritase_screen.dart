@@ -9,6 +9,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -96,6 +97,7 @@ class _SecurityVerifikasiRitaseScreenState
                     icon: Icons.shield_outlined,
                     title: 'Tidak Ada Ritase Siap Cek',
                     subtitle: 'Belum ada ritase terverifikasi logistik yang memerlukan pemeriksaan security.',
+                    illustrationVariant: EmptyStateVariant.noData,
                   ),
                 ],
               ),

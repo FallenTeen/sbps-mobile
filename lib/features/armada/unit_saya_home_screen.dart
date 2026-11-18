@@ -8,6 +8,7 @@ import '../../core/armada_jenis.dart';
 import '../../core/outbox/pending_action.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/brand_strip.dart';
@@ -68,6 +69,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                   title: 'Gagal memuat data unit',
                   subtitle:
                       'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+                  illustrationVariant: EmptyStateVariant.error,
                   actionLabel: 'Coba Lagi',
                   onAction: () {
                     ref.invalidate(armadaSayaProvider);
@@ -92,6 +94,7 @@ class _UnitSayaHomeScreenState extends ConsumerState<UnitSayaHomeScreen> {
                           'Checklist muncul setelah unit ditugaskan ke kamu '
                           'oleh admin atau Ketua Armada.\nSudah ditugaskan '
                           'tapi belum muncul? Hubungi Ketua Armada kamu.',
+                      illustrationVariant: EmptyStateVariant.noData,
                     ),
                   ),
                 ],

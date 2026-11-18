@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/date_grouping.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -83,6 +84,7 @@ class _InventoryDetailStokContentState
                   icon: Icons.inventory_2_outlined,
                   title: 'Barang tidak ditemukan',
                   subtitle: 'Barang ini mungkin tidak lagi aktif.',
+                  illustrationVariant: EmptyStateVariant.noData,
                 ),
               ],
             );
@@ -125,6 +127,7 @@ class _InventoryDetailStokContentState
           icon: Icons.cloud_off_outlined,
           title: 'Gagal Memuat Detail Stok',
           subtitle: e is ApiException ? e.message : 'Gagal memuat detail stok.',
+          illustrationVariant: EmptyStateVariant.error,
           actionLabel: 'Coba Lagi',
           onAction: () => ref.invalidate(inventoryStokProvider),
         ),
@@ -355,6 +358,7 @@ class _MutasiSection extends StatelessWidget {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal Memuat Mutasi',
             subtitle: e is ApiException ? e.message : 'Gagal memuat mutasi.',
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba Lagi',
             onAction: onRefresh,
           ),
@@ -370,6 +374,7 @@ class _MutasiSection extends StatelessWidget {
                 subtitle: tipeFilter != null
                     ? 'Tidak ada mutasi ${tipeFilter!.label.toLowerCase()} untuk barang ini.'
                     : 'Mutasi masuk/keluar barang ini belum tercatat.',
+                illustrationVariant: EmptyStateVariant.noData,
               );
             }
             final rows = _buildRows(items);

@@ -7,6 +7,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
@@ -91,6 +92,7 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
                           icon: Icons.scale_outlined,
                           title: 'Tidak Ada Ritase',
                           subtitle: 'Belum ada data ritase dalam kategori ini.',
+                          illustrationVariant: EmptyStateVariant.noData,
                         ),
                       ],
                     ),

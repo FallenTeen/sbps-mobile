@@ -10,6 +10,7 @@ import '../../core/api_client.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/searchable_list_header.dart';
@@ -118,6 +119,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
             icon: Icons.cloud_off_outlined,
             title: 'Gagal memuat data tracking',
             subtitle: e is ApiException ? e.message : null,
+            illustrationVariant: EmptyStateVariant.error,
             actionLabel: 'Coba lagi',
             onAction: () => ref.invalidate(activeUsersProvider),
           ),
@@ -127,6 +129,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                 icon: Icons.person_search_outlined,
                 title: 'Belum ada karyawan aktif',
                 subtitle: 'Belum ada karyawan dengan presensi aktif hari ini.',
+                illustrationVariant: EmptyStateVariant.noData,
               );
             }
 
@@ -179,6 +182,7 @@ class _ActiveUsersScreenState extends ConsumerState<ActiveUsersScreen> {
                             title: 'Tidak ada yang cocok',
                             subtitle:
                                 'Coba ubah kata kunci pencarian atau filter status.',
+                            illustrationVariant: EmptyStateVariant.noResults,
                             actionLabel: 'Reset Filter',
                             onAction: _resetFilters,
                           )
@@ -480,6 +484,7 @@ class _ActiveUsersMapState extends State<_ActiveUsersMap> {
         icon: Icons.map_outlined,
         title: 'Belum ada koordinat GPS',
         subtitle: 'Belum ada koordinat GPS untuk ditampilkan di peta.',
+        illustrationVariant: EmptyStateVariant.noData,
       );
     }
 

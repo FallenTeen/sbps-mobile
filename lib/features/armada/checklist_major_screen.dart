@@ -10,6 +10,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/photo_viewer_dialog.dart';
 import '../../shared/widgets/portal_switch_button.dart';
@@ -645,6 +646,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
               icon: Icons.verified_outlined,
               title: 'Semua Baik',
               subtitle: 'Tidak ada item rusak - bukti foto tidak diperlukan.',
+              illustrationVariant: EmptyStateVariant.success,
             )
           else ...[
             Text(
@@ -1715,6 +1717,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
                 title: 'Gagal memuat data armada',
                 subtitle:
                     'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+                illustrationVariant: EmptyStateVariant.error,
                 actionLabel: 'Coba lagi',
                 onAction: () => ref.invalidate(armadaSayaProvider),
               ),
@@ -1770,6 +1773,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
                     title: 'Gagal memuat data armada',
                     subtitle:
                         'Tidak dapat terhubung ke server.\nPeriksa koneksi internet lalu coba lagi.',
+                    illustrationVariant: EmptyStateVariant.error,
                     actionLabel: 'Coba lagi',
                     onAction: () => ref.invalidate(masterArmadaProvider),
                   ),
@@ -1779,6 +1783,7 @@ class _VehicleSelectionStep extends ConsumerWidget {
                         icon: Icons.local_shipping_outlined,
                         title: 'Tidak ada armada',
                         subtitle: 'Belum ada unit armada terdaftar.',
+                        illustrationVariant: EmptyStateVariant.noData,
                       );
                     }
                     return _builtinList(

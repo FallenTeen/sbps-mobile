@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/info_tooltip.dart';
@@ -331,6 +332,7 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
       subtitle:
           '$subtitle\nAntrean berisi pengajuan servis milikmu sendiri atau '
           'unit yang kamu pegang.',
+      illustrationVariant: EmptyStateVariant.noData,
     );
   }
 

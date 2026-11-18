@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/breadcrumb_title.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
@@ -149,6 +150,7 @@ class _WorkshopVerifikasiEksternalScreenState
                         icon: Icons.cloud_off_outlined,
                         title: 'Gagal Memuat Data',
                         subtitle: _errorMessage,
+                        illustrationVariant: EmptyStateVariant.error,
                         actionLabel: 'Coba Lagi',
                         onAction: _loadData,
                       ),
@@ -160,6 +162,7 @@ class _WorkshopVerifikasiEksternalScreenState
                             title: 'Tidak Ada Servis Eksternal',
                             subtitle:
                                 'Saat ini tidak ada servis eksternal yang memerlukan verifikasi.',
+                            illustrationVariant: EmptyStateVariant.success,
                             actionLabel: 'Refresh',
                             onAction: _loadData,
                           ),

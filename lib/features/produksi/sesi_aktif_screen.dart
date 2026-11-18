@@ -10,6 +10,7 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/status_pill.dart';
@@ -194,6 +195,7 @@ class _ActiveSessionsTab extends ConsumerWidget {
               subtitle:
                   'Akun "${user.email}" belum terhubung ke data karyawan aktif.\n'
                   'Hubungi admin untuk menghubungkan akun ke data karyawan agar dapat mengoperasikan sesi produksi.',
+              illustrationVariant: EmptyStateVariant.noPermission,
               actionLabel: 'Muat Ulang',
               onAction: () => _refreshAll(ref),
             ),
@@ -243,6 +245,7 @@ class _ActiveSessionsTab extends ConsumerWidget {
                         subtitle:
                             'Mulai sesi produksi baru dengan menekan tombol '
                             'Mulai Sesi di bawah.',
+                        illustrationVariant: EmptyStateVariant.noData,
                         actionLabel: 'Mulai Sesi',
                         onAction: () => context.push('/produksi/mulai'),
                       ),
