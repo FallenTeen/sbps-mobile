@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../shared/theme/app_icons.dart';
 import '../../shared/widgets/adaptive_nav_shell.dart';
@@ -102,7 +102,7 @@ class RolePermissions {
     'Driver Kondisional': {'armada'},
     'Operator Alat Berat': {'armada'},
     // F-02: tanpa 'logistik' - role ini tidak punya permission logistik
-    // di backend (verify ritase logistik|manage timbang) → modul akan 403.
+    // di backend (verify ritase logistik|manage timbang) â†’ modul akan 403.
     'Kepala Divisi Armada': {'armada', 'dashboard'},
     'Ketua Divisi Armada': {'armada', 'dashboard'},
     'Ketua Armada': {'armada', 'dashboard'},
@@ -145,6 +145,8 @@ AdaptiveNavDestination _notifikasiDestination() => const AdaptiveNavDestination(
   label: 'Notifikasi',
   icon: Icons.notifications_outlined,
   selectedIcon: Icons.notifications_rounded,
+  tooltip: 'Notifikasi',
+  isPrimary: true,
 );
 
 AdaptiveNavDestination _tugasDestination() => const AdaptiveNavDestination(
@@ -183,13 +185,13 @@ String? tugasModuleFor(String? role) => _tugasModuleByRole[role];
 /// Jenis isi Beranda (role-aware).
 enum AppHomeKind { presensi, driver, workshop, inventory, logistik, security, proyek }
 
-/// Mapping role + portal → isi Beranda.
+/// Mapping role + portal â†’ isi Beranda.
 ///
-/// - Portal Presensi (atau tanpa role App 2) → beranda presensi.
-/// - Driver Armada → "Pekerjaan Hari Ini" (Unit Saya / workflow).
-/// - Workshop → "Workshop Hari Ini" (antrian).
-/// - Inventory → "Perhatian Hari Ini" (stok rendah / request / opname).
-/// - Role lain (Mandor/Owner/Admin/Kontraktor/Kepala Divisi) → module cards
+/// - Portal Presensi (atau tanpa role App 2) â†’ beranda presensi.
+/// - Driver Armada â†’ "Pekerjaan Hari Ini" (Unit Saya / workflow).
+/// - Workshop â†’ "Workshop Hari Ini" (antrian).
+/// - Inventory â†’ "Perhatian Hari Ini" (stok rendah / request / opname).
+/// - Role lain (Mandor/Owner/Admin/Kontraktor/Kepala Divisi) â†’ module cards
 ///   penuh ([ProyekHomeScreen]) - attention + operational + modul.
 AppHomeKind appHomeKindFor({
   required String? role,
@@ -211,10 +213,10 @@ AppHomeKind appHomeKindFor({
 
 /// Branch index StatefulShellRoute untuk sebuah key destinasi navigasi.
 ///
-/// [moduleBranchByKey] = peta key modul → branch shell (definisi di router,
+/// [moduleBranchByKey] = peta key modul â†’ branch shell (definisi di router,
 /// `_proyekBranchByModule`). Tab universal (`home`/`presensi`/`notifikasi`)
 /// dan `tugas` (yang menunjuk modul utama role) diresolusi di sini sehingga
-/// mapping destinasi → branch bisa diuji tanpa perlu GoRouter.
+/// mapping destinasi â†’ branch bisa diuji tanpa perlu GoRouter.
 int navBranchFor(
   String destinationKey,
   String? role,
@@ -238,7 +240,7 @@ int navBranchFor(
 /// Destinasi nav shell role-aware (maksimal 4: Beranda,
 /// Tugas/Operasional, Presensi, Notifikasi). Field single-modul hanya
 /// Beranda + Presensi + Notifikasi (Beranda mereka sudah merupakan pekerjaan).
-/// Role tanpa akses modul (presensi-only) → Beranda + Notifikasi.
+/// Role tanpa akses modul (presensi-only) â†’ Beranda + Notifikasi.
 List<AdaptiveNavDestination> buildNavDestinations(String? role) {
   final allowed = RolePermissions.modulesFor(role);
   final destination = <AdaptiveNavDestination>[_homeDestination()];

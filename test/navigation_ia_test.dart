@@ -4,6 +4,7 @@ import 'package:sbps_mobile/core/app_router.dart';
 import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
 import 'package:sbps_mobile/core/outbox/pending_action.dart';
 import 'package:sbps_mobile/features/proyek/pending_summary_provider.dart';
+import 'package:sbps_mobile/features/proyek/proyek_home_screen.dart';
 import 'package:sbps_mobile/features/proyek/role_permissions.dart';
 import 'package:sbps_mobile/shared/widgets/adaptive_nav_shell.dart';
 
@@ -26,10 +27,12 @@ List<String> _keysOf(String? role) =>
 
 void main() {
   group('buildNavDestinations (≤ 4, task-first, single shell)', () {
-    test('Driver Armada → Beranda + Presensi + Notifikasi (pekerjaan = Beranda)',
-        () {
-      expect(_keysOf('Driver Armada'), ['home', 'presensi', 'notifikasi']);
-    });
+    test(
+      'Driver Armada → Beranda + Presensi + Notifikasi (pekerjaan = Beranda)',
+      () {
+        expect(_keysOf('Driver Armada'), ['home', 'presensi', 'notifikasi']);
+      },
+    );
 
     test('Workshop → Beranda + Presensi + Notifikasi', () {
       expect(_keysOf('Workshop'), ['home', 'presensi', 'notifikasi']);
@@ -40,13 +43,21 @@ void main() {
     });
 
     test('Mandor Titik → Beranda + Tugas + Presensi + Notifikasi (4)', () {
-      expect(_keysOf('Mandor Titik'),
-          ['home', 'tugas', 'presensi', 'notifikasi']);
+      expect(_keysOf('Mandor Titik'), [
+        'home',
+        'tugas',
+        'presensi',
+        'notifikasi',
+      ]);
     });
 
     test('Kepala Divisi Armada → Beranda + Tugas + Presensi + Notifikasi', () {
-      expect(_keysOf('Kepala Divisi Armada'),
-          ['home', 'tugas', 'presensi', 'notifikasi']);
+      expect(_keysOf('Kepala Divisi Armada'), [
+        'home',
+        'tugas',
+        'presensi',
+        'notifikasi',
+      ]);
     });
 
     test('Owner → Beranda + Tugas + Presensi + Notifikasi (4)', () {
@@ -54,13 +65,21 @@ void main() {
     });
 
     test('Admin Keuangan → Beranda + Tugas + Presensi + Notifikasi', () {
-      expect(_keysOf('Admin Keuangan'),
-          ['home', 'tugas', 'presensi', 'notifikasi']);
+      expect(_keysOf('Admin Keuangan'), [
+        'home',
+        'tugas',
+        'presensi',
+        'notifikasi',
+      ]);
     });
 
     test('Kontraktor → Beranda + Tugas + Presensi + Notifikasi', () {
-      expect(_keysOf('Kontraktor'),
-          ['home', 'tugas', 'presensi', 'notifikasi']);
+      expect(_keysOf('Kontraktor'), [
+        'home',
+        'tugas',
+        'presensi',
+        'notifikasi',
+      ]);
     });
 
     test('tidak pernah melebihi 4 destination', () {
@@ -74,22 +93,29 @@ void main() {
         'Kepala Divisi Armada',
         'Kontraktor',
       ]) {
-        expect(buildNavDestinations(role).length, lessThanOrEqualTo(4),
-            reason: 'role $role');
+        expect(
+          buildNavDestinations(role).length,
+          lessThanOrEqualTo(4),
+          reason: 'role $role',
+        );
       }
     });
 
-    test('Logistik -> Beranda + Presensi + Notifikasi (Beranda = antrean kerja)',
-        () {
-      expect(_keysOf('Logistik'), ['home', 'presensi', 'notifikasi']);
-      expect(tugasModuleFor('Logistik'), isNull);
-    });
+    test(
+      'Logistik -> Beranda + Presensi + Notifikasi (Beranda = antrean kerja)',
+      () {
+        expect(_keysOf('Logistik'), ['home', 'presensi', 'notifikasi']);
+        expect(tugasModuleFor('Logistik'), isNull);
+      },
+    );
 
-    test('Security -> Beranda + Presensi + Notifikasi (Beranda = modul security)',
-        () {
-      expect(_keysOf('Security'), ['home', 'presensi', 'notifikasi']);
-      expect(tugasModuleFor('Security'), isNull);
-    });
+    test(
+      'Security -> Beranda + Presensi + Notifikasi (Beranda = modul security)',
+      () {
+        expect(_keysOf('Security'), ['home', 'presensi', 'notifikasi']);
+        expect(tugasModuleFor('Security'), isNull);
+      },
+    );
 
     test('semua destinasi role mana pun dipetakan ke branch yang unik', () {
       // Daftar role mencakup setiap nilai berbeda di _tugasModuleByRole
@@ -122,8 +148,11 @@ void main() {
         final branches = destinations
             .map((d) => navBranchFor(d.key, role, _moduleBranchByKey))
             .toSet();
-        expect(branches.length, destinations.length,
-            reason: 'role $role punya destinasi yang menunjuk branch sama');
+        expect(
+          branches.length,
+          destinations.length,
+          reason: 'role $role punya destinasi yang menunjuk branch sama',
+        );
       }
     });
 
@@ -229,16 +258,26 @@ void main() {
     });
 
     test('Tugas mengikuti modul utama role', () {
-      expect(navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey),
-          _moduleBranchByKey['produksi']);
-      expect(navBranchFor('tugas', 'Owner', _moduleBranchByKey),
-          _moduleBranchByKey['dashboard']);
-      expect(navBranchFor('tugas', 'Admin Keuangan', _moduleBranchByKey),
-          _moduleBranchByKey['keuangan']);
-      expect(navBranchFor('tugas', 'Kepala Divisi Armada', _moduleBranchByKey),
-          _moduleBranchByKey['armada']);
-      expect(navBranchFor('tugas', 'Kontraktor', _moduleBranchByKey),
-          _moduleBranchByKey['kontraktor']);
+      expect(
+        navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey),
+        _moduleBranchByKey['produksi'],
+      );
+      expect(
+        navBranchFor('tugas', 'Owner', _moduleBranchByKey),
+        _moduleBranchByKey['dashboard'],
+      );
+      expect(
+        navBranchFor('tugas', 'Admin Keuangan', _moduleBranchByKey),
+        _moduleBranchByKey['keuangan'],
+      );
+      expect(
+        navBranchFor('tugas', 'Kepala Divisi Armada', _moduleBranchByKey),
+        _moduleBranchByKey['armada'],
+      );
+      expect(
+        navBranchFor('tugas', 'Kontraktor', _moduleBranchByKey),
+        _moduleBranchByKey['kontraktor'],
+      );
     });
 
     test('Tugas tanpa modul → fallback Beranda (branch 0)', () {
@@ -248,24 +287,38 @@ void main() {
 
     test('key modul → branch modulnya', () {
       for (final entry in _moduleBranchByKey.entries) {
-        expect(navBranchFor(entry.key, 'Owner', _moduleBranchByKey), entry.value);
+        expect(
+          navBranchFor(entry.key, 'Owner', _moduleBranchByKey),
+          entry.value,
+        );
       }
     });
   });
 
   group('Destination tap & initialLocation rules', () {
-    test('tap active destination → initialLocation true (resets to branch root)', () {
-      // Rule: targetBranch == currentBranch => initialLocation = true
-      const currentBranch = 1; // e.g. Produksi branch
-      final targetBranch = navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey);
-      expect(targetBranch, 1);
-      final initialLocation = targetBranch == currentBranch;
-      expect(initialLocation, isTrue);
-    });
+    test(
+      'tap active destination → initialLocation true (resets to branch root)',
+      () {
+        // Rule: targetBranch == currentBranch => initialLocation = true
+        const currentBranch = 1; // e.g. Produksi branch
+        final targetBranch = navBranchFor(
+          'tugas',
+          'Mandor Titik',
+          _moduleBranchByKey,
+        );
+        expect(targetBranch, 1);
+        final initialLocation = targetBranch == currentBranch;
+        expect(initialLocation, isTrue);
+      },
+    );
 
     test('switching destination → initialLocation false (preserves stack)', () {
       const currentBranch = 0; // On Home
-      final targetBranch = navBranchFor('tugas', 'Mandor Titik', _moduleBranchByKey);
+      final targetBranch = navBranchFor(
+        'tugas',
+        'Mandor Titik',
+        _moduleBranchByKey,
+      );
       expect(targetBranch, 1);
       final initialLocation = targetBranch == currentBranch;
       expect(initialLocation, isFalse);
@@ -273,7 +326,11 @@ void main() {
 
     test('tap active Presensi branch → initialLocation true', () {
       const currentBranch = kPresensiBranchIndex; // 10
-      final targetBranch = navBranchFor('presensi', 'Owner', _moduleBranchByKey);
+      final targetBranch = navBranchFor(
+        'presensi',
+        'Owner',
+        _moduleBranchByKey,
+      );
       expect(targetBranch == currentBranch, isTrue);
     });
   });
@@ -307,92 +364,122 @@ void main() {
   });
 
   group('PendingSummary uses RolePermissions delegation', () {
-    test('Mandor Titik gets 0 for inventory even if outbox has opname', () async {
-      final repo = _NavFakeOutboxRepository([
-        PendingAction(
-          id: 'inv-1',
-          clientUuid: 'uuid-1',
-          endpoint: PendingEndpoint.inventoryOpname,
-          payloadJson: const {},
-          createdAt: DateTime.now(),
-          idempotencyKey: 'idem-1',
-        ),
-      ]);
-      final summary = PendingSummary(repository: repo);
-      final mandorCounts = await summary.getSummary('Mandor Titik');
-      expect(mandorCounts.inventory, 0);
+    test(
+      'Mandor Titik gets 0 for inventory even if outbox has opname',
+      () async {
+        final repo = _NavFakeOutboxRepository([
+          PendingAction(
+            id: 'inv-1',
+            clientUuid: 'uuid-1',
+            endpoint: PendingEndpoint.inventoryOpname,
+            payloadJson: const {},
+            createdAt: DateTime.now(),
+            idempotencyKey: 'idem-1',
+          ),
+        ]);
+        final summary = PendingSummary(repository: repo);
+        final mandorCounts = await summary.getSummary('Mandor Titik');
+        expect(mandorCounts.inventory, 0);
 
-      final invCounts = await summary.getSummary('Inventory');
-      expect(invCounts.inventory, 1);
-    });
+        final invCounts = await summary.getSummary('Inventory');
+        expect(invCounts.inventory, 1);
+      },
+    );
   });
 
   group('AdaptiveNavShell null currentIndex handling', () {
     final destinations = buildNavDestinations('Mandor Titik');
 
-    testWidgets('null currentIndex on compact screen does not render NavigationBar', (tester) async {
-      tester.view.physicalSize = const Size(360, 640);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'null currentIndex on compact screen does not render NavigationBar',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AdaptiveNavShell(
-            currentIndex: null,
-            onDestinationSelected: (_) {},
-            destinations: destinations,
-            child: const Scaffold(body: Center(child: Text('Auxiliary Screen'))),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AdaptiveNavShell(
+              currentIndex: null,
+              onDestinationSelected: (_) {},
+              destinations: destinations,
+              child: const Scaffold(
+                body: Center(child: Text('Auxiliary Screen')),
+              ),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Auxiliary Screen'), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
+        expect(find.text('Auxiliary Screen'), findsOneWidget);
+        expect(find.byType(NavigationBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'valid currentIndex on compact screen renders NavigationBar with selected index',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AdaptiveNavShell(
+              currentIndex: 1,
+              onDestinationSelected: (_) {},
+              destinations: destinations,
+              child: const Scaffold(body: Center(child: Text('Tugas Screen'))),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tugas Screen'), findsOneWidget);
+        final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+        expect(navBar.selectedIndex, 1);
+      },
+    );
+
+    testWidgets(
+      'null currentIndex on medium screen renders NavigationRail with unselected state',
+      (tester) async {
+        tester.view.physicalSize = const Size(700, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AdaptiveNavShell(
+              currentIndex: null,
+              onDestinationSelected: (_) {},
+              destinations: destinations,
+              child: const Scaffold(
+                body: Center(child: Text('Tablet Aux Screen')),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tablet Aux Screen'), findsOneWidget);
+        final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+        expect(rail.selectedIndex, isNull);
+      },
+    );
+  });
+
+  group('proyekModuleRoute', () {
+    test('semua modul Owner punya rute (termasuk logistik & security)', () {
+      for (final key in RolePermissions.modulesFor('Owner')) {
+        expect(proyekModuleRoute(key), isNotNull, reason: 'modul $key');
+      }
+      expect(proyekModuleRoute('logistik'), '/logistik');
+      expect(proyekModuleRoute('security'), '/security');
     });
 
-    testWidgets('valid currentIndex on compact screen renders NavigationBar with selected index', (tester) async {
-      tester.view.physicalSize = const Size(360, 640);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AdaptiveNavShell(
-            currentIndex: 1,
-            onDestinationSelected: (_) {},
-            destinations: destinations,
-            child: const Scaffold(body: Center(child: Text('Tugas Screen'))),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Tugas Screen'), findsOneWidget);
-      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(navBar.selectedIndex, 1);
-    });
-
-    testWidgets('null currentIndex on medium screen renders NavigationRail with unselected state', (tester) async {
-      tester.view.physicalSize = const Size(700, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AdaptiveNavShell(
-            currentIndex: null,
-            onDestinationSelected: (_) {},
-            destinations: destinations,
-            child: const Scaffold(body: Center(child: Text('Tablet Aux Screen'))),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Tablet Aux Screen'), findsOneWidget);
-      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-      expect(rail.selectedIndex, isNull);
+    test('modul tidak dikenal tetap null', () {
+      expect(proyekModuleRoute('tidak-ada'), isNull);
     });
   });
 }

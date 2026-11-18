@@ -183,11 +183,16 @@ class _SbpsAppState extends ConsumerState<SbpsApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     const title = 'SBPS';
-    final theme = AppTheme.lightTheme;
-    final darkTheme = AppTheme.darkTheme;
-    final banner = !AppConfig.isProduction;
-
     final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.light;
+    final highContrast = ref.watch(highContrastModeProvider).value ?? false;
+
+    final theme = highContrast
+        ? AppTheme.highContrastLightTheme
+        : AppTheme.lightTheme;
+    final darkTheme = highContrast
+        ? AppTheme.highContrastDarkTheme
+        : AppTheme.darkTheme;
+    final banner = !AppConfig.isProduction;
 
     return _App(
       title: title,

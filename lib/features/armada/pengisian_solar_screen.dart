@@ -15,8 +15,9 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
+import '../../shared/widgets/form_section.dart';
 import '../../shared/widgets/portal_switch_button.dart';
-import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'models/armada.dart';
@@ -197,7 +198,9 @@ class _ArmadaInfo extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -238,9 +241,7 @@ class _PengisianList extends StatelessWidget {
         ),
       );
     }
-    return Column(
-      children: [for (final p in items) _PengisianCard(item: p)],
-    );
+    return Column(children: [for (final p in items) _PengisianCard(item: p)]);
   }
 }
 
@@ -251,7 +252,8 @@ class _PengisianCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasNota = item.notaLengkap == true ||
+    final hasNota =
+        item.notaLengkap == true ||
         (item.fotoNotaUrl != null && item.fotoNotaUrl!.isNotEmpty);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -301,12 +303,18 @@ class _PengisianCard extends StatelessWidget {
               children: [
                 Text(
                   'ODO/HM: ${_fmtNum(item.odoAtauHm)}',
-                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textSecondary,
+                  ),
                 ),
                 if (!hasNota) ...[
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: context.colors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -341,7 +349,10 @@ class _PengisianCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 item.catatan!,
-                style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.colors.textTertiary,
+                ),
               ),
             ],
           ],
@@ -490,9 +501,11 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
     final odo = double.tryParse(_odoCtrl.text.trim());
     final nominal = _nominal;
     if (odo == null) {
-      _snack(widget.armada.isAlatBerat
-          ? 'HM saat isi wajib diisi.'
-          : 'ODO saat isi wajib diisi.');
+      _snack(
+        widget.armada.isAlatBerat
+            ? 'HM saat isi wajib diisi.'
+            : 'ODO saat isi wajib diisi.',
+      );
       return;
     }
     if (nominal == null || nominal <= 0) {
@@ -552,9 +565,9 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
         left: 16,
         right: 16,
         top: 12,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SingleChildScrollView(
+      child: FocusTraversalGroup(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -581,7 +594,10 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
             const SizedBox(height: 4),
             Text(
               '${armada.platNomor}${armada.kodeUnit != null ? ' • ${armada.kodeUnit}' : ''}',
-              style: TextStyle(fontSize: 13, color: context.colors.textTertiary),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.colors.textTertiary,
+              ),
             ),
             if (_draftFound) ...[
               const SizedBox(height: 12),
@@ -603,78 +619,94 @@ class _PengisianFormSheetState extends ConsumerState<_PengisianFormSheet> {
               ),
             ],
             const SizedBox(height: 16),
-            TextField(
-              controller: _odoCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onChanged: (_) => _autosave.onFieldChanged(),
-              decoration: InputDecoration(
-                labelText: armada.isAlatBerat
-                    ? 'HM saat isi'
-                    : 'ODO saat isi ($satuan)',
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(
-                  armada.isAlatBerat
-                      ? Icons.timer_outlined
-                      : Icons.speed_outlined,
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FormSection(
+                      title: 'Pengisian',
+                      children: [
+                        TextField(
+                          controller: _odoCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => _autosave.onFieldChanged(),
+                          decoration: InputDecoration(
+                            labelText: armada.isAlatBerat
+                                ? 'HM saat isi'
+                                : 'ODO saat isi ($satuan)',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: Icon(
+                              armada.isAlatBerat
+                                  ? Icons.timer_outlined
+                                  : Icons.speed_outlined,
+                            ),
+                          ),
+                        ),
+                        TextField(
+                          controller: _nominalCtrl,
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => _autosave.onFieldChanged(),
+                          decoration: const InputDecoration(
+                            labelText: 'Nominal Pembelian',
+                            border: OutlineInputBorder(),
+                            prefixText: 'Rp ',
+                            helperText:
+                                'Driver tidak perlu mengisi liter (diisi kantor/nota).',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    FormSection(
+                      title: 'Dokumentasi & Catatan',
+                      children: [
+                        _PhotoField(
+                          label: armada.isAlatBerat
+                              ? 'Foto HM (wajib)'
+                              : 'Foto ODO (wajib)',
+                          photo: _fotoOdo,
+                          onTap: _isLoading
+                              ? null
+                              : () => _pickFoto(isOdo: true),
+                        ),
+                        _PhotoField(
+                          label: 'Foto Nota (opsional)',
+                          photo: _fotoNota,
+                          onTap: _isLoading
+                              ? null
+                              : () => _pickFoto(isOdo: false),
+                        ),
+                        Text(
+                          'Nota boleh diserahkan manual ke Ketua Armada / Keuangan.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.colors.textTertiary,
+                          ),
+                        ),
+                        TextField(
+                          controller: _catatanCtrl,
+                          maxLines: 2,
+                          onChanged: (_) => _autosave.onFieldChanged(),
+                          decoration: const InputDecoration(
+                            labelText: 'Catatan (opsional)',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nominalCtrl,
-              keyboardType: TextInputType.number,
-              onChanged: (_) => _autosave.onFieldChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Nominal Pembelian',
-                border: OutlineInputBorder(),
-                prefixText: 'Rp ',
-                helperText: 'Driver tidak perlu mengisi liter (diisi kantor/nota).',
-              ),
-            ),
-            const SizedBox(height: 16),
-            _PhotoField(
-              label: armada.isAlatBerat
-                  ? 'Foto HM (wajib)'
-                  : 'Foto ODO (wajib)',
-              photo: _fotoOdo,
-              onTap: _isLoading ? null : () => _pickFoto(isOdo: true),
-            ),
-            const SizedBox(height: 12),
-            _PhotoField(
-              label: 'Foto Nota (opsional)',
-              photo: _fotoNota,
-              onTap: _isLoading ? null : () => _pickFoto(isOdo: false),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Nota boleh diserahkan manual ke Ketua Armada / Keuangan.',
-              style: TextStyle(fontSize: 12, color: context.colors.textTertiary),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _catatanCtrl,
-              maxLines: 2,
-              onChanged: (_) => _autosave.onFieldChanged(),
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 48,
-              child: BouncingButton(
-                onPressed: _isLoading ? null : _submit,
-                child: FilledButton.icon(
-                  onPressed: _isLoading ? null : _submit,
-                  icon: _isLoading
-                      ? const SubmitSpinner()
-                      : const Icon(Icons.save),
-                  label: Text(_isLoading ? 'Menyimpan...' : 'Simpan Pengisian'),
-                ),
-              ),
+            StickyActionBar(
+              padding: const EdgeInsets.only(top: 12),
+              primaryLabel: _isLoading ? 'Menyimpan...' : 'Simpan Pengisian',
+              primaryIcon: Icons.save,
+              showPrimaryLoading: _isLoading,
+              onPrimary: _submit,
             ),
           ],
         ),

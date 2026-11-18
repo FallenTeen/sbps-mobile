@@ -954,7 +954,7 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
     routes: [
       GoRoute(
         path: '/notifikasi',
-        pageBuilder: (context, state) => buildAppTransitionPage(
+        pageBuilder: (context, state) => buildFadeThroughPage(
           key: state.pageKey,
           child: const NotifikasiScreen(),
         ),

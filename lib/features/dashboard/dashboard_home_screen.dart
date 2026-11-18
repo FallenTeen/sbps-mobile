@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,6 +24,9 @@ import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/section_header.dart';
+import '../../shared/widgets/global_search_sheet.dart';
+import '../../shared/widgets/pinned_modules_row.dart';
+import '../../shared/widgets/recent_modules_row.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 
 /// Dashboard operasional per role (attention-first):
@@ -33,7 +36,7 @@ import '../../shared/widgets/skeleton_loader.dart';
 ///                        drill-down; item = 0 tidak dimunculkan.
 /// 2. Operasional Hari Ini - overview titik, armada, kehadiran, chart.
 /// 3. Ringkasan Finansial   - chart keuangan, PO pending, invoice.
-/// 4. Aktivitas Terbaru     - notifikasi terbaru (real, tap → layar terkait).
+/// 4. Aktivitas Terbaru     - notifikasi terbaru (real, tap â†’ layar terkait).
 class DashboardHomeScreen extends ConsumerWidget {
   const DashboardHomeScreen({super.key});
 
@@ -46,7 +49,30 @@ class DashboardHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Dashboard Operasional'),
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions(showNotification: false)],
+        actions: [
+          IconButton(
+            tooltip: 'Cari modul',
+            icon: const Icon(Icons.search),
+            onPressed: () => showGlobalSearchSheet(
+              context,
+              modules: [
+                SearchableModule(
+                  name: 'Modul',
+                  items: kProyekModules
+                      .map((m) => SearchResult(
+                        title: m.label,
+                        subtitle: m.key,
+                        icon: m.icon,
+                        route: '/proyek',
+                      ))
+                      .toList(),
+                ),
+              ],
+              onSelected: (r) {},
+            ),
+          ),
+          const AppTopBarActions(showNotification: false),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -74,6 +100,10 @@ class DashboardHomeScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               const _SectionAttention(),
+              const SizedBox(height: 12),
+              const RecentModulesRow(),
+              const SizedBox(height: 8),
+              const PinnedModulesRow(),
               const SizedBox(height: 20),
               SectionHeader(title: 'Operasional Hari Ini', padding: const EdgeInsets.only(bottom: 8)),
               if (sections.showOverview) ...[
@@ -438,7 +468,7 @@ class _MiniChip extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Section: Status armada (tap → overview armada, bukan dead-end)
+// Section: Status armada (tap â†’ overview armada, bukan dead-end)
 // ---------------------------------------------------------------------------
 
 class _SectionArmada extends ConsumerWidget {

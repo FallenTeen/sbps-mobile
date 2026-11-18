@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../theme/app_spacing.dart';
+import '../theme/touch_targets.dart';
+import 'illustrated_empty_state.dart';
 
 /// Reusable and consistent empty state with muted icon, title, subtitle,
 /// and optional action button. Wrapped with gentle fade-in animation.
+///
+/// Can also render [IllustratedEmptyState] variant for richer visuals.
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     super.key,
@@ -11,6 +16,7 @@ class AppEmptyState extends StatelessWidget {
     this.actionLabel,
     this.onAction,
     this.padding = const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+    this.illustrationVariant,
   });
 
   final IconData icon;
@@ -19,10 +25,20 @@ class AppEmptyState extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
   final EdgeInsetsGeometry padding;
+  final EmptyStateVariant? illustrationVariant;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    if (illustrationVariant != null) {
+      return IllustratedEmptyState(
+        variant: illustrationVariant!,
+        title: title,
+        subtitle: subtitle,
+        actionLabel: actionLabel,
+        onAction: onAction,
+        padding: padding,
+      );
+    }
 
     return Semantics(
       label: '$title. ${subtitle ?? ""}',
@@ -43,38 +59,43 @@ class AppEmptyState extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
                       alpha: 0.5,
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                  child: Icon(
+                    icon,
+                    size: TouchTargets.iconLarge,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                AppSpacing.vGapMd,
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 if (subtitle != null && subtitle!.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  AppSpacing.vGapXs,
                   Text(
                     subtitle!,
                     textAlign: TextAlign.center,
-                    // onSurfaceVariant (bukan outline) karena ini TEKS -
-                    // outline terlalu tipis untuk teks (1.5:1 di light).
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
                 if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(height: 20),
+                  AppSpacing.vGapLg,
                   FilledButton.tonal(
                     onPressed: onAction,
+                    style: FilledButton.styleFrom(
+                      minimumSize: Size(TouchTargets.minTap, TouchTargets.minTap),
+                    ),
                     child: Text(actionLabel!),
                   ),
                 ],

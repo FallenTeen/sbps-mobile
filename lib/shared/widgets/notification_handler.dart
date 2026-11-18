@@ -68,8 +68,7 @@ class NotificationHandler {
           isRead: false,
           actionUrl: data['action_url']?.toString(),
           route: data['route']?.toString(),
-          routeId:
-              data['route_id']?.toString() ?? data['id']?.toString(),
+          routeId: data['route_id']?.toString() ?? data['id']?.toString(),
         ),
         role: _ref?.read(activeRoleProvider),
       );
@@ -82,9 +81,11 @@ class NotificationHandler {
           _markReadBestEffort(data);
         case NotificationTargetStatus.openExternal:
         case NotificationTargetStatus.unavailable:
-          router.push('/notifikasi');
+          // `go` avoids duplicate page keys when the app is already on
+          // /notifikasi (FCM tap while the inbox is open).
+          router.go('/notifikasi');
         case NotificationTargetStatus.deniedRole:
-          router.push('/notifikasi');
+          router.go('/notifikasi');
           final messageText = notificationDestinationMessage(resolved);
           if (messageText != null && messenger != null) {
             messenger.showSnackBar(SnackBar(content: Text(messageText)));
@@ -93,7 +94,7 @@ class NotificationHandler {
     } catch (error) {
       debugPrint('[FCM] Navigation failed: $error');
       try {
-        router.push('/notifikasi');
+        router.go('/notifikasi');
       } catch (_) {
         // Router belum siap - biarkan user tetap di layar sekarang.
       }
@@ -109,9 +110,7 @@ class NotificationHandler {
     final ref = _ref;
     if (ref == null) return;
     try {
-      await ref
-          .read(notifikasiRepositoryProvider)
-          .markRead(notificationId);
+      await ref.read(notifikasiRepositoryProvider).markRead(notificationId);
       ref.read(unreadCountProvider.notifier).reload();
     } catch (error) {
       // Best-effort saja - jaringan/read gagal tidak boleh mengganggu navigasi.

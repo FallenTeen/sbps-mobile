@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
+import '../utils/haptic_map.dart';
 
 /// Micro-interaction wrapper for buttons: scales down slightly (to 0.96)
 /// on tap down and returns on release (~100ms duration).
@@ -48,7 +50,8 @@ class _BouncingButtonState extends State<BouncingButton>
   }
 
   void _onTapDown(TapDownDetails _) {
-    if (widget.onPressed != null) {
+    if (widget.onPressed != null &&
+        !(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
       _controller.forward();
     }
   }
@@ -75,7 +78,9 @@ class _BouncingButtonState extends State<BouncingButton>
         onTapDown: _onTapDown,
         onTapUp: _onTapUp,
         onTapCancel: _onTapCancel,
-        onTap: widget.onPressed,
+        onTap: widget.onPressed == null
+            ? null
+            : () { triggerHaptic(HapticType.medium); widget.onPressed!(); },
         // IgnorePointer prevents the child (e.g. FilledButton) from also
         // responding to taps - wrapper is the single source of the action.
         // When wrapper is enabled (onPressed != null), block child taps;

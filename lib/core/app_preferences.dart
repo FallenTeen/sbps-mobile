@@ -8,6 +8,8 @@ class AppPreferences {
 
   static const _kBox = 'app_preferences';
   static const _kThemeMode = 'theme_mode';
+  static const _kHighContrastMode = 'ui.high_contrast_mode';
+  static const _kOutdoorMode = 'ui.outdoor_mode';
 
   static Future<Box<String>> _openBox() async {
     if (Hive.isBoxOpen(_kBox)) return Hive.box<String>(_kBox);
@@ -27,6 +29,26 @@ class AppPreferences {
   static Future<void> saveThemeMode(ThemeMode mode) async {
     final box = await _openBox();
     await box.put(_kThemeMode, mode.name);
+  }
+
+  static Future<bool> getHighContrastMode() async {
+    final box = await _openBox();
+    return box.get(_kHighContrastMode) == 'true';
+  }
+
+  static Future<void> setHighContrastMode(bool value) async {
+    final box = await _openBox();
+    await box.put(_kHighContrastMode, value ? 'true' : 'false');
+  }
+
+  static Future<bool> getOutdoorMode() async {
+    final box = await _openBox();
+    return box.get(_kOutdoorMode) == 'true';
+  }
+
+  static Future<void> setOutdoorMode(bool value) async {
+    final box = await _openBox();
+    await box.put(_kOutdoorMode, value ? 'true' : 'false');
   }
 
   static Future<bool> getFlag(String key) async {
@@ -64,5 +86,23 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
   Future<void> select(ThemeMode mode) async {
     await AppPreferences.saveThemeMode(mode);
     state = AsyncData(mode);
+  }
+}
+
+/// Mode kontras tinggi (outdoor/aksesibilitas). `false` = normal,
+/// `true` = skema kontras tinggi. Baca-tulis Hive via [AppPreferences].
+final highContrastModeProvider =
+    AsyncNotifierProvider<HighContrastModeNotifier, bool>(
+  HighContrastModeNotifier.new,
+);
+
+class HighContrastModeNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async => await AppPreferences.getHighContrastMode();
+
+  Future<void> toggle() async {
+    final value = !(state.value ?? false);
+    await AppPreferences.setHighContrastMode(value);
+    state = AsyncData(value);
   }
 }

@@ -8,8 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
-import '../../shared/widgets/bouncing_button.dart';
-import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
@@ -195,9 +194,12 @@ class _LogistikVerifikasiScreenState
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
             // Info Unit & Ritase Card
             Card(
               elevation: 0,
@@ -511,24 +513,17 @@ class _LogistikVerifikasiScreenState
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Tombol Submit
-              SizedBox(
-                height: 48,
-                child: BouncingButton(
-                  onPressed: _isSubmitting ? () {} : _submit,
-                  child: FilledButton.icon(
-                    onPressed: _isSubmitting ? null : _submit,
-                    icon: _isSubmitting
-                        ? const SubmitSpinner(size: 18)
-                        : const Icon(Icons.verified_outlined),
-                    label: Text(_isSubmitting ? 'Menyimpan...' : 'Simpan & Verifikasi Ritase'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
             ],
           ),
+            ),
+            StickyActionBar(
+              primaryLabel: _isSubmitting ? 'Menyimpan...' : 'Simpan & Verifikasi Ritase',
+              showPrimaryLoading: _isSubmitting,
+              primaryIcon: Icons.verified_outlined,
+              onPrimary: _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

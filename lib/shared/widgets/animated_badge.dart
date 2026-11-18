@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Animated count badge using AnimatedSwitcher for smooth scale/fade transitions.
 class AnimatedCountBadge extends StatelessWidget {
@@ -87,6 +87,17 @@ class _PulsingSyncDotState extends State<PulsingSyncDot>
   Widget build(BuildContext context) {
     final effectiveColor =
         widget.color ?? Theme.of(context).colorScheme.primary;
+
+    if (MediaQuery.of(context).disableAnimations) {
+      return Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: effectiveColor,
+          shape: BoxShape.circle,
+        ),
+      );
+    }
 
     return AnimatedBuilder(
       animation: _animation,

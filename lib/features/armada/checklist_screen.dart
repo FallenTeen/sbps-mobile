@@ -11,11 +11,13 @@ import '../../core/formatters.dart';
 import '../../core/watermark_service.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
+import '../../shared/widgets/accordion_tile.dart';
 import '../../shared/widgets/app_empty_state.dart';
-import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../../shared/widgets/draft_restore_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_banner.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'armada_providers.dart';
 import 'checklist_draft_store.dart';
@@ -737,6 +739,7 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
   @override
   Widget build(BuildContext context) {
     final diperiksa = _bagian.where((b) => b.level != null).length;
+    final progres = _bagian.isEmpty ? 0.0 : diperiksa / _bagian.length;
     final stokOpsi =
         widget.item?.opsiStokSolar.isNotEmpty == true
             ? widget.item!.opsiStokSolar
@@ -755,6 +758,22 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
         ],
         if (_readOnly) _LockedBanner(isAkhir: widget.isAkhir, alasan: _lockReason),
         if (_readOnly) const SizedBox(height: 12),
+        if (!_readOnly)
+          StatusBanner(
+            status: StatusConfig(
+              label: diperiksa == _bagian.length
+                  ? 'Semua bagian sudah diperiksa'
+                  : '$diperiksa dari ${_bagian.length} bagian diperiksa',
+              color: diperiksa == _bagian.length
+                  ? context.colors.success
+                  : context.colors.primary,
+              icon: displayedIcon(diperiksa == _bagian.length),
+              progress: progres,
+            ),
+            showProgressRing: false,
+            progress: progres,
+          ),
+        if (!_readOnly) const SizedBox(height: 12),
         _SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,65 +865,52 @@ class _ChecklistFormState extends ConsumerState<_ChecklistForm>
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Text(
-              'Pemeriksaan bagian',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: context.colors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '$diperiksa/${_bagian.length} bagian diperiksa',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: diperiksa == _bagian.length
-                    ? context.colors.success
-                    : context.colors.textSecondary,
-              ),
-            ),
-          ],
+        Text(
+          'Pemeriksaan bagian',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: context.colors.textPrimary,
+          ),
         ),
         const SizedBox(height: 8),
-        for (var i = 0; i < _bagian.length; i++) ...[
-          _BagianAccordion(
-            state: _bagian[i],
+        for (var i = 0; i < _bagian.length; i++)
+          AccordionTile(
             expanded: _expanded == i,
-            readOnly: _readOnly,
-            catatanCtrl: _catatanCtrl[i],
             onToggle: () => setState(
               () => _expanded = _expanded == i ? null : i,
             ),
-            onLevelChanged: (level) => _setLevel(i, level),
-            onFoto: () => _pickItemFoto(i),
-            onCatatanChanged: _scheduleAutosave,
+            header: _BagianHeader(
+              state: _bagian[i],
+              catatanCtrl: _catatanCtrl[i],
+              readOnly: _readOnly,
+            ),
+            content: _BagianContent(
+              state: _bagian[i],
+              readOnly: _readOnly,
+              catatanCtrl: _catatanCtrl[i],
+              onLevelChanged: (level) => _setLevel(i, level),
+              onFoto: () => _pickItemFoto(i),
+              onCatatanChanged: _scheduleAutosave,
+            ),
           ),
-          const SizedBox(height: 8),
-        ],
         const SizedBox(height: 12),
         if (!_readOnly)
-          SizedBox(
-            height: 48,
-            child: BouncingButton(
-              onPressed: _busy ? null : _submit,
-              child: FilledButton(
-                onPressed: _busy ? null : _submit,
-                child: Text(
-                  _busy
-                      ? 'Menyimpan...'
-                      : _isEdit
-                      ? 'Simpan Perubahan'
-                      : 'Kirim Checklist',
-                ),
-              ),
-            ),
+          StickyActionBar(
+            primaryLabel: _busy
+                ? 'Menyimpan...'
+                : _isEdit
+                ? 'Simpan Perubahan'
+                : 'Kirim Checklist',
+            showPrimaryLoading: _busy,
+            onPrimary: _submit,
           ),
       ],
     );
+  }
+
+  IconData displayedIcon(bool allChecked) {
+    return allChecked ? Icons.check_circle : Icons.checklist;
   }
 }
 
@@ -967,29 +973,17 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _BagianAccordion extends StatelessWidget {
-  const _BagianAccordion({
+class _BagianHeader extends StatelessWidget {
+  const _BagianHeader({
     required this.state,
-    required this.expanded,
-    required this.readOnly,
     required this.catatanCtrl,
-    required this.onToggle,
-    required this.onLevelChanged,
-    required this.onFoto,
-    required this.onCatatanChanged,
+    required this.readOnly,
   });
 
   final _BagianState state;
-  final bool expanded;
-  final bool readOnly;
   final TextEditingController catatanCtrl;
-  final VoidCallback onToggle;
-  final ValueChanged<ChecklistItemLevel> onLevelChanged;
-  final VoidCallback onFoto;
-  final VoidCallback onCatatanChanged;
+  final bool readOnly;
 
-  /// True bila kondisi bermasalah tapi dokumentasi (catatan/foto) belum
-  /// lengkap - dipakai untuk indikator peringatan di header accordion.
   bool get _docIncomplete {
     if (readOnly) return false;
     final level = state.level;
@@ -1002,146 +996,135 @@ class _BagianAccordion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.colors.border),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                state.bagian,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+            ),
+            _LevelChip(level: state.level),
+          ],
+        ),
+        if (_docIncomplete) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 12,
+                color: context.colors.warning,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Dokumentasi belum lengkap',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.warning,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _BagianContent extends StatelessWidget {
+  const _BagianContent({
+    required this.state,
+    required this.readOnly,
+    required this.catatanCtrl,
+    required this.onLevelChanged,
+    required this.onFoto,
+    required this.onCatatanChanged,
+  });
+
+  final _BagianState state;
+  final bool readOnly;
+  final TextEditingController catatanCtrl;
+  final ValueChanged<ChecklistItemLevel> onLevelChanged;
+  final VoidCallback onFoto;
+  final VoidCallback onCatatanChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            // Bisa dibuka juga dalam mode readOnly supaya dokumentasi foto
-            // yang tersimpan di server tetap bisa dilihat saat buka ulang.
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          state.bagian,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.textPrimary,
-                          ),
-                        ),
-                        if (_docIncomplete) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.warning_amber_rounded,
-                                size: 12,
-                                color: context.colors.warning,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Dokumentasi belum lengkap',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: context.colors.warning,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  _LevelChip(level: state.level),
-                  const SizedBox(width: 6),
-                  Icon(
-                    expanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    color: context.colors.textMuted,
-                    size: 20,
-                  ),
-                ],
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _ToggleChip(
+                  label: ChecklistItemLevel.baik.label,
+                  selected: state.level == ChecklistItemLevel.baik,
+                  selectedColor: context.colors.success,
+                  onTap: () => onLevelChanged(ChecklistItemLevel.baik),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ToggleChip(
+                  label: ChecklistItemLevel.perluPerhatian.label,
+                  selected: state.level == ChecklistItemLevel.perluPerhatian,
+                  selectedColor: context.colors.warning,
+                  onTap: () =>
+                      onLevelChanged(ChecklistItemLevel.perluPerhatian),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ToggleChip(
+                  label: ChecklistItemLevel.rusak.label,
+                  selected: state.level == ChecklistItemLevel.rusak,
+                  selectedColor: context.colors.error,
+                  onTap: () => onLevelChanged(ChecklistItemLevel.rusak),
+                ),
+              ),
+            ],
+          ),
+          if (state.level != null && state.level!.isBermasalah) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: catatanCtrl,
+              maxLines: 2,
+              enabled: !readOnly,
+              onChanged: (v) {
+                state.catatan = v;
+                onCatatanChanged();
+              },
+              decoration: InputDecoration(
+                labelText: 'Jelaskan kondisi (wajib)',
+                border: const OutlineInputBorder(),
+                hintText: state.level == ChecklistItemLevel.rusak
+                    ? 'Contoh: rem tidak pakem saat mengerem'
+                    : 'Contoh: suara mesin kasar',
               ),
             ),
-          ),
-          if (expanded) ...[
-            Divider(height: 1, color: context.colors.border),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ToggleChip(
-                          label: ChecklistItemLevel.baik.label,
-                          selected:
-                              state.level == ChecklistItemLevel.baik,
-                          selectedColor: context.colors.success,
-                          onTap: () => onLevelChanged(ChecklistItemLevel.baik),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _ToggleChip(
-                          label: ChecklistItemLevel.perluPerhatian.label,
-                          selected:
-                              state.level ==
-                              ChecklistItemLevel.perluPerhatian,
-                          selectedColor: context.colors.warning,
-                          onTap: () =>
-                              onLevelChanged(ChecklistItemLevel.perluPerhatian),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _ToggleChip(
-                          label: ChecklistItemLevel.rusak.label,
-                          selected: state.level == ChecklistItemLevel.rusak,
-                          selectedColor: context.colors.error,
-                          onTap: () => onLevelChanged(ChecklistItemLevel.rusak),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (state.level != null && state.level!.isBermasalah) ...[
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: catatanCtrl,
-                      maxLines: 2,
-                      enabled: !readOnly,
-                      onChanged: (v) {
-                        state.catatan = v;
-                        onCatatanChanged();
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Jelaskan kondisi (wajib)',
-                        border: const OutlineInputBorder(),
-                        hintText: state.level == ChecklistItemLevel.rusak
-                            ? 'Contoh: rem tidak pakem saat mengerem'
-                            : 'Contoh: suara mesin kasar',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _PhotoField(
-                      label: state.level == ChecklistItemLevel.rusak
-                          ? 'Foto kerusakan (wajib)'
-                          : 'Foto kondisi (wajib)',
-                      localPath: state.fotoPath,
-                      fotoUrl: state.fotoUrl,
-                      hasExisting: state.fotoUrl != null,
-                      enabled: !readOnly,
-                      onTap: onFoto,
-                    ),
-                  ],
-                ],
-              ),
+            const SizedBox(height: 10),
+            _PhotoField(
+              label: state.level == ChecklistItemLevel.rusak
+                  ? 'Foto kerusakan (wajib)'
+                  : 'Foto kondisi (wajib)',
+              localPath: state.fotoPath,
+              fotoUrl: state.fotoUrl,
+              hasExisting: state.fotoUrl != null,
+              enabled: !readOnly,
+              onTap: onFoto,
             ),
           ],
         ],

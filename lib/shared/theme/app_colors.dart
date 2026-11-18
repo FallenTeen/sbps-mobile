@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// Tema-warna aplikasi SBPS sebagai `ThemeExtension`.
+
+/// High contrast color schemes for outdoor/accessibility mode.
+export 'high_contrast_colors.dart';
 ///
 /// Dipakai untuk semua warna inline yang dulu memakai konstanta statis
 /// `AppTheme.*` (mis. `context.colors.textPrimary`) - supaya warnanya otomatis

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../theme/app_spacing.dart';
 
 /// Reusable skeleton loader with Shimmer effect for smooth initial loading states.
 /// Designed to be lightweight and performant on mid-to-low tier mobile devices.
@@ -20,8 +21,6 @@ class SkeletonLoader extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    // Warna skeleton mengikuti skema tema (M3 surface) - konsisten dengan
-    // SkeletonBlock, kontras terjaga di mode terang & gelap.
     final defaultBase = isDark
         ? scheme.surfaceContainerHigh
         : scheme.surfaceContainerHighest;
@@ -69,6 +68,19 @@ class SkeletonBlock extends StatelessWidget {
   }
 }
 
+/// Pre-sized skeleton blocks using spacing tokens.
+class SkeletonBlocks {
+  static const double avatarSm = 32;
+  static const double avatarMd = 40;
+  static const double avatarLg = 48;
+  static const double badge = 20;
+  static const double lineSm = 11;
+  static const double lineMd = 14;
+  static const double lineLg = 16;
+  static const double card = 100;
+  static const double cardLg = 160;
+}
+
 /// Skeleton for ListTile-based items (Riwayat, Notifikasi, Titik kerja, etc.)
 class SkeletonListTile extends StatelessWidget {
   const SkeletonListTile({
@@ -85,36 +97,36 @@ class SkeletonListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: AppSpacing.onlyBottomXs,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (hasLeading) ...[
               const SkeletonBlock(
-                width: 40,
-                height: 40,
+                width: SkeletonBlocks.avatarMd,
+                height: SkeletonBlocks.avatarMd,
                 shape: BoxShape.circle,
               ),
-              const SizedBox(width: 16),
+              AppSpacing.hGapMd,
             ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SkeletonBlock(width: double.infinity, height: 14),
+                  const SkeletonBlock(width: double.infinity, height: SkeletonBlocks.lineMd),
                   if (hasSubtitle) ...[
-                    const SizedBox(height: 8),
-                    const SkeletonBlock(width: 140, height: 11),
+                    AppSpacing.vGapXs,
+                    const SkeletonBlock(width: 140, height: SkeletonBlocks.lineSm),
                   ],
                 ],
               ),
             ),
             if (hasTrailing) ...[
-              const SizedBox(width: 16),
-              const SkeletonBlock(width: 48, height: 20, borderRadius: 12),
+              AppSpacing.hGapMd,
+              const SkeletonBlock(width: 48, height: SkeletonBlocks.badge, borderRadius: 12),
             ],
           ],
         ),
@@ -153,7 +165,7 @@ class SkeletonCard extends StatelessWidget {
   const SkeletonCard({
     super.key,
     this.height = 100,
-    this.margin = const EdgeInsets.only(bottom: 12),
+    this.margin = const EdgeInsets.only(bottom: 8),
   });
 
   final double height;
@@ -166,16 +178,16 @@ class SkeletonCard extends StatelessWidget {
       child: SizedBox(
         height: height,
         width: double.infinity,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
+        child: Padding(
+          padding: AppSpacing.paddingMd,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SkeletonBlock(width: 160, height: 16),
-              SizedBox(height: 12),
-              SkeletonBlock(width: double.infinity, height: 12),
-              SizedBox(height: 8),
-              SkeletonBlock(width: 220, height: 12),
+              SkeletonBlock(width: 160, height: SkeletonBlocks.lineLg),
+              AppSpacing.vGapSm,
+              SkeletonBlock(width: double.infinity, height: SkeletonBlocks.lineSm),
+              AppSpacing.vGapXs,
+              SkeletonBlock(width: 220, height: SkeletonBlocks.lineSm),
             ],
           ),
         ),
@@ -192,12 +204,12 @@ class SkeletonDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SkeletonLoader(
       child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
+        padding: AppSpacing.paddingMd,
+        children: [
           SkeletonCard(height: 110),
-          SizedBox(height: 8),
+          AppSpacing.vGapXs,
           SkeletonCard(height: 160),
-          SizedBox(height: 8),
+          AppSpacing.vGapXs,
           SkeletonCard(height: 140),
         ],
       ),
@@ -215,17 +227,17 @@ class SkeletonDashboardOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SkeletonCard(height: 90),
-          const SizedBox(height: 12),
+          SkeletonCard(height: 90),
+          AppSpacing.vGapSm,
           Row(
-            children: const [
+            children: [
               Expanded(child: SkeletonCard(height: 80)),
-              SizedBox(width: 8),
+              AppSpacing.hGapXs,
               Expanded(child: SkeletonCard(height: 80)),
             ],
           ),
-          const SizedBox(height: 12),
-          const SkeletonCard(height: 180),
+          AppSpacing.vGapSm,
+          SkeletonCard(height: 180),
         ],
       ),
     );

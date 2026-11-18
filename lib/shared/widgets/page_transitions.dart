@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Standard page transition for GoRouter:
@@ -15,6 +15,9 @@ CustomTransitionPage<T> buildAppTransitionPage<T>({
     transitionDuration: duration,
     reverseTransitionDuration: duration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      if (MediaQuery.of(context).disableAnimations) {
+        return child;
+      }
       final curvedAnimation = CurvedAnimation(
         parent: animation,
         curve: Curves.easeOutCubic,
@@ -39,6 +42,39 @@ CustomTransitionPage<T> buildAppTransitionPage<T>({
   );
 }
 
+/// Fade + subtle scale for peer/sibling destinations (bottom-nav branches).
+/// Unlike [buildAppTransitionPage] there is no horizontal slide: switching
+/// tabs should feel like cross-fading content, not drilling into a new screen.
+CustomTransitionPage<T> buildFadeThroughPage<T>({
+  required LocalKey key,
+  required Widget child,
+  Duration duration = const Duration(milliseconds: 220),
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      if (MediaQuery.of(context).disableAnimations) {
+        return child;
+      }
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 /// Helper PageRoute for Navigator.of(context).push calls
 class AppPageRoute<T> extends PageRouteBuilder<T> {
   AppPageRoute({
@@ -51,6 +87,9 @@ class AppPageRoute<T> extends PageRouteBuilder<T> {
          transitionDuration: duration,
          reverseTransitionDuration: duration,
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           if (MediaQuery.of(context).disableAnimations) {
+             return child;
+           }
            final curvedAnimation = CurvedAnimation(
              parent: animation,
              curve: Curves.easeOutCubic,

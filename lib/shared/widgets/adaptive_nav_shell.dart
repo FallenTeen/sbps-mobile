@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/breakpoints.dart';
+import '../utils/haptic_map.dart';
 
 /// Destinasi navigasi persisten di dalam [AdaptiveNavShell].
 class AdaptiveNavDestination {
@@ -10,9 +11,12 @@ class AdaptiveNavDestination {
     required this.label,
     required this.icon,
     required this.selectedIcon,
+    this.tooltip,
+    this.badge,
+    this.isPrimary = false,
   });
 
-  /// Identitas destinasi ('home', 'produksi', 'qc', …) - dipakai router untuk
+  /// Identitas destinasi ('home', 'produksi', 'qc', â€¦) - dipakai router untuk
   /// memetakan destinasi ke branch `StatefulShellRoute`.
   final String key;
 
@@ -23,14 +27,23 @@ class AdaptiveNavDestination {
 
   /// Ikon kondisi aktif.
   final IconData selectedIcon;
+
+  /// Tooltip shown on hover (medium/expanded rail).
+  final String? tooltip;
+
+  /// Optional custom badge widget (overrides notifikasi badge).
+  final Widget? badge;
+
+  /// Whether this destination is a primary action.
+  final bool isPrimary;
 }
 
 /// Nav shell persisten role-aware untuk Portal Proyek.
 ///
 /// Render mengikuti `context.screenClass` (helper yang sudah ada):
 /// - Compact (<600dp): `NavigationBar` Material 3 di bagian bawah.
-/// - Medium (600–839dp): `NavigationRail` di kiri, label hanya item terpilih.
-/// - Expanded (≥840dp): `NavigationRail` extended di kiri, label selalu tampil.
+/// - Medium (600â€“839dp): `NavigationRail` di kiri, label hanya item terpilih.
+/// - Expanded (â‰¥840dp): `NavigationRail` extended di kiri, label selalu tampil.
 ///
 /// Jika [destinations] kosong (mis. role hanya punya 1 modul), shell tidak
 /// dirender sama sekali - cukup tampilkan [child] polos.
@@ -57,7 +70,7 @@ class AdaptiveNavShell extends StatelessWidget {
 
   final List<AdaptiveNavDestination> destinations;
 
-  /// Role aktif - bila diisi, strip "Bekerja sebagai: …" ditampilkan
+  /// Role aktif - bila diisi, strip "Bekerja sebagai: â€¦" ditampilkan
   /// persisten di atas konten. Nilai null (mis. layar
   /// presensi-only) tidak menampilkan strip.
   final String? activeRole;
@@ -80,6 +93,7 @@ class AdaptiveNavShell extends StatelessWidget {
           icon: _destinationIcon(context, d),
           selectedIcon: _destinationIcon(context, d, selected: true),
           label: Text(d.label),
+
         ),
     ];
 
@@ -95,7 +109,7 @@ class AdaptiveNavShell extends StatelessWidget {
                     NavigationRail(
                       extended: true,
                       selectedIndex: currentIndex,
-                      onDestinationSelected: onDestinationSelected,
+                      onDestinationSelected: (i) { triggerHaptic(HapticType.light); onDestinationSelected(i); },
                       destinations: railDestinations,
                     ),
                     VerticalDivider(width: 1, color: context.colors.border),
@@ -117,7 +131,7 @@ class AdaptiveNavShell extends StatelessWidget {
                     NavigationRail(
                       labelType: NavigationRailLabelType.selected,
                       selectedIndex: currentIndex,
-                      onDestinationSelected: onDestinationSelected,
+                      onDestinationSelected: (i) { triggerHaptic(HapticType.light); onDestinationSelected(i); },
                       destinations: railDestinations,
                     ),
                     VerticalDivider(width: 1, color: context.colors.border),
@@ -140,7 +154,7 @@ class AdaptiveNavShell extends StatelessWidget {
               ? null
               : NavigationBar(
                   selectedIndex: currentIndex!,
-                  onDestinationSelected: onDestinationSelected,
+                  onDestinationSelected: (i) { triggerHaptic(HapticType.light); onDestinationSelected(i); },
                   destinations: [
                     for (final d in destinations)
                       NavigationDestination(
@@ -171,7 +185,7 @@ class AdaptiveNavShell extends StatelessWidget {
   }
 }
 
-/// Strip tipis yang menampilkan role aktif ("Bekerja sebagai: …") secara
+/// Strip tipis yang menampilkan role aktif ("Bekerja sebagai: â€¦") secara
 /// persisten di atas konten.
 class _ActiveRoleBar extends StatelessWidget {
   const _ActiveRoleBar({required this.role});

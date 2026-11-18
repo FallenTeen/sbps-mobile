@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
+import '../utils/haptic_map.dart';
 
 import '../theme/app_theme.dart';
 
@@ -50,7 +52,7 @@ class ActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
+          onTap: () { triggerHaptic(HapticType.light); onTap(); },
           child: Padding(
             padding: EdgeInsets.all(dense ? 12 : 16),
             child: Column(

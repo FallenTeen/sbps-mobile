@@ -7,9 +7,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/analytics_service.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/utils/feedback_service.dart';
 import '../../shared/utils/feedback_copy.dart';
-import '../../shared/widgets/bouncing_button.dart';
-import '../../shared/widgets/submit_spinner.dart';
+import '../../shared/widgets/form_section.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
@@ -70,11 +71,17 @@ class _SecurityBukuTamuFormScreenState
         nama: _namaCtrl.text.trim(),
         jumlahOrang: jml,
         asal: _asalCtrl.text.trim(),
-        nomorTelepon: _nomorTeleponCtrl.text.trim().isEmpty ? null : _nomorTeleponCtrl.text.trim(),
+        nomorTelepon: _nomorTeleponCtrl.text.trim().isEmpty
+            ? null
+            : _nomorTeleponCtrl.text.trim(),
         kendaraan: _kendaraan,
-        platNomor: _platNomorCtrl.text.trim().isEmpty ? null : _platNomorCtrl.text.trim(),
+        platNomor: _platNomorCtrl.text.trim().isEmpty
+            ? null
+            : _platNomorCtrl.text.trim(),
         fotoPath: _fotoPath,
-        catatan: _catatanCtrl.text.trim().isEmpty ? null : _catatanCtrl.text.trim(),
+        catatan: _catatanCtrl.text.trim().isEmpty
+            ? null
+            : _catatanCtrl.text.trim(),
       );
 
       AnalyticsService.log('security_buku_tamu_submit', {
@@ -83,19 +90,17 @@ class _SecurityBukuTamuFormScreenState
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Catatan tamu berhasil disimpan.'),
-          backgroundColor: context.colors.success,
-        ),
-      );
+      FeedbackService.success(context, 'Catatan tamu berhasil disimpan.');
       context.pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            friendlyErrorMessage(e, fallback: 'Gagal menyimpan tamu. Coba lagi.'),
+            friendlyErrorMessage(
+              e,
+              fallback: 'Gagal menyimpan tamu. Coba lagi.',
+            ),
           ),
           backgroundColor: context.colors.error,
         ),
@@ -108,184 +113,198 @@ class _SecurityBukuTamuFormScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catat Tamu Baru'),
-      ),
+      appBar: AppBar(title: const Text('Catat Tamu Baru')),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _namaCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nama Lengkap Tamu',
-                hintText: 'Contoh: Budi Santoso',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
-            ),
-            const SizedBox(height: 14),
-
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: _asalCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Asal / Instansi / PT',
-                      hintText: 'Contoh: PT Semen Indonesia',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.business_outlined),
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Asal instansi wajib diisi' : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _jumlahOrangCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Jumlah Orang',
-                      border: OutlineInputBorder(),
-                      suffixText: 'org',
-                    ),
-                    validator: (v) {
-                      final n = int.tryParse(v ?? '');
-                      if (n == null || n <= 0) return 'Min 1';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            TextFormField(
-              controller: _nomorTeleponCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Nomor Telepon / WhatsApp (opsional)',
-                hintText: 'Contoh: 081234567890',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Dropdown Kendaraan & Plat
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<KendaraanTamu>(
-                    initialValue: _kendaraan,
-                    decoration: const InputDecoration(
-                      labelText: 'Kendaraan',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    items: KendaraanTamu.values
-                        .map(
-                          (k) => DropdownMenuItem(
-                            value: k,
-                            child: Text(k.label),
+        child: FocusTraversalGroup(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    FormSection(
+                      title: 'Identitas Tamu',
+                      children: [
+                        TextFormField(
+                          controller: _namaCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Lengkap Tamu',
+                            hintText: 'Contoh: Budi Santoso',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.person_outline),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) {
-                      if (v != null) setState(() => _kendaraan = v);
-                    },
-                  ),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Nama wajib diisi'
+                              : null,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextFormField(
+                                controller: _asalCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Asal / Instansi / PT',
+                                  hintText: 'Contoh: PT Semen Indonesia',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.business_outlined),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Asal instansi wajib diisi'
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _jumlahOrangCtrl,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Jumlah Orang',
+                                  border: OutlineInputBorder(),
+                                  suffixText: 'org',
+                                ),
+                                validator: (v) {
+                                  final n = int.tryParse(v ?? '');
+                                  if (n == null || n <= 0) return 'Min 1';
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextFormField(
+                          controller: _nomorTeleponCtrl,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Nomor Telepon / WhatsApp (opsional)',
+                            hintText: 'Contoh: 081234567890',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    FormSection(
+                      title: 'Kendaraan',
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<KendaraanTamu>(
+                                initialValue: _kendaraan,
+                                decoration: const InputDecoration(
+                                  labelText: 'Kendaraan',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                items: KendaraanTamu.values
+                                    .map(
+                                      (k) => DropdownMenuItem(
+                                        value: k,
+                                        child: Text(k.label),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (v) {
+                                  if (v != null) setState(() => _kendaraan = v);
+                                },
+                              ),
+                            ),
+                            if (_kendaraan != KendaraanTamu.tanpaKendaraan) ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _platNomorCtrl,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Plat Nomor (opsional)',
+                                    hintText: 'Contoh: B 1234 CD',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    FormSection(
+                      title: 'Foto & Catatan',
+                      children: [
+                        Text(
+                          'Foto Tamu / Kendaraan (Opsional - 1 Foto)',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                        if (_fotoPath != null)
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(
+                                  File(_fotoPath!),
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: Colors.black54,
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    setState(() => _fotoPath = null),
+                              ),
+                            ],
+                          )
+                        else
+                          OutlinedButton.icon(
+                            onPressed: _takeFoto,
+                            icon: const Icon(Icons.camera_alt_outlined),
+                            label: const Text('Ambil Foto Tamu / Kendaraan'),
+                          ),
+                        TextFormField(
+                          controller: _catatanCtrl,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Keperluan / Catatan (opsional)',
+                            hintText:
+                                'Contoh: Bertemu Bpk. Andi bagian Keuangan',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                if (_kendaraan != KendaraanTamu.tanpaKendaraan) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _platNomorCtrl,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: const InputDecoration(
-                        labelText: 'Plat Nomor (opsional)',
-                        hintText: 'Contoh: B 1234 CD',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Foto Tamu / Kendaraan Opsional
-            Text(
-              'Foto Tamu / Kendaraan (Opsional - 1 Foto)',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: context.colors.textPrimary,
               ),
-            ),
-            const SizedBox(height: 8),
-            if (_fotoPath != null) ...[
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(
-                      File(_fotoPath!),
-                      height: 160,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Colors.black54,
-                      child: Icon(Icons.close, size: 16, color: Colors.white),
-                    ),
-                    onPressed: () => setState(() => _fotoPath = null),
-                  ),
-                ],
+              StickyActionBar(
+                primaryLabel: _isSubmitting
+                    ? 'Menyimpan...'
+                    : 'Simpan Buku Tamu',
+                onPrimary: _isSubmitting ? () {} : _submit,
+                showPrimaryLoading: _isSubmitting,
               ),
-            ] else
-              OutlinedButton.icon(
-                onPressed: _takeFoto,
-                icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Ambil Foto Tamu / Kendaraan'),
-              ),
-            const SizedBox(height: 14),
-
-            TextFormField(
-              controller: _catatanCtrl,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Keperluan / Catatan (opsional)',
-                hintText: 'Contoh: Bertemu Bpk. Andi bagian Keuangan',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              height: 48,
-              child: BouncingButton(
-                onPressed: _isSubmitting ? () {} : _submit,
-                child: FilledButton.icon(
-                  onPressed: _isSubmitting ? null : _submit,
-                  icon: _isSubmitting
-                      ? const SubmitSpinner(size: 18)
-                      : const Icon(Icons.save_rounded),
-                  label: Text(_isSubmitting ? 'Menyimpan...' : 'Simpan Buku Tamu'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
+            ],
+          ),
         ),
       ),
     );

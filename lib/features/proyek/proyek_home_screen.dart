@@ -9,10 +9,31 @@ import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
+import '../../shared/widgets/global_search_sheet.dart';
+import '../../shared/widgets/pinned_modules_row.dart';
+import '../../shared/widgets/recent_modules_row.dart';
 import '../auth/auth_providers.dart';
 import '../tracking/tracking_providers.dart';
 import 'role_permissions.dart';
 import 'pending_summary_provider.dart';
+
+/// Rute tujuan setiap kartu modul di Beranda Proyek.
+/// Menjadi satu-satunya sumber keputusan navigasi supaya modul baru tidak
+/// terjebak di fallback "belum tersedia".
+String? proyekModuleRoute(String moduleKey) => switch (moduleKey) {
+  'produksi' => '/produksi/sesi-aktif',
+  'qc' => '/qc',
+  'tracking' => '/tracking/pengguna-aktif',
+  'dashboard' => '/dashboard',
+  'keuangan' => '/dashboard/keuangan',
+  'armada' => '/armada',
+  'kontraktor' => '/kontraktor/proyek',
+  'workshop' => '/workshop',
+  'inventory' => '/inventory',
+  'logistik' => '/logistik',
+  'security' => '/security',
+  _ => null,
+};
 
 class ProyekHomeScreen extends ConsumerWidget {
   const ProyekHomeScreen({super.key});
@@ -31,7 +52,32 @@ class ProyekHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: null,
         bottom: const BrandStrip(),
-        actions: const [AppTopBarActions(showNotification: false)],
+        actions: [
+          IconButton(
+            tooltip: 'Cari modul',
+            icon: const Icon(Icons.search),
+            onPressed: () => showGlobalSearchSheet(
+              context,
+              modules: [
+                SearchableModule(
+                  name: 'Modul',
+                  items: allowed
+                      .map(
+                        (m) => SearchResult(
+                          title: m.label,
+                          subtitle: m.key,
+                          icon: m.icon,
+                          route: '/proyek',
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+              onSelected: (r) {},
+            ),
+          ),
+          const AppTopBarActions(showNotification: false),
+        ],
       ),
       body: role == null
           ? const AppEmptyState(
@@ -48,6 +94,11 @@ class ProyekHomeScreen extends ConsumerWidget {
                   // Greeting header
                   _GreetingHeader(user: user, role: role),
                   const SizedBox(height: 20),
+
+                  const RecentModulesRow(),
+                  const SizedBox(height: 8),
+                  const PinnedModulesRow(),
+                  const SizedBox(height: 16),
 
                   if (role == 'Mandor Titik') ...[
                     const _TrackingStatusCard(),
@@ -113,7 +164,7 @@ class ProyekHomeScreen extends ConsumerWidget {
   }
 }
 
-// ── Greeting Header ───────────────────────────────────────────────────────────
+// â”€â”€ Greeting Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _GreetingHeader extends StatelessWidget {
   const _GreetingHeader({required this.user, required this.role});
@@ -187,7 +238,7 @@ class _GreetingHeader extends StatelessWidget {
   }
 }
 
-// ── Module Card ───────────────────────────────────────────────────────────────
+// â”€â”€ Module Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ModuleCard extends ConsumerWidget {
   const _ModuleCard({required this.module});
@@ -280,30 +331,15 @@ class _ModuleCard extends ConsumerWidget {
       }
     }
 
-    switch (module.key) {
-      case 'produksi':
-        open('/produksi/sesi-aktif');
-      case 'qc':
-        open('/qc');
-      case 'tracking':
-        open('/tracking/pengguna-aktif');
-      case 'dashboard':
-        open('/dashboard');
-      case 'keuangan':
-        open('/dashboard/keuangan');
-      case 'armada':
-        open('/armada');
-      case 'kontraktor':
-        open('/kontraktor/proyek');
-      case 'workshop':
-        open('/workshop');
-      case 'inventory':
-        open('/inventory');
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${module.label} belum tersedia')),
-        );
+    final route = proyekModuleRoute(module.key);
+    if (route != null) {
+      open(route);
+      return;
     }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${module.label} belum tersedia')));
   }
 
   String _subtitleFor(String key) => switch (key) {
@@ -316,6 +352,8 @@ class _ModuleCard extends ConsumerWidget {
     'kontraktor' => 'Proyek kontrak, progress, invoice & chat',
     'workshop' => 'Antrian servis, checklist pengerjaan & sparepart',
     'inventory' => 'Stok barang, request sparepart & opname',
+    'logistik' => 'Verifikasi ritase & timbang',
+    'security' => 'Buku tamu, checklist & laporan darurat',
     _ => 'Menyusul di fase berikutnya',
   };
 }
@@ -331,7 +369,7 @@ IconData _iconForRole(String role) => switch (role) {
   _ => Icons.badge_rounded,
 };
 
-// ── Tracking Status ───────────────────────────────────────────────────────────
+// â”€â”€ Tracking Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TrackingStatusCard extends ConsumerWidget {
   const _TrackingStatusCard();
@@ -414,9 +452,9 @@ class _TrackingStatusCard extends ConsumerWidget {
   }
 }
 
-// ── No Active Role ────────────────────────────────────────────────────────────
+// â”€â”€ No Active Role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── Pekerjaan Menunggu Anda Card ───────────────────────────────────────
+// â”€â”€ Pekerjaan Menunggu Anda Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PendingWorkCard extends ConsumerWidget {
   const _PendingWorkCard({required this.role});
@@ -571,7 +609,7 @@ class _PendingItem extends StatelessWidget {
   }
 }
 
-// ── Pending Badge ─────────────────────────────────────────────────────
+// â”€â”€ Pending Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PendingBadge extends ConsumerWidget {
   const _PendingBadge({required this.moduleKey, required this.role});
@@ -636,7 +674,7 @@ class _PendingBadge extends ConsumerWidget {
   }
 }
 
-// ── Quick Actions per Role ─────────────────────────────────────────────
+// â”€â”€ Quick Actions per Role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.role});

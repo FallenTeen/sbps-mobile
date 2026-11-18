@@ -18,7 +18,9 @@ import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/status_banner.dart';
 import '../../shared/widgets/status_pill.dart';
+import '../../shared/widgets/sticky_action_bar.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../presensi/presensi_providers.dart';
 import 'armada_providers.dart';
@@ -549,56 +551,69 @@ class _RitaseInputScreenState extends ConsumerState<RitaseInputScreen> {
           final byId = {for (final a in armadaList) a.id: a};
           final summary = summaryRitase(_records);
 
-          return Column(
-            children: [
-              _SummaryHeader(
-                summary: summary,
-                onAdd: () => _openFormSheet(armadaList: armadaList),
-              ),
-              Expanded(
-                child: _records.isEmpty
-                    ? AppEmptyState(
-                        icon: Icons.add_box_outlined,
-                        title: 'Belum ada muatan',
-                        subtitle:
-                            'Catat muatan/jam kerja unit Anda hari ini.\n'
-                            'Draft tersimpan otomatis dan tidak hilang '
-                            'saat Anda keluar layar.',
-                        actionLabel: 'Tambah Muatan',
-                        onAction: () => _openFormSheet(armadaList: armadaList),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                        itemCount: _records.length,
-                        itemBuilder: (context, i) {
-                          final record = _records[i];
-                          return _RecordCard(
-                            record: record,
-                            armada: byId[record.armadaId],
-                            submitting:
-                                _syncingIds.contains(record.id) ||
-                                (_submittingAll &&
-                                    record.status == RitaseRecordStatus.draft),
-                            onEdit: () => _openFormSheet(
-                              existing: record,
-                              armadaList: armadaList,
-                            ),
-                            onDelete: () => _deleteRecord(record),
-                            onReview: () => _openReviewSheet(record),
-                            onSubmit: () => _submitRecords([record]),
-                            onRetry: () => _retryRecord(record),
-                          );
-                        },
+            return Column(
+                children: [
+                  _SummaryHeader(
+                    summary: summary,
+                    onAdd: () => _openFormSheet(armadaList: armadaList),
+                  ),
+                  // Show progress banner when there are pending sync items
+                  if (summary.hasPending)
+                    StatusBanner(
+                      status: StatusConfig(
+                        label: '${summary.recordCount - summary.syncedCount} muatan masih menunggu sinkron',
+                        color: context.colors.warning,
+                        icon: Icons.cloud_upload_outlined,
                       ),
-              ),
-              if (_records.isNotEmpty)
-                _SubmitBar(
-                  summary: summary,
-                  submittingAll: _submittingAll,
-                  onSendAll: _submitAll,
-                ),
-            ],
-          );
+                      showProgressRing: false,
+                    ),
+                  Expanded(
+                    child: _records.isEmpty
+                        ? AppEmptyState(
+                            icon: Icons.add_box_outlined,
+                            title: 'Belum ada muatan',
+                            subtitle:
+                                'Catat muatan/jam kerja unit Anda hari ini.\n'
+                                'Draft tersimpan otomatis dan tidak hilang '
+                                'saat Anda keluar layar.',
+                            actionLabel: 'Tambah Muatan',
+                            onAction: () => _openFormSheet(armadaList: armadaList),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                            itemCount: _records.length,
+                            itemBuilder: (context, i) {
+                              final record = _records[i];
+                              return _RecordCard(
+                                record: record,
+                                armada: byId[record.armadaId],
+                                submitting:
+                                    _syncingIds.contains(record.id) ||
+                                    (_submittingAll &&
+                                        record.status == RitaseRecordStatus.draft),
+                                onEdit: () => _openFormSheet(
+                                  existing: record,
+                                  armadaList: armadaList,
+                                ),
+                                onDelete: () => _deleteRecord(record),
+                                onReview: () => _openReviewSheet(record),
+                                onSubmit: () => _submitRecords([record]),
+                                onRetry: () => _retryRecord(record),
+                              );
+                            },
+                          ),
+                  ),
+                  if (_records.isNotEmpty && (summary.draftCount + summary.failedCount) > 0)
+                    StickyActionBar(
+                      primaryLabel: _submittingAll
+                          ? 'Mengirim...'
+                          : 'Kirim Semua Muatan (${summary.draftCount + summary.failedCount})',
+                      showPrimaryLoading: _submittingAll,
+                      primaryIcon: Icons.send,
+                      onPrimary: _submitAll,
+                    ),
+                ],
+              );
         },
       ),
     );
@@ -1020,68 +1035,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Bottom submit bar
-// ---------------------------------------------------------------------------
 
-class _SubmitBar extends StatelessWidget {
-  const _SubmitBar({
-    required this.summary,
-    required this.submittingAll,
-    required this.onSendAll,
-  });
-
-  final RitaseSummary summary;
-  final bool submittingAll;
-  final VoidCallback onSendAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final toSend = summary.draftCount + summary.failedCount;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        boxShadow: AppTheme.shadowUpLv2,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (summary.queuedCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '${summary.queuedCount} tersimpan - terkirim otomatis.',
-                style: TextStyle(fontSize: 12, color: context.colors.warning),
-              ),
-            ),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: BouncingButton(
-              onPressed: toSend == 0 || submittingAll ? null : onSendAll,
-              child: FilledButton.icon(
-                onPressed: toSend == 0 || submittingAll ? null : onSendAll,
-                icon: submittingAll
-                    ? const SubmitSpinner(size: 18)
-                    : const Icon(Icons.send, size: 18),
-                label: Text(
-                  submittingAll
-                      ? 'Mengirim...'
-                      : toSend > 0
-                      ? 'Kirim Semua Muatan ($toSend)'
-                      : summary.queuedCount > 0
-                      ? 'Sedang menunggu sinkron otomatis'
-                      : 'Semua muatan terkirim',
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 String _labelJenis(String? jenis) => labelJenisArmada(jenis, fallback: 'Unit');
 

@@ -1,5 +1,5 @@
-# ============================================================================
-# CODEMAGIC CI/CD — SBPS Mobile (unified app)
+﻿# ============================================================================
+# CODEMAGIC CI/CD - SBPS Mobile (unified app)
 # ----------------------------------------------------------------------------
 # WORKFLOW:
 #   1. sbps-android : push ke develop/main atau tag v*
@@ -32,7 +32,7 @@
 workflows:
 
   # ==========================================================================
-  # WORKFLOW 1 — BUILD: Firebase App Distribution
+  # WORKFLOW 1 - BUILD: Firebase App Distribution
   # ==========================================================================
   sbps-android:
     name: SBPS Mobile (Android)
@@ -145,7 +145,7 @@ workflows:
           failure: true
 
   # ==========================================================================
-  # WORKFLOW 2 — OTA PATCH (tanpa build ulang)
+  # WORKFLOW 2 - OTA PATCH (tanpa build ulang)
   # Jalankan manual dari dashboard Codemagic pada commit yang sudah dirilis.
   # ==========================================================================
   sbps-patch:
