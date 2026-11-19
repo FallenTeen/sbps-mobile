@@ -26,7 +26,12 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging && mounted) setState(() {});
   }
 
   @override
@@ -44,296 +49,323 @@ class _ProyekKontrakScreenState extends ConsumerState<ProyekKontrakScreen>
       appBar: AppBar(
         title: const Text('Portal Kontraktor'),
         actions: const [AppTopBarActions(showNotification: false)],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.business_center_outlined),
-              text: 'Proyek Kontrak',
-            ),
-            Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Invoice'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          // TAB 1: Daftar Proyek Kontrak
-          RefreshIndicator(
-            onRefresh: () async =>
-                ref.refresh(proyekKontrakListProvider.future),
-            child: proyeksAsync.when(
-              loading: () => const SkeletonListView(),
-              error: (err, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      friendlyErrorMessage(
-                        err,
-                        fallback: 'Gagal memuat proyek. Silakan coba lagi.',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: () =>
-                          ref.invalidate(proyekKontrakListProvider),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Proyek Kontrak')),
+                  ButtonSegment(value: 1, label: Text('Invoice')),
+                ],
+                selected: {_tabController.index},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) {
+                  _tabController.animateTo(selection.first);
+                },
               ),
-              data: (items) {
-                if (items.isEmpty) {
-                  return ListView(
-                    children: [
-                      const SizedBox(height: 140),
-                      Icon(
-                        Icons.folder_open_outlined,
-                        size: 48,
-                        color: context.colors.textMuted,
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // TAB 1: Daftar Proyek Kontrak
+                RefreshIndicator(
+                  onRefresh: () async =>
+                      ref.refresh(proyekKontrakListProvider.future),
+                  child: proyeksAsync.when(
+                    loading: () => const SkeletonListView(),
+                    error: (err, _) => Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            friendlyErrorMessage(
+                              err,
+                              fallback:
+                                  'Gagal memuat proyek. Silakan coba lagi.',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () =>
+                                ref.invalidate(proyekKontrakListProvider),
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Belum ada proyek kontrak terdaftar.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: context.colors.textMuted),
-                      ),
-                    ],
-                  );
-                }
+                    ),
+                    data: (items) {
+                      if (items.isEmpty) {
+                        return ListView(
+                          children: [
+                            const SizedBox(height: 140),
+                            Icon(
+                              Icons.folder_open_outlined,
+                              size: 48,
+                              color: context.colors.textMuted,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Belum ada proyek kontrak terdaftar.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: context.colors.textMuted),
+                            ),
+                          ],
+                        );
+                      }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    final color = statusColor(item.status, context);
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final color = statusColor(item.status, context);
 
-                    return Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () =>
-                            context.push('/kontraktor/proyek/${item.id}'),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      item.nama,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                          return Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () =>
+                                  context.push('/kontraktor/proyek/${item.id}'),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            item.nama,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: color.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            kontraktorStatusLabel(item.status),
+                                            style: TextStyle(
+                                              color: color,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      kontraktorStatusLabel(item.status),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Kode: ${item.kodeProyek}${item.client != null ? ' • Klien: ${item.client}' : ''}',
                                       style: TextStyle(
-                                        color: color,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                        fontSize: 13,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Kode: ${item.kodeProyek}${item.client != null ? ' • Klien: ${item.client}' : ''}',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
+                                    if (item.lokasi != null) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.location_on_outlined,
+                                            size: 14,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              item.lokasi!,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurfaceVariant,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
-                              if (item.lokasi != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on_outlined,
-                                      size: 14,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        item.lokasi!,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                // TAB 2: Daftar Invoice Kontrak
+                RefreshIndicator(
+                  onRefresh: () async =>
+                      ref.refresh(invoiceKontrakListProvider.future),
+                  child: invoicesAsync.when(
+                    loading: () => const SkeletonListView(),
+                    error: (err, _) => Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            friendlyErrorMessage(
+                              err,
+                              fallback:
+                                  'Gagal memuat invoice. Silakan coba lagi.',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () =>
+                                ref.invalidate(invoiceKontrakListProvider),
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    data: (invoices) {
+                      if (invoices.isEmpty) {
+                        return ListView(
+                          children: [
+                            const SizedBox(height: 140),
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 48,
+                              color: context.colors.textMuted,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Belum ada invoice kontrak.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: context.colors.textMuted),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: invoices.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final inv = invoices[index];
+                          final color = statusColor(inv.status, context);
+
+                          return Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          inv.kodeInvoice,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          kontraktorStatusLabel(inv.status),
+                                          style: TextStyle(
+                                            color: color,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (inv.proyek != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Proyek: ${inv.proyek}',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // TAB 2: Daftar Invoice Kontrak
-          RefreshIndicator(
-            onRefresh: () async =>
-                ref.refresh(invoiceKontrakListProvider.future),
-            child: invoicesAsync.when(
-              loading: () => const SkeletonListView(),
-              error: (err, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      friendlyErrorMessage(
-                        err,
-                        fallback: 'Gagal memuat invoice. Silakan coba lagi.',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: () =>
-                          ref.invalidate(invoiceKontrakListProvider),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
-              ),
-              data: (invoices) {
-                if (invoices.isEmpty) {
-                  return ListView(
-                    children: [
-                      const SizedBox(height: 140),
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        size: 48,
-                        color: context.colors.textMuted,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Belum ada invoice kontrak.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: context.colors.textMuted),
-                      ),
-                    ],
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: invoices.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final inv = invoices[index];
-                    final color = statusColor(inv.status, context);
-
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    inv.kodeInvoice,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
+                                  const Divider(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Total Tagihan:'),
+                                      Text(
+                                        fmtRp(inv.total),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Sisa Bayar:'),
+                                      Text(
+                                        fmtRp(inv.sisa),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: inv.sisa > 0
+                                              ? context.colors.error
+                                              : context.colors.success,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    kontraktorStatusLabel(inv.status),
-                                    style: TextStyle(
-                                      color: color,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (inv.proyek != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                'Proyek: ${inv.proyek}',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
+                                ],
                               ),
-                            ],
-                            const Divider(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Total Tagihan:'),
-                                Text(
-                                  fmtRp(inv.total),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Sisa Bayar:'),
-                                Text(
-                                  fmtRp(inv.sisa),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: inv.sisa > 0
-                                        ? context.colors.error
-                                        : context.colors.success,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],

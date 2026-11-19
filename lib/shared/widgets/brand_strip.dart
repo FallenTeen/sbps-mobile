@@ -18,7 +18,7 @@ class BrandStrip extends StatelessWidget implements PreferredSizeWidget {
     return Container(
       height: height,
       width: double.infinity,
-      decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+      decoration: const BoxDecoration(gradient: AppTheme.primaryGradientVivid),
     );
   }
 }

@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import 'models/security_models.dart';
 import 'security_repository.dart';
@@ -36,7 +38,9 @@ class _SecurityBukuTamuScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Tandai ${tamu.nama} Keluar?'),
-        content: Text('Tamu dari "${tamu.asal}" akan dicatat jam keluarnya pada saat ini.'),
+        content: Text(
+          'Tamu dari "${tamu.asal}" akan dicatat jam keluarnya pada saat ini.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -70,7 +74,10 @@ class _SecurityBukuTamuScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            friendlyErrorMessage(e, fallback: 'Gagal menandai keluar. Coba lagi.'),
+            friendlyErrorMessage(
+              e,
+              fallback: 'Gagal menandai keluar. Coba lagi.',
+            ),
           ),
           backgroundColor: context.colors.error,
         ),
@@ -133,51 +140,37 @@ class _SecurityBukuTamuScreenState
           // List Tamu
           Expanded(
             child: tamuAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: context.colors.error),
-                      const SizedBox(height: 12),
-                      Text(
-                        friendlyErrorMessage(
-                          err,
-                          fallback: 'Gagal memuat buku tamu. Coba lagi.',
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => ref.invalidate(bukuTamuHariIniProvider),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
+              loading: () => const SkeletonListView(),
+              error: (err, _) => ErrorState(
+                message: friendlyErrorMessage(
+                  err,
+                  fallback: 'Gagal memuat buku tamu. Coba lagi.',
                 ),
+                onRetry: () => ref.invalidate(bukuTamuHariIniProvider),
               ),
               data: (list) {
                 final filtered = list.where((t) {
                   if (_query.isEmpty) return true;
                   final matchNama = t.nama.toLowerCase().contains(_query);
                   final matchAsal = t.asal.toLowerCase().contains(_query);
-                  final matchPlat = t.platNomor?.toLowerCase().contains(_query) ?? false;
+                  final matchPlat =
+                      t.platNomor?.toLowerCase().contains(_query) ?? false;
                   return matchNama || matchAsal || matchPlat;
                 }).toList();
 
                 if (filtered.isEmpty) {
                   return RefreshIndicator(
-                    onRefresh: () async => ref.invalidate(bukuTamuHariIniProvider),
+                    onRefresh: () async =>
+                        ref.invalidate(bukuTamuHariIniProvider),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
                         const SizedBox(height: 80),
                         AppEmptyState(
                           icon: Icons.menu_book_rounded,
-                          title: _query.isEmpty ? 'Belum Ada Tamu' : 'Tamu Tidak Ditemukan',
+                          title: _query.isEmpty
+                              ? 'Belum Ada Tamu'
+                              : 'Tamu Tidak Ditemukan',
                           subtitle: _query.isEmpty
                               ? 'Belum ada catatan tamu masuk hari ini.'
                               : 'Tidak ada tamu yang cocok dengan pencarian "$_query".',
@@ -191,11 +184,13 @@ class _SecurityBukuTamuScreenState
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(bukuTamuHariIniProvider),
+                  onRefresh: () async =>
+                      ref.invalidate(bukuTamuHariIniProvider),
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                     itemCount: filtered.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
                     itemBuilder: (ctx, i) {
                       final tamu = filtered[i];
                       return _TamuCard(
@@ -229,7 +224,9 @@ class _TamuCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isKeluar ? context.colors.border : context.colors.info.withValues(alpha: 0.35),
+          color: isKeluar
+              ? context.colors.border
+              : context.colors.info.withValues(alpha: 0.35),
         ),
       ),
       child: Padding(
@@ -263,14 +260,19 @@ class _TamuCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isKeluar
                         ? context.colors.surfaceVariant
                         : context.colors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isKeluar ? context.colors.border : context.colors.success.withValues(alpha: 0.4),
+                      color: isKeluar
+                          ? context.colors.border
+                          : context.colors.success.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
@@ -278,7 +280,9 @@ class _TamuCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: isKeluar ? context.colors.textMuted : context.colors.success,
+                      color: isKeluar
+                          ? context.colors.textMuted
+                          : context.colors.success,
                     ),
                   ),
                 ),
@@ -287,17 +291,29 @@ class _TamuCard extends StatelessWidget {
             const Divider(height: 16),
             Row(
               children: [
-                Icon(Icons.directions_car_outlined, size: 16, color: context.colors.textSecondary),
+                Icon(
+                  Icons.directions_car_outlined,
+                  size: 16,
+                  color: context.colors.textSecondary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '${tamu.kendaraan.label}${tamu.platNomor != null ? ' (${tamu.platNomor})' : ''}',
                   style: const TextStyle(fontSize: 13),
                 ),
-                if (tamu.nomorTelepon != null && tamu.nomorTelepon!.isNotEmpty) ...[
+                if (tamu.nomorTelepon != null &&
+                    tamu.nomorTelepon!.isNotEmpty) ...[
                   const SizedBox(width: 12),
-                  Icon(Icons.phone_outlined, size: 15, color: context.colors.textSecondary),
+                  Icon(
+                    Icons.phone_outlined,
+                    size: 15,
+                    color: context.colors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
-                  Text(tamu.nomorTelepon!, style: const TextStyle(fontSize: 12)),
+                  Text(
+                    tamu.nomorTelepon!,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ],
             ),
@@ -308,7 +324,10 @@ class _TamuCard extends StatelessWidget {
                 Text(
                   'Masuk: ${tamu.jamMasuk.hour.toString().padLeft(2, '0')}:${tamu.jamMasuk.minute.toString().padLeft(2, '0')}'
                   '${tamu.jamKeluar != null ? " • Keluar: ${tamu.jamKeluar!.hour.toString().padLeft(2, '0')}:${tamu.jamKeluar!.minute.toString().padLeft(2, '0')}" : ""}',
-                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.textSecondary,
+                  ),
                 ),
                 if (!isKeluar)
                   BouncingButton(
@@ -316,11 +335,17 @@ class _TamuCard extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: onTandaiKeluar,
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text('Tandai Keluar', style: TextStyle(fontSize: 12)),
+                      child: const Text(
+                        'Tandai Keluar',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
               ],

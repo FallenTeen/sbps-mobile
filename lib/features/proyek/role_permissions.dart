@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../shared/theme/app_icons.dart';
 import '../../shared/widgets/adaptive_nav_shell.dart';
@@ -24,7 +24,7 @@ const kProyekModules = <ProyekModule>[
     icon: Icons.precision_manufacturing,
   ),
   ProyekModule(key: 'qc', label: 'Quality Control', icon: Icons.fact_check),
-  ProyekModule(key: 'tracking', label: 'Tracking', icon: Icons.local_shipping),
+  ProyekModule(key: 'tracking', label: 'Tracking', icon: Icons.route_outlined),
   ProyekModule(
     key: 'dashboard',
     label: 'Dashboard Operasional',
@@ -35,7 +35,11 @@ const kProyekModules = <ProyekModule>[
     label: 'Dashboard Finansial',
     icon: Icons.payments_outlined,
   ),
-  ProyekModule(key: 'armada', label: 'Armada', icon: Icons.local_shipping),
+  ProyekModule(
+    key: 'armada',
+    label: 'Armada',
+    icon: Icons.directions_bus_outlined,
+  ),
   ProyekModule(
     key: 'kontraktor',
     label: 'Portal Kontrak',
@@ -136,15 +140,15 @@ AdaptiveNavDestination _homeDestination() => const AdaptiveNavDestination(
 AdaptiveNavDestination _presensiDestination() => const AdaptiveNavDestination(
   key: 'presensi',
   label: 'Presensi',
-  icon: Icons.fingerprint,
-  selectedIcon: Icons.fingerprint_rounded,
+  icon: AppIcons.navPresensi,
+  selectedIcon: AppIcons.navPresensiActive,
 );
 
 AdaptiveNavDestination _notifikasiDestination() => const AdaptiveNavDestination(
   key: 'notifikasi',
   label: 'Notifikasi',
-  icon: Icons.notifications_outlined,
-  selectedIcon: Icons.notifications_rounded,
+  icon: AppIcons.navNotification,
+  selectedIcon: AppIcons.navNotificationActive,
   tooltip: 'Notifikasi',
   isPrimary: true,
 );
@@ -152,8 +156,8 @@ AdaptiveNavDestination _notifikasiDestination() => const AdaptiveNavDestination(
 AdaptiveNavDestination _tugasDestination() => const AdaptiveNavDestination(
   key: 'tugas',
   label: 'Tugas / Operasional',
-  icon: Icons.assignment_outlined,
-  selectedIcon: Icons.assignment_rounded,
+  icon: AppIcons.navTasks,
+  selectedIcon: AppIcons.navTasksActive,
 );
 
 /// Branch indeks di dalam shell tunggal SBPS Mobile untuk tab Presensi dan
@@ -183,7 +187,15 @@ const _tugasModuleByRole = <String, String>{
 String? tugasModuleFor(String? role) => _tugasModuleByRole[role];
 
 /// Jenis isi Beranda (role-aware).
-enum AppHomeKind { presensi, driver, workshop, inventory, logistik, security, proyek }
+enum AppHomeKind {
+  presensi,
+  driver,
+  workshop,
+  inventory,
+  logistik,
+  security,
+  proyek,
+}
 
 /// Mapping role + portal â†’ isi Beranda.
 ///

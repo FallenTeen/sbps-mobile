@@ -32,10 +32,17 @@ class AppTheme {
   static const Color _error = Color(0xFFB91C1C);
 
   // ── Brand Gradient ─────────────────────────────────────────────────────────
-  /// Gradien identitas SBPS: dipakai di splash, header ringkasan,
-  /// AppBar modul utama, portal, dan badge "terdekat". Ganti di sini cukup
-  /// untuk mengubah semua header gradient sekaligus.
+  /// Gradien identitas SBPS untuk permukaan yang membawa teks putih.
+  /// Ujung gradien sengaja #D32F2F, bukan #EF4444: teks putih 12-13px di atas
+  /// #EF4444 hanya 3.75:1 (gagal AA), sedangkan #D32F2F mencapai 4.98:1.
   static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFFDC2626), Color(0xFFD32F2F)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Versi vivid tanpa teks: strip dekoratif dan aksen non-teks.
+  static const LinearGradient primaryGradientVivid = LinearGradient(
     colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -85,6 +92,15 @@ class AppTheme {
     surface: _surface,
     onSurface: const Color(0xFF1E293B),
     onSurfaceVariant: const Color(0xFF64748B),
+    surfaceContainerLowest: Colors.white,
+    surfaceContainerLow: _background,
+    surfaceContainer: _surfaceVariant,
+    surfaceContainerHigh: const Color(0xFFE9EEF5),
+    surfaceContainerHighest: const Color(0xFFE2E8F0),
+    inverseSurface: const Color(0xFF1E293B),
+    onInverseSurface: const Color(0xFFF8FAFC),
+    inversePrimary: _primaryLight,
+    surfaceTint: Colors.transparent,
     error: _error,
     onError: Colors.white,
     outline: const Color(0xFFCBD5E1),
@@ -206,7 +222,10 @@ class AppTheme {
   static final InputDecorationTheme _inputTheme = InputDecorationTheme(
     filled: true,
     fillColor: Colors.white,
-    contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: AppSpacing.md,
+      vertical: 14,
+    ),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -294,6 +313,15 @@ class AppTheme {
     surface: _darkSurface,
     onSurface: _darkTextPrimary,
     onSurfaceVariant: _darkTextTertiary,
+    surfaceContainerLowest: const Color(0xFF0B0D10),
+    surfaceContainerLow: const Color(0xFF15181D),
+    surfaceContainer: _darkSurface,
+    surfaceContainerHigh: const Color(0xFF23272F),
+    surfaceContainerHighest: _darkBorder,
+    inverseSurface: const Color(0xFFF1F5F9),
+    onInverseSurface: const Color(0xFF0F1115),
+    inversePrimary: const Color(0xFF991B1B),
+    surfaceTint: Colors.transparent,
     error: const Color(0xFFF28B82),
     onError: const Color(0xFF3D0A0A),
     outline: const Color(0xFF475069),
@@ -388,6 +416,71 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: BorderSide.none,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colors.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        indicatorColor: colorScheme.primary.withValues(
+          alpha: isDark ? 0.22 : 0.12,
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? colorScheme.primary : colors.textTertiary,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: 24,
+            color: selected ? colorScheme.primary : colors.textTertiary,
+          );
+        }),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: colors.card,
+        indicatorColor: colorScheme.primary.withValues(
+          alpha: isDark ? 0.22 : 0.12,
+        ),
+        selectedIconTheme: IconThemeData(color: colorScheme.primary, size: 24),
+        unselectedIconTheme: IconThemeData(
+          color: colors.textTertiary,
+          size: 24,
+        ),
+        selectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.primary,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: colors.textTertiary,
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return colorScheme.primary.withValues(
+                alpha: isDark ? 0.24 : 0.12,
+              );
+            }
+            return Colors.transparent;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? colorScheme.onPrimaryContainer
+                : colors.textSecondary;
+          }),
+          side: WidgetStatePropertyAll(BorderSide(color: borderColor)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colors.card,

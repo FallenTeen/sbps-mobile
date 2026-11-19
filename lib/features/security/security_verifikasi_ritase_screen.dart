@@ -9,7 +9,9 @@ import '../../core/formatters.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/submit_spinner.dart';
 import '../../shared/widgets/watermarked_camera_capture.dart';
@@ -59,36 +61,19 @@ class _SecurityVerifikasiRitaseScreenState
         ],
       ),
       body: ritaseAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: context.colors.error),
-                const SizedBox(height: 12),
-                Text(
-                  friendlyErrorMessage(
-                    err,
-                    fallback: 'Gagal memuat ritase security. Coba lagi.',
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: () => ref.invalidate(ritaseSecurityAntreanProvider),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Coba Lagi'),
-                ),
-              ],
-            ),
+        loading: () => const SkeletonListView(),
+        error: (err, _) => ErrorState(
+          message: friendlyErrorMessage(
+            err,
+            fallback: 'Gagal memuat ritase security. Coba lagi.',
           ),
+          onRetry: () => ref.invalidate(ritaseSecurityAntreanProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
             return RefreshIndicator(
-              onRefresh: () async => ref.invalidate(ritaseSecurityAntreanProvider),
+              onRefresh: () async =>
+                  ref.invalidate(ritaseSecurityAntreanProvider),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: const [
@@ -96,7 +81,8 @@ class _SecurityVerifikasiRitaseScreenState
                   AppEmptyState(
                     icon: Icons.shield_outlined,
                     title: 'Tidak Ada Ritase Siap Cek',
-                    subtitle: 'Belum ada ritase terverifikasi logistik yang memerlukan pemeriksaan security.',
+                    subtitle:
+                        'Belum ada ritase terverifikasi logistik yang memerlukan pemeriksaan security.',
                     illustrationVariant: EmptyStateVariant.noData,
                   ),
                 ],
@@ -105,7 +91,8 @@ class _SecurityVerifikasiRitaseScreenState
           }
 
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(ritaseSecurityAntreanProvider),
+            onRefresh: () async =>
+                ref.invalidate(ritaseSecurityAntreanProvider),
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: items.length,
@@ -119,7 +106,9 @@ class _SecurityVerifikasiRitaseScreenState
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: isSecVerified ? context.colors.success.withValues(alpha: 0.4) : context.colors.border,
+                      color: isSecVerified
+                          ? context.colors.success.withValues(alpha: 0.4)
+                          : context.colors.border,
                     ),
                   ),
                   child: Padding(
@@ -135,40 +124,72 @@ class _SecurityVerifikasiRitaseScreenState
                                 children: [
                                   Text(
                                     item.armadaPlat ?? 'Unit Kendaraan',
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     'Sopir: ${item.driverNama ?? 'Driver'} • ${fmtTanggal(item.tanggal)}',
-                                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.colors.textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             if (isSecVerified)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: context.colors.success.withValues(alpha: 0.12),
+                                  color: context.colors.success.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: context.colors.success.withValues(alpha: 0.3)),
+                                  border: Border.all(
+                                    color: context.colors.success.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
                                 ),
                                 child: Text(
                                   'Verified (Security)',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.success),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.colors.success,
+                                  ),
                                 ),
                               )
                             else
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: context.colors.info.withValues(alpha: 0.12),
+                                  color: context.colors.info.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: context.colors.info.withValues(alpha: 0.3)),
+                                  border: Border.all(
+                                    color: context.colors.info.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
                                 ),
                                 child: Text(
                                   'Verified (Logistik)',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.info),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.colors.info,
+                                  ),
                                 ),
                               ),
                           ],
@@ -179,21 +200,32 @@ class _SecurityVerifikasiRitaseScreenState
                             Expanded(
                               child: Text(
                                 'Material: ${item.material ?? 'Muatan'}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                             if (item.jumlahVerifikasiLogistik != null)
                               Text(
                                 'Netto Logistik: ${item.jumlahVerifikasiLogistik} ton',
-                                style: TextStyle(fontSize: 12, color: context.colors.info, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.colors.info,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                           ],
                         ),
-                        if (item.ruteAsal != null || item.ruteTujuan != null) ...[
+                        if (item.ruteAsal != null ||
+                            item.ruteTujuan != null) ...[
                           const SizedBox(height: 4),
                           Text(
                             '${item.ruteAsal ?? '-'} → ${item.ruteTujuan ?? '-'}',
-                            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textSecondary,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 12),
@@ -204,7 +236,11 @@ class _SecurityVerifikasiRitaseScreenState
                             child: OutlinedButton.icon(
                               onPressed: () => _openVerifikasiModal(item),
                               icon: const Icon(Icons.shield_outlined, size: 18),
-                              label: Text(isSecVerified ? 'Pemeriksaan Selesai (Edit)' : 'Konfirmasi Keamanan Unit'),
+                              label: Text(
+                                isSecVerified
+                                    ? 'Pemeriksaan Selesai (Edit)'
+                                    : 'Konfirmasi Keamanan Unit',
+                              ),
                             ),
                           ),
                         ),
@@ -263,7 +299,9 @@ class _SecurityVerifikasiFormSheetState
         unitSesuai: _unitSesuai,
         muatanAman: _muatanAman,
         fotoPath: _fotoPath,
-        catatan: _catatanCtrl.text.trim().isEmpty ? null : _catatanCtrl.text.trim(),
+        catatan: _catatanCtrl.text.trim().isEmpty
+            ? null
+            : _catatanCtrl.text.trim(),
       );
 
       AnalyticsService.log('security_verifikasi_ritase_submit', {
@@ -316,7 +354,10 @@ class _SecurityVerifikasiFormSheetState
                 Expanded(
                   child: Text(
                     'Pemeriksaan Unit: ${widget.ritase.armadaPlat ?? '-'}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -331,14 +372,18 @@ class _SecurityVerifikasiFormSheetState
             CheckboxListTile(
               value: _unitSesuai,
               onChanged: (v) => setState(() => _unitSesuai = v ?? false),
-              title: const Text('Fisik unit kendaraan & nomor plat sesuai data armada'),
+              title: const Text(
+                'Fisik unit kendaraan & nomor plat sesuai data armada',
+              ),
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,
             ),
             CheckboxListTile(
               value: _muatanAman,
               onChanged: (v) => setState(() => _muatanAman = v ?? false),
-              title: const Text('Kondisi muatan aman, terpal tertutup rapi & tidak tumpah'),
+              title: const Text(
+                'Kondisi muatan aman, terpal tertutup rapi & tidak tumpah',
+              ),
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,
             ),
@@ -399,7 +444,11 @@ class _SecurityVerifikasiFormSheetState
                   icon: _isSubmitting
                       ? const SubmitSpinner(size: 18)
                       : const Icon(Icons.check_circle_outline),
-                  label: Text(_isSubmitting ? 'Menyimpan...' : 'Konfirmasi Verified Security'),
+                  label: Text(
+                    _isSubmitting
+                        ? 'Menyimpan...'
+                        : 'Konfirmasi Verified Security',
+                  ),
                 ),
               ),
             ),

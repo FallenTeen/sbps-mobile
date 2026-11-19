@@ -41,6 +41,25 @@ class ArmadaRepository {
     return res.data ?? [];
   }
 
+  /// GET /armada/checklist-major/template?armada_id= - template item kustom.
+  Future<List<String>> getChecklistMajorTemplate({required String armadaId}) async {
+    final res = await _api.get<Map<String, dynamic>>(
+      '/armada/checklist-major/template',
+      query: {'armada_id': armadaId},
+      parse: (raw) => raw is Map
+          ? Map<String, dynamic>.from(raw)
+          : <String, dynamic>{},
+    );
+
+    final raw = res.data?['item_template'];
+    if (raw is! List) return const [];
+
+    return [
+      for (final value in raw)
+        if (value is String && value.trim().isNotEmpty) value.trim(),
+    ];
+  }
+
   /// GET /armada/pengisian-solar?armada_id=&tanggal= - riwayat pengisian.
   Future<List<PengisianSolarItem>> getPengisianSolar({
     String? armadaId,
@@ -244,11 +263,13 @@ class ArmadaRepository {
 
   /// POST /armada/checklist-major - serah terima kendaraan (Section 21.10).
   /// Menggunakan outbox untuk offline support. [items] berupa daftar peta
-  /// `{label, status, photo_index?}`; [photoPaths] berisi path foto item
-  /// (urutan sesuai `photo_index`), dikirim sebagai field multipart `photos[]`.
+  /// `{bagian, kondisi, catatan?, foto?}`; [photoPaths] berisi path foto item,
+  /// dikirim sebagai field multipart `photos[]`.
   Future<OutboxSendResult> submitChecklistMajor({
     required String armadaId,
     required List<Map<String, dynamic>> items,
+    String? tipe,
+    List<String>? itemTemplate,
     String? catatan,
     List<String> photoPaths = const [],
   }) async {
@@ -258,6 +279,8 @@ class ArmadaRepository {
       endpoint: PendingEndpoint.armadaChecklistMajor,
       payloadJson: {
         'armada_id': armadaId,
+        'tipe': tipe ?? 'berangkat',
+        'item_template': jsonEncode(itemTemplate ?? const []),
         'items': jsonEncode(items),
         if (catatan != null && catatan.trim().isNotEmpty)
           'catatan': catatan.trim(),

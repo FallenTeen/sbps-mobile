@@ -130,91 +130,91 @@ class _CombinedSelectionScreenState
         child: Scaffold(
           backgroundColor: context.colors.background,
           body: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              _Header(
-                user: user,
-                onLogout: () async {
-                  final result = await confirmLogout(context);
-                  if (result?.confirmed == true) {
-                    ref.read(authControllerProvider.notifier).logout();
-                  }
-                },
-              ),
+            child: Column(
+              children: [
+                // Header
+                _Header(
+                  user: user,
+                  onLogout: () async {
+                    final result = await confirmLogout(context);
+                    if (result?.confirmed == true) {
+                      ref.read(authControllerProvider.notifier).logout();
+                    }
+                  },
+                ),
 
-              // Selection content
-              Expanded(
-                child: ResponsiveCenter(
-                  maxWidth: AppBreakpoints.maxFormWidth,
-                  child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  children: [
-                    // Portal selection
-                    if (canPresensi && canProyek) ...[
-                      SectionHeader(
-                        title: 'Pilih Portal',
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(height: 12),
-                      _PortalSelection(
-                        selected: _selectedPortal,
-                        onSelected: (portal) {
-                          setState(() {
-                            _selectedPortal = portal;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                // Selection content
+                Expanded(
+                  child: ResponsiveCenter(
+                    maxWidth: AppBreakpoints.maxFormWidth,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      children: [
+                        // Portal selection
+                        if (canPresensi && canProyek) ...[
+                          SectionHeader(
+                            title: 'Pilih Portal',
+                            padding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(height: 12),
+                          _PortalSelection(
+                            selected: _selectedPortal,
+                            onSelected: (portal) {
+                              setState(() {
+                                _selectedPortal = portal;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                        ],
 
-                    // Role selection (only for Proyek portal)
-                    if ((canProyek && !canPresensi) ||
-                        _selectedPortal == AppPortal.proyek) ...[
-                      SectionHeader(
-                        title: 'Pilih Peran',
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(height: 12),
-                      _RoleSelection(
-                        roles: roles,
-                        selected: _selectedRole,
-                        onSelected: (role) {
-                          setState(() {
-                            _selectedRole = role;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24),
-                    ],
+                        // Role selection (only for Proyek portal)
+                        if ((canProyek && !canPresensi) ||
+                            _selectedPortal == AppPortal.proyek) ...[
+                          SectionHeader(
+                            title: 'Pilih Peran',
+                            padding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(height: 12),
+                          _RoleSelection(
+                            roles: roles,
+                            selected: _selectedRole,
+                            onSelected: (role) {
+                              setState(() {
+                                _selectedRole = role;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 24),
+                        ],
 
-                    // Submit button
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _canSubmit() ? _submit : null,
-                        child: const Text('Lanjut'),
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    // Footer
-                    Center(
-                      child: Text(
-                        'SBPS Mobile v1.0',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.colors.textMuted,
+                        // Submit button
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: _canSubmit() ? _submit : null,
+                            child: const Text('Lanjut'),
+                          ),
                         ),
-                      ),
+                        SizedBox(height: 32),
+                        // Footer
+                        Center(
+                          child: Text(
+                            'SBPS Mobile v1.0',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -431,11 +431,7 @@ class _PortalOption extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  size: 20,
-                  color: accent,
-                )
+                Icon(Icons.check_circle, size: 20, color: accent)
               else
                 Icon(
                   Icons.circle_outlined,
@@ -450,7 +446,7 @@ class _PortalOption extends StatelessWidget {
   }
 }
 
-class _RoleSelection extends StatelessWidget {
+class _RoleSelection extends ConsumerStatefulWidget {
   const _RoleSelection({
     required this.roles,
     required this.selected,
@@ -462,20 +458,165 @@ class _RoleSelection extends StatelessWidget {
   final ValueChanged<String> onSelected;
 
   @override
+  ConsumerState<_RoleSelection> createState() => _RoleSelectionState();
+}
+
+class _RoleSelectionState extends ConsumerState<_RoleSelection> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  String? _lastUsed;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastUsed = ref.read(activeRoleProvider);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (final role in roles)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _RoleOption(
-              role: role,
-              isSelected: selected == role,
-              onTap: () => onSelected(role),
+    final query = _query.trim().toLowerCase();
+    final filtered = widget.roles.where((role) {
+      if (query.isEmpty) return true;
+      return role.toLowerCase().contains(query) ||
+          _descriptionForRole(role).toLowerCase().contains(query);
+    }).toList();
+
+    final groups = <String, List<String>>{};
+    for (final role in filtered) {
+      groups.putIfAbsent(_groupForRole(role), () => []).add(role);
+    }
+
+    final lastUsed = _lastUsed;
+    final showLastUsed =
+        query.isEmpty && lastUsed != null && filtered.contains(lastUsed);
+
+    final children = <Widget>[];
+
+    if (widget.roles.length > 6) {
+      children.add(
+        TextField(
+          controller: _searchController,
+          onChanged: (value) => setState(() => _query = value),
+          decoration: InputDecoration(
+            hintText: 'Cari peran...',
+            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    tooltip: 'Hapus pencarian',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
+                  ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
             ),
           ),
-      ],
+        ),
+      );
+      children.add(const SizedBox(height: 12));
+    }
+
+    if (filtered.isEmpty) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Text(
+            'Tidak ada peran yang cocok. Coba kata kunci lain.',
+            style: TextStyle(color: context.colors.textTertiary, fontSize: 13),
+          ),
+        ),
+      );
+      return Column(children: children);
+    }
+
+    if (showLastUsed) {
+      children.add(_groupHeader('Terakhir dipakai'));
+      children.add(_roleTile(lastUsed));
+    }
+
+    for (final group in _roleGroupOrder) {
+      final rolesInGroup =
+          groups[group]
+              ?.where((role) => !(showLastUsed && role == lastUsed))
+              .toList() ??
+          const <String>[];
+      if (rolesInGroup.isEmpty) continue;
+      children.add(_groupHeader(group));
+      for (final role in rolesInGroup) {
+        children.add(_roleTile(role));
+      }
+    }
+
+    return Column(children: children);
+  }
+
+  Widget _groupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+          color: context.colors.textTertiary,
+        ),
+      ),
     );
+  }
+
+  Widget _roleTile(String role) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _RoleOption(
+        role: role,
+        isSelected: widget.selected == role,
+        onTap: () => widget.onSelected(role),
+      ),
+    );
+  }
+}
+
+const _roleGroupOrder = <String>[
+  'Operasional Lapangan',
+  'Teknis & Logistik',
+  'Manajemen & Kantor',
+  'Lainnya',
+];
+
+String _groupForRole(String role) {
+  switch (role) {
+    case 'Mandor Titik':
+    case 'Operator Alat Berat':
+    case 'Operator Mesin':
+    case 'Driver Armada':
+    case 'Driver Standby':
+    case 'Driver Kondisional':
+    case 'Security':
+      return 'Operasional Lapangan';
+    case 'Workshop':
+    case 'Inventory':
+    case 'Logistik':
+      return 'Teknis & Logistik';
+    case 'Kontraktor':
+    case 'Owner':
+    case 'Admin Keuangan':
+    case 'Kepala Divisi Armada':
+    case 'Ketua Divisi Armada':
+    case 'Ketua Armada':
+      return 'Manajemen & Kantor';
+    default:
+      return 'Lainnya';
   }
 }
 
@@ -565,62 +706,62 @@ class _RoleOption extends StatelessWidget {
       ),
     );
   }
+}
 
-  IconData _iconForRole(String role) {
-    switch (role) {
-      case 'Mandor Titik':
-        return Icons.engineering;
-      case 'Kontraktor':
-        return Icons.business_center;
-      case 'Admin Keuangan':
-        return Icons.account_balance_wallet;
-      case 'Owner':
-        return Icons.supervisor_account;
-      case 'Driver Armada':
-      case 'Driver Standby':
-      case 'Driver Kondisional':
-        return Icons.local_shipping;
-      case 'Kepala Divisi Armada':
-      case 'Ketua Divisi Armada':
-      case 'Ketua Armada':
-        return Icons.supervisor_account;
-      case 'Workshop':
-        return Icons.build;
-      case 'Inventory':
-        return Icons.inventory_2;
-      case 'Operator Mesin':
-        return Icons.precision_manufacturing;
-      default:
-        return Icons.badge;
-    }
+IconData _iconForRole(String role) {
+  switch (role) {
+    case 'Mandor Titik':
+      return Icons.engineering;
+    case 'Kontraktor':
+      return Icons.business_center;
+    case 'Admin Keuangan':
+      return Icons.account_balance_wallet;
+    case 'Owner':
+      return Icons.supervisor_account;
+    case 'Driver Armada':
+    case 'Driver Standby':
+    case 'Driver Kondisional':
+      return Icons.local_shipping;
+    case 'Kepala Divisi Armada':
+    case 'Ketua Divisi Armada':
+    case 'Ketua Armada':
+      return Icons.supervisor_account;
+    case 'Workshop':
+      return Icons.build;
+    case 'Inventory':
+      return Icons.inventory_2;
+    case 'Operator Mesin':
+      return Icons.precision_manufacturing;
+    default:
+      return Icons.badge;
   }
+}
 
-  String _descriptionForRole(String role) {
-    switch (role) {
-      case 'Mandor Titik':
-        return 'Sesi produksi, QC, dan progres titik';
-      case 'Kontraktor':
-        return 'Dashboard operasional non-finansial';
-      case 'Owner':
-        return 'Akses penuh termasuk finansial';
-      case 'Admin Keuangan':
-        return 'Dashboard finansial dan tracking';
-      case 'Driver Armada':
-      case 'Driver Standby':
-      case 'Driver Kondisional':
-        return 'Unit saya, checklist, ritase, dan servis';
-      case 'Kepala Divisi Armada':
-      case 'Ketua Divisi Armada':
-      case 'Ketua Armada':
-        return 'Overview armada dan approval';
-      case 'Workshop':
-        return 'Antrian servis dan todo per job';
-      case 'Inventory':
-        return 'Stok barang dan request sparepart';
-      case 'Operator Mesin':
-        return 'Sesi produksi, mesin, dan uji QC';
-      default:
-        return '';
-    }
+String _descriptionForRole(String role) {
+  switch (role) {
+    case 'Mandor Titik':
+      return 'Sesi produksi, QC, dan progres titik';
+    case 'Kontraktor':
+      return 'Dashboard operasional non-finansial';
+    case 'Owner':
+      return 'Akses penuh termasuk finansial';
+    case 'Admin Keuangan':
+      return 'Dashboard finansial dan tracking';
+    case 'Driver Armada':
+    case 'Driver Standby':
+    case 'Driver Kondisional':
+      return 'Unit saya, checklist, ritase, dan servis';
+    case 'Kepala Divisi Armada':
+    case 'Ketua Divisi Armada':
+    case 'Ketua Armada':
+      return 'Overview armada dan approval';
+    case 'Workshop':
+      return 'Antrian servis dan todo per job';
+    case 'Inventory':
+      return 'Stok barang dan request sparepart';
+    case 'Operator Mesin':
+      return 'Sesi produksi, mesin, dan uji QC';
+    default:
+      return '';
   }
 }

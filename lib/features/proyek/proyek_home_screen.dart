@@ -130,37 +130,25 @@ class ProyekHomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  if (context.isTablet)
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 3.2,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                          ),
-                      itemCount: allowed.length,
-                      itemBuilder: (context, i) => StaggeredEntrance(
-                        index: i,
-                        child: _ModuleCard(module: allowed[i]),
-                      ),
-                    )
-                  else
-                    for (var i = 0; i < allowed.length; i++)
-                      StaggeredEntrance(
-                        index: i,
-                        child: _ModuleCard(module: allowed[i]),
-                      ),
+                  AdaptiveGrid(
+                    compactColumns: 1,
+                    mediumColumns: 2,
+                    expandedColumns: 2,
+                    spacing: 10,
+                    children: [
+                      for (var i = 0; i < allowed.length; i++)
+                        StaggeredEntrance(
+                          index: i,
+                          child: _ModuleCard(module: allowed[i]),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
     );
   }
 }
-
-// â”€â”€ Greeting Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _GreetingHeader extends StatelessWidget {
   const _GreetingHeader({required this.user, required this.role});
@@ -234,8 +222,6 @@ class _GreetingHeader extends StatelessWidget {
   }
 }
 
-// â”€â”€ Module Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 class _ModuleCard extends ConsumerWidget {
   const _ModuleCard({required this.module});
 
@@ -246,7 +232,6 @@ class _ModuleCard extends ConsumerWidget {
     final role = ref.watch(activeRoleProvider);
 
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
@@ -365,8 +350,6 @@ IconData _iconForRole(String role) => switch (role) {
   'Driver Kondisional' => Icons.local_shipping_rounded,
   _ => Icons.badge_rounded,
 };
-
-// â”€â”€ Tracking Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TrackingStatusCard extends ConsumerWidget {
   const _TrackingStatusCard();
@@ -606,8 +589,6 @@ class _PendingItem extends StatelessWidget {
   }
 }
 
-// â”€â”€ Pending Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 class _PendingBadge extends ConsumerWidget {
   const _PendingBadge({required this.moduleKey, required this.role});
 
@@ -671,8 +652,6 @@ class _PendingBadge extends ConsumerWidget {
   }
 }
 
-// â”€â”€ Quick Actions per Role â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.role});
 
@@ -709,7 +688,7 @@ class _QuickActions extends StatelessWidget {
         ),
         SizedBox(height: 12),
         AdaptiveGrid(
-          compactColumns: actions.length,
+          compactColumns: actions.length.clamp(1, 2).toInt(),
           mediumColumns: 2,
           expandedColumns: 4,
           spacing: 12,

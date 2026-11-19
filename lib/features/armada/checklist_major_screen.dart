@@ -48,6 +48,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
   _Step _step = _Step.pilih;
   _SelectedUnit? _unit;
   MajorChecklistMode _mode = MajorChecklistMode.berangkat;
+  List<String> _itemTemplate = kMajorChecklistLabels;
   List<MajorChecklistItem> _items = [];
   MajorChecklistSnapshot? _berangkatSnapshot;
   bool _isSubmitting = false;
@@ -95,25 +96,87 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
     final snapshot = await ChecklistMajorStore.loadBerangkat(unit.id);
     if (!mounted) return;
     setState(() => _berangkatSnapshot = snapshot);
+
+    try {
+      final template = await ref
+          .read(armadaRepositoryProvider)
+          .getChecklistMajorTemplate(armadaId: unit.id);
+      if (template.isNotEmpty && mounted) {
+        setState(() => _itemTemplate = template);
+      }
+    } on ApiException catch (_) {
+      // Template lokal tetap dipakai saat perangkat offline.
+    }
+
+    if (!mounted) return;
     setState(() => _step = _Step.konteks);
   }
 
+  List<String> _templateForCurrentMode() {
+    final labels = List<String>.from(_itemTemplate);
+    if (_mode == MajorChecklistMode.kembali && _berangkatSnapshot != null) {
+      for (final item in _berangkatSnapshot!.items) {
+        if (!labels.contains(item.label)) labels.add(item.label);
+      }
+    }
+    return labels;
+  }
+
   void _prepareChecklist() {
-    final base = defaultMajorChecklistItems();
-    final items =
-        _mode == MajorChecklistMode.kembali && _berangkatSnapshot != null
-            ? [
-                for (final b in base)
-                  b.copyWith(
-                    status:
-                        _berangkatSnapshot!.statusFor(b.label) ??
-                        MajorChecklistStatus.belum,
-                  ),
-              ]
-            : base;
+    final snapshot =
+        _mode == MajorChecklistMode.kembali ? _berangkatSnapshot : null;
+    final items = majorItemsFromTemplate(
+      _templateForCurrentMode(),
+      snapshot: snapshot,
+    );
     setState(() {
       _items = items;
       _step = _Step.checklist;
+    });
+  }
+
+  void _removeChecklistItem(int index) {
+    setState(() {
+      _items = majorRemoveChecklistItem(_items, index);
+      _itemTemplate = majorTemplateFromItems(_items);
+    });
+  }
+
+  Future<void> _addChecklistItem() async {
+    final controller = TextEditingController();
+    final label = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tambah Bagian'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            labelText: 'Nama bagian',
+            hintText: 'Misal: Jok',
+          ),
+          onSubmitted: (value) => Navigator.of(context).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Tambah'),
+          ),
+        ],
+      ),
+    );
+    if (label == null || !mounted) return;
+
+    final next = majorAddChecklistItem(_items, label);
+    if (identical(next, _items)) return;
+    setState(() {
+      _items = next;
+      _itemTemplate = majorTemplateFromItems(_items);
     });
   }
 
@@ -173,6 +236,8 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
           .submitChecklistMajor(
             armadaId: unit.id,
             items: payload,
+            tipe: _mode.name,
+            itemTemplate: majorTemplateFromItems(_items),
             catatan: _catatanCtrl.text.trim(),
             photoPaths: photoPaths,
           );
@@ -539,17 +604,26 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _items = [
-                        for (final i in _items)
-                          i.copyWith(status: MajorChecklistStatus.baik),
-                      ];
-                    });
-                  },
-                  icon: const Icon(Icons.done_all, size: 18),
-                  label: const Text('Semua Baik'),
+                Column(
+                  children: [
+                    TextButton.icon(
+                      onPressed: _addChecklistItem,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Tambah Bagian'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _items = [
+                            for (final i in _items)
+                              i.copyWith(status: MajorChecklistStatus.baik),
+                          ];
+                        });
+                      },
+                      icon: const Icon(Icons.done_all, size: 18),
+                      label: const Text('Semua Baik'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -573,6 +647,7 @@ class _ChecklistMajorScreenState extends ConsumerState<ChecklistMajorScreen> {
                   },
                   onTakePhoto: () => _takePhoto(index),
                   onDeletePhoto: () => _deletePhoto(index),
+                  onRemove: () => _removeChecklistItem(index),
                   onPreview: () {
                     final p = _items[index].photoPath;
                     if (p == null) return;
@@ -1150,6 +1225,7 @@ class _MajorItemTile extends StatelessWidget {
     required this.onStatusChanged,
     required this.onTakePhoto,
     required this.onDeletePhoto,
+    required this.onRemove,
     required this.onPreview,
     this.berangkatHint,
   });
@@ -1158,6 +1234,7 @@ class _MajorItemTile extends StatelessWidget {
   final ValueChanged<MajorChecklistStatus> onStatusChanged;
   final VoidCallback onTakePhoto;
   final VoidCallback onDeletePhoto;
+  final VoidCallback onRemove;
   final VoidCallback onPreview;
 
   /// Kondisi item saat berangkat (mode kembali) - null bila tak tersedia.
@@ -1222,6 +1299,17 @@ class _MajorItemTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                IconButton(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  color: colors.error,
+                  tooltip: 'Hapus bagian',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
               ],
             ),
             if (berangkatHint != null && berangkatHint!.isAssessed) ...[

@@ -31,7 +31,12 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging && mounted) setState(() {});
   }
 
   @override
@@ -52,13 +57,6 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
           title: widget.nama ?? 'Tracking Hari Ini',
         ),
         actions: const [PortalSwitchButton()],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.map_outlined), text: 'Peta Jejak'),
-            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Daftar Titik'),
-          ],
-        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(trailProvider(widget.userId).future),
@@ -116,179 +114,214 @@ class _TrailScreenState extends ConsumerState<TrailScreen>
             );
             final lastNama = widget.nama ?? data.nama ?? 'Lokasi terakhir';
 
-            return TabBarView(
-              controller: _tabController,
+            return Column(
               children: [
-                // TAB 1: Peta Interaktif
-                Stack(
-                  children: [
-                    FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        initialCenter: lastPoint,
-                        initialZoom: 15.0,
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.sbps.mobile',
-                        ),
-                        if (points.length > 1)
-                          PolylineLayer(
-                            polylines: [
-                              Polyline(
-                                points: points,
-                                strokeWidth: 4.5,
-                                color: Colors.blueAccent,
-                              ),
-                            ],
-                          ),
-                        MarkerLayer(
-                          markers: [
-                            // Titik Awal
-                            Marker(
-                              point: firstPoint,
-                              width: 40,
-                              height: 40,
-                              child: const Icon(
-                                Icons.play_circle_fill,
-                                color: Colors.green,
-                                size: 36,
-                              ),
-                            ),
-                            // Titik Akhir (Posisi Terakhir)
-                            if (points.length > 1)
-                              Marker(
-                                point: lastPoint,
-                                width: 40,
-                                height: 40,
-                                child: const Icon(
-                                  Icons.location_pin,
-                                  color: Colors.red,
-                                  size: 40,
-                                ),
-                              ),
-                          ],
-                        ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<int>(
+                      segments: const [
+                        ButtonSegment(value: 0, label: Text('Peta Jejak')),
+                        ButtonSegment(value: 1, label: Text('Daftar Titik')),
                       ],
+                      selected: {_tabController.index},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (selection) {
+                        _tabController.animateTo(selection.first);
+                      },
                     ),
-                    // Floating Summary Card
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      right: 12,
-                      child: Card(
-                        elevation: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // TAB 1: Peta Interaktif
+                      Stack(
+                        children: [
+                          FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: lastPoint,
+                              initialZoom: 15.0,
+                            ),
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${data.tanggal ?? 'Hari ini'} • ${data.items.length} titik',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${fmtWaktu(firstTime)} → ${fmtWaktu(lastTime)}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context).colorScheme
-                                          .onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.sbps.mobile',
                               ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (lastUrl != null)
-                                    IconButton(
-                                      icon: const Icon(Icons.share_location),
-                                      tooltip: 'Buka / Bagikan Lokasi',
-                                      onPressed: () =>
-                                          showTrackLocationActions(
-                                        context,
-                                        url: lastUrl,
-                                        nama: lastNama,
+                              if (points.length > 1)
+                                PolylineLayer(
+                                  polylines: [
+                                    Polyline(
+                                      points: points,
+                                      strokeWidth: 4.5,
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ],
+                                ),
+                              MarkerLayer(
+                                markers: [
+                                  // Titik Awal
+                                  Marker(
+                                    point: firstPoint,
+                                    width: 40,
+                                    height: 40,
+                                    child: const Icon(
+                                      Icons.play_circle_fill,
+                                      color: Colors.green,
+                                      size: 36,
+                                    ),
+                                  ),
+                                  // Titik Akhir (Posisi Terakhir)
+                                  if (points.length > 1)
+                                    Marker(
+                                      point: lastPoint,
+                                      width: 40,
+                                      height: 40,
+                                      child: const Icon(
+                                        Icons.location_pin,
+                                        color: Colors.red,
+                                        size: 40,
                                       ),
                                     ),
-                                  IconButton(
-                                    icon: const Icon(Icons.my_location),
-                                    tooltip: 'Fokus ke Posisi Terakhir',
-                                    onPressed: () {
-                                      _mapController.move(lastPoint, 16.0);
-                                    },
-                                  ),
                                 ],
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // TAB 2: Daftar Kronologis Titik
-                ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: data.items.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    // Hindari alloc + O(n²) `reversed.toList()` per baris -
-                    // tautan indeks terbalik langsung tanpa salinan.
-                    final item = data.items[data.items.length - 1 - i];
-                    final isLatest = i == 0;
-                    return ListTile(
-                      leading: Icon(
-                        isLatest ? Icons.location_pin : Icons.place_outlined,
-                        color: isLatest ? Colors.red : null,
-                      ),
-                      title: Text(
-                        fmtWaktu(item.timestamp),
-                        style: TextStyle(
-                          fontWeight: isLatest
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Lat: ${item.lat.toStringAsFixed(6)}, Lng: ${item.lng.toStringAsFixed(6)}',
-                      ),
-                      trailing: isLatest
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (lastUrl != null)
-                                  IconButton(
-                                    tooltip: 'Buka / Bagikan Lokasi',
-                                    icon: const Icon(Icons.share_location),
-                                    visualDensity: VisualDensity.compact,
-                                    onPressed: () =>
-                                        showTrackLocationActions(
-                                      context,
-                                      url: lastUrl,
-                                      nama: lastNama,
-                                    ),
-                                  ),
-                                const Chip(
-                                  label: Text('Terbaru'),
-                                  visualDensity: VisualDensity.compact,
+                          // Floating Summary Card
+                          Positioned(
+                            top: 12,
+                            left: 12,
+                            right: 12,
+                            child: Card(
+                              elevation: 4,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
                                 ),
-                              ],
-                            )
-                          : null,
-                    );
-                  },
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${data.tanggal ?? 'Hari ini'} • ${data.items.length} titik',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${fmtWaktu(firstTime)} → ${fmtWaktu(lastTime)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (lastUrl != null)
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.share_location,
+                                            ),
+                                            tooltip: 'Buka / Bagikan Lokasi',
+                                            onPressed: () =>
+                                                showTrackLocationActions(
+                                                  context,
+                                                  url: lastUrl,
+                                                  nama: lastNama,
+                                                ),
+                                          ),
+                                        IconButton(
+                                          icon: const Icon(Icons.my_location),
+                                          tooltip: 'Fokus ke Posisi Terakhir',
+                                          onPressed: () {
+                                            _mapController.move(
+                                              lastPoint,
+                                              16.0,
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // TAB 2: Daftar Kronologis Titik
+                      ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: data.items.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          // Hindari alloc + O(n²) `reversed.toList()` per baris -
+                          // tautan indeks terbalik langsung tanpa salinan.
+                          final item = data.items[data.items.length - 1 - i];
+                          final isLatest = i == 0;
+                          return ListTile(
+                            leading: Icon(
+                              isLatest
+                                  ? Icons.location_pin
+                                  : Icons.place_outlined,
+                              color: isLatest ? Colors.red : null,
+                            ),
+                            title: Text(
+                              fmtWaktu(item.timestamp),
+                              style: TextStyle(
+                                fontWeight: isLatest
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Lat: ${item.lat.toStringAsFixed(6)}, Lng: ${item.lng.toStringAsFixed(6)}',
+                            ),
+                            trailing: isLatest
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (lastUrl != null)
+                                        IconButton(
+                                          tooltip: 'Buka / Bagikan Lokasi',
+                                          icon: const Icon(
+                                            Icons.share_location,
+                                          ),
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () =>
+                                              showTrackLocationActions(
+                                                context,
+                                                url: lastUrl,
+                                                nama: lastNama,
+                                              ),
+                                        ),
+                                      const Chip(
+                                        label: Text('Terbaru'),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ],
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             );

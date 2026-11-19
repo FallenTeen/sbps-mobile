@@ -174,16 +174,19 @@ class SparepartRequestItem {
   const SparepartRequestItem({
     required this.namaBarang,
     required this.jumlah,
+    this.bahanBakuId,
     this.satuan,
     this.keterangan,
   });
 
   final String namaBarang;
   final int jumlah;
+  final String? bahanBakuId;
   final String? satuan;
   final String? keterangan;
 
   Map<String, dynamic> toJson() => {
+    if (bahanBakuId != null) 'bahan_baku_id': bahanBakuId,
     'nama_barang': namaBarang,
     'jumlah': jumlah,
     if (satuan != null) 'satuan': satuan,

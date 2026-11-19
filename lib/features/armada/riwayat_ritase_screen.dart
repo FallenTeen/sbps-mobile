@@ -31,7 +31,12 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging && mounted) setState(() {});
   }
 
   @override
@@ -46,17 +51,33 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
       appBar: AppBar(
         title: const Text('Riwayat Muatan'),
         actions: [PortalSwitchButton()],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Hari Ini'),
-            Tab(text: 'Riwayat'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_HariIniTab(), _RiwayatTab()],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Hari Ini')),
+                  ButtonSegment(value: 1, label: Text('Riwayat')),
+                ],
+                selected: {_tabController.index},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) {
+                  _tabController.animateTo(selection.first);
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [_HariIniTab(), _RiwayatTab()],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -308,7 +329,11 @@ class _RitaseCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.scale_outlined, size: 14, color: context.colors.textMuted),
+                  Icon(
+                    Icons.scale_outlined,
+                    size: 14,
+                    color: context.colors.textMuted,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Muatan: ${ritase.jumlahDriver} ${ritase.satuanMuatan ?? 'ton'}',
@@ -372,7 +397,8 @@ class _RitaseCard extends StatelessWidget {
                       icon: Icons.hourglass_top_rounded,
                       borderRadius: 999,
                     ),
-                  if (ritase.wajibJembatanTimbang == true && !ritase.isVerifiedLogistik)
+                  if (ritase.wajibJembatanTimbang == true &&
+                      !ritase.isVerifiedLogistik)
                     StatusPill(
                       label: 'Wajib Timbang',
                       color: context.colors.secondary,

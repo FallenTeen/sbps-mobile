@@ -17,10 +17,13 @@ ServisArmada _servis(String status, {String armadaId = 'a1'}) {
 
 void main() {
   group('Checklist Major - item & status', () {
-    test('defaultMajorChecklistItems membuat 10 item belum dinilai', () {
+    test('defaultMajorChecklistItems membuat item default belum dinilai', () {
       final items = defaultMajorChecklistItems();
-      expect(items.length, 10);
-      expect(items.map((i) => i.index), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      expect(items.length, kMajorChecklistLabels.length);
+      expect(
+        items.map((i) => i.index),
+        List.generate(kMajorChecklistLabels.length, (i) => i + 1),
+      );
       expect(items.every((i) => i.status == MajorChecklistStatus.belum), isTrue);
     });
 
@@ -40,6 +43,46 @@ void main() {
       expect(p['label'], 'Rem');
       expect(p['status'], 'rusak_ringan');
       expect(p.containsKey('photo_index'), isFalse);
+    });
+
+    test('template kustom: tambah/hapus bagian dan status berangkat terbawa', () {
+      final template = [...kMajorChecklistLabels, 'Jok'];
+      final berangkat = [
+        for (final i in majorItemsFromTemplate(template))
+          i.copyWith(
+            status: i.index == 1
+                ? MajorChecklistStatus.rusakRingan
+                : i.index == template.length
+                ? MajorChecklistStatus.baik
+                : i.status,
+          ),
+      ];
+
+      final snapshot = MajorChecklistSnapshot(
+        armadaId: 'a1',
+        tanggal: '2026-09-10T08:00:00',
+        items: [
+          for (final i in berangkat) (label: i.label, status: i.status),
+        ],
+      );
+      final kembali = majorItemsFromTemplate(template, snapshot: snapshot);
+
+      expect(kembali.length, kMajorChecklistLabels.length + 1);
+      expect(kembali.last.label, 'Jok');
+      expect(kembali.first.status, MajorChecklistStatus.rusakRingan);
+      expect(kembali.last.status, MajorChecklistStatus.baik);
+
+      final removed = majorRemoveChecklistItem(kembali, 1);
+      expect(removed.length, kMajorChecklistLabels.length);
+      expect(
+        removed.map((i) => i.index),
+        List.generate(kMajorChecklistLabels.length, (i) => i + 1),
+      );
+      expect(removed.map((i) => i.label), isNot(contains(kMajorChecklistLabels[1])));
+
+      final added = majorAddChecklistItem(removed, 'Radio');
+      expect(majorTemplateFromItems(added).last, 'Radio');
+      expect(majorAddChecklistItem(added, 'Radio'), same(added));
     });
 
     test('needsEvidence true bila rusak, false bila baik/belum', () {
@@ -83,7 +126,12 @@ void main() {
 
     test('majorAllAssessed butuh semua item dinilai', () {
       expect(
-        majorAllAssessed(itemsWith([for (var i = 0; i < 10; i++) MajorChecklistStatus.baik])),
+        majorAllAssessed(
+          itemsWith([
+            for (var i = 0; i < kMajorChecklistLabels.length; i++)
+              MajorChecklistStatus.baik,
+          ]),
+        ),
         isTrue,
       );
       expect(
@@ -115,7 +163,10 @@ void main() {
     });
 
     test('majorSummaryOf.allBaik true bila semua baik', () {
-      final items = itemsWith([for (var i = 0; i < 10; i++) MajorChecklistStatus.baik]);
+      final items = itemsWith([
+        for (var i = 0; i < kMajorChecklistLabels.length; i++)
+          MajorChecklistStatus.baik,
+      ]);
       expect(majorSummaryOf(items).allBaik, isTrue);
     });
   });
@@ -184,11 +235,9 @@ void main() {
       final kini = [
         for (var i = 0; i < base.length; i++)
           base[i].copyWith(
-            status: base[i].label == 'Rem'
+            status: base[i].label == 'Kondisi Rem / Hydraulic'
                 ? MajorChecklistStatus.rusakBerat
-                : (base[i].label == 'Ban'
-                      ? MajorChecklistStatus.baik
-                      : MajorChecklistStatus.baik),
+                : MajorChecklistStatus.baik,
           ),
       ];
       final snapshot = MajorChecklistSnapshot(
@@ -200,12 +249,12 @@ void main() {
       );
 
       final comps = compareReturnToBerangkat(kini, snapshot: snapshot);
-      final rem = comps.firstWhere((c) => c.label == 'Rem');
+      final rem = comps.firstWhere((c) => c.label == 'Kondisi Rem / Hydraulic');
       expect(rem.berubah, isTrue);
       expect(rem.berangkat, MajorChecklistStatus.baik);
       expect(rem.kini, MajorChecklistStatus.rusakBerat);
 
-      final ban = comps.firstWhere((c) => c.label == 'Ban');
+      final ban = comps.firstWhere((c) => c.label == 'Kondisi Ban & Velg');
       expect(ban.berubah, isFalse);
     });
 

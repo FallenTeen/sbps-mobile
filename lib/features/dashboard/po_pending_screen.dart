@@ -9,6 +9,7 @@ import 'fmt.dart';
 import 'status_chip.dart';
 import '../../shared/widgets/info_banner.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 
 /// Daftar PO menunggu approval (Owner/Admin Keuangan) - server dibatasi
 /// maks 20 item terbaru; UI memberi label eksplisit bila tepat 20
@@ -28,7 +29,7 @@ class PoPendingScreen extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(poPendingProvider.future),
         child: po.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonListView(),
           error: (e, _) => ListView(
             padding: const EdgeInsets.all(24),
             children: [
@@ -152,7 +153,9 @@ class _CappedBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.warning.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: context.colors.warning.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: context.colors.warning.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         children: [

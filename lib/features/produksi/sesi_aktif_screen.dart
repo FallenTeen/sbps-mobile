@@ -36,25 +36,22 @@ class SesiAktifScreen extends ConsumerStatefulWidget {
   ConsumerState<SesiAktifScreen> createState() => _SesiAktifScreenState();
 }
 
-class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen> {
+  int _tabIndex = 0;
   Timer? _durationTicker;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     // Durasi sesi berjalan diperbarui tiap menit.
     _durationTicker = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted && _tabController.index == 0) setState(() {});
+      if (mounted && _tabIndex == 0) setState(() {});
     });
   }
 
   @override
   void dispose() {
     _durationTicker?.cancel();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -124,43 +121,44 @@ class _SesiAktifScreenState extends ConsumerState<SesiAktifScreen>
             ],
           ),
         ],
-        bottom: PreferredSize(
-          // BrandStrip (3) + TabBar Material 3 (48).
-          preferredSize: const Size.fromHeight(51),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const BrandStrip(),
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'Sesi Aktif'),
-                  Tab(text: 'Progress'),
-                  Tab(text: 'Riwayat'),
-                ],
-              ),
-            ],
-          ),
-        ),
+        bottom: const BrandStrip(),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/produksi/mulai'),
         icon: const Icon(Icons.play_arrow),
         label: const Text('Mulai Sesi'),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          // Tab 1: Sesi Aktif + ringkasan Produksi Hari Ini.
-          _ActiveSessionsTab(
-            sesi: sesi,
-            progress: progress,
-            waitingQc: waitingQc,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Sesi Aktif')),
+                  ButtonSegment(value: 1, label: Text('Progress')),
+                  ButtonSegment(value: 2, label: Text('Riwayat')),
+                ],
+                selected: {_tabIndex},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) {
+                  setState(() => _tabIndex = selection.first);
+                },
+              ),
+            ),
           ),
-          // Tab 2: Progress - konten nyata per titik hari ini.
-          const ProgressHariIniContent(),
-          // Tab 3: Riwayat - konten nyata dengan filter yang berfungsi.
-          const RiwayatProduksiContent(),
+          Expanded(
+            child: _tabIndex == 0
+                ? _ActiveSessionsTab(
+                    sesi: sesi,
+                    progress: progress,
+                    waitingQc: waitingQc,
+                  )
+                : _tabIndex == 1
+                ? const ProgressHariIniContent()
+                : const RiwayatProduksiContent(),
+          ),
         ],
       ),
     );
@@ -366,8 +364,11 @@ class _ProduksiHariIniHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.notification_important_outlined,
-                      color: Colors.white, size: 16),
+                  const Icon(
+                    Icons.notification_important_outlined,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
@@ -494,18 +495,17 @@ class _SessionCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: (hasWaitingQc
-                        ? context.colors.warning
-                        : context.colors.success)
-                    .withValues(alpha: 0.1),
+                color:
+                    (hasWaitingQc
+                            ? context.colors.warning
+                            : context.colors.success)
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
                   Icon(
-                    hasWaitingQc
-                        ? Icons.speed
-                        : Icons.science_outlined,
+                    hasWaitingQc ? Icons.speed : Icons.science_outlined,
                     size: 15,
                     color: hasWaitingQc
                         ? context.colors.warning
@@ -601,11 +601,7 @@ class _SessionCard extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.text,
-    this.highlight,
-  });
+  const _DetailRow({required this.icon, required this.text, this.highlight});
 
   final IconData icon;
   final String text;
@@ -728,9 +724,7 @@ class _SelesaikanSheetState extends ConsumerState<_SelesaikanSheet> {
       );
     } else if (result.queued) {
       Navigator.of(context).pop();
-      messenger.showSnackBar(
-        const SnackBar(content: Text(kCopyQueued)),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text(kCopyQueued)));
     } else if (result.error != null) {
       messenger.showSnackBar(SnackBar(content: Text(result.error!)));
     }

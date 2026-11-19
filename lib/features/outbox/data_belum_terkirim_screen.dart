@@ -7,6 +7,7 @@ import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/widgets/confirmation_dialog.dart';
 import '../presensi/presensi_providers.dart';
 
@@ -50,7 +51,7 @@ class _DataBelumTerkirimScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('Data Belum Terkirim')),
       body: actions.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonListView(),
         error: (error, _) => AppEmptyState(
           icon: Icons.cloud_off_outlined,
           title: 'Gagal membuka antrean',
@@ -123,7 +124,8 @@ class _PendingActionTile extends StatelessWidget {
     PendingEndpoint.servisEksternalCreate => 'Servis eksternal armada',
     PendingEndpoint.servisEksternalNota => 'Nota servis eksternal',
     PendingEndpoint.servisEksternalFotoHasil => 'Foto hasil servis',
-    PendingEndpoint.workshopVerifikasiEksternal => 'Verifikasi servis eksternal',
+    PendingEndpoint.workshopVerifikasiEksternal =>
+      'Verifikasi servis eksternal',
     PendingEndpoint.workshopTodoPhoto => 'Foto bukti todo workshop',
     PendingEndpoint.workshopRequestSparepart => 'Request sparepart workshop',
     PendingEndpoint.logistikVerifikasiRitase => 'Verifikasi ritase logistik',
@@ -182,9 +184,9 @@ class _PendingActionTile extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   // pending = retryable (menunggu jaringan) - jangan tampil
                   // merah seperti error permanen (failed) yang butuh tindakan.
-                   color: action.status == PendingStatus.failed
-                       ? context.colors.error
-                       : context.colors.warning,
+                  color: action.status == PendingStatus.failed
+                      ? context.colors.error
+                      : context.colors.warning,
                 ),
               ),
             ],

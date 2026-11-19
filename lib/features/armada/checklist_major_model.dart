@@ -27,18 +27,21 @@ enum MajorChecklistStatus {
   bool get isRusak => this == rusakRingan || this == rusakBerat;
 }
 
-/// Ten item serah terima kendaraan (urutan & label tetap).
+/// Item default serah terima kendaraan (urutan & label tetap).
+/// Selaras dengan `ChecklistSerahTerima::DEFAULT_ITEMS` di backend.
 const List<String> kMajorChecklistLabels = [
-  'Body / Karoseri',
-  'Mesin',
-  'Transmisi',
-  'Rem',
-  'Ban',
-  'Kaca / Spion',
-  'Lampu',
-  'Interior',
-  'KM (Odometer)',
-  'Kelengkapan Dokumen',
+  'Kondisi Mesin & Getaran',
+  'Kondisi Rem / Hydraulic',
+  'Kondisi Ban & Velg',
+  'Kondisi Kaca & Spion',
+  'Kondisi Aki & Kelistrikan',
+  'Kondisi Lampu & Klakson',
+  'Kondisi Dashboard & Instrumen (ODO/HM)',
+  'Kondisi Kebocoran Oli / Solar',
+  'Kondisi Sabuk, Radiator & Pendingin',
+  'Kondisi Body / Karoseri',
+  'Kondisi Kabin & Kebersihan Unit',
+  'Kondisi Perlengkapan (Kunci, Dongkrak, Ban Cadangan)',
 ];
 
 /// Satu item checklist major pada form.
@@ -81,11 +84,74 @@ class MajorChecklistItem {
   };
 }
 
-/// Membuat daftar default 10 item checklist (belum dinilai).
-List<MajorChecklistItem> defaultMajorChecklistItems() {
+/// Membuat daftar item checklist dari template label (belum dinilai).
+///
+/// Dipakai untuk template kustom yang berasal dari server maupun snapshot
+/// berangkat. Status mode "kembali" diisi ulang dari [snapshot] bila label
+/// cocok.
+List<MajorChecklistItem> majorItemsFromTemplate(
+  Iterable<String> labels, {
+  MajorChecklistSnapshot? snapshot,
+}) {
+  final seen = <String>{};
+  final unique = <String>[];
+  for (final raw in labels) {
+    final label = raw.trim();
+    if (label.isEmpty || !seen.add(label)) continue;
+    unique.add(label);
+  }
+
   return [
-    for (var i = 0; i < kMajorChecklistLabels.length; i++)
-      MajorChecklistItem(index: i + 1, label: kMajorChecklistLabels[i]),
+    for (var i = 0; i < unique.length; i++)
+      MajorChecklistItem(
+        index: i + 1,
+        label: unique[i],
+        status: snapshot?.statusFor(unique[i]) ?? MajorChecklistStatus.belum,
+      ),
+  ];
+}
+
+/// Membuat daftar default 10 item checklist (belum dinilai).
+List<MajorChecklistItem> defaultMajorChecklistItems() =>
+    majorItemsFromTemplate(kMajorChecklistLabels);
+
+/// Template label dari item yang sedang ditampilkan.
+List<String> majorTemplateFromItems(List<MajorChecklistItem> items) =>
+    items.map((i) => i.label).toList();
+
+/// Tambah bagian kustom. Label duplikat diabaikan.
+List<MajorChecklistItem> majorAddChecklistItem(
+  List<MajorChecklistItem> items,
+  String rawLabel,
+) {
+  final label = rawLabel.trim();
+  if (label.isEmpty || items.any((i) => i.label == label)) return items;
+
+  return [
+    ...items,
+    MajorChecklistItem(index: items.length + 1, label: label),
+  ];
+}
+
+/// Hapus bagian pada [index] lalu rapikan nomor urut.
+List<MajorChecklistItem> majorRemoveChecklistItem(
+  List<MajorChecklistItem> items,
+  int index,
+) {
+  if (index < 0 || index >= items.length) return items;
+
+  final remaining = <MajorChecklistItem>[
+    for (var i = 0; i < items.length; i++)
+      if (i != index) items[i],
+  ];
+  return [
+    for (var i = 0; i < remaining.length; i++)
+      MajorChecklistItem(
+        index: i + 1,
+        label: remaining[i].label,
+        status: remaining[i].status,
+        photoPath: remaining[i].photoPath,
+      ),
   ];
 }
 

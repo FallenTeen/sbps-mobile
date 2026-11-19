@@ -46,9 +46,7 @@ class QueueCard extends StatelessWidget {
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: highlighted
-              ? context.colors.primary
-              : context.colors.border,
+          color: highlighted ? context.colors.primary : context.colors.border,
           width: highlighted ? 1.6 : 1,
         ),
         boxShadow: AppTheme.shadowLv2,
@@ -78,6 +76,8 @@ class QueueCard extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: context.colors.textPrimary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (statusLabel != null)
@@ -87,42 +87,46 @@ class QueueCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                      if (badgeLabel != null) ...[
-                        const SizedBox(height: 6),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: (badgeColor ?? context.colors.warning)
-                                  .withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              badgeLabel!,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color:
-                                    badgeColor ?? context.colors.warning,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (subtitle != null) ...[
+                      // Dua baris saja; teks lengkap ada di layar detail.
+                      if (subtitle != null || badgeLabel != null) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          subtitle!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.colors.textTertiary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            if (subtitle != null)
+                              Expanded(
+                                child: Text(
+                                  subtitle!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.colors.textTertiary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            if (badgeLabel != null) ...[
+                              if (subtitle != null) const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (badgeColor ?? context.colors.warning)
+                                      .withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  badgeLabel!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: badgeColor ?? context.colors.warning,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ],

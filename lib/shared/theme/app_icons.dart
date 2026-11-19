@@ -37,6 +37,12 @@ abstract final class AppIcons {
   // ── Navigasi ────────────────────────────────────────────────────────────────
   static const navHome = Icons.home_outlined;
   static const navHomeActive = Icons.home_rounded;
+  static const navPresensi = Icons.fingerprint;
+  static const navPresensiActive = Icons.fingerprint_rounded;
+  static const navNotification = Icons.notifications_outlined;
+  static const navNotificationActive = Icons.notifications_rounded;
+  static const navTasks = Icons.assignment_outlined;
+  static const navTasksActive = Icons.assignment_rounded;
   static const navBack = Icons.arrow_back_ios_new_rounded;
   static const navForward = Icons.chevron_right_rounded;
   static const navRefresh = Icons.refresh_rounded;
