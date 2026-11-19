@@ -144,6 +144,8 @@ class ServisArmada {
   bool get isDisetujui => status == 'disetujui';
   bool get isDitolak => status == 'ditolak';
   bool get isDikerjakan => status == 'dikerjakan';
+  bool get isMenungguSparepart => status == 'menunggu_sparepart';
+  bool get isSparepartTersedia => status == 'sparepart_tersedia';
   bool get isSelesai => status == 'selesai';
 
   factory ServisArmada.fromJson(Map<String, dynamic> json) {

@@ -257,11 +257,10 @@ class ServisRepository {
     _ensureSuccess(res);
   }
 
-  /// GET /servis-armada?tipe_servis=eksternal - Daftar servis eksternal untuk verifikasi workshop.
+  /// GET /workshop/servis-eksternal - Daftar servis eksternal untuk verifikasi workshop.
   Future<List<ServisArmada>> getServisEksternalList() async {
     final res = await _api.get<List<ServisArmada>>(
-      '/servis-armada',
-      query: {'tipe_servis': 'eksternal'},
+      '/workshop/servis-eksternal',
       parse: (raw) {
         final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
         final items = map['items'] ?? map['data'] ?? (raw is List ? raw : const []);

@@ -41,6 +41,11 @@ void main() {
       expect(servisStatusLabel('ditolak'), 'Ditolak');
     });
 
+    test('status sparepart punya label workshop yang jelas', () {
+      expect(servisStatusLabel('menunggu_sparepart'), 'Menunggu Sparepart');
+      expect(servisStatusLabel('sparepart_tersedia'), 'Sparepart Tersedia');
+    });
+
     test('status tak dikenal dikembalikan apa adanya (tidak mengarang)', () {
       expect(servisStatusLabel('archived'), 'archived');
     });
@@ -132,6 +137,15 @@ void main() {
       final steps = servisTimelineSteps(_servis(status: 'dikerjakan'));
       expect(steps[0].state, ServisTimelineState.done);
       expect(steps[1].state, ServisTimelineState.done);
+      expect(steps[2].state, ServisTimelineState.current);
+      expect(steps[3].state, ServisTimelineState.pending);
+    });
+
+    test('status sparepart mengikuti langkah dikerjakan', () {
+      final steps = servisTimelineSteps(
+        _servis(status: 'menunggu_sparepart'),
+      );
+      expect(steps.length, 4);
       expect(steps[2].state, ServisTimelineState.current);
       expect(steps[3].state, ServisTimelineState.pending);
     });

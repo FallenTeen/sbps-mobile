@@ -26,7 +26,8 @@ class WorkshopRepository {
   static const _uuid = Uuid();
 
   /// GET /servis-armada - Antrian workshop (servis yang disetujui/dikerjakan).
-  /// Filter status: 'disetujui' (menunggu), 'dikerjakan', 'selesai'.
+  /// Status workshop: 'disetujui' (menunggu), 'dikerjakan',
+  /// 'menunggu_sparepart', 'sparepart_tersedia', 'selesai'.
   Future<List<WorkshopJob>> getAntrianServis({String? status}) async {
     final res = await _api.get<List<WorkshopJob>>(
       '/servis-armada',
@@ -39,8 +40,9 @@ class WorkshopRepository {
   /// Parse response `/servis-armada` menjadi daftar pekerjaan workshop.
   ///
   /// HANYA pekerjaan yang benar-benar masuk antrian: `disetujui` (menunggu),
-  /// `dikerjakan`, atau `selesai`. `diajukan` & `ditolak` BUKAN pekerjaan
-  /// workshop - ditolak TIDAK boleh tampil sebagai pending.
+  /// `dikerjakan`, `menunggu_sparepart`, `sparepart_tersedia`, atau `selesai`.
+  /// `diajukan` & `ditolak` BUKAN pekerjaan workshop - ditolak TIDAK boleh
+  /// tampil sebagai pending.
   static List<WorkshopJob> antrianFromRaw(Object? raw) {
     final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
     final items =
@@ -156,5 +158,9 @@ class WorkshopRepository {
 
   /// True jika servis adalah pekerjaan yang valid untuk antrian workshop.
   static bool isWorkForWorkshop(ServisArmada servis) =>
-      servis.isDisetujui || servis.isDikerjakan || servis.isSelesai;
+      servis.isDisetujui ||
+      servis.isDikerjakan ||
+      servis.isMenungguSparepart ||
+      servis.isSparepartTersedia ||
+      servis.isSelesai;
 }

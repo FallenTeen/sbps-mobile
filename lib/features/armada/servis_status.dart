@@ -3,7 +3,8 @@
 /// Semua layar (index / work queue, detail, form) memakai helper ini supaya
 /// tidak ada label atau urutan timeline yang terpecah antar file.
 /// Status yang dipakai PERSIS sesuai API (`models/servis_armada.dart`):
-/// `diajukan`, `disetujui`, `ditolak`, `dikerjakan`, `selesai`.
+/// `diajukan`, `disetujui`, `ditolak`, `dikerjakan`, `menunggu_sparepart`,
+/// `sparepart_tersedia`, `selesai`.
 library;
 
 import 'package:flutter/material.dart';
@@ -43,6 +44,8 @@ String servisStatusLabel(String status) {
     'diajukan' => 'Menunggu Persetujuan',
     'disetujui' => 'Disetujui',
     'dikerjakan' => 'Sedang Dikerjakan',
+    'menunggu_sparepart' => 'Menunggu Sparepart',
+    'sparepart_tersedia' => 'Sparepart Tersedia',
     'selesai' => 'Selesai',
     'ditolak' => 'Ditolak',
     _ => status,
@@ -56,6 +59,8 @@ Color servisStatusColor(String status, AppColors colors) {
     'diajukan' => colors.warning,
     'disetujui' => colors.info,
     'dikerjakan' => colors.secondary,
+    'menunggu_sparepart' => colors.warning,
+    'sparepart_tersedia' => colors.info,
     'selesai' => colors.success,
     'ditolak' => colors.error,
     _ => colors.textMuted,
@@ -80,6 +85,8 @@ String servisNextAction(ServisArmada item, {bool canApprove = false}) {
         : 'Menunggu persetujuan atasan',
     'disetujui' => 'Menunggu dijadwalkan workshop',
     'dikerjakan' => 'Sedang dikerjakan workshop',
+    'menunggu_sparepart' => 'Menunggu sparepart dari inventory',
+    'sparepart_tersedia' => 'Sparepart tersedia - lanjutkan pengerjaan',
     'selesai' => 'Selesai - lihat hasil & biaya servis',
     'ditolak' => 'Ditolak - ajukan ulang bila perlu',
     _ => '',
@@ -108,7 +115,11 @@ class ServisTimelineStep {
 /// - `ditolak` = node terminal merah setelah Diajukan (dengan alasan penolakan).
 List<ServisTimelineStep> servisTimelineSteps(ServisArmada item) {
   const labels = ['Diajukan', 'Disetujui', 'Dikerjakan', 'Selesai'];
-  final reachedIdx = kServisStatusOrder.indexOf(item.status);
+  final wireStatus = switch (item.status) {
+    'menunggu_sparepart' || 'sparepart_tersedia' => 'dikerjakan',
+    _ => item.status,
+  };
+  final reachedIdx = kServisStatusOrder.indexOf(wireStatus);
 
   if (item.status == 'ditolak') {
     return [

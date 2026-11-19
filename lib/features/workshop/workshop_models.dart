@@ -57,6 +57,8 @@ class WorkshopJob {
     return switch (value) {
       'disetujui' => WorkshopJobStatus.menunggu,
       'dikerjakan' => WorkshopJobStatus.dikerjakan,
+      'menunggu_sparepart' => WorkshopJobStatus.dikerjakan,
+      'sparepart_tersedia' => WorkshopJobStatus.dikerjakan,
       'selesai' => WorkshopJobStatus.selesai,
       // 'diajukan' & 'ditolak' BUKAN pekerjaan workshop - jangan pernah
       // ditampilkan sebagai "Menunggu" (antrian hanya untuk yang disetujui).
@@ -78,7 +80,10 @@ class WorkshopJob {
       createdAt: servis.tanggalAjuan.isEmpty
           ? null
           : DateTime.tryParse(servis.tanggalAjuan),
-      assignedAt: servis.status == 'dikerjakan' || servis.status == 'selesai'
+      assignedAt: servis.isDikerjakan ||
+              servis.isMenungguSparepart ||
+              servis.isSparepartTersedia ||
+              servis.isSelesai
           ? servis.tanggalAjuan.isEmpty
                 ? null
                 : DateTime.tryParse(servis.tanggalAjuan)

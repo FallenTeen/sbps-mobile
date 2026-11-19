@@ -97,6 +97,25 @@ void main() {
         isFalse,
       );
     });
+
+    test('status sparepart tetap masuk antrian workshop', () {
+      final jobs = WorkshopRepository.antrianFromRaw(
+        _rawServisItems(['menunggu_sparepart', 'sparepart_tersedia']),
+      );
+      expect(jobs.length, 2);
+      expect(
+        jobs.map((j) => j.status),
+        [WorkshopJobStatus.dikerjakan, WorkshopJobStatus.dikerjakan],
+      );
+      expect(
+        WorkshopRepository.isWorkForWorkshop(_servis('menunggu_sparepart')),
+        isTrue,
+      );
+      expect(
+        WorkshopRepository.isWorkForWorkshop(_servis('sparepart_tersedia')),
+        isTrue,
+      );
+    });
   });
 
   group('Selesai Hari Ini - benar-benar berdasarkan tanggal', () {
