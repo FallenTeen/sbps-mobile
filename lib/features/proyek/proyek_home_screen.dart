@@ -4,17 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
+import '../../shared/theme/touch_targets.dart';
 import '../../shared/widgets/adaptive_grid.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_screen_frame.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
-import '../../shared/widgets/brand_strip.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/global_search_sheet.dart';
 import '../../shared/widgets/pinned_modules_row.dart';
-import '../../shared/widgets/recent_modules_row.dart';
 import '../auth/auth_providers.dart';
 import '../tracking/tracking_providers.dart';
+import 'home_quick_actions.dart';
 import 'role_permissions.dart';
 import 'pending_summary_provider.dart';
 import '../../shared/utils/module_routes.dart';
@@ -36,64 +37,59 @@ class ProyekHomeScreen extends ConsumerWidget {
         .where((m) => m.key != 'tracking' || RolePermissions.isAdminLike(role))
         .toList();
 
+    final searchModules = <SearchableModule>[
+      SearchableModule(
+        name: 'Modul',
+        items: allowed
+            .map(
+              (m) => SearchResult(
+                title: m.label,
+                subtitle: m.key,
+                icon: m.icon,
+                route: '/proyek',
+              ),
+            )
+            .toList(),
+      ),
+    ];
+
+    void openSearchResult(SearchResult result) {
+      final route = moduleRouteFor(result.subtitle);
+      if (route != null) {
+        context.push(route);
+      }
+    }
+
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: null,
-        bottom: const BrandStrip(),
-        actions: [
-          IconButton(
-            tooltip: 'Cari modul',
-            icon: const Icon(Icons.search),
-            onPressed: () => showGlobalSearchSheet(
-              context,
-              modules: [
-                SearchableModule(
-                  name: 'Modul',
-                  items: allowed
-                      .map(
-                        (m) => SearchResult(
-                          title: m.label,
-                          subtitle: m.key,
-                          icon: m.icon,
-                          route: '/proyek',
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              onSelected: (r) {
-                final route = moduleRouteFor(r.subtitle);
-                if (route != null) {
-                  ref.read(recentModulesProvider.notifier).add(r.subtitle);
-                  context.push(route);
-                }
-              },
-            ),
+      body: AppScreenFrame(
+        title: 'Beranda',
+        maxWidth: AppBreakpoints.maxContentWidth - (AppSpacing.md * 2),
+        actions: const [AppTopBarActions(showNotification: false)],
+        search: _HeaderSearchField(
+          onTap: () => showGlobalSearchSheet(
+            context,
+            modules: searchModules,
+            onSelected: openSearchResult,
           ),
-          const AppTopBarActions(showNotification: false),
-        ],
-      ),
-      body: role == null
-          ? const AppEmptyState(
-              icon: Icons.person_off_outlined,
-              title: 'Peran aktif tidak tersedia',
-              subtitle: 'Peran aktif tidak tersedia untuk App Proyek.',
-              illustrationVariant: EmptyStateVariant.noPermission,
-            )
-          : ResponsiveCenter(
-              maxWidth: AppBreakpoints.maxContentWidth,
-              child: ListView(
+        ),
+        body: role == null
+            ? const AppEmptyState(
+                icon: Icons.person_off_outlined,
+                title: 'Peran aktif tidak tersedia',
+                subtitle: 'Peran aktif tidak tersedia untuk App Proyek.',
+                illustrationVariant: EmptyStateVariant.noPermission,
+              )
+            : ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
                 children: [
                   // Greeting header
                   _GreetingHeader(user: user, role: role),
                   const SizedBox(height: 20),
 
-                  const RecentModulesRow(),
-                  const SizedBox(height: 16),
-                  const PinnedModulesRow(),
+                  PinnedModulesRow(
+                    allowedModules: RolePermissions.modulesFor(role),
+                  ),
                   const SizedBox(height: 16),
 
                   if (role == 'Mandor Titik') ...[
@@ -145,7 +141,40 @@ class ProyekHomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+        ),
+    );
+  }
+}
+
+class _HeaderSearchField extends StatelessWidget {
+  const _HeaderSearchField({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: context.colors.border),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: TextField(
+        readOnly: true,
+        onTap: onTap,
+        decoration: InputDecoration(
+          hintText: 'Cari modul...',
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: context.colors.surfaceVariant,
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border,
+        ),
+      ),
     );
   }
 }
@@ -314,7 +343,6 @@ class _ModuleCard extends ConsumerWidget {
 
     final route = proyekModuleRoute(module.key);
     if (route != null) {
-      ref.read(recentModulesProvider.notifier).add(module.key);
       open(route);
       return;
     }
@@ -659,7 +687,14 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actions = _getActionsForRole(role);
+    final actions = homeQuickActionKeysForRole(role).map((key) {
+      final module = kProyekModules.firstWhere((item) => item.key == key);
+      return _QuickAction(
+        icon: module.icon,
+        label: module.label,
+        route: moduleRouteFor(key)!,
+      );
+    }).toList();
 
     if (actions.isEmpty) {
       return SizedBox.shrink();
@@ -699,56 +734,6 @@ class _QuickActions extends StatelessWidget {
       ],
     );
   }
-
-  List<_QuickAction> _getActionsForRole(String? role) {
-    switch (role) {
-      case 'Mandor Titik':
-        return [
-          _QuickAction(
-            icon: Icons.play_circle,
-            label: 'Mulai Sesi',
-            route: '/produksi/mulai',
-          ),
-          _QuickAction(icon: Icons.science, label: 'QC Test', route: '/qc'),
-        ];
-      case 'Operator Mesin':
-        return [
-          _QuickAction(
-            icon: Icons.play_circle,
-            label: 'Mulai Sesi',
-            route: '/produksi/mulai',
-          ),
-          _QuickAction(
-            icon: Icons.timelapse,
-            label: 'Sesi Aktif',
-            route: '/produksi/sesi-aktif',
-          ),
-          _QuickAction(icon: Icons.science, label: 'QC Test', route: '/qc'),
-        ];
-      case 'Kepala Divisi Armada':
-      case 'Ketua Divisi Armada':
-      case 'Ketua Armada':
-        return [
-          _QuickAction(
-            icon: Icons.analytics,
-            label: 'Overview',
-            route: '/armada/overview',
-          ),
-          _QuickAction(
-            icon: Icons.build,
-            label: 'Approval Servis',
-            route: '/armada/servis',
-          ),
-          _QuickAction(
-            icon: Icons.route,
-            label: 'Riwayat Muatan',
-            route: '/armada/ritase',
-          ),
-        ];
-      default:
-        return [];
-    }
-  }
 }
 
 class _QuickAction {
@@ -775,6 +760,9 @@ class _QuickActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
+        constraints: BoxConstraints(
+          minHeight: TouchTargets.buttonMinHeight(context),
+        ),
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: context.colors.card,

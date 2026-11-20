@@ -315,7 +315,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : 'Tidak ada notifikasi baru',
                   ),
                   trailing: unread > 0 ? _CountBadge(count: unread) : null,
-                  onTap: () => context.push('/notifikasi'),
+                  onTap: () => context.go('/notifikasi'),
                 ),
                 const Divider(height: 1),
                 ListTile(

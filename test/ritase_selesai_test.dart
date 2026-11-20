@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sbps_mobile/core/api_client.dart';
@@ -9,7 +10,10 @@ import 'package:sbps_mobile/core/outbox/outbox_repository.dart';
 import 'package:sbps_mobile/core/outbox/outbox_sync_service.dart';
 import 'package:sbps_mobile/features/armada/armada_providers.dart';
 import 'package:sbps_mobile/features/armada/armada_repository.dart';
+import 'package:sbps_mobile/features/armada/detail_ritase_screen.dart';
 import 'package:sbps_mobile/features/armada/models/armada.dart';
+import 'package:sbps_mobile/features/version/version_gate.dart';
+import 'package:sbps_mobile/shared/theme/app_theme.dart';
 
 class _JsonAdapter implements HttpClientAdapter {
   _JsonAdapter(this.body, {this.statusCode = 200});
@@ -31,7 +35,9 @@ class _JsonAdapter implements HttpClientAdapter {
     return ResponseBody.fromString(
       jsonEncode(body),
       statusCode,
-      headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
     );
   }
 
@@ -53,15 +59,15 @@ ArmadaRepository _repoWith(HttpClientAdapter adapter) {
 
 class _RecordingSelesaiRepository extends ArmadaRepository {
   _RecordingSelesaiRepository({this.selesaiError})
-      : super(
-          api: ApiClient(dio: Dio()..httpClientAdapter = _JsonAdapter(const {})),
-          outbox: OutboxRepository(),
-          sync: OutboxSyncService(
-            OutboxRepository(),
-            ApiClient(dio: Dio()),
-            connectivityStream: () => const Stream.empty(),
-          ),
-        );
+    : super(
+        api: ApiClient(dio: Dio()..httpClientAdapter = _JsonAdapter(const {})),
+        outbox: OutboxRepository(),
+        sync: OutboxSyncService(
+          OutboxRepository(),
+          ApiClient(dio: Dio()),
+          connectivityStream: () => const Stream.empty(),
+        ),
+      );
 
   final String? selesaiError;
   final List<String> selesaiIds = [];
@@ -116,6 +122,31 @@ Map<String, dynamic> _selesaiPayload() => {
   'bisa_selesaikan': false,
 };
 
+class _ConstantGate extends VersionGateController {
+  @override
+  Future<VersionGateState> build() async => VersionGateState.ok;
+}
+
+class _DetailSelesaiRepository extends _RecordingSelesaiRepository {
+  _DetailSelesaiRepository({super.selesaiError});
+
+  final List<String> detailIds = [];
+
+  RitaseItem _detail() => RitaseItem.fromJson({
+    'id': 'ritase-1',
+    'tanggal': '2026-11-20',
+    'status': 'disetujui',
+    'selesai': selesaiIds.isNotEmpty,
+    'bisa_selesaikan': selesaiIds.isEmpty,
+  });
+
+  @override
+  Future<RitaseItem> getRitaseDetail(String id) async {
+    detailIds.add(id);
+    return _detail();
+  }
+}
+
 void main() {
   test('fromJson memparse status selesai dan flag aksi', () {
     final item = RitaseItem.fromJson(_selesaiPayload());
@@ -138,22 +169,25 @@ void main() {
     expect(item.selesaiPada, isNull);
   });
 
-  test('selesaikanRitase POST ke endpoint selesai dan memetakan ritase', () async {
-    final adapter = _JsonAdapter({
-      'status': 'success',
-      'message': 'Ritase ditandai selesai.',
-      'data': _selesaiPayload(),
-    });
+  test(
+    'selesaikanRitase POST ke endpoint selesai dan memetakan ritase',
+    () async {
+      final adapter = _JsonAdapter({
+        'status': 'success',
+        'message': 'Ritase ditandai selesai.',
+        'data': _selesaiPayload(),
+      });
 
-    final item = await _repoWith(adapter).selesaikanRitase('ritase-1');
+      final item = await _repoWith(adapter).selesaikanRitase('ritase-1');
 
-    expect(adapter.method, 'POST');
-    expect(adapter.path, '/armada/ritase/ritase-1/selesai');
-    expect(item.id, 'ritase-1');
-    expect(item.isSelesai, isTrue);
-    expect(item.selesaiPada, '2026-11-20T05:00:00.000Z');
-    expect(item.bisaSelesaikan, isFalse);
-  });
+      expect(adapter.method, 'POST');
+      expect(adapter.path, '/armada/ritase/ritase-1/selesai');
+      expect(item.id, 'ritase-1');
+      expect(item.isSelesai, isTrue);
+      expect(item.selesaiPada, '2026-11-20T05:00:00.000Z');
+      expect(item.bisaSelesaikan, isFalse);
+    },
+  );
 
   test('selesaikanRitase envelope error melempar ApiException', () async {
     final adapter = _JsonAdapter({
@@ -249,4 +283,93 @@ void main() {
       'Gagal menandai ritase selesai.',
     );
   });
+
+  testWidgets(
+    'aksi sukses di detail menginvalidasi tiga provider dan tetap di detail',
+    (tester) async {
+      const id = 'ritase-1';
+      const tanggal = '2026-11-20';
+      final repo = _DetailSelesaiRepository();
+      final container = ProviderContainer(
+        overrides: [
+          armadaRepositoryProvider.overrideWithValue(repo),
+          versionGateProvider.overrideWith(() => _ConstantGate()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final detailSub = container.listen(detailRitaseProvider(id), (_, __) {});
+      addTearDown(detailSub.close);
+      final hariIniSub = container.listen(
+        ritaseHariIniProvider(tanggal),
+        (_, __) {},
+      );
+      addTearDown(hariIniSub.close);
+      final riwayatSub = container.listen(ritaseRiwayatProvider, (_, __) {});
+      addTearDown(riwayatSub.close);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: DetailRitaseScreen(id: id),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repo.detailIds, [id]);
+      expect(repo.hariIniTanggalArgs, [tanggal]);
+      final riwayatCallsBefore = repo.getRitaseCalls;
+      expect(riwayatCallsBefore, greaterThan(0));
+
+      await tester.tap(find.text('Selesaikan Ritase'));
+      await tester.pumpAndSettle();
+
+      expect(repo.selesaiIds, [id]);
+      expect(repo.detailIds, [id, id]);
+      expect(repo.hariIniTanggalArgs, [tanggal, tanggal]);
+      expect(repo.getRitaseCalls, greaterThan(riwayatCallsBefore));
+      expect(find.byType(DetailRitaseScreen), findsOneWidget);
+      expect(find.text('Selesaikan Ritase'), findsNothing);
+      expect(find.text('Selesai'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'aksi gagal di detail menampilkan error dan mengaktifkan tombol',
+    (tester) async {
+      const id = 'ritase-1';
+      final repo = _DetailSelesaiRepository(
+        selesaiError: 'Gagal menandai ritase selesai.',
+      );
+      final container = ProviderContainer(
+        overrides: [
+          armadaRepositoryProvider.overrideWithValue(repo),
+          versionGateProvider.overrideWith(() => _ConstantGate()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: DetailRitaseScreen(id: id),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Selesaikan Ritase'));
+      await tester.pumpAndSettle();
+
+      expect(repo.selesaiIds, [id]);
+      expect(repo.detailIds, [id]);
+      expect(find.text('Gagal menandai ritase selesai.'), findsWidgets);
+      expect(find.text('Selesaikan Ritase'), findsOneWidget);
+    },
+  );
 }

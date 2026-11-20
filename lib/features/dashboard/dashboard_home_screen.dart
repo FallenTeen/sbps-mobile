@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/theme/breakpoints.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 import '../presensi/models/titik.dart';
@@ -21,12 +21,11 @@ import 'models.dart';
 import 'status_chip.dart' show kPoPendingLimit;
 import 'widgets/charts.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
-import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/app_screen_frame.dart';
 import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/global_search_sheet.dart';
 import '../../shared/widgets/pinned_modules_row.dart';
-import '../../shared/widgets/recent_modules_row.dart';
 import '../../shared/widgets/skeleton_loader.dart';
 import '../../shared/utils/module_routes.dart';
 
@@ -46,73 +45,68 @@ class DashboardHomeScreen extends ConsumerWidget {
     final role = ref.watch(activeRoleProvider);
     final sections = dashboardSectionsFor(role);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Operasional'),
-        bottom: const BrandStrip(),
-        actions: [
-          IconButton(
-            tooltip: 'Cari modul',
-            icon: const Icon(Icons.search),
-            onPressed: () => showGlobalSearchSheet(
-              context,
-              modules: [
-                SearchableModule(
-                  name: 'Modul',
-                  items: kProyekModules
-                      .map(
-                        (m) => SearchResult(
-                          title: m.label,
-                          subtitle: m.key,
-                          icon: m.icon,
-                          route: '/proyek',
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              onSelected: (r) {
-                final route = moduleRouteFor(r.subtitle);
-                if (route != null) {
-                  ref.read(recentModulesProvider.notifier).add(r.subtitle);
-                  context.push(route);
-                }
-              },
-            ),
-          ),
-          const AppTopBarActions(showNotification: false),
-        ],
+    final searchModules = <SearchableModule>[
+      SearchableModule(
+        name: 'Modul',
+        items: kProyekModules
+            .map(
+              (m) => SearchResult(
+                title: m.label,
+                subtitle: m.key,
+                icon: m.icon,
+                route: '/proyek',
+              ),
+            )
+            .toList(),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(overviewProvider);
-          if (sections.showArmadaStatus) ref.invalidate(armadaStatusProvider);
-          if (sections.showKehadiran) ref.invalidate(kehadiranDivisiProvider);
-          if (sections.showChartProduksi) {
-            ref.invalidate(produksiChartProvider);
-          }
-          if (RolePermissions.isAdminLike(role)) {
-            ref.invalidate(poPendingProvider);
-            ref.invalidate(invoiceBelumDibayarProvider);
-            if (role == 'Owner') ref.invalidate(inventorySummaryProvider);
-          }
-          if (role == 'Mandor Titik') {
-            ref.invalidate(produksiMenungguQcProvider);
-          }
-          ref.read(notificationsProvider.notifier).refresh();
-          await Future<void>.delayed(const Duration(milliseconds: 300));
-        },
-        child: ResponsiveCenter(
-          maxWidth: AppBreakpoints.maxContentWidth,
+    ];
+
+    void openSearchResult(SearchResult result) {
+      final route = moduleRouteFor(result.subtitle);
+      if (route != null) {
+        context.push(route);
+      }
+    }
+
+    return Scaffold(
+      body: AppScreenFrame(
+        title: 'Dashboard Operasional',
+        maxWidth: AppBreakpoints.maxContentWidth - (AppSpacing.md * 2),
+        actions: const [AppTopBarActions(showNotification: false)],
+        search: _HeaderSearchField(
+          onTap: () => showGlobalSearchSheet(
+            context,
+            modules: searchModules,
+            onSelected: openSearchResult,
+          ),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(overviewProvider);
+            if (sections.showArmadaStatus) ref.invalidate(armadaStatusProvider);
+            if (sections.showKehadiran) ref.invalidate(kehadiranDivisiProvider);
+            if (sections.showChartProduksi) {
+              ref.invalidate(produksiChartProvider);
+            }
+            if (RolePermissions.isAdminLike(role)) {
+              ref.invalidate(poPendingProvider);
+              ref.invalidate(invoiceBelumDibayarProvider);
+              if (role == 'Owner') ref.invalidate(inventorySummaryProvider);
+            }
+            if (role == 'Mandor Titik') {
+              ref.invalidate(produksiMenungguQcProvider);
+            }
+            ref.read(notificationsProvider.notifier).refresh();
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
             children: [
               const _SectionAttention(),
               const SizedBox(height: 12),
-              const RecentModulesRow(),
-              const SizedBox(height: 16),
-              const PinnedModulesRow(),
+              PinnedModulesRow(
+                allowedModules: RolePermissions.modulesFor(role),
+              ),
               const SizedBox(height: 20),
               SectionHeader(
                 title: 'Operasional Hari Ini',
@@ -163,6 +157,39 @@ class DashboardHomeScreen extends ConsumerWidget {
               const _SectionRecentActivity(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderSearchField extends StatelessWidget {
+  const _HeaderSearchField({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: context.colors.border),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: TextField(
+        readOnly: true,
+        onTap: onTap,
+        decoration: InputDecoration(
+          hintText: 'Cari modul...',
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: context.colors.surfaceVariant,
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border,
         ),
       ),
     );
@@ -878,7 +905,7 @@ class _SectionRecentActivity extends ConsumerWidget {
     return SectionCard(
       title: 'Aktivitas Terbaru',
       trailing: TextButton(
-        onPressed: () => context.push('/notifikasi'),
+        onPressed: () => context.go('/notifikasi'),
         child: const Text('Lihat semua'),
       ),
       child: async.when(

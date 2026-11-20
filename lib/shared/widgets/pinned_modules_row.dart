@@ -7,11 +7,20 @@ import '../../features/proyek/role_permissions.dart';
 import '../utils/feedback_service.dart';
 import '../utils/module_routes.dart';
 import 'module_shortcut.dart';
-import 'recent_modules_row.dart' show recentModulesProvider;
+
+List<String> visiblePinnedModules(
+  List<String> pinned,
+  Set<String> allowedModules,
+) => pinned.where((key) => allowedModules.contains(key)).toList();
 
 class PinnedModulesRow extends ConsumerStatefulWidget {
+  final Set<String> allowedModules;
   final int maxItems;
-  const PinnedModulesRow({super.key, this.maxItems = 4});
+  const PinnedModulesRow({
+    super.key,
+    required this.allowedModules,
+    this.maxItems = 4,
+  });
 
   @override
   ConsumerState<PinnedModulesRow> createState() => _PinnedModulesRowState();
@@ -58,15 +67,37 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
   }
 
   void _openModule(String key) {
+    if (!widget.allowedModules.contains(key)) return;
     final route = moduleRouteFor(key);
     if (route == null) return;
-    ref.read(recentModulesProvider.notifier).add(key);
     context.push(route);
+  }
+
+  void _reorderPinned(int oldIndex, int newIndex) {
+    final allowed = widget.allowedModules;
+    final displayed = visiblePinnedModules(_pinned, allowed)
+        .take(widget.maxItems)
+        .toList();
+    if (oldIndex < 0 || oldIndex >= displayed.length) return;
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    if (target < 0 || target >= displayed.length) return;
+
+    displayed.insert(target, displayed.removeAt(oldIndex));
+    var next = 0;
+    final reordered = [
+      for (final key in _pinned)
+        allowed.contains(key) && next < displayed.length
+            ? displayed[next++]
+            : key,
+    ];
+    setState(() => _pinned = reordered);
+    _save();
   }
 
   @override
   Widget build(BuildContext context) {
-    final modules = _pinned
+    final modules = visiblePinnedModules(_pinned, widget.allowedModules)
         .take(widget.maxItems)
         .map(
           (key) => kProyekModules.firstWhere(
@@ -93,14 +124,7 @@ class _PinnedModulesRowState extends ConsumerState<PinnedModulesRow> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             // Dual SDK support: onReorderItem only exists in newer Flutter.
             // ignore: deprecated_member_use
-            onReorder: (oldIndex, newIndex) {
-              setState(() {
-                if (newIndex > oldIndex) newIndex -= 1;
-                final item = _pinned.removeAt(oldIndex);
-                _pinned.insert(newIndex, item);
-              });
-              _save();
-            },
+            onReorder: _reorderPinned,
             children: [
               for (int i = 0; i < modules.length; i++)
                 Padding(

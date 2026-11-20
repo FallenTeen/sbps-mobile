@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../shared/theme/app_spacing.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/date_grouping.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/widgets/adaptive_master_detail.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_screen_frame.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/notification_routes.dart';
@@ -43,8 +45,8 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     final async = ref.watch(notificationsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifikasi'),
+      body: AppScreenFrame(
+        title: 'Notifikasi',
         actions: [
           const PortalSwitchButton(),
           IconButton(
@@ -92,9 +94,8 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
             ],
           ),
         ],
-      ),
-      body: ResponsiveCenter(
-        child: async.when(
+        maxWidth: AppBreakpoints.maxFormWidth - (AppSpacing.md * 2),
+        body: async.when(
           loading: () => const SkeletonListView(itemCount: 6),
           error: (error, _) => AppEmptyState(
             icon: Icons.cloud_off_outlined,

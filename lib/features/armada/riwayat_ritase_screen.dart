@@ -5,12 +5,16 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'armada_providers.dart';
 import 'models/armada.dart';
+import '../../shared/theme/app_spacing.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/theme/breakpoints.dart';
 import '../../shared/utils/feedback_copy.dart';
 import '../../shared/utils/status_labels.dart';
 import '../../shared/widgets/app_empty_state.dart';
+import '../../shared/widgets/app_screen_frame.dart';
 import '../../shared/widgets/illustrated_empty_state.dart';
 import '../../shared/widgets/portal_switch_button.dart';
+import '../../shared/widgets/ritase_status_badges.dart';
 import '../../shared/widgets/status_pill.dart';
 import '../../core/formatters.dart';
 
@@ -63,36 +67,37 @@ class _RiwayatRitaseScreenState extends ConsumerState<RiwayatRitaseScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Muatan'),
-        actions: [PortalSwitchButton()],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<int>(
-                segments: const [
-                  ButtonSegment(value: 0, label: Text('Hari Ini')),
-                  ButtonSegment(value: 1, label: Text('Riwayat')),
-                ],
-                selected: {_tabController.index},
-                showSelectedIcon: false,
-                onSelectionChanged: (selection) {
-                  _tabController.animateTo(selection.first);
-                },
+      body: AppScreenFrame(
+        title: 'Riwayat Muatan',
+        actions: const [PortalSwitchButton()],
+        maxWidth: AppBreakpoints.maxContentWidth - (AppSpacing.md * 2),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 0, label: Text('Hari Ini')),
+                    ButtonSegment(value: 1, label: Text('Riwayat')),
+                  ],
+                  selected: {_tabController.index},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (selection) {
+                    _tabController.animateTo(selection.first);
+                  },
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [_HariIniTab(), _RiwayatTab()],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [_HariIniTab(), _RiwayatTab()],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -125,7 +130,8 @@ class _HariIniTab extends ConsumerWidget {
                 return const AppEmptyState(
                   icon: Icons.route_outlined,
                   title: 'Belum ada muatan hari ini',
-                  subtitle: 'Muatan yang Anda catat hari ini akan muncul di sini.',
+                  subtitle:
+                      'Muatan yang Anda catat hari ini akan muncul di sini.',
                 );
               }
               return ListView.separated(
@@ -137,9 +143,6 @@ class _HariIniTab extends ConsumerWidget {
                   return RitaseListCard(
                     ritase: item,
                     onTap: () => context.push(ritaseDetailPath(item)),
-                    onSelesai: () => ref
-                        .read(ritaseRiwayatProvider.notifier)
-                        .selesaikan(item.id),
                   );
                 },
               );
@@ -176,8 +179,11 @@ class _HariIniTab extends ConsumerWidget {
         ),
         error: (e, _) => Row(
           children: [
-            Icon(Icons.cloud_off_outlined,
-                color: context.colors.error, size: 20),
+            Icon(
+              Icons.cloud_off_outlined,
+              color: context.colors.error,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -225,11 +231,11 @@ class _HariIniTab extends ConsumerWidget {
                       Text(
                         armadaList.first.isAlatBerat
                             ? (armadaList.first.jamOperasionalTerkini != null
-                                ? 'HM: ${armadaList.first.jamOperasionalTerkini} jam'
-                                : 'HM: -')
+                                  ? 'HM: ${armadaList.first.jamOperasionalTerkini} jam'
+                                  : 'HM: -')
                             : (armadaList.first.odoTerkini != null
-                                ? 'ODO: ${armadaList.first.odoTerkini} km'
-                                : 'ODO: -'),
+                                  ? 'ODO: ${armadaList.first.odoTerkini} km'
+                                  : 'ODO: -'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -309,8 +315,6 @@ class _RiwayatTab extends ConsumerWidget {
         return RitaseListCard(
           ritase: item,
           onTap: () => context.push(ritaseDetailPath(item)),
-          onSelesai: () =>
-              ref.read(ritaseRiwayatProvider.notifier).selesaikan(item.id),
         );
       },
     );
@@ -318,168 +322,112 @@ class _RiwayatTab extends ConsumerWidget {
 }
 
 class RitaseListCard extends StatelessWidget {
-  const RitaseListCard({
-    super.key,
-    required this.ritase,
-    required this.onTap,
-    this.onSelesai,
-  });
+  const RitaseListCard({super.key, required this.ritase, required this.onTap});
 
   final RitaseItem ritase;
   final VoidCallback onTap;
-  final VoidCallback? onSelesai;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final badges = ritaseStatusBadges(
+      statusLabel: ritase.status == null
+          ? 'Ritase'
+          : statusLabel(ritase.status!),
+      terverifikasi: ritase.isVerifiedLogistik || ritase.isVerifiedSecurity,
+      selesai: ritase.isSelesai,
+    );
+
     return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: onTap,
-            child: Semantics(
-              button: true,
-              label: 'Lihat timeline ritase ${ritase.id}',
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${ritase.material ?? 'Material'} • ${_fmtCardTanggal(ritase.tanggal)}',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+      child: InkWell(
+        onTap: onTap,
+        child: Semantics(
+          button: true,
+          label: 'Lihat timeline ritase ${ritase.id}',
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${ritase.material ?? 'Material'} • ${_fmtCardTanggal(ritase.tanggal)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Wrap(spacing: 6, runSpacing: 4, children: badges),
+                const SizedBox(height: 6),
+                Text(
+                  '${fmtRitase(ritase.jumlahRit)}'
+                  '${ritase.ruteAsal != null && ritase.ruteTujuan != null ? ' • ${ritase.ruteAsal} → ${ritase.ruteTujuan}' : ''}',
+                ),
+                if (ritase.jumlahDriver != null) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.scale_outlined,
+                        size: 14,
+                        color: colors.textMuted,
+                      ),
+                      Text(
+                        'Muatan: ${ritase.jumlahDriver} ${ritase.satuanMuatan ?? 'ton'}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      if (ritase.jumlahVerifikasiLogistik != null)
+                        Text(
+                          '• Netto: ${ritase.jumlahVerifikasiLogistik} ton',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        if (ritase.status != null)
-                          StatusPill(
-                            label: _labelStatus(ritase.status!),
-                            color: statusColor(ritase.status!, context),
-                            borderRadius: 999,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${fmtRitase(ritase.jumlahRit)}'
-                      '${ritase.ruteAsal != null && ritase.ruteTujuan != null ? ' • ${ritase.ruteAsal} → ${ritase.ruteTujuan}' : ''}',
-                    ),
-                    if (ritase.jumlahDriver != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.scale_outlined,
-                            size: 14,
-                            color: context.colors.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Muatan: ${ritase.jumlahDriver} ${ritase.satuanMuatan ?? 'ton'}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color:
-                                  Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          if (ritase.jumlahVerifikasiLogistik != null) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              '• Netto: ${ritase.jumlahVerifikasiLogistik} ton',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
                     ],
-                    if (ritase.totalUpahRit != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Upah: ${fmtRp(ritase.totalUpahRit!)}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                  ),
+                ],
+                if (ritase.totalUpahRit != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Upah: ${fmtRp(ritase.totalUpahRit!)}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+                if (ritase.hasSelisih ||
+                    (ritase.wajibJembatanTimbang == true &&
+                        !ritase.isVerifiedLogistik)) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (ritase.hasSelisih)
+                        StatusPill(
+                          label: 'Selisih',
+                          color: colors.error,
+                          icon: Icons.warning_amber_rounded,
+                          borderRadius: 999,
+                        ),
+                      if (ritase.wajibJembatanTimbang == true &&
+                          !ritase.isVerifiedLogistik)
+                        StatusPill(
+                          label: 'Wajib Timbang',
+                          color: colors.secondary,
+                          icon: Icons.scale_rounded,
+                          borderRadius: 999,
+                        ),
                     ],
-                    if (ritase.isSelesai || ritase.hasVerifikasiData) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          if (ritase.isSelesai)
-                            StatusPill(
-                              label: 'Selesai',
-                              color: context.colors.success,
-                              icon: Icons.check_circle_outline,
-                              borderRadius: 999,
-                            ),
-                          if (ritase.hasSelisih)
-                            StatusPill(
-                              label: 'Selisih',
-                              color: context.colors.error,
-                              icon: Icons.warning_amber_rounded,
-                              borderRadius: 999,
-                            ),
-                          if (ritase.isVerifiedSecurity)
-                            StatusPill(
-                              label: 'Verified (Security)',
-                              color: context.colors.success,
-                              icon: Icons.shield_outlined,
-                              borderRadius: 999,
-                            ),
-                          if (ritase.isVerifiedLogistik)
-                            StatusPill(
-                              label: 'Verified (Logistik)',
-                              color: context.colors.info,
-                              icon: Icons.verified_outlined,
-                              borderRadius: 999,
-                            )
-                          else if (ritase.isMenungguVerifikasi)
-                            StatusPill(
-                              label: 'Menunggu verifikasi',
-                              color: context.colors.warning,
-                              icon: Icons.hourglass_top_rounded,
-                              borderRadius: 999,
-                            ),
-                          if (ritase.wajibJembatanTimbang == true &&
-                              !ritase.isVerifiedLogistik)
-                            StatusPill(
-                              label: 'Wajib Timbang',
-                              color: context.colors.secondary,
-                              icon: Icons.scale_rounded,
-                              borderRadius: 999,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
           ),
-          if (ritase.bisaSelesaikan)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: FilledButton.tonal(
-                onPressed: onSelesai,
-                child: const Text('Selesaikan Ritase'),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
 }
-
-String _labelStatus(String status) => switch (status) {
-  'disetujui' => 'Disetujui',
-  'ditagih' => 'Ditagih',
-  'draft' => 'Draft',
-  _ => status,
-};
