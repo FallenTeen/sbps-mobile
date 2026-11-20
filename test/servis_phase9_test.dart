@@ -13,6 +13,7 @@ ServisArmada _servis({
   String? disetujuiOleh,
   String? catatanWorkshop,
   String? tanggalSelesai,
+  bool butuhSparepart = true,
 }) {
   return ServisArmada(
     id: 's1',
@@ -28,6 +29,7 @@ ServisArmada _servis({
     disetujuiOleh: disetujuiOleh,
     catatanWorkshop: catatanWorkshop,
     tanggalSelesai: tanggalSelesai,
+    butuhSparepart: butuhSparepart,
   );
 }
 
@@ -113,27 +115,34 @@ void main() {
   });
 
   group('servisTimelineSteps', () {
-    test('diajukan: langkah 1 current, sisanya pending', () {
+    test('urutan mengikuti backend 6 step', () {
       final steps = servisTimelineSteps(_servis(status: 'diajukan'));
-      expect(steps.length, 4);
-      expect(steps[0].label, 'Diajukan');
+      expect(kServisStatusOrder, [
+        'diajukan',
+        'disetujui',
+        'dikerjakan',
+        'menunggu_sparepart',
+        'sparepart_tersedia',
+        'selesai',
+      ]);
+      expect(steps.length, 6);
+      expect(steps[0].label, 'Ajuan Dibuat');
       expect(steps[0].state, ServisTimelineState.current);
       expect(steps[1].state, ServisTimelineState.pending);
-      expect(steps[2].state, ServisTimelineState.pending);
-      expect(steps[3].state, ServisTimelineState.pending);
+      expect(steps[5].state, ServisTimelineState.pending);
     });
 
-    test('disetujui: Diajukan done, Disetujui current', () {
+    test('disetujui: Ajuan Dibuat done, Persetujuan current', () {
       final steps = servisTimelineSteps(
         _servis(status: 'disetujui', disetujuiOleh: 'Pak Manager'),
       );
       expect(steps[0].state, ServisTimelineState.done);
-      expect(steps[1].label, 'Disetujui');
+      expect(steps[1].label, 'Persetujuan');
       expect(steps[1].state, ServisTimelineState.current);
       expect(steps[2].state, ServisTimelineState.pending);
     });
 
-    test('dikerjakan: sampai Dikerjakan terpenuhi', () {
+    test('dikerjakan: sampai Pengerjaan Dimulai terpenuhi', () {
       final steps = servisTimelineSteps(_servis(status: 'dikerjakan'));
       expect(steps[0].state, ServisTimelineState.done);
       expect(steps[1].state, ServisTimelineState.done);
@@ -141,16 +150,35 @@ void main() {
       expect(steps[3].state, ServisTimelineState.pending);
     });
 
-    test('status sparepart mengikuti langkah dikerjakan', () {
-      final steps = servisTimelineSteps(
+    test('status sparepart punya node timeline sendiri', () {
+      final waiting = servisTimelineSteps(
         _servis(status: 'menunggu_sparepart'),
       );
-      expect(steps.length, 4);
-      expect(steps[2].state, ServisTimelineState.current);
-      expect(steps[3].state, ServisTimelineState.pending);
+      expect(waiting.length, 6);
+      expect(waiting[2].state, ServisTimelineState.done);
+      expect(waiting[3].label, 'Menunggu Sparepart');
+      expect(waiting[3].state, ServisTimelineState.current);
+      expect(waiting[4].state, ServisTimelineState.pending);
+
+      final ready = servisTimelineSteps(
+        _servis(status: 'sparepart_tersedia'),
+      );
+      expect(ready[3].state, ServisTimelineState.done);
+      expect(ready[4].label, 'Sparepart Tersedia');
+      expect(ready[4].state, ServisTimelineState.current);
     });
 
-    test('selesai: semua langkah done', () {
+    test('tanpa sparepart: dua step sparepart ditandai tidak perlu', () {
+      final steps = servisTimelineSteps(
+        _servis(status: 'selesai', butuhSparepart: false),
+      );
+      expect(steps[3].state, ServisTimelineState.skipped);
+      expect(steps[3].badge, 'Tidak perlu');
+      expect(steps[4].state, ServisTimelineState.skipped);
+      expect(steps[5].state, ServisTimelineState.done);
+    });
+
+    test('selesai: semua langkah aktif done', () {
       final steps = servisTimelineSteps(
         _servis(status: 'selesai', tanggalSelesai: '2026-09-10'),
       );
@@ -159,15 +187,88 @@ void main() {
       }
     });
 
-    test('ditolak: node terminal Ditolak merujuk alasan penolakan', () {
+    test('ditolak: Persetujuan ditandai Ditolak beserta alasannya', () {
       final steps = servisTimelineSteps(
         _servis(status: 'ditolak', alasanPenolakan: 'Unit sudah diganti'),
       );
-      expect(steps.length, 5);
+      expect(steps.length, 6);
       expect(steps[0].state, ServisTimelineState.done);
-      expect(steps.last.label, 'Ditolak');
-      expect(steps.last.state, ServisTimelineState.rejected);
-      expect(steps.last.caption, 'Unit sudah diganti');
+      expect(steps[1].state, ServisTimelineState.rejected);
+      expect(steps[1].badge, 'Ditolak');
+      expect(steps[1].caption, 'Unit sudah diganti');
+      expect(steps[5].state, ServisTimelineState.pending);
+    });
+
+    test('timeline dari backend dipetakan oleh model detail', () {
+      final item = ServisArmada.fromJson({
+        'id': 's2',
+        'armada_id': 'a1',
+        'status': 'menunggu_sparepart',
+        'tanggal_ajuan': '2026-09-01',
+        'keluhan': 'Mesin berisik',
+        'timeline': [
+          {
+            'key': 'menunggu_sparepart',
+            'label': 'Menunggu Sparepart',
+            'state': 'current',
+            'badge': 'Menunggu Sparepart',
+            'at': null,
+            'actor': '-',
+            'details': [],
+          },
+        ],
+      });
+      expect(item.timeline, hasLength(1));
+      expect(item.timeline.single.label, 'Menunggu Sparepart');
+      expect(item.timeline.single.state, 'current');
+    });
+
+    test('timeline backend skipped/ditolak tetap dikenali sebagai node terminal', () {
+      final item = ServisArmada.fromJson({
+        'id': 's3',
+        'armada_id': 'a1',
+        'status': 'ditolak',
+        'tanggal_ajuan': '2026-09-01',
+        'keluhan': 'Mesin berisik',
+        'timeline': [
+          {
+            'key': 'disetujui',
+            'label': 'Persetujuan',
+            'state': 'skipped',
+            'badge': 'Ditolak',
+            'details': [],
+          },
+          {
+            'key': 'menunggu_sparepart',
+            'label': 'Menunggu Sparepart',
+            'state': 'skipped',
+            'badge': 'Tidak perlu',
+            'details': [],
+          },
+        ],
+      });
+      expect(item.timeline[0].state, 'skipped');
+      expect(item.timeline[0].badge, 'Ditolak');
+      expect(item.timeline[0].isRejected, isTrue);
+      expect(item.timeline[1].state, 'skipped');
+      expect(item.timeline[1].badge, 'Tidak perlu');
+      expect(item.timeline[1].isRejected, isFalse);
+    });
+  });
+
+  group('ServisArmadaPage.fromRaw', () {
+    test('format array polos tetap diterima sebagai satu halaman', () {
+      final page = ServisArmadaPage.fromRaw([
+        {
+          'id': 's1',
+          'armada_id': 'a1',
+          'status': 'disetujui',
+          'tanggal_ajuan': '2026-09-01',
+          'keluhan': 'Mesin berisik',
+        },
+      ]);
+      expect(page.items, hasLength(1));
+      expect(page.lastPage, 1);
     });
   });
 

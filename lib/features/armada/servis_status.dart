@@ -12,12 +12,23 @@ import 'package:flutter/material.dart';
 import '../../shared/theme/app_theme.dart';
 import 'models/servis_armada.dart';
 
-/// Urutan status work queue (tanpa 'ditolak'; ditolak jadi node terminal).
+/// Urutan status timeline servis (sama dengan `ServisTimelineService` backend).
 const List<String> kServisStatusOrder = [
   'diajukan',
   'disetujui',
   'dikerjakan',
+  'menunggu_sparepart',
+  'sparepart_tersedia',
   'selesai',
+];
+
+const List<String> kServisTimelineLabels = [
+  'Ajuan Dibuat',
+  'Persetujuan',
+  'Pengerjaan Dimulai',
+  'Menunggu Sparepart',
+  'Sparepart Tersedia',
+  'Servis Selesai',
 ];
 
 const List<String> kKategoriServisOptions = [
@@ -94,7 +105,7 @@ String servisNextAction(ServisArmada item, {bool canApprove = false}) {
 }
 
 /// Tahapan timeline servis.
-enum ServisTimelineState { done, current, pending, rejected }
+enum ServisTimelineState { done, current, pending, skipped, rejected }
 
 /// Satu node pada timeline servis.
 class ServisTimelineStep {
@@ -102,51 +113,52 @@ class ServisTimelineStep {
     required this.label,
     required this.state,
     this.caption,
+    this.badge,
   });
 
   final String label;
   final ServisTimelineState state;
   final String? caption;
+  final String? badge;
 }
 
-/// Membangun langkah timeline: Diajukan → Disetujui → Dikerjakan → Selesai.
-///
-/// - status aktif = `current`; yang sudah lewat = `done`; yang belum = `pending`.
-/// - `ditolak` = node terminal merah setelah Diajukan (dengan alasan penolakan).
+/// Fallback lokal bila endpoint detail belum mengirim `timeline`.
+/// Urutan mengikuti backend 6 step; sparepart dilewati bila `butuh_sparepart=false`.
 List<ServisTimelineStep> servisTimelineSteps(ServisArmada item) {
-  const labels = ['Diajukan', 'Disetujui', 'Dikerjakan', 'Selesai'];
-  final wireStatus = switch (item.status) {
-    'menunggu_sparepart' || 'sparepart_tersedia' => 'dikerjakan',
-    _ => item.status,
-  };
-  final reachedIdx = kServisStatusOrder.indexOf(wireStatus);
-
-  if (item.status == 'ditolak') {
-    return [
-      for (var i = 0; i < labels.length; i++)
-        ServisTimelineStep(
-          label: labels[i],
-          state: i == 0 ? ServisTimelineState.done : ServisTimelineState.pending,
-        ),
-      ServisTimelineStep(
-        label: 'Ditolak',
-        state: ServisTimelineState.rejected,
-        caption: item.alasanPenolakan,
-      ),
-    ];
-  }
+  final rejected = item.status == 'ditolak';
+  final reachedIdx = kServisStatusOrder.indexOf(item.status);
+  final skipSparepart = !item.butuhSparepart &&
+      (item.status == 'dikerjakan' || item.status == 'selesai');
 
   return [
-    for (var i = 0; i < labels.length; i++)
+    for (var i = 0; i < kServisTimelineLabels.length; i++)
       ServisTimelineStep(
-        label: labels[i],
-        state: item.status == 'selesai'
-            ? ServisTimelineState.done
-            : i < reachedIdx
+        label: kServisTimelineLabels[i],
+        badge: rejected && i == 1
+            ? 'Ditolak'
+            : skipSparepart &&
+                    (kServisStatusOrder[i] == 'menunggu_sparepart' ||
+                        kServisStatusOrder[i] == 'sparepart_tersedia')
+                ? 'Tidak perlu'
+                : null,
+        caption: rejected && i == 1 ? item.alasanPenolakan : null,
+        state: rejected
+            ? i == 0
                 ? ServisTimelineState.done
-                : i == reachedIdx
-                    ? ServisTimelineState.current
-                    : ServisTimelineState.pending,
+                : i == 1
+                    ? ServisTimelineState.rejected
+                    : ServisTimelineState.pending
+            : skipSparepart &&
+                    (kServisStatusOrder[i] == 'menunggu_sparepart' ||
+                        kServisStatusOrder[i] == 'sparepart_tersedia')
+                ? ServisTimelineState.skipped
+                : item.status == 'selesai'
+                    ? ServisTimelineState.done
+                    : i < reachedIdx
+                        ? ServisTimelineState.done
+                        : i == reachedIdx
+                            ? ServisTimelineState.current
+                            : ServisTimelineState.pending,
       ),
   ];
 }

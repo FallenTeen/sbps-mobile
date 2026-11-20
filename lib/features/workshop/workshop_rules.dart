@@ -48,8 +48,16 @@ Set<String> sparepartWaitingJobIds(
 }
 
 /// Jumlah pekerjaan yang sedang menunggu sparepart (subset pekerjaan aktif).
+/// Status server `menunggu_sparepart` dihitung walau request inventori belum
+/// sempat termuat; `sparepart_tersedia` sengaja tidak dihitung.
 int countMenungguSparepart(List<WorkshopJob> jobs, Set<String> waitingIds) {
-  return jobs.where((j) => waitingIds.contains(j.id)).length;
+  return jobs
+      .where(
+        (j) =>
+            j.status != WorkshopJobStatus.selesai &&
+            (waitingIds.contains(j.id) || j.isMenungguSparepartWire),
+      )
+      .length;
 }
 
 /// Hasil pemeriksaan kelayakan "Tandai Selesai".
@@ -101,11 +109,14 @@ WorkshopCompleteCheck workshopCanComplete({
 
 /// Langkah berikutnya di job detail, sesuai status NYATA + keadaan sparepart.
 String workshopNextAction(WorkshopJob job, {required bool waitingSparepart}) {
-  return switch (job.status) {
-    WorkshopJobStatus.menunggu => 'Mulai Pengerjaan',
-    WorkshopJobStatus.dikerjakan => waitingSparepart
-        ? 'Menunggu sparepart dari inventori'
-        : 'Selesaikan item & lengkapi foto bukti',
-    WorkshopJobStatus.selesai => 'Job sudah selesai',
-  };
+  if (job.status == WorkshopJobStatus.selesai) return 'Job sudah selesai';
+  if (job.status == WorkshopJobStatus.menunggu) return 'Mulai Pengerjaan';
+
+  if (job.isSparepartTersediaWire) {
+    return 'Sparepart tersedia - lanjutkan pengerjaan';
+  }
+  if (job.isMenungguSparepartWire || waitingSparepart) {
+    return 'Menunggu sparepart dari inventori';
+  }
+  return 'Selesaikan item & lengkapi foto bukti';
 }

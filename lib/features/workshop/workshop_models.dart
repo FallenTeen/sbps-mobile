@@ -10,6 +10,7 @@ class WorkshopJob {
     required this.kategoriServis,
     required this.keluhan,
     required this.status,
+    this.wireStatus,
     this.createdAt,
     this.assignedAt,
     this.completedAt,
@@ -23,11 +24,18 @@ class WorkshopJob {
   final String kategoriServis;
   final String keluhan;
   final WorkshopJobStatus status;
+
+  /// Status asli dari API (`disetujui`, `dikerjakan`, `menunggu_sparepart`, ...).
+  /// Dipakai untuk aksi dan labeling agar tidak salah menyarankan tombol.
+  final String? wireStatus;
   final DateTime? createdAt;
   final DateTime? assignedAt;
   final DateTime? completedAt;
   final int totalItems;
   final int completedItems;
+
+  bool get isMenungguSparepartWire => wireStatus == 'menunggu_sparepart';
+  bool get isSparepartTersediaWire => wireStatus == 'sparepart_tersedia';
 
   factory WorkshopJob.fromJson(Map<String, dynamic> json) {
     return WorkshopJob(
@@ -39,6 +47,7 @@ class WorkshopJob {
       status:
           _parseStatus(json['status'] as String?) ??
           WorkshopJobStatus.menunggu,
+      wireStatus: json['wireStatus'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
@@ -77,6 +86,7 @@ class WorkshopJob {
       kategoriServis: servis.kategori ?? 'Servis Armada',
       keluhan: servis.keluhan,
       status: _parseStatus(servis.status) ?? WorkshopJobStatus.menunggu,
+      wireStatus: servis.status,
       createdAt: servis.tanggalAjuan.isEmpty
           ? null
           : DateTime.tryParse(servis.tanggalAjuan),

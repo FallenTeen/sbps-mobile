@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
 import '../../core/outbox/pending_action.dart';
+import '../armada/servis_providers.dart';
 import '../auth/auth_providers.dart';
 import '../inventory/inventory_providers.dart';
 import '../presensi/presensi_providers.dart';
@@ -15,6 +16,7 @@ final workshopRepositoryProvider = Provider<WorkshopRepository>(
     api: ref.watch(apiClientProvider),
     outbox: ref.watch(outboxRepositoryProvider),
     sync: ref.watch(outboxSyncServiceProvider),
+    servis: ref.watch(servisRepositoryProvider),
   ),
 );
 

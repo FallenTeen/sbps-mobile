@@ -88,6 +88,8 @@ class ServisArmada {
     this.verifikasiWorkshopPada,
     this.fotoNotaUrls = const [],
     this.fotoHasilUrls = const [],
+    this.butuhSparepart = false,
+    this.timeline = const [],
   });
 
   final String id;
@@ -97,7 +99,8 @@ class ServisArmada {
   final String? jenisArmada;
   final String tanggalAjuan;
 
-  /// Status: 'diajukan', 'disetujui', 'ditolak', 'dikerjakan', 'selesai'.
+  /// Status: 'diajukan', 'disetujui', 'ditolak', 'dikerjakan',
+  /// 'menunggu_sparepart', 'sparepart_tersedia', 'selesai'.
   final String status;
   final String keluhan;
   final String? kategori;
@@ -135,6 +138,12 @@ class ServisArmada {
 
   /// Foto hasil pengerjaan
   final List<String> fotoHasilUrls;
+
+  /// Apakah alur servis memerlukan tahapan sparepart.
+  final bool butuhSparepart;
+
+  /// Timeline otoritatif dari endpoint detail (bila tersedia).
+  final List<ServisTimelineEntry> timeline;
 
   bool get isEksternal => tipeServis.toLowerCase() == 'eksternal';
   bool get isInternal => !isEksternal;
@@ -278,6 +287,73 @@ class ServisArmada {
             else if (h is String && h.isNotEmpty)
               h,
       ],
+      butuhSparepart:
+          json['butuh_sparepart'] == true ||
+          json['butuh_sparepart'] == 1 ||
+          json['butuh_sparepart'] == '1',
+      timeline: [
+        if (json['timeline'] is List)
+          for (final t in json['timeline'] as List)
+            if (t is Map)
+              ServisTimelineEntry.fromJson(Map<String, dynamic>.from(t)),
+      ],
+    );
+  }
+}
+
+/// Satu node timeline dari endpoint detail backend.
+class ServisTimelineEntry {
+  const ServisTimelineEntry({
+    required this.key,
+    required this.label,
+    required this.state,
+    required this.badge,
+    this.at,
+    this.actor,
+    this.details = const [],
+  });
+
+  final String key;
+  final String label;
+  final String state;
+  final String badge;
+  final String? at;
+  final String? actor;
+  final List<ServisTimelineDetail> details;
+
+  bool get isRejected => badge == 'Ditolak';
+
+  factory ServisTimelineEntry.fromJson(Map<String, dynamic> json) {
+    return ServisTimelineEntry(
+      key: json['key']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      state: json['state']?.toString() ?? 'pending',
+      badge: json['badge']?.toString() ?? '',
+      at: json['at']?.toString(),
+      actor: json['actor']?.toString(),
+      details: [
+        if (json['details'] is List)
+          for (final d in json['details'] as List)
+            if (d is Map)
+              ServisTimelineDetail.fromJson(Map<String, dynamic>.from(d)),
+      ],
+    );
+  }
+}
+
+/// Detail pendukung pada node timeline (label + nilai opsional).
+class ServisTimelineDetail {
+  const ServisTimelineDetail({required this.label, this.value, this.url});
+
+  final String label;
+  final String? value;
+  final String? url;
+
+  factory ServisTimelineDetail.fromJson(Map<String, dynamic> json) {
+    return ServisTimelineDetail(
+      label: json['label']?.toString() ?? '',
+      value: json['value']?.toString(),
+      url: json['url']?.toString(),
     );
   }
 }
@@ -331,7 +407,7 @@ class ServisArmadaPage {
 
   static ServisArmadaPage fromRaw(Object? raw) {
     final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
-    final list = map['items'] ?? map['data'];
+    final list = map['items'] ?? map['data'] ?? (raw is List ? raw : null);
     return ServisArmadaPage(
       items: [
         if (list is List)

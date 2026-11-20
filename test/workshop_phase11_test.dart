@@ -108,6 +108,10 @@ void main() {
         [WorkshopJobStatus.dikerjakan, WorkshopJobStatus.dikerjakan],
       );
       expect(
+        jobs.map((j) => j.wireStatus),
+        ['menunggu_sparepart', 'sparepart_tersedia'],
+      );
+      expect(
         WorkshopRepository.isWorkForWorkshop(_servis('menunggu_sparepart')),
         isTrue,
       );
@@ -181,6 +185,22 @@ void main() {
         _req('s1', InventoryRequestStatus.pending),
       ]);
       expect(waiting, isEmpty);
+    });
+
+    test('status server menunggu_sparepart ikut dihitung walau request belum ada', () {
+      final jobs = [
+        _job('menunggu_sparepart', id: 'w1'),
+        _job('sparepart_tersedia', id: 'r1'),
+      ];
+      expect(countMenungguSparepart(jobs, const {}), 1);
+      expect(workshopNextAction(jobs[0], waitingSparepart: false),
+          contains('Menunggu sparepart'));
+      expect(workshopNextAction(jobs[1], waitingSparepart: false),
+          contains('Sparepart tersedia'));
+      expect(
+        workshopNextAction(_job('dikerjakan'), waitingSparepart: false),
+        contains('Selesaikan item'),
+      );
     });
   });
 

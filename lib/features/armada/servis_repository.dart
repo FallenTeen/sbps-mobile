@@ -22,6 +22,7 @@ class ServisRepository {
   final OutboxRepository _outbox;
   final OutboxSyncService _sync;
   static const _uuid = Uuid();
+  static const _perPage = 50;
 
   /// GET /master/armada - daftar semua armada untuk dropdown ajuan servis.
   Future<List<MasterArmada>> getMasterArmada() async {
@@ -91,6 +92,46 @@ class ServisRepository {
           lastPage: 1,
           total: 0,
         );
+  }
+
+  /// Ambil seluruh halaman `/servis-armada` untuk konsumsi internal (mis. antrian Workshop).
+  /// Backend membatasi `per_page` maksimal 50; loop ini mengikuti `last_page`.
+  Future<List<ServisArmada>> getAllServisArmada({String? status}) {
+    return _fetchAllServisPages(
+      '/servis-armada',
+      query: {'status': ?status},
+    );
+  }
+
+  Future<List<ServisArmada>> _fetchAllServisPages(
+    String path, {
+    Map<String, dynamic>? query,
+  }) async {
+    final all = <ServisArmada>[];
+    var page = 1;
+
+    while (true) {
+      final res = await _api.get<ServisArmadaPage>(
+        path,
+        query: {
+          ...?query,
+          'page': page,
+          'per_page': _perPage,
+        },
+        parse: ServisArmadaPage.fromRaw,
+      );
+      _ensureSuccess(res);
+
+      final current = res.data;
+      if (current == null) break;
+      all.addAll(current.items);
+
+      final lastPage = current.lastPage < 1 ? 1 : current.lastPage;
+      if (page >= lastPage || current.items.isEmpty) break;
+      page++;
+    }
+
+    return all;
   }
 
   /// GET /servis-armada/saya - Riwayat ajuan servis milik user aktif / armada yang di-PIC-kan.
@@ -258,20 +299,8 @@ class ServisRepository {
   }
 
   /// GET /workshop/servis-eksternal - Daftar servis eksternal untuk verifikasi workshop.
-  Future<List<ServisArmada>> getServisEksternalList() async {
-    final res = await _api.get<List<ServisArmada>>(
-      '/workshop/servis-eksternal',
-      parse: (raw) {
-        final map = raw is Map ? Map<String, dynamic>.from(raw) : const {};
-        final items = map['items'] ?? map['data'] ?? (raw is List ? raw : const []);
-        return <ServisArmada>[
-          if (items is List)
-            for (final e in items)
-              if (e is Map) ServisArmada.fromJson(Map<String, dynamic>.from(e)),
-        ];
-      },
-    );
-    return res.data ?? const [];
+  Future<List<ServisArmada>> getServisEksternalList() {
+    return _fetchAllServisPages('/workshop/servis-eksternal');
   }
 
   void _ensureSuccess(ApiResponse<dynamic> res) {

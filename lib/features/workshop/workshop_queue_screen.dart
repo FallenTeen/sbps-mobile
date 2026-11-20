@@ -50,8 +50,10 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
   Color _statusColor(WorkshopJobStatus status) =>
       statusColor(status.name, context);
 
-  String _statusLabel(WorkshopJobStatus status) {
-    return switch (status) {
+  String _statusLabel(WorkshopJob job) {
+    if (job.isSparepartTersediaWire) return 'Sparepart Tersedia';
+    if (job.isMenungguSparepartWire) return 'Menunggu Sparepart';
+    return switch (job.status) {
       WorkshopJobStatus.menunggu => 'Menunggu',
       WorkshopJobStatus.dikerjakan => 'Dikerjakan',
       WorkshopJobStatus.selesai => 'Selesai',
@@ -202,8 +204,8 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
                           'Menunggu Sparepart dihitung dari request inventori yang '
                           'masih pending/diproses untuk job ini.'
                     : 'Jumlah dihitung dari status nyata server.\n'
-                          '"Menunggu Sparepart" = job yang punya request inventori '
-                          'yang masih pending/diproses.',
+                          '"Menunggu Sparepart" = status server menunggu_sparepart '
+                          'atau job yang punya request inventori pending/diproses.',
               ),
             ],
           ),
@@ -282,6 +284,11 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
           final job = filtered[index];
           final waitingSparepart = job.status != WorkshopJobStatus.selesai &&
               state.waitingSparepartJobIds.contains(job.id);
+          final badgeLabel = job.isSparepartTersediaWire
+              ? 'Sparepart Tersedia'
+              : (job.isMenungguSparepartWire || waitingSparepart)
+                  ? 'Menunggu Sparepart'
+                  : null;
           return QueueCard(
             highlighted: job.id == selectedJobId,
             leading: CircleAvatar(
@@ -296,11 +303,14 @@ class _WorkshopQueueScreenState extends ConsumerState<WorkshopQueueScreen> {
             title:
                 '${job.platNomor} \u2022 ${formatKategoriServis(job.kategoriServis)}',
             subtitle: job.keluhan,
-            statusLabel: _statusLabel(job.status),
-            statusColor: _statusColor(job.status),
-            badgeLabel:
-                waitingSparepart ? 'Menunggu Sparepart' : null,
-            badgeColor: context.colors.warning,
+            statusLabel: _statusLabel(job),
+            statusColor: job.isSparepartTersediaWire
+                ? context.colors.success
+                : _statusColor(job.status),
+            badgeLabel: badgeLabel,
+            badgeColor: job.isSparepartTersediaWire
+                ? context.colors.success
+                : context.colors.warning,
             onTap: () => onSelect(job.id),
           );
         },

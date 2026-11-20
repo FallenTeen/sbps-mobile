@@ -949,8 +949,8 @@ class _DetailServisContentState extends ConsumerState<DetailServisContent> {
   }
 }
 
-/// Timeline servis: Diajukan → Disetujui → Dikerjakan → Selesai, plus node
-/// terminal "Ditolak" bila pengajuan ditolak.
+/// Timeline servis 6 step, mengikuti `ServisTimelineService` backend.
+/// Bila detail endpoint mengirim `timeline`, data itulah yang dipakai.
 class ServisTimelineCard extends StatelessWidget {
   const ServisTimelineCard({required this.item, super.key});
 
@@ -958,7 +958,21 @@ class ServisTimelineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = servisTimelineSteps(item);
+    final localSteps = item.timeline.isEmpty ? servisTimelineSteps(item) : const [];
+    final items = item.timeline.isNotEmpty
+        ? [
+            for (final entry in item.timeline)
+              TimelineItem(
+                title: entry.label,
+                subtitle: _entrySubtitle(entry),
+                timeLabel: entry.badge.isEmpty ? null : entry.badge,
+                status: _entryStatus(entry),
+              ),
+          ]
+        : [
+            for (var i = 0; i < localSteps.length; i++)
+              _localTimelineItem(localSteps[i], i),
+          ];
 
     return Card(
       child: Padding(
@@ -971,28 +985,49 @@ class ServisTimelineCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            Timeline(
-              padding: EdgeInsets.zero,
-              items: [
-                for (var i = 0; i < steps.length; i++)
-                  TimelineItem(
-                    title: steps[i].label,
-                    subtitle: steps[i].state == ServisTimelineState.rejected
-                        ? item.alasanPenolakan
-                        : _captionFor(i),
-                    status: switch (steps[i].state) {
-                      ServisTimelineState.done => TimelineStatus.done,
-                      ServisTimelineState.current => TimelineStatus.current,
-                      ServisTimelineState.pending => TimelineStatus.pending,
-                      ServisTimelineState.rejected => TimelineStatus.rejected,
-                    },
-                  ),
-              ],
-            ),
+            Timeline(padding: EdgeInsets.zero, items: items),
           ],
         ),
       ),
     );
+  }
+
+  TimelineItem _localTimelineItem(ServisTimelineStep step, int index) {
+    return TimelineItem(
+      title: step.label,
+      subtitle: step.caption ?? _captionFor(index),
+      timeLabel: step.badge,
+      status: switch (step.state) {
+        ServisTimelineState.done => TimelineStatus.done,
+        ServisTimelineState.current => TimelineStatus.current,
+        ServisTimelineState.rejected => TimelineStatus.rejected,
+        ServisTimelineState.pending || ServisTimelineState.skipped =>
+          TimelineStatus.pending,
+      },
+    );
+  }
+
+  TimelineStatus _entryStatus(ServisTimelineEntry entry) {
+    if (entry.isRejected) return TimelineStatus.rejected;
+    return switch (entry.state) {
+      'done' => TimelineStatus.done,
+      'current' => TimelineStatus.current,
+      _ => TimelineStatus.pending,
+    };
+  }
+
+  String? _entrySubtitle(ServisTimelineEntry entry) {
+    final parts = <String>[
+      if (entry.at != null && entry.at!.isNotEmpty) fmtTanggal(entry.at!),
+      if (entry.actor != null &&
+          entry.actor!.isNotEmpty &&
+          entry.actor != '-')
+        entry.actor!,
+      for (final detail in entry.details)
+        if (detail.value != null && detail.value!.isNotEmpty)
+          '${detail.label}: ${detail.value}',
+    ];
+    return parts.isEmpty ? null : parts.join(' • ');
   }
 
   /// Fakta yang tersedia dari API (tidak mengarang tanggal antar-status).
@@ -1005,7 +1040,7 @@ class ServisTimelineCard extends StatelessWidget {
     }
     if (index == 1) return item.disetujuiOleh;
     if (index == 2) return item.catatanWorkshop;
-    if (index == 3) {
+    if (index == 5) {
       return item.tanggalSelesai == null
           ? null
           : fmtTanggal(item.tanggalSelesai);

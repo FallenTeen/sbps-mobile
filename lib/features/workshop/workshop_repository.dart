@@ -6,6 +6,7 @@ import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/outbox_sync_service.dart';
 import '../../core/outbox/pending_action.dart';
 import '../armada/models/servis_armada.dart';
+import '../armada/servis_repository.dart';
 import 'workshop_models.dart';
 
 /// Repository modul Workshop - Antrian Kerja (Section 14c).
@@ -16,25 +17,27 @@ class WorkshopRepository {
     required ApiClient api,
     required OutboxRepository outbox,
     required OutboxSyncService sync,
+    required ServisRepository servis,
   }) : _api = api,
        _outbox = outbox,
-       _sync = sync;
+       _sync = sync,
+       _servis = servis;
 
   final ApiClient _api;
   final OutboxRepository _outbox;
   final OutboxSyncService _sync;
+  final ServisRepository _servis;
   static const _uuid = Uuid();
 
   /// GET /servis-armada - Antrian workshop (servis yang disetujui/dikerjakan).
   /// Status workshop: 'disetujui' (menunggu), 'dikerjakan',
   /// 'menunggu_sparepart', 'sparepart_tersedia', 'selesai'.
   Future<List<WorkshopJob>> getAntrianServis({String? status}) async {
-    final res = await _api.get<List<WorkshopJob>>(
-      '/servis-armada',
-      query: {'status': ?status},
-      parse: antrianFromRaw,
-    );
-    return res.data ?? const [];
+    final servis = await _servis.getAllServisArmada(status: status);
+    return [
+      for (final item in servis)
+        if (isWorkForWorkshop(item)) WorkshopJob.fromServisArmada(item),
+    ];
   }
 
   /// Parse response `/servis-armada` menjadi daftar pekerjaan workshop.

@@ -77,11 +77,16 @@ class _WorkshopJobDetailContentState
     extends ConsumerState<WorkshopJobDetailContent> {
   bool _isSubmitting = false;
 
-  Color _statusColor(WorkshopJobStatus status) =>
-      statusColor(status.name, context);
+  Color _statusColor(WorkshopJob job) {
+    if (job.isSparepartTersediaWire) return context.colors.success;
+    if (job.isMenungguSparepartWire) return context.colors.warning;
+    return statusColor(job.status.name, context);
+  }
 
-  String _statusLabel(WorkshopJobStatus status) {
-    return switch (status) {
+  String _statusLabel(WorkshopJob job) {
+    if (job.isSparepartTersediaWire) return 'Sparepart Tersedia';
+    if (job.isMenungguSparepartWire) return 'Menunggu Sparepart';
+    return switch (job.status) {
       WorkshopJobStatus.menunggu => 'Menunggu',
       WorkshopJobStatus.dikerjakan => 'Dikerjakan',
       WorkshopJobStatus.selesai => 'Selesai',
@@ -437,18 +442,27 @@ class _WorkshopJobDetailContentState
         onPrimary: _startWork,
       );
     }
+    final sparepartTersedia = job.isSparepartTersediaWire;
+    final menungguSparepart =
+        waitingSparepart || job.isMenungguSparepartWire;
+
     return StickyActionBar(
-      secondaryLabel: 'Request Sparepart',
-      onSecondary: _isSubmitting ? null : _requestSparepart,
+      secondaryLabel: sparepartTersedia ? null : 'Request Sparepart',
+      onSecondary: sparepartTersedia || _isSubmitting
+          ? null
+          : _requestSparepart,
       primaryLabel: 'Tandai Selesai',
       primaryIcon: Icons.check,
       showPrimaryLoading: _isSubmitting,
       onPrimary: () => _markComplete(items),
-      note: waitingSparepart
-          ? 'Masih menunggu sparepart dari inventori. '
-                'Pastikan request sudah beres sebelum Tandai Selesai.'
-          : null,
+      note: sparepartTersedia
+          ? 'Sparepart sudah tersedia dari inventori. Lanjutkan checklist pekerjaan.'
+          : menungguSparepart
+              ? 'Masih menunggu sparepart dari inventori. '
+                  'Pastikan request sudah beres sebelum Tandai Selesai.'
+              : null,
     );
+
   }
 
   Widget _buildTodoSection(List<WorkshopTodoItem> items) {
@@ -598,6 +612,10 @@ class _WorkshopJobDetailContentState
     ServisArmada servis, {
     required bool waitingSparepart,
   }) {
+    final nextActionWaitingSparepart =
+        waitingSparepart || job.isMenungguSparepartWire;
+    final nextActionSparepartReady = job.isSparepartTersediaWire;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -631,8 +649,8 @@ class _WorkshopJobDetailContentState
                   ),
                 ),
                 StatusPill(
-                  label: _statusLabel(job.status),
-                  color: _statusColor(job.status),
+                  label: _statusLabel(job),
+                  color: _statusColor(job),
                   filled: job.status == WorkshopJobStatus.selesai,
                   borderRadius: 16,
                 ),
@@ -642,13 +660,15 @@ class _WorkshopJobDetailContentState
             Row(
               children: [
                 Icon(
-                  waitingSparepart
+                  nextActionWaitingSparepart || nextActionSparepartReady
                       ? Icons.inventory_2_outlined
                       : Icons.next_plan_outlined,
                   size: 15,
-                  color: waitingSparepart
-                      ? context.colors.warning
-                      : context.colors.textTertiary,
+                  color: nextActionSparepartReady
+                      ? context.colors.success
+                      : nextActionWaitingSparepart
+                          ? context.colors.warning
+                          : context.colors.textTertiary,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -660,9 +680,11 @@ class _WorkshopJobDetailContentState
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: waitingSparepart
-                          ? context.colors.warning
-                          : context.colors.textSecondary,
+                      color: nextActionSparepartReady
+                          ? context.colors.success
+                          : nextActionWaitingSparepart
+                              ? context.colors.warning
+                              : context.colors.textSecondary,
                     ),
                   ),
                 ),
