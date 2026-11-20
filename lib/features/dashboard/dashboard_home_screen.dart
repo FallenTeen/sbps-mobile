@@ -24,6 +24,7 @@ import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/app_screen_frame.dart';
 import '../../shared/widgets/notification_routes.dart';
 import '../../shared/widgets/section_header.dart';
+import '../../shared/widgets/section_link.dart';
 import '../../shared/widgets/global_search_sheet.dart';
 import '../../shared/widgets/pinned_modules_row.dart';
 import '../../shared/widgets/skeleton_loader.dart';
@@ -129,9 +130,10 @@ class DashboardHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
               if (sections.showFinancial) ...[
-                SectionHeader(
+                sectionHeaderWithLink(
                   title: 'Ringkasan Finansial',
-                  padding: const EdgeInsets.only(bottom: 8),
+                  actionLabel: 'Lihat Keuangan',
+                  onAction: () => context.push('/dashboard/keuangan'),
                 ),
                 Card(
                   child: ListTile(

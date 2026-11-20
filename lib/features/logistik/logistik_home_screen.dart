@@ -12,6 +12,7 @@ import '../../shared/widgets/app_error_state.dart';
 import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/bouncing_button.dart';
 import '../../shared/widgets/brand_strip.dart';
+import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/status_pill.dart';
 import '../armada/models/armada.dart';
 import 'logistik_repository.dart';
@@ -60,6 +61,13 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
             ),
           ),
           const Divider(height: 1),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SectionHeader(
+              title: 'Antrean Ritase',
+              padding: EdgeInsets.only(bottom: 8),
+            ),
+          ),
 
           // List Antrean
           Expanded(
@@ -74,12 +82,7 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
                     ref.invalidate(antreanVerifikasiRitaseProvider),
               ),
               data: (items) {
-                final filtered = items.where((item) {
-                  if (_selectedFilter == 1) return item.wajibJembatanTimbang == true;
-                  if (_selectedFilter == 2) return item.isMenungguVerifikasi;
-                  if (_selectedFilter == 3) return item.isVerifiedLogistik;
-                  return true;
-                }).toList();
+                final filtered = items.where(_matchesSelectedFilter).toList();
 
                 if (filtered.isEmpty) {
                   return RefreshIndicator(
@@ -130,6 +133,13 @@ class _LogistikHomeScreenState extends ConsumerState<LogistikHomeScreen> {
         ),
       ),
     );
+  }
+
+  bool _matchesSelectedFilter(RitaseItem item) {
+    if (_selectedFilter == 1) return item.wajibJembatanTimbang == true;
+    if (_selectedFilter == 2) return item.isMenungguVerifikasi;
+    if (_selectedFilter == 3) return item.isVerifiedLogistik;
+    return true;
   }
 
   Widget _buildFilterChip(int index, String label) {

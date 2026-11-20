@@ -13,6 +13,7 @@ import '../../shared/widgets/app_top_bar_actions.dart';
 import '../../shared/widgets/entrance_fader.dart';
 import '../../shared/widgets/global_search_sheet.dart';
 import '../../shared/widgets/pinned_modules_row.dart';
+import '../../shared/widgets/section_header.dart';
 import '../auth/auth_providers.dart';
 import '../tracking/tracking_providers.dart';
 import 'home_quick_actions.dart';
@@ -106,23 +107,10 @@ class ProyekHomeScreen extends ConsumerWidget {
                   SizedBox(height: 16),
 
                   // Section: Modul
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.grid_view_rounded,
-                        size: 20,
-                        color: context.colors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Modul',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                    ],
+                  const SectionHeader(
+                    title: 'Modul',
+                    leadingIcon: Icons.grid_view_rounded,
+                    padding: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 12),
 

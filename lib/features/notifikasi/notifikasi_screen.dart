@@ -348,7 +348,7 @@ class _ArchiveSheet extends ConsumerWidget {
                 itemCount: items.length,
                 itemBuilder: (context, i) {
                   final n = items[i];
-                  final visual = categoryVisual(n.category);
+                  final visual = categoryVisual(context, n.category);
                   void restore() =>
                       ref.read(notificationsProvider.notifier).restore(n.id);
                   return ListTile(
@@ -429,9 +429,9 @@ class _FilterBar extends StatelessWidget {
                 const SizedBox(width: 8),
                 ChoiceChip(
                   avatar: Icon(
-                    categoryVisual(c).icon,
+                    categoryVisual(context, c).icon,
                     size: 16,
-                    color: categoryVisual(c).color,
+                    color: categoryVisual(context, c).color,
                   ),
                   label: Text('${c.label} (${counts[c] ?? 0})'),
                   selected: category == c,
@@ -470,26 +470,26 @@ class CategoryVisual {
   final Color color;
 }
 
-CategoryVisual categoryVisual(NotificationCategory c) {
-  // Dipanggil dalam build - warna mengikuti tema via context.
+CategoryVisual categoryVisual(BuildContext context, NotificationCategory c) {
+  final colors = context.colors;
   switch (c) {
     case NotificationCategory.approval:
-      return CategoryVisual(Icons.approval_outlined, Color(0xFFF59E0B));
+      return CategoryVisual(Icons.approval_outlined, colors.warning);
     case NotificationCategory.servis:
-      return CategoryVisual(Icons.build_outlined, Color(0xFF6366F1));
+      return CategoryVisual(Icons.build_outlined, colors.info);
     case NotificationCategory.stok:
-      return CategoryVisual(Icons.inventory_2_outlined, Color(0xFF3B82F6));
+      return CategoryVisual(Icons.inventory_2_outlined, colors.info);
     case NotificationCategory.produksi:
       return CategoryVisual(
         Icons.precision_manufacturing_outlined,
-        Color(0xFFDC2626),
+        colors.error,
       );
     case NotificationCategory.presensi:
-      return CategoryVisual(Icons.fingerprint, Color(0xFF10B981));
+      return CategoryVisual(Icons.fingerprint, colors.success);
     case NotificationCategory.formulir:
-      return CategoryVisual(Icons.description_outlined, Color(0xFF059669));
+      return CategoryVisual(Icons.description_outlined, colors.success);
     case NotificationCategory.sistem:
-      return CategoryVisual(Icons.campaign_outlined, Color(0xFF64748B));
+      return CategoryVisual(Icons.campaign_outlined, colors.textTertiary);
   }
 }
 
@@ -506,7 +506,7 @@ class _SwipeTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final unread = !notification.isRead;
-    final visual = categoryVisual(notification.category);
+    final visual = categoryVisual(context, notification.category);
     final resolved = resolveNotificationDestination(
       notification: notification,
       role: ref.watch(activeRoleProvider),
@@ -703,7 +703,7 @@ class _NotificationDetail extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final visual = categoryVisual(notification.category);
+    final visual = categoryVisual(context, notification.category);
     final destination = resolveNotificationDestination(
       notification: notification,
       role: ref.watch(activeRoleProvider),
