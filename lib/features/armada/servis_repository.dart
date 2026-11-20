@@ -96,10 +96,16 @@ class ServisRepository {
 
   /// Ambil seluruh halaman `/servis-armada` untuk konsumsi internal (mis. antrian Workshop).
   /// Backend membatasi `per_page` maksimal 50; loop ini mengikuti `last_page`.
-  Future<List<ServisArmada>> getAllServisArmada({String? status}) {
+  Future<List<ServisArmada>> getAllServisArmada({
+    String? status,
+    List<String>? statuses,
+  }) {
+    final statusQuery = statuses != null && statuses.isNotEmpty
+        ? statuses.join(',')
+        : status;
     return _fetchAllServisPages(
       '/servis-armada',
-      query: {'status': ?status},
+      query: {'status': ?statusQuery},
     );
   }
 

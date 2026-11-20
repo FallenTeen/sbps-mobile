@@ -28,12 +28,22 @@ class WorkshopRepository {
   final OutboxSyncService _sync;
   final ServisRepository _servis;
   static const _uuid = Uuid();
+  static const workshopStatuses = [
+    'disetujui',
+    'dikerjakan',
+    'menunggu_sparepart',
+    'sparepart_tersedia',
+    'selesai',
+  ];
 
   /// GET /servis-armada - Antrian workshop (servis yang disetujui/dikerjakan).
-  /// Status workshop: 'disetujui' (menunggu), 'dikerjakan',
-  /// 'menunggu_sparepart', 'sparepart_tersedia', 'selesai'.
+  /// Filter status dikirim ke server agar tidak mengunduh riwayat di luar
+  /// antrian workshop hanya untuk dibuang di klien.
   Future<List<WorkshopJob>> getAntrianServis({String? status}) async {
-    final servis = await _servis.getAllServisArmada(status: status);
+    final servis = await _servis.getAllServisArmada(
+      status: status,
+      statuses: status == null ? workshopStatuses : null,
+    );
     return [
       for (final item in servis)
         if (isWorkForWorkshop(item)) WorkshopJob.fromServisArmada(item),

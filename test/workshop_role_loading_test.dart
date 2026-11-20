@@ -80,10 +80,15 @@ class _StaticServisRepository extends ServisRepository {
 
   final List<ServisArmada> items;
   String? receivedStatus;
+  List<String>? receivedStatuses;
 
   @override
-  Future<List<ServisArmada>> getAllServisArmada({String? status}) async {
+  Future<List<ServisArmada>> getAllServisArmada({
+    String? status,
+    List<String>? statuses,
+  }) async {
     receivedStatus = status;
+    receivedStatuses = statuses;
     return items;
   }
 }
@@ -134,6 +139,22 @@ void main() {
     expect(api.calls.every((c) => c.query?['per_page'] == 50), isTrue);
   });
 
+  test('filter status jamak dikirim sebagai daftar dipisah koma', () async {
+    final api = _RecordingApiClient();
+    final repository = repositoryFor(api);
+
+    await repository.getAllServisArmada(
+      statuses: ['disetujui', 'dikerjakan', 'selesai'],
+    );
+
+    expect(
+      api.calls.every(
+        (c) => c.query?['status'] == 'disetujui,dikerjakan,selesai',
+      ),
+      isTrue,
+    );
+  });
+
   test('WorkshopRepository memetakan seluruh hasil servis ke antrian', () async {
     final api = _RecordingApiClient();
     final servis = _StaticServisRepository([
@@ -174,10 +195,31 @@ void main() {
     final jobs = await repository.getAntrianServis(status: 'disetujui');
 
     expect(servis.receivedStatus, 'disetujui');
+    expect(servis.receivedStatuses, isNull);
     expect(jobs.map((j) => j.id), ['w1', 'r1']);
     expect(jobs.map((j) => j.wireStatus), [
       'menunggu_sparepart',
       'sparepart_tersedia',
     ]);
+  });
+
+  test('WorkshopRepository tanpa filter status membatasi status di server', () async {
+    final api = _RecordingApiClient();
+    final servis = _StaticServisRepository([], api);
+    final repository = WorkshopRepository(
+      api: api,
+      outbox: OutboxRepository(),
+      sync: OutboxSyncService(
+        OutboxRepository(),
+        api,
+        connectivityStream: () => const Stream.empty(),
+      ),
+      servis: servis,
+    );
+
+    await repository.getAntrianServis();
+
+    expect(servis.receivedStatus, isNull);
+    expect(servis.receivedStatuses, WorkshopRepository.workshopStatuses);
   });
 }
