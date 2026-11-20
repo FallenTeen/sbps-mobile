@@ -165,6 +165,10 @@ class RitaseItem {
     this.beratKosongKg,
     this.beratIsiKg,
     this.beratNettoKg,
+    this.timeline = const [],
+    this.selesai = false,
+    this.selesaiPada,
+    this.bisaSelesaikan = false,
   });
 
   final String id;
@@ -198,6 +202,15 @@ class RitaseItem {
   final double? beratIsiKg;
   final double? beratNettoKg;
 
+  /// Timeline status detail ritase (kosong untuk respons daftar biasa).
+  final List<RitaseTimelineEntry> timeline;
+
+  /// Penanda selesai milik driver; tidak mengubah `status` ritase.
+  final bool selesai;
+  final String? selesaiPada;
+  final bool bisaSelesaikan;
+
+  bool get isSelesai => selesai || selesaiPada != null;
   bool get isVerifiedLogistik => statusVerifikasiLogistik == 'terverifikasi';
   bool get isVerifiedSecurity => statusVerifikasiSecurity == 'terverifikasi';
   bool get isMenungguVerifikasi =>
@@ -276,6 +289,80 @@ class RitaseItem {
           parseNum(timbangMap?['berat_isi_kg']),
       beratNettoKg: parseNum(json['berat_netto_kg']) ??
           parseNum(timbangMap?['berat_netto_kg']),
+      timeline: [
+        if (json['timeline'] is List)
+          for (final t in json['timeline'] as List)
+            if (t is Map)
+              RitaseTimelineEntry.fromJson(Map<String, dynamic>.from(t)),
+      ],
+      selesai: json['selesai'] == true || json['selesai_pada'] != null,
+      selesaiPada: json['selesai_pada']?.toString(),
+      bisaSelesaikan: json['bisa_selesaikan'] == true,
+    );
+  }
+}
+
+/// Satu langkah pada timeline detail ritase.
+class RitaseTimelineEntry {
+  const RitaseTimelineEntry({
+    required this.key,
+    required this.label,
+    required this.state,
+    required this.badge,
+    this.at,
+    this.actor,
+    this.details = const [],
+  });
+
+  final String key;
+  final String label;
+  final String state;
+  final String badge;
+  final String? at;
+  final String? actor;
+  final List<RitaseTimelineDetail> details;
+
+  factory RitaseTimelineEntry.fromJson(Map<String, dynamic> json) {
+    final rawState = json['state']?.toString();
+    final state = const {'done', 'current', 'pending'}.contains(rawState)
+        ? rawState!
+        : 'pending';
+    return RitaseTimelineEntry(
+      key: json['key']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      state: state,
+      badge: json['badge']?.toString() ?? '',
+      at: json['at']?.toString(),
+      actor: json['actor']?.toString(),
+      details: [
+        if (json['details'] is List)
+          for (final d in json['details'] as List)
+            if (d is Map) RitaseTimelineDetail.fromJson(d),
+      ],
+    );
+  }
+}
+
+/// Satu baris informasi pendukung pada langkah timeline ritase.
+class RitaseTimelineDetail {
+  const RitaseTimelineDetail({
+    required this.label,
+    this.value,
+    this.url,
+  });
+
+  final String label;
+  final String? value;
+  final String? url;
+
+  factory RitaseTimelineDetail.fromJson(Object? raw) {
+    final json = raw is Map
+        ? Map<String, dynamic>.from(raw)
+        : const <String, dynamic>{};
+    return RitaseTimelineDetail(
+      label: json['label']?.toString() ?? '',
+      value: json['value']?.toString(),
+      url: json['url']?.toString(),
     );
   }
 }

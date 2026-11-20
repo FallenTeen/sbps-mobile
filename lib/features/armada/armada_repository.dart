@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_response.dart';
 import '../../core/outbox/outbox_repository.dart';
 import '../../core/outbox/outbox_sync_service.dart';
 import '../../core/outbox/pending_action.dart';
@@ -88,15 +89,44 @@ class ArmadaRepository {
     return res.data ?? [];
   }
 
-  /// GET /armada/ritase?page=&per_page= - riwayat pengiriman driver.
-  Future<RitasePage> getRitase({int page = 1, int perPage = 15}) async {
+  /// GET /armada/ritase?page=&per_page=&tanggal= - riwayat pengiriman driver.
+  Future<RitasePage> getRitase({
+    int page = 1,
+    int perPage = 15,
+    String? tanggal,
+  }) async {
     final res = await _api.get<RitasePage>(
       '/armada/ritase',
-      query: {'page': page, 'per_page': perPage},
+      query: {
+        'page': page,
+        'per_page': perPage,
+        if (tanggal != null) 'tanggal': tanggal,
+      },
       parse: RitasePage.fromRaw,
     );
     return res.data ??
         const RitasePage(items: [], currentPage: 1, lastPage: 1, total: 0);
+  }
+
+  /// GET /armada/ritase/{id} - detail ritase beserta timeline statusnya.
+  Future<RitaseItem> getRitaseDetail(String id) async {
+    final res = await _api.get<RitaseItem>(
+      '/armada/ritase/$id',
+      parse: (raw) {
+        final payload = raw is Map
+            ? Map<String, dynamic>.from(raw)
+            : const <String, dynamic>{};
+        final ritaseMap = payload['ritase'] is Map
+            ? Map<String, dynamic>.from(payload['ritase'] as Map)
+            : payload;
+        return RitaseItem.fromJson({
+          ...ritaseMap,
+          'timeline': payload['timeline'] ?? const [],
+        });
+      },
+    );
+    _ensureSuccess(res);
+    return res.data!;
   }
 
   /// GET /armada/checklist-hari-ini - status checklist tiap armada hari ini.
@@ -393,6 +423,19 @@ class ArmadaRepository {
     return _outbox.enqueue(action, _sync.send);
   }
 
+  /// POST /armada/ritase/{id}/selesai - catat waktu selesai milik driver.
+  /// Respons `data` adalah payload ritase itu sendiri (bukan `{ritase, ...}`).
+  Future<RitaseItem> selesaikanRitase(String id) async {
+    final res = await _api.post<RitaseItem>(
+      '/armada/ritase/$id/selesai',
+      parse: (raw) => RitaseItem.fromJson(
+        raw is Map ? Map<String, dynamic>.from(raw) : const {},
+      ),
+    );
+    _ensureSuccess(res);
+    return res.data!;
+  }
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
@@ -452,4 +495,8 @@ class ArmadaRepository {
   /// Format angka untuk field multipart (bulat tanpa desimal).
   static String _numStr(double n) =>
       n % 1 == 0 ? n.toInt().toString() : n.toString();
+
+  void _ensureSuccess(ApiResponse<dynamic> res) {
+    if (!res.isSuccess) throw ApiException(res.message);
+  }
 }

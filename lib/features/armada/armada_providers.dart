@@ -120,6 +120,16 @@ class RitaseRiwayatController extends Notifier<RitaseRiwayatState> {
 
   Future<void> refresh() => _loadPage(page: 1);
 
+  Future<void> selesaikan(String id) async {
+    try {
+      await ref.read(armadaRepositoryProvider).selesaikanRitase(id);
+      await refresh();
+      ref.invalidate(ritaseHariIniProvider);
+    } on ApiException catch (e) {
+      state = state.copyWith(error: e.message);
+    }
+  }
+
   Future<void> loadMore() async {
     if (state.loading || !state.hasMore) return;
     state = state.copyWith(loading: true);
@@ -131,6 +141,16 @@ final ritaseRiwayatProvider =
     NotifierProvider<RitaseRiwayatController, RitaseRiwayatState>(
       RitaseRiwayatController.new,
     );
+
+final detailRitaseProvider = FutureProvider.autoDispose
+    .family<RitaseItem, String>((ref, id) {
+  return ref.watch(armadaRepositoryProvider).getRitaseDetail(id);
+});
+
+final ritaseHariIniProvider = FutureProvider.autoDispose
+    .family<RitasePage, String>((ref, tanggal) {
+  return ref.watch(armadaRepositoryProvider).getRitase(tanggal: tanggal);
+});
 
 // ---------------------------------------------------------------------------
 // Helpers armada (Section 21 - PIC absenkan helper)

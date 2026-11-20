@@ -14,6 +14,7 @@ import '../features/armada/armada_home_screen.dart';
 import '../features/armada/checklist_screen.dart';
 import '../features/armada/checklist_major_screen.dart';
 import '../features/armada/driver_dashboard_screen.dart';
+import '../features/armada/detail_ritase_screen.dart';
 import '../features/armada/detail_servis_screen.dart';
 import '../features/armada/helper_presensi_screen.dart';
 import '../features/armada/monitoring_armada_screen.dart';
@@ -125,6 +126,7 @@ const kAppRoutePaths = <String>[
   // Branch 6 - Armada.
   '/armada',
   '/armada/ritase',
+  '/armada/ritase/:id',
   '/armada/checklist',
   '/armada/checklist-akhir',
   '/armada/odo-awal',
@@ -700,6 +702,13 @@ List<StatefulShellBranch> _proyekShellBranches(Ref ref) => [
             pageBuilder: (context, state) => buildAppTransitionPage(
               key: state.pageKey,
               child: const RiwayatRitaseScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'ritase/:id',
+            pageBuilder: (context, state) => buildAppTransitionPage(
+              key: state.pageKey,
+              child: DetailRitaseScreen(id: state.pathParameters['id']!),
             ),
           ),
           GoRoute(
